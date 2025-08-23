@@ -7,6 +7,12 @@
 #include <filesystem>
 #include <string>
 #include <list>
+#include <algorithm>
+#include <limits>
+
+#include <cstdint>
+#include <cstdio>
+
 
 namespace fs = std::filesystem;
 
@@ -119,7 +125,14 @@ int main(int argc, char* argv[])
 
         cout << format("Archiving File: {}...", fn);
         // 1. file name length
-        const uint8_t fn_size = fn.size();
+        if (fn.size() > std::numeric_limits<uint8_t>::max())
+        {
+            cerr << std::format("filename too long: {}", fn);
+            goto BRA_IO_WRITE_ERR;
+        }
+
+        const uint8_t fn_size = static_cast<uint8_t>(fn.size());
+
         if (fwrite(&fn_size, sizeof(uint8_t), 1, f) != 1)
             goto BRA_IO_WRITE_ERR;
         // 2. file name

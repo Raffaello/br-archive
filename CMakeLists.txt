@@ -31,3 +31,13 @@ target_include_directories(bra PRIVATE
 # target_sources(bra PRIVATE ...)
 # target_compile_options(bra ...)
 target_link_libraries(bra PRIVATE lib_bra)
+
+add_executable(unbra src/unbra.cpp)
+set_property(TARGET unbra PROPERTY COMPILE_WARNING_AS_ERROR ON)
+target_include_directories(unbra PRIVATE
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/src> # for configure_file (version.h)
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+)
+# target_sources(bra PRIVATE ...)
+# target_compile_options(bra ...)
+target_link_libraries(unbra PRIVATE lib_bra)

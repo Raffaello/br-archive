@@ -12,9 +12,13 @@ set(CMAKE_DEBUG_POSTFIX d)
 
 # set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+configure_file(src/version.h.in src/version.h)
+
 add_executable(bra src/bra.cpp)
 set_property(TARGET bra PROPERTY COMPILE_WARNING_AS_ERROR ON)
-
+target_include_directories(bra PRIVATE
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/src> # for configure_file (version.h)
+)
 # target_sources(bra PRIVATE ...)
 # target_compile_options(bra ...)
 # target_link_libraries(bra ...)

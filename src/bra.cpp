@@ -12,6 +12,7 @@ namespace fs = std::filesystem;
 
 
 std::list<fs::path> g_files;    // it is just 1 for now but...
+// std::string         g_out_filename;
 
 bool g_sfx = false;
 
@@ -23,11 +24,12 @@ void help()
     cout << endl;
     cout << format("Usage:") << endl;
     cout << format("  bra (input_file)") << endl;
-    cout << format("The [output_file] generate will be with a .BRa extension") << endl;
+    cout << format("The [output_file] will be with a .BRa extension") << endl;
     cout << format("Example:") << endl;
     cout << format("  bra test.txt") << endl;
     cout << endl;
-    cout << format("(input_file): (single file only for now) the output") << endl;
+    cout << format("(input_file) : (single file only for now) the output") << endl;
+    // cout << format("(output_file): output file name without extension") << endl;
     cout << endl;
     cout << format("Options:") << endl;
     cout << format("--help: display this page.") << endl;
@@ -87,9 +89,10 @@ int main(int argc, char* argv[])
         return 1;
     }
 
-
     // header
-    string out_fn = "test.bra";    // TODO: add output file without extension
+    fs::path p = g_files.front();
+    p.replace_extension(BRA_FILE_EXT);
+    string out_fn = p.string();    // TODO: add output file without extension
     FILE*  f      = fopen(out_fn.c_str(), "wb");
     if (f == NULL)
     {

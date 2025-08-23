@@ -39,7 +39,8 @@ int main(int argc, char* argv[])
     if (argc < 2)
     {
         help();
-        exit(1);
+
+        return 1;
     }
 
     for (int i = 1; i < argc; i++)
@@ -48,7 +49,8 @@ int main(int argc, char* argv[])
         if (s == "--help")
         {
             help();
-            exit(0);
+
+            return 0;
         }
         else if (s == "--sfx")
         {
@@ -60,7 +62,8 @@ int main(int argc, char* argv[])
             if (!fs::is_regular_file(s))
             {
                 cout << format("s is not a file!") << endl;
-                exit(2);
+
+                return 2;
             }
 
             g_files.push_back(s);
@@ -68,7 +71,8 @@ int main(int argc, char* argv[])
         else
         {
             cout << format("unknow argument: {}", s) << endl;
-            exit(1);
+
+            return 1;
         }
     }
 
@@ -76,7 +80,8 @@ int main(int argc, char* argv[])
     {
         cerr << "[debug] (it shouldn't be here...)" << endl;
         help();
-        exit(1);
+
+        return 1;
     }
 
     for (const auto& f : g_files)
@@ -87,7 +92,8 @@ int main(int argc, char* argv[])
     if (g_sfx)
     {
         cout << "SFX NOT IMPLEMENTED YET" << endl;
-        exit(0);
+
+        return 3;
     }
 
     return 0;

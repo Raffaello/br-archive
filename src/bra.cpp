@@ -2,10 +2,15 @@
 #include <iostream>
 #include <filesystem>
 #include <string>
+#include <list>
 
 #include <version.h>
 
 namespace fs = std::filesystem;
+
+std::list<std::string> g_files;    // it is just 1 for now but...
+
+bool g_sfx = false;
 
 void help()
 {
@@ -31,7 +36,7 @@ int main(int argc, char* argv[])
 {
     using namespace std;
 
-    if (argc < 3)
+    if (argc < 2)
     {
         help();
         exit(1);
@@ -47,8 +52,7 @@ int main(int argc, char* argv[])
         }
         else if (s == "--sfx")
         {
-            cout << "SFX NOT IMPLEMENTED YET" << endl;
-            exit(0);
+            g_sfx = true;
         }
         // check if it is file
         else if (fs::exists(s))
@@ -58,6 +62,8 @@ int main(int argc, char* argv[])
                 cout << format("s is not a file!") << endl;
                 exit(2);
             }
+
+            g_files.push_back(s);
         }
         else
         {
@@ -66,6 +72,23 @@ int main(int argc, char* argv[])
         }
     }
 
+    if (g_files.size() == 0)
+    {
+        cerr << "[debug] (it shouldn't be here...)" << endl;
+        help();
+        exit(1);
+    }
+
+    for (const auto& f : g_files)
+    {
+        cout << format("Archiving File: {}...", f) << endl;
+    }
+
+    if (g_sfx)
+    {
+        cout << "SFX NOT IMPLEMENTED YET" << endl;
+        exit(0);
+    }
 
     return 0;
 }

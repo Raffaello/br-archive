@@ -1,5 +1,4 @@
 #include <lib_bra.h>
-
 #include <version.h>
 
 #include <format>
@@ -72,7 +71,7 @@ int main(int argc, char* argv[])
         {
             if (!fs::is_regular_file(s))
             {
-                cout << format("s is not a file!") << endl;
+                cout << format("{} is not a file!", s) << endl;
 
                 return 2;
             }
@@ -100,7 +99,7 @@ int main(int argc, char* argv[])
     p.replace_extension(BRA_FILE_EXT);
     string out_fn = p.string();    // TODO: add output file without extension
     FILE*  f      = fopen(out_fn.c_str(), "wb");
-    if (f == NULL)
+    if (f == nullptr)
     {
         cout << format("unable to write {} BRa file", out_fn) << endl;
         return 1;
@@ -136,7 +135,7 @@ int main(int argc, char* argv[])
         if (fwrite(&fn_size, sizeof(uint8_t), 1, f) != 1)
             goto BRA_IO_WRITE_ERR;
         // 2. file name
-        if (fwrite(fn.c_str(), sizeof(char) * fn_size, 1, f) != 1)
+        if (fwrite(fn.c_str(), sizeof(char), fn_size, f) != fn_size)
             goto BRA_IO_WRITE_ERR;
         // 3. data size
         const uintmax_t ds = fs::file_size(fn);
@@ -144,7 +143,7 @@ int main(int argc, char* argv[])
             goto BRA_IO_WRITE_ERR;
         // 4. data
         FILE* f2 = fopen(fn.c_str(), "rb");
-        if (f2 == NULL)
+        if (f2 == nullptr)
             goto BRA_IO_WRITE_ERR;
 
         constexpr uint32_t MAX_BUF_SIZE = 1024 * 1024;
@@ -154,7 +153,7 @@ int main(int argc, char* argv[])
             uint32_t s = std::min(static_cast<uintmax_t>(MAX_BUF_SIZE), ds - i);
 
             // read source chunk
-            if (fread(buf, sizeof(uint8_t) * s, 1, f2) != 1)
+            if (fread(buf, sizeof(uint8_t), s, f2) != s)
             {
             BRA_IO_WRITE_ERR_READ:
                 cout << format("unable to read {} file", fn) << endl;
@@ -164,7 +163,7 @@ int main(int argc, char* argv[])
             }
 
             // write source chunk
-            if (fwrite(buf, sizeof(uint8_t) * s, 1, f) != 1)
+            if (fwrite(buf, sizeof(uint8_t), s, f) != s)
             {
                 fclose(f2);
                 goto BRA_IO_WRITE_ERR;

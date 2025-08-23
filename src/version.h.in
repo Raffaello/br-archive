@@ -8,5 +8,4 @@
 #define VERSION_PATCH ${CMAKE_PROJECT_VERSION_PATCH}
 #define VERSION "${CMAKE_PROJECT_VERSION}"
 
-#endif
 // clang-format on

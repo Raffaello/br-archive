@@ -11,7 +11,7 @@
 namespace fs = std::filesystem;
 
 
-std::list<std::string> g_files;    // it is just 1 for now but...
+std::list<fs::path> g_files;    // it is just 1 for now but...
 
 bool g_sfx = false;
 
@@ -87,10 +87,81 @@ int main(int argc, char* argv[])
         return 1;
     }
 
-    for (const auto& f : g_files)
+
+    // header
+    string out_fn = "test.bra";    // TODO: add output file without extension
+    FILE*  f      = fopen(out_fn.c_str(), "wb");
+    if (f == NULL)
     {
-        cout << format("Archiving File: {}...", f) << endl;
+        cout << format("unable to write {} BRa file", out_fn) << endl;
+        return 1;
     }
+
+    bra_header_t header = {
+        .magic     = BRA_MAGIC,
+        .num_files = (uint32_t) g_files.size(),
+    };
+
+    if (fwrite(&header, sizeof(bra_header_t), 1, f) != 1)
+    {
+    BRA_IO_WRITE_ERR:
+        cout << format("unable to write {} BRa file", out_fn) << endl;
+        fclose(f);
+        return 1;
+    }
+
+    for (const auto& fn_ : g_files)
+    {
+        const string fn = fn_.generic_string();
+
+        cout << format("Archiving File: {}...", fn);
+        // 1. file name length
+        const uint8_t fn_size = fn.size();
+        if (fwrite(&fn_size, sizeof(uint8_t), 1, f) != 1)
+            goto BRA_IO_WRITE_ERR;
+        // 2. file name
+        if (fwrite(fn.c_str(), sizeof(char) * fn_size, 1, f) != 1)
+            goto BRA_IO_WRITE_ERR;
+        // 3. data size
+        const uintmax_t ds = fs::file_size(fn);
+        if (fwrite(&ds, sizeof(uintmax_t), 1, f) != 1)
+            goto BRA_IO_WRITE_ERR;
+        // 4. data
+        FILE* f2 = fopen(fn.c_str(), "rb");
+        if (f2 == NULL)
+            goto BRA_IO_WRITE_ERR;
+
+        constexpr uint32_t MAX_BUF_SIZE = 1024 * 1024;
+        uint8_t            buf[MAX_BUF_SIZE];    // 1M
+        for (uintmax_t i = 0; i < ds;)
+        {
+            uint32_t s = std::min(static_cast<uintmax_t>(MAX_BUF_SIZE), ds - i);
+
+            // read source chunk
+            if (fread(buf, sizeof(uint8_t) * s, 1, f2) != 1)
+            {
+            BRA_IO_WRITE_ERR_READ:
+                cout << format("unable to read {} file", fn) << endl;
+                fclose(f2);
+                fclose(f);
+                return 1;
+            }
+
+            // write source chunk
+            if (fwrite(buf, sizeof(uint8_t) * s, 1, f) != 1)
+            {
+                fclose(f2);
+                goto BRA_IO_WRITE_ERR;
+            }
+
+            i += s;
+        }
+
+        fclose(f2);
+        cout << "OK" << endl;
+    }
+
+    fclose(f);
 
     if (g_sfx)
     {

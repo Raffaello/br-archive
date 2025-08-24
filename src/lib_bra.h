@@ -18,6 +18,9 @@ extern "C" {
  */
 #define BRA_MAGIC    0x612D5242    // 0x61='a' 0x2D='-' 0x52='R' 0x42='B'
 #define BRA_FILE_EXT ".BRa"
+#define BRA_NAME     "BRa"
+
+#define MAX_BUF_SIZE (1024 * 1024)    // 1M
 
 typedef struct bra_file_name_t
 {

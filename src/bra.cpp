@@ -146,8 +146,7 @@ int main(int argc, char* argv[])
         if (f2 == nullptr)
             goto BRA_IO_WRITE_ERR;
 
-        constexpr uint32_t MAX_BUF_SIZE = 1024 * 1024;
-        uint8_t            buf[MAX_BUF_SIZE];    // 1M
+        uint8_t buf[MAX_BUF_SIZE];    // 1M
         for (uintmax_t i = 0; i < ds;)
         {
             uint32_t s = std::min(static_cast<uintmax_t>(MAX_BUF_SIZE), ds - i);

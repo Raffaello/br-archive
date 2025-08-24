@@ -71,6 +71,13 @@ bool parse_args(int argc, char* argv[])
                 return false;
             }
 
+            fs::path p = s;
+            if (p.generic_string().starts_with("../"))
+            {
+                cerr << format("ERROR: parent directory detected: {}", s) << endl;
+                return false;
+            }
+
             g_files.push_back(s);
         }
         else
@@ -174,6 +181,7 @@ int main(int argc, char* argv[])
     for (const auto& fn_ : g_files)
     {
         const string fn = fs::relative(fn_).generic_string();
+
         if (!bra_file_encode_and_write_to_disk(&f, fn))
             return 1;
     }
@@ -199,7 +207,7 @@ int main(int argc, char* argv[])
         if (!bra_io_open(&f, sfx_path.string().c_str(), "rb+"))
             goto BRA_SFX_IO_ERROR;
 
-        if (fseeko(f.f, 0, SEEK_END) != 0)
+        if (!bra_io_seek(&f, 0, SEEK_END))
         {
         BRA_SFX_IO_F_ERROR:
             bra_io_close(&f);
@@ -207,7 +215,7 @@ int main(int argc, char* argv[])
         }
 
         // save the start of the payload for later...
-        const _off_t data_offset = ftello(f.f);
+        const int64_t data_offset = bra_io_tell(&f);
         if (data_offset < 0L)
             goto BRA_SFX_IO_ERROR;
 
@@ -221,7 +229,7 @@ int main(int argc, char* argv[])
 
         bra_io_close(&f2);
         // write footer
-        if (!bra_io_write_footer(&f, static_cast<uint64_t long>(data_offset)))
+        if (!bra_io_write_footer(&f, data_offset))
             goto BRA_SFX_IO_ERROR;
 
         bra_io_close(&f);

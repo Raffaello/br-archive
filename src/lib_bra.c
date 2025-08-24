@@ -75,6 +75,20 @@ void bra_io_close(bra_file_t* bf)
     }
 }
 
+bool bra_io_seek(bra_file_t* f, const int64_t offs, const int origin)
+{
+    assert_bra_file_t(f);
+
+    return fseeko64(f->f, offs, origin) == 0;
+}
+
+int64_t bra_io_tell(bra_file_t* f)
+{
+    assert_bra_file_t(f);
+
+    return ftello64(f->f);
+}
+
 bool bra_io_read_header(bra_file_t* bf, bra_header_t* out_bh)
 {
     assert_bra_file_t(bf);
@@ -139,7 +153,7 @@ bool bra_io_read_footer(bra_file_t* f, bra_footer_t* bf_out)
     return true;
 }
 
-bool bra_io_write_footer(bra_file_t* f, const uint64_t data_offset)
+bool bra_io_write_footer(bra_file_t* f, const int64_t data_offset)
 {
     assert_bra_file_t(f);
     assert(data_offset > 0);
@@ -214,6 +228,22 @@ bool bra_io_decode_and_write_to_disk(bra_file_t* f)
         goto BRA_IO_READ_ERR;
 
     out_fn[fn_size] = '\0';
+
+    // 2.1 sanitize output path: reject absolute or parent traversal
+    //     POSIX absolute, Windows drive letter, and leading backslash
+    if (out_fn[0] == '/' || out_fn[0] == '\\' ||
+        (fn_size >= 2 && ((out_fn[1] == ':' && ((out_fn[0] >= 'A' && out_fn[0] <= 'Z') || (out_fn[0] >= 'a' && out_fn[0] <= 'z'))))))
+    {
+        printf("ERROR: absolute output path: %s\n", out_fn);
+        goto BRA_IO_READ_ERR;
+    }
+    // Reject common traversal patterns
+    if (strstr(out_fn, "/../") != NULL || strstr(out_fn, "\\..\\") != NULL ||
+        strncmp(out_fn, "../", 3) == 0 || strncmp(out_fn, "..\\", 3) == 0)
+    {
+        printf("ERROR: invalid output path (contains '..'): %s\n", out_fn);
+        goto BRA_IO_READ_ERR;
+    }
 
     // 3. data size
     uint64_t ds = 0;

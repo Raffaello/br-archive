@@ -122,7 +122,7 @@ bool bra_file_open_and_read_footer_header(const char* fn, bra_header_t* out_bh, 
         return false;
     }
 
-    if (fseeko(f->f, -1L * static_cast<off_t>(sizeof(bra_footer_t)), SEEK_END) != 0)
+    if (!bra_io_seek(f, -1L * static_cast<off_t>(sizeof(bra_footer_t)), SEEK_END))
     {
     BRA_IO_READ_ERROR:
         cerr << format("unable to read file {}", fn) << endl;
@@ -135,7 +135,7 @@ bool bra_file_open_and_read_footer_header(const char* fn, bra_header_t* out_bh, 
         return false;
 
     // read header and check
-    if (fseeko(f->f, bf.data_offset, SEEK_SET) != 0)
+    if (!bra_io_seek(f, bf.data_offset, SEEK_SET))
     {
     BRA_SFX_IO_READ_ERROR:
         bra_io_read_error(f);

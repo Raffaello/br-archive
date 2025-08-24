@@ -63,7 +63,7 @@ typedef struct bra_header_t
 typedef struct bra_footer_t
 {
     uint32_t magic;          //!< 'BR-x'
-    uint64_t data_offset;    //!< where the data chunk start from the beginning of the file
+    int64_t  data_offset;    //!< where the data chunk start from the beginning of the file
 } bra_footer_t;
 
 #pragma pack(pop)
@@ -102,6 +102,26 @@ bool bra_io_open(bra_file_t* bf, const char* fn, const char* mode);
  * @param bf
  */
 void bra_io_close(bra_file_t* bf);
+
+/**
+ * @brief seek file at position @p offs.
+ *  *
+ * @param f
+ * @param offs
+ * @param origin SEEK_SET, SEEK_CUR, SEEK_END
+ * @return true
+ * @return false
+ */
+bool bra_io_seek(bra_file_t* f, const int64_t offs, const int origin);
+
+/**
+ * @brief tell the file position.
+ *        On error returns -1
+ *
+ * @param f
+ * @return int64_t
+ */
+int64_t bra_io_tell(bra_file_t* f);
 
 /**
  * @brief read the header from the give @p bf file.
@@ -147,7 +167,7 @@ bool bra_io_read_footer(bra_file_t* f, bra_footer_t* bf_out);
  * @return true
  * @return false
  */
-bool bra_io_write_footer(bra_file_t* f, const uint64_t data_offset);
+bool bra_io_write_footer(bra_file_t* f, const int64_t data_offset);
 
 /**
  * @brief Copy from @p src to @p dst in chunks size of #MAX_BUF_SIZE for @p data_size bytes

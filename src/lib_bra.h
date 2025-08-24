@@ -21,7 +21,16 @@ extern "C" {
 #define BRA_FOOTER_MAGIC 0x782D5242    // 0x78='x' 0x2D='-' 0x52='R' 0x42='B'
 #define BRA_FILE_EXT     ".BRa"
 #define BRA_NAME         "BRa"
+#define BRA_SFX_FILENAME "bra.sfx"    // @todo: generate it through cmake conf
 
+#ifdef _linux_
+#define BRA_SFX_FILE_EXT ".brx"
+#elif __WIN32__
+#define BRA_SFX_FILE_EXT ".exe"
+#else
+#error "unsupported platform" // maybe it could work anyway, but did't test it.
+#endif
+// #define BRA_SFX_FILE_TMP ".tmp"
 
 #define MAX_BUF_SIZE (1024 * 1024)    // 1M
 
@@ -48,7 +57,7 @@ typedef struct bra_header_t
 typedef struct bra_footer_t
 {
     uint32_t magic;          //!< 'BR-x'
-    uint32_t data_offset;    //!< where the data chunk start from the beginning of the file
+    long     data_offset;    //!< where the data chunk start from the beginning of the file
 } bra_footer_t;
 
 // bool bra_encode(const char* file, const uint8_t buf);

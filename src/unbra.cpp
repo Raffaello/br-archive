@@ -99,6 +99,9 @@ int main(int argc, char* argv[])
     if (!bra_io_open(&f, g_bra_file.string().c_str(), "rb"))
         return 1;
 
+    if (!bra_io_read_header(&f, &bh))
+        return 1;
+
     cout << format("{} containing num files: {}", BRA_NAME, bh.num_files) << endl;
     for (uint32_t i = 0; i < bh.num_files; i++)
     {

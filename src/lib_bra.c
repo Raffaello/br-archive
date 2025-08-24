@@ -205,7 +205,7 @@ bool bra_io_decode_and_write_to_disk(bra_file_t* f)
 {
     assert_bra_file_t(f);
 
-    char buf[MAX_BUF_SIZE];
+    char out_fn[sizeof(uint8_t) + 1];
 
     // 1. filename size
     uint8_t fn_size = 0;
@@ -217,41 +217,29 @@ bool bra_io_decode_and_write_to_disk(bra_file_t* f)
     }
 
     // 2. filename
-    if (fread(buf, sizeof(uint8_t), fn_size, f->f) != fn_size)
+    if (fread(out_fn, sizeof(uint8_t), fn_size, f->f) != fn_size)
         goto BRA_IO_READ_ERR;
 
-    buf[fn_size] = '\0';
-
-    char* out_fn = bra_strdup(buf);
-    if (out_fn == NULL)
-        goto BRA_IO_READ_ERR;
+    out_fn[fn_size] = '\0';
 
     // 3. data size
     uintmax_t ds = 0;
     if (fread(&ds, sizeof(uintmax_t), 1, f->f) != 1)
-    {
-    BRA_IO_READ_ERR_DUP:
-        free(out_fn);
         goto BRA_IO_READ_ERR;
-    }
 
     // 4. read and write in chunk data
-    printf("ERROR: Extracting file: %s ...\n", out_fn);
+    printf("Extracting file: %s ...", out_fn);
     bra_file_t f2;
     if (!bra_io_open(&f2, out_fn, "wb"))
     {
         printf("ERROR: unable to write file: %s\n", out_fn);
-        goto BRA_IO_READ_ERR_DUP;
+        goto BRA_IO_READ_ERR;
     }
 
     if (!bra_io_copy_file_chunks(&f2, f, ds))
-    {
-        free(out_fn);
         return false;
-    }
 
     bra_io_close(&f2);
-    free(out_fn);
     printf("OK\n");
     return true;
 }

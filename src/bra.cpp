@@ -240,14 +240,15 @@ int main(int argc, char* argv[])
 
         cout << format("creating Self-extracting archive {}...", sfx_path.string());
 
-        if (!fs::copy_file(BRA_SFX_FILENAME, sfx_path))
+        // TODO: ask to overwrite instead
+        if (!fs::copy_file(BRA_SFX_FILENAME, sfx_path, fs::copy_options::overwrite_existing))
         {
         BRA_SFX_IO_ERROR:
             cerr << "unable to create a BRa-SFX file" << endl;
             return 2;
         }
 
-        FILE* f = fopen(sfx_path.string().c_str(), "wb");
+        FILE* f = fopen(sfx_path.string().c_str(), "rb+");
         if (f == nullptr)
             goto BRA_SFX_IO_ERROR;
 
@@ -279,7 +280,7 @@ int main(int argc, char* argv[])
             .data_offset = data_offset,
         };
 
-        res = fwrite(&bf, sizeof(bra_footer_t), 1, f) != 1;
+        res = fwrite(&bf, sizeof(bra_footer_t), 1, f) == 1;
         fclose(f);
         if (!res)
             goto BRA_SFX_IO_ERROR;

@@ -7,10 +7,6 @@
 
 #include <cstdio>
 
-/**
- **** @todo THIS FILE IS MOSTLY A DUPLICATION of unbra.cpp
- */
-
 
 using namespace std;
 
@@ -18,7 +14,7 @@ namespace fs = std::filesystem;
 
 fs::path g_bra_file;
 
-bool isElf(const char* fn)
+bool bra_isElf(const char* fn)
 {
     FILE* f = fopen(fn, "rb");
     if (f == nullptr)
@@ -41,7 +37,7 @@ bool isElf(const char* fn)
     return magic[0] == 0x7F && magic[1] == 'E' && magic[2] == 'L' && magic[3] == 'F';
 }
 
-bool isExe(const char* fn)
+bool bra_isExe(const char* fn)
 {
     FILE* f = fopen(fn, "rb");
     if (f == nullptr)
@@ -86,11 +82,11 @@ void help()
 bool parse_args(int argc, char* argv[])
 {
     // Supporting only EXE and ELF file type for now
-    if (isElf(argv[0]))
+    if (bra_isElf(argv[0]))
     {
         cout << "[debug] ELF file detected" << endl;
     }
-    else if (isExe(argv[0]))
+    else if (bra_isExe(argv[0]))
     {
         cout << "[debug] EXE file detected" << endl;
     }
@@ -118,128 +114,38 @@ bool parse_args(int argc, char* argv[])
     return true;
 }
 
-FILE* bra_file_open_and_read_footer_header(const char* fn, bra_header_t* out_bh)
+bool bra_file_open_and_read_footer_header(const char* fn, bra_header_t* out_bh, bra_file_t* f)
 {
-    FILE* f = fopen(fn, "rb");
-    if (f == nullptr)
+    if (!bra_io_open(f, fn, "rb"))
     {
         cerr << format("unable to open file {}", fn) << endl;
-        return nullptr;
-    }
-
-    if (fseek(f, -1L * static_cast<long>(sizeof(bra_footer_t)), SEEK_END) != 0)
-    {
-    BRA_IO_READ_ERROR:
-        cerr << format("unable to read file {}", fn) << endl;
-        fclose(f);
-        return nullptr;
-    }
-
-    bra_footer_t bf{};
-    if (fread(&bf, sizeof(bra_footer_t), 1, f) != 1)
-        goto BRA_IO_READ_ERROR;
-
-    // check footer magic
-    if (bf.magic != BRA_FOOTER_MAGIC)
-    {
-        cerr << format("corrupted or not valid BRA-SFX file: {}", fn) << endl;
-        fclose(f);
-        return nullptr;
-    }
-
-    // read header and check
-    if (fseek(f, bf.data_offset, SEEK_SET) != 0)
-    {
-    BRA_SFX_IO_READ_ERROR:
-        cout << format("unable to read {} {} file", fn, BRA_NAME) << endl;
-        fclose(f);
-        return nullptr;
-    }
-
-
-    // TODO: refactor in a read header function alone
-    // duplicated from unbra.cpp:
-    // FILE* bra_file_open_and_read_header(const char* fn, bra_header_t* out_bh)
-    if (fread(out_bh, sizeof(bra_header_t), 1, f) != 1)
-        goto BRA_SFX_IO_READ_ERROR;
-
-    // check header magic
-    if (out_bh->magic != BRA_MAGIC)
-    {
-        cerr << format("Not a valid {} file", BRA_FILE_EXT) << endl;
-        fclose(f);
-        return nullptr;
-    }
-
-    return f;
-}
-
-/**
- * @brief
- * @todo DUPLICATED from unbra.cpp (refactor)
- *
- * @param f
- * @return true
- * @return false
- */
-bool bra_file_decode_and_write_to_disk(FILE* f)
-{
-    char buf[MAX_BUF_SIZE];
-
-    // 1. filename size
-    uint8_t fn_size = 0;
-    if (fread(&fn_size, sizeof(uint8_t), 1, f) != 1)
-    {
-    BRA_IO_READ_ERR:
-        cout << format("unable to read {} BRa file", g_bra_file.string()) << endl;
-        // fclose(f);
         return false;
     }
 
-    // 2. filename
-    if (fread(buf, sizeof(uint8_t), fn_size, f) != fn_size)
-        goto BRA_IO_READ_ERR;
-
-    buf[fn_size]        = '\0';
-    const string out_fn = buf;
-
-    // 3. data size
-    uintmax_t ds = 0;
-    if (fread(&ds, sizeof(uintmax_t), 1, f) != 1)
-        goto BRA_IO_READ_ERR;
-
-    cout << format("Extracting file: {} ...", out_fn);
-    FILE* f2 = fopen(out_fn.c_str(), "wb");
-    if (f2 == nullptr)
+    if (fseek(f->f, -1L * static_cast<long>(sizeof(bra_footer_t)), SEEK_END) != 0)
     {
-        cerr << format("unable to write file: {}", out_fn.c_str()) << endl;
-        goto BRA_IO_READ_ERR;
+    BRA_IO_READ_ERROR:
+        cerr << format("unable to read file {}", fn) << endl;
+        bra_io_close(f);
+        return false;
     }
 
-    // 4. read and write in chunk data
-    for (uintmax_t i = 0; i < ds;)
+    bra_footer_t bf{};
+    if (!bra_io_read_footer(f, &bf))
+        return false;
+
+    // read header and check
+    if (fseek(f->f, bf.data_offset, SEEK_SET) != 0)
     {
-        uint32_t s = std::min(static_cast<uintmax_t>(MAX_BUF_SIZE), ds - i);
-        if (fread(buf, sizeof(char), s, f) != s)
-        {
-            cerr << format("unable to decode file: {}", out_fn.c_str()) << endl;
-            fclose(f2);
-            return false;
-        }
-
-        if (fwrite(buf, sizeof(char), s, f2) != s)
-        {
-            cerr << format("unable to write file: {}", out_fn.c_str()) << endl;
-            fclose(f2);
-            // fclose(f);
-            return false;
-        }
-
-        i += s;
+    BRA_SFX_IO_READ_ERROR:
+        cout << format("unable to read {} {} file", fn, BRA_NAME) << endl;
+        bra_io_close(f);
+        return false;
     }
 
-    fclose(f2);
-    cout << "OK" << endl;
+    if (!bra_io_read_header(f, out_bh))
+        return false;
+
     return true;
 }
 
@@ -250,8 +156,6 @@ int main(int argc, char* argv[])
     // TODO: ask to overwrite files, etc..
     // TODO: all these functionalities are common among the utilities
 
-    // TODO: this utility shares functionalties with 'unbra'
-
     if (!parse_args(argc, argv))
         return 1;
 
@@ -261,19 +165,17 @@ int main(int argc, char* argv[])
     // and decoded
 
     bra_header_t bh;
-    FILE*        f = bra_file_open_and_read_footer_header(argv[0], &bh);
-    if (f == nullptr)
+    bra_file_t   f{};
+    if (!bra_file_open_and_read_footer_header(argv[0], &bh, &f))
         return 1;
 
     // extract payload, encoded data
-    // NOTE: extract payload and copy into a temp file first?
-    if (!bra_file_decode_and_write_to_disk(f))
+    for (uint32_t i = 0; i < bh.num_files; ++i)
     {
-        cerr << "unable to decode" << endl;
-        fclose(f);
-        return 1;
+        if (!bra_io_decode_and_write_to_disk(&f))
+            return 1;
     }
 
-    fclose(f);
+    bra_io_close(&f);
     return 0;
 }

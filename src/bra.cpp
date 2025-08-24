@@ -80,6 +80,12 @@ bool parse_args(int argc, char* argv[])
         }
     }
 
+    if (g_files.empty())
+    {
+        cerr << "no input file provided" << endl;
+        return false;
+    }
+
     return true;
 }
 

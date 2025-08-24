@@ -41,6 +41,8 @@ void help()
 
 bool parse_args(int argc, char* argv[])
 {
+    g_bra_file.clear();
+
     if (argc < 2)
     {
         help();
@@ -71,6 +73,12 @@ bool parse_args(int argc, char* argv[])
             cout << format("unknow argument: {}", s) << endl;
             return false;
         }
+    }
+
+    if (g_bra_file.empty())
+    {
+        cerr << "no input file provided" << endl;
+        return false;
     }
 
     return true;

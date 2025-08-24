@@ -160,6 +160,7 @@ bool bra_file_decode_and_write_to_disk(FILE* f)
     }
 
     fclose(f2);
+    cout << "OK" << endl;
     return true;
 }
 

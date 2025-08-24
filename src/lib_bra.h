@@ -42,9 +42,11 @@ typedef struct bra_file_name_t
 
 typedef struct bra_data_t
 {
-    uintmax_t data_size;
+    uint64_t data_size;
     // uint8_t* data;
 } bra_data_t;
+
+#pragma pack(push, 1)
 
 typedef struct bra_header_t
 {
@@ -58,6 +60,8 @@ typedef struct bra_footer_t
     uint32_t magic;          //!< 'BR-x'
     uint64_t data_offset;    //!< where the data chunk start from the beginning of the file
 } bra_footer_t;
+
+#pragma pack(pop)
 
 typedef struct bra_file_t
 {
@@ -151,7 +155,7 @@ bool bra_io_write_footer(bra_file_t* f, const uint64_t data_offset);
  * @return true
  * @return false
  */
-bool bra_io_copy_file_chunks(bra_file_t* dst, bra_file_t* src, const uintmax_t data_size);
+bool bra_io_copy_file_chunks(bra_file_t* dst, bra_file_t* src, const uint64_t data_size);
 
 /**
  * @brief Decode the current pointed internal file contained in @p f and write it to its relative path on disk.

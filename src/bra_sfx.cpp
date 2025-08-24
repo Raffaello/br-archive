@@ -122,7 +122,7 @@ bool bra_file_open_and_read_footer_header(const char* fn, bra_header_t* out_bh, 
         return false;
     }
 
-    if (fseeko(f->f, -1L * static_cast<long>(sizeof(bra_footer_t)), SEEK_END) != 0)
+    if (fseeko(f->f, -1L * static_cast<off_t>(sizeof(bra_footer_t)), SEEK_END) != 0)
     {
     BRA_IO_READ_ERROR:
         cerr << format("unable to read file {}", fn) << endl;

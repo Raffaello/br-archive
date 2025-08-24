@@ -99,7 +99,7 @@ bool parse_args(int argc, char* argv[])
     if (g_files.size() > numeric_limits<uint32_t>::max())
     {
         cerr << format("Too many files, not supported yet: {}/{}", g_files.size(), numeric_limits<uint32_t>::max());
-        return 10;
+        return false;
     }
 
     return true;
@@ -129,8 +129,8 @@ bool bra_file_encode_and_write_to_disk(bra_file_t* f, const string& fn)
         goto BRA_IO_ENCODE_WRITE_ERR;
 
     // 3. data size
-    const uintmax_t ds = fs::file_size(fn);
-    if (fwrite(&ds, sizeof(uintmax_t), 1, f->f) != 1)
+    const uint64_t ds = fs::file_size(fn);
+    if (fwrite(&ds, sizeof(uint64_t), 1, f->f) != 1)
         goto BRA_IO_ENCODE_WRITE_ERR;
 
     // 4. data

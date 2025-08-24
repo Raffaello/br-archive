@@ -7,7 +7,7 @@
 
 #define assert_bra_file_t(x) assert((x) != NULL && (x)->f != NULL && (x)->fn != NULL)
 
-static inline uintmax_t bra_min(const uintmax_t a, const uintmax_t b)
+static inline uint64_t bra_min(const uint64_t a, const uint64_t b)
 {
     return a < b ? a : b;
 }
@@ -159,14 +159,14 @@ bool bra_io_write_footer(bra_file_t* f, const uint64_t data_offset)
     return true;
 }
 
-bool bra_io_copy_file_chunks(bra_file_t* dst, bra_file_t* src, const uintmax_t data_size)
+bool bra_io_copy_file_chunks(bra_file_t* dst, bra_file_t* src, const uint64_t data_size)
 {
     assert_bra_file_t(dst);
     assert_bra_file_t(src);
 
     char buf[MAX_BUF_SIZE];
 
-    for (uintmax_t i = 0; i < data_size;)
+    for (uint64_t i = 0; i < data_size;)
     {
         uint32_t s = bra_min(MAX_BUF_SIZE, data_size - i);
 
@@ -216,8 +216,8 @@ bool bra_io_decode_and_write_to_disk(bra_file_t* f)
     out_fn[fn_size] = '\0';
 
     // 3. data size
-    uintmax_t ds = 0;
-    if (fread(&ds, sizeof(uintmax_t), 1, f->f) != 1)
+    uint64_t ds = 0;
+    if (fread(&ds, sizeof(uint64_t), 1, f->f) != 1)
         goto BRA_IO_READ_ERR;
 
     // 4. read and write in chunk data

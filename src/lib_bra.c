@@ -79,14 +79,26 @@ bool bra_io_seek(bra_file_t* f, const int64_t offs, const int origin)
 {
     assert_bra_file_t(f);
 
-    return fseeko64(f->f, offs, origin) == 0;
+#if defined(_WIN32) || defined(_WIN64)
+    return _fseeki64(f->f, offs, origin) == 0;
+#elif defined(__APPLE__) || defined(__linux__) || defined(__linux)
+    return fseeko(f->f, offs, origin) == 0;
+#else
+#error "not supported"
+#endif
 }
 
 int64_t bra_io_tell(bra_file_t* f)
 {
     assert_bra_file_t(f);
 
-    return ftello64(f->f);
+#if defined(_WIN32) || defined(_WIN64)
+    return _ftelli64(f->f) == 0;
+#elif defined(__APPLE__) || defined(__linux__) || defined(__linux)
+    return ftello(f->f) == 0;
+#else
+#error "not supported"
+#endif
 }
 
 bool bra_io_read_header(bra_file_t* bf, bra_header_t* out_bh)

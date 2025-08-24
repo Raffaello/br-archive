@@ -8,6 +8,7 @@
 #include <list>
 #include <algorithm>
 #include <limits>
+#include <system_error>
 
 #include <cstdint>
 #include <cstdio>
@@ -139,8 +140,9 @@ bool bra_file_encode_and_write_to_disk(bra_file_t* f, const string& fn)
         goto BRA_IO_ENCODE_WRITE_ERR;
 
     // 3. data size
-    const uint64_t ds = fs::file_size(fn);
-    if (fwrite(&ds, sizeof(uint64_t), 1, f->f) != 1)
+    std::error_code ec;
+    const uint64_t  ds = fs::file_size(fn, ec);
+    if (ec || fwrite(&ds, sizeof(uint64_t), 1, f->f) != 1)
         goto BRA_IO_ENCODE_WRITE_ERR;
 
     // 4. data
@@ -220,14 +222,16 @@ int main(int argc, char* argv[])
         // save the start of the payload for later...
         const int64_t data_offset = bra_io_tell(&f);
         if (data_offset < 0L)
-            goto BRA_SFX_IO_ERROR;
+            goto BRA_SFX_IO_F_ERROR;
 
         // append bra file
         bra_file_t f2{};
         if (!bra_io_open(&f2, out_fn.c_str(), "rb"))
             goto BRA_SFX_IO_F_ERROR;
 
-        if (!bra_io_copy_file_chunks(&f, &f2, fs::file_size(out_fn)))
+        error_code ec;
+        auto       file_size = fs::file_size(out_fn, ec);
+        if (ec || !bra_io_copy_file_chunks(&f, &f2, file_size))
             goto BRA_SFX_IO_F_ERROR;
 
         bra_io_close(&f2);

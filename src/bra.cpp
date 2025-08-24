@@ -19,7 +19,7 @@ namespace fs = std::filesystem;
 
 
 std::list<fs::path> g_files;    // it is just 1 for now but...
-// std::string         g_out_filename;
+// std::string         g_out_filename; // TODO
 
 bool g_sfx = false;
 

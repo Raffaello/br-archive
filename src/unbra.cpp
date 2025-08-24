@@ -39,12 +39,12 @@ void help()
     cout << endl;
 }
 
-int parse_args(int argc, char* argv[])
+bool parse_args(int argc, char* argv[])
 {
     if (argc < 2)
     {
         help();
-        return 1;
+        return false;
     }
 
     for (int i = 1; i < argc; i++)
@@ -53,7 +53,7 @@ int parse_args(int argc, char* argv[])
         if (s == "--help")
         {
             help();
-            return 0;
+            exit(0);
         }
         // check if it is a file
         else if (fs::exists(s))
@@ -69,11 +69,11 @@ int parse_args(int argc, char* argv[])
         else
         {
             cout << format("unknow argument: {}", s) << endl;
-            return 1;
+            return false;
         }
     }
 
-    return 0;
+    return true;
 }
 
 FILE* bra_file_open_and_read_header(const char* fn, bra_header_t* out_bh)
@@ -165,9 +165,8 @@ bool bra_file_decode_and_write_to_disk(FILE* f)
 
 int main(int argc, char* argv[])
 {
-    const int ret = parse_args(argc, argv);
-    if (ret != 0)
-        return ret;
+    if (!parse_args(argc, argv))
+        return 1;
 
     // adjust input file extension
     if (g_bra_file.extension() != BRA_FILE_EXT)

@@ -7,10 +7,6 @@
 
 #include <cstdio>
 
-/**
- **** @todo THIS FILE IS MOSTLY A DUPLICATION of unbra.cpp
- */
-
 
 using namespace std;
 
@@ -153,32 +149,22 @@ bool bra_file_open_and_read_footer_header(const char* fn, bra_header_t* out_bh, 
     return true;
 }
 
-/**
- * @brief
- * @todo DUPLICATED from unbra.cpp (refactor)
- *
- * @param f
- * @return true
- * @return false
- */
-// bool bra_file_decode_and_write_to_disk(FILE* f)
+// bool bra_file_decode_and_write_to_disk(bra_file_t* f)
 // {
 //     char buf[MAX_BUF_SIZE];
 
-// // TODO: decode is shared with unbra
-
 // // 1. filename size
 // uint8_t fn_size = 0;
-// if (fread(&fn_size, sizeof(uint8_t), 1, f) != 1)
+// if (fread(&fn_size, sizeof(uint8_t), 1, f->f) != 1)
 // {
 // BRA_IO_READ_ERR:
-//     cout << format("unable to read {} BRa file", g_bra_file.string()) << endl;
+//     cout << format("unable to read {} {} file", f->fn, BRA_NAME) << endl;
 //     // fclose(f);
 //     return false;
 // }
 
 // // 2. filename
-// if (fread(buf, sizeof(uint8_t), fn_size, f) != fn_size)
+// if (fread(buf, sizeof(uint8_t), fn_size, f->f) != fn_size)
 //     goto BRA_IO_READ_ERR;
 
 // buf[fn_size]        = '\0';
@@ -186,12 +172,12 @@ bool bra_file_open_and_read_footer_header(const char* fn, bra_header_t* out_bh, 
 
 // // 3. data size
 // uintmax_t ds = 0;
-// if (fread(&ds, sizeof(uintmax_t), 1, f) != 1)
+// if (fread(&ds, sizeof(uintmax_t), 1, f->f) != 1)
 //     goto BRA_IO_READ_ERR;
 
 // cout << format("Extracting file: {} ...", out_fn);
-// FILE* f2 = fopen(out_fn.c_str(), "wb");
-// if (f2 == nullptr)
+// bra_file_t f2{};
+// if (!bra_io_open(&f2, out_fn.c_str(), "wb"))
 // {
 //     cerr << format("unable to write file: {}", out_fn.c_str()) << endl;
 //     goto BRA_IO_READ_ERR;
@@ -201,80 +187,19 @@ bool bra_file_open_and_read_footer_header(const char* fn, bra_header_t* out_bh, 
 // for (uintmax_t i = 0; i < ds;)
 // {
 //     uint32_t s = std::min(static_cast<uintmax_t>(MAX_BUF_SIZE), ds - i);
-//     if (fread(buf, sizeof(char), s, f) != s)
+//     if (!bra_io_copy_file_chunks(&f2, f, s))
 //     {
-//         cerr << format("unable to decode file: {}", out_fn.c_str()) << endl;
-//         fclose(f2);
+//         bra_io_close(&f2);
 //         return false;
 //     }
-
-// if (fwrite(buf, sizeof(char), s, f2) != s)
-// {
-//     cerr << format("unable to write file: {}", out_fn.c_str()) << endl;
-//     fclose(f2);
-//     // fclose(f);
-//     return false;
-// }
 
 // i += s;
 // }
 
-// fclose(f2);
+// bra_io_close(&f2);
 // cout << "OK" << endl;
 // return true;
 // }
-
-bool bra_file_decode_and_write_to_disk(bra_file_t* f)
-{
-    char buf[MAX_BUF_SIZE];
-
-    // 1. filename size
-    uint8_t fn_size = 0;
-    if (fread(&fn_size, sizeof(uint8_t), 1, f->f) != 1)
-    {
-    BRA_IO_READ_ERR:
-        cout << format("unable to read {} {} file", f->fn, BRA_NAME) << endl;
-        // fclose(f);
-        return false;
-    }
-
-    // 2. filename
-    if (fread(buf, sizeof(uint8_t), fn_size, f->f) != fn_size)
-        goto BRA_IO_READ_ERR;
-
-    buf[fn_size]        = '\0';
-    const string out_fn = buf;
-
-    // 3. data size
-    uintmax_t ds = 0;
-    if (fread(&ds, sizeof(uintmax_t), 1, f->f) != 1)
-        goto BRA_IO_READ_ERR;
-
-    cout << format("Extracting file: {} ...", out_fn);
-    bra_file_t f2{};
-    if (!bra_io_open(&f2, out_fn.c_str(), "wb"))
-    {
-        cerr << format("unable to write file: {}", out_fn.c_str()) << endl;
-        goto BRA_IO_READ_ERR;
-    }
-
-    // 4. read and write in chunk data
-    for (uintmax_t i = 0; i < ds;)
-    {
-        uint32_t s = std::min(static_cast<uintmax_t>(MAX_BUF_SIZE), ds - i);
-        if (!bra_io_copy_file_chunks(&f2, f, s))
-        {
-            bra_io_close(&f2);
-            return false;
-        }
-
-        i += s;
-    }
-
-    bra_io_close(&f2);
-    cout << "OK" << endl;
-    return true;
-}
 
 int main(int argc, char* argv[])
 {
@@ -301,11 +226,10 @@ int main(int argc, char* argv[])
     // extract payload, encoded data
     // NOTE: extract payload and copy into a temp file first?
     // TODO: refactor with unbra
-    if (!bra_file_decode_and_write_to_disk(&f))
+    for (uint32_t i = 0; i < bh.num_files; ++i)
     {
-        cerr << "unable to decode" << endl;
-        bra_io_close(&f);
-        return 1;
+        if (!bra_io_decode_and_write_to_disk(&f))
+            return 1;
     }
 
     bra_io_close(&f);

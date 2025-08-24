@@ -11,7 +11,7 @@
  * @param str
  * @return char*
  */
-static char* bra_io_strdup(const char* str)
+static char* bra_strdup(const char* str)
 {
     const size_t sz = strlen(str) + 1;
     char*        c  = malloc(sz);
@@ -50,7 +50,7 @@ bool bra_io_open(bra_file_t* bf, const char* fn, const char* mode)
     }
 
     // copy filename
-    bf->fn = bra_io_strdup(fn);
+    bf->fn = bra_strdup(fn);
     if (bf->fn == NULL)
     {
         bra_io_close(bf);
@@ -193,5 +193,63 @@ bool bra_io_copy_file_chunks(bra_file_t* dst, bra_file_t* src, const uintmax_t d
         i += s;
     }
 
+    return true;
+}
+
+bool bra_io_decode_and_write_to_disk(bra_file_t* f)
+{
+    assert(f != NULL);
+    assert(f->f != NULL);
+    assert(f->fn != NULL);
+
+    char buf[MAX_BUF_SIZE];
+    // 1. filename size
+    uint8_t fn_size = 0;
+    if (fread(&fn_size, sizeof(uint8_t), 1, f->f) != 1)
+    {
+    BRA_IO_READ_ERR:
+        bra_io_read_error(f);
+        return false;
+    }
+
+    // 2. filename
+    if (fread(buf, sizeof(uint8_t), fn_size, f->f) != fn_size)
+        goto BRA_IO_READ_ERR;
+
+    buf[fn_size] = '\0';
+
+    char* out_fn = bra_strdup(buf);
+    if (out_fn == NULL)
+        goto BRA_IO_READ_ERR;
+
+    // 3. data size
+    uintmax_t ds = 0;
+    if (fread(&ds, sizeof(uintmax_t), 1, f->f) != 1)
+    {
+    BRA_IO_READ_ERR_DUP:
+        free(out_fn);
+        goto BRA_IO_READ_ERR;
+    }
+
+    // 4. read and write in chunk data
+    printf("ERROR: Extracting file: %s ...\n", out_fn);
+    bra_file_t f2;
+    if (!bra_io_open(&f2, out_fn, "wb"))
+    {
+        printf("ERROR: unable to write file: %s\n", out_fn);
+        goto BRA_IO_READ_ERR_DUP;
+    }
+
+    if (!bra_io_copy_file_chunks(&f2, f, ds))
+    {
+        bra_io_close(f);
+        bra_io_close(&f2);
+        free(out_fn);
+        return false;
+    }
+
+    bra_io_close(&f2);
+    free(out_fn);
+    printf("OK\n");
     return true;
 }

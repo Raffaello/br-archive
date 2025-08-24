@@ -145,6 +145,16 @@ bool bra_io_write_footer(bra_file_t* f, const unsigned long data_offset);
  */
 bool bra_io_copy_file_chunks(bra_file_t* dst, bra_file_t* src, const uintmax_t data_size);
 
+/**
+ * @brief decode the current pointed file contained in @p f and write them to their disk relative location.
+ *        In case of error calls @ref bra_io_close with param @p f. Closing the file.
+ *
+ * @param f
+ * @return true
+ * @return false
+ */
+bool bra_io_decode_and_write_to_disk(bra_file_t* f);
+
 #ifdef __cplusplus
 }
 #endif

@@ -24,7 +24,7 @@ extern "C" {
 
 typedef struct bra_file_name_t
 {
-    // TODO: add CRC ... file permissions, etc...
+    // TODO: add CRC ... file permissions, file attributes, etc...
     uint8_t name_size;
     // char*   name;
 } bra_file_name_t;

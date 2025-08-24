@@ -41,3 +41,17 @@ target_include_directories(unbra PRIVATE
 # target_sources(bra PRIVATE ...)
 # target_compile_options(bra ...)
 target_link_libraries(unbra PRIVATE lib_bra)
+
+add_executable(bra_sfx src/bra_sfx.c)
+set_property(TARGET bra_sfx PROPERTY COMPILE_WARNING_AS_ERROR ON)
+target_include_directories(bra_sfx PRIVATE
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/src> # for configure_file (version.h)
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+)
+# target_sources(bra PRIVATE ...)
+# target_compile_options(bra ...)
+target_link_libraries(bra_sfx PRIVATE lib_bra)
+set_target_properties(bra_sfx PROPERTIES
+     OUTPUT_NAME "bra"
+     SUFFIX ".sfx"
+)

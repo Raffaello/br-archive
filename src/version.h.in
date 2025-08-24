@@ -1,0 +1,11 @@
+// clang-format off
+
+#pragma once
+
+
+#define VERSION_MAJOR ${CMAKE_PROJECT_VERSION_MAJOR}
+#define VERSION_MINOR ${CMAKE_PROJECT_VERSION_MINOR}
+#define VERSION_PATCH ${CMAKE_PROJECT_VERSION_PATCH}
+#define VERSION "${CMAKE_PROJECT_VERSION}"
+
+// clang-format on

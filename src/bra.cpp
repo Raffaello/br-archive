@@ -155,8 +155,6 @@ FILE* bra_file_open_and_write_header(const char* fn)
 
 bool bra_file_encode_and_write_to_disk(FILE* f, const string& fn)
 {
-    // char buf[MAX_BUF_SIZE];
-
     cout << format("Archiving File: {}...", fn);
     // 1. file name length
     if (fn.size() > std::numeric_limits<uint8_t>::max())

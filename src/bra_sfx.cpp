@@ -245,9 +245,8 @@ bool bra_file_decode_and_write_to_disk(FILE* f)
 
 int main(int argc, char* argv[])
 {
-    // TODO: add help section
     // TODO: add output directory where to decode
-    // TODO: add test archive?
+    // TODO: add test the archive?
     // TODO: ask to overwrite files, etc..
     // TODO: all these functionalities are common among the utilities
 
@@ -255,7 +254,6 @@ int main(int argc, char* argv[])
 
     if (!parse_args(argc, argv))
         return 1;
-
 
     // The idea of the SFX is to have a footer at the end of the file
     // The footer contain the location where the embedded data is
@@ -268,7 +266,7 @@ int main(int argc, char* argv[])
         return 1;
 
     // extract payload, encoded data
-    // TODO: extract payload and copy into a temp file first?
+    // NOTE: extract payload and copy into a temp file first?
     if (!bra_file_decode_and_write_to_disk(f))
     {
         cerr << "unable to decode" << endl;

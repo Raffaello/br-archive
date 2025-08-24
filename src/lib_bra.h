@@ -16,6 +16,11 @@ extern "C" {
  * @todo issue with big endian (not supporting it for now)
  * @todo can use a magic string instead so it will be endian independent
  */
+#if defined(__BYTE_ORDER__) && (__BYTE_ORDER__ == __ORDER_BIG_ENDIAN__)
+#error "Big-endian is not supported yet; add endian-neutral (LE) serialization."
+#endif
+
+
 #define BRA_MAGIC        0x612D5242    // 0x61='a' 0x2D='-' 0x52='R' 0x42='B'
 #define BRA_FOOTER_MAGIC 0x782D5242    // 0x78='x' 0x2D='-' 0x52='R' 0x42='B'
 #define BRA_FILE_EXT     ".BRa"

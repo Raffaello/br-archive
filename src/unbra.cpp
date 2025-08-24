@@ -111,22 +111,22 @@ FILE* bra_file_open_and_read_header(const char* fn, bra_header_t* out_bh)
     return f;
 }
 
-bool bra_file_decode_and_write_to_disk(FILE* f)
+bool bra_file_decode_and_write_to_disk(bra_file_t* f)
 {
     char buf[MAX_BUF_SIZE];
 
     // 1. filename size
     uint8_t fn_size = 0;
-    if (fread(&fn_size, sizeof(uint8_t), 1, f) != 1)
+    if (fread(&fn_size, sizeof(uint8_t), 1, f->f) != 1)
     {
     BRA_IO_READ_ERR:
-        cout << format("unable to read {} BRa file", g_bra_file.string()) << endl;
+        cout << format("unable to read {} {} file", f->fn, BRA_NAME) << endl;
         // fclose(f);
         return false;
     }
 
     // 2. filename
-    if (fread(buf, sizeof(uint8_t), fn_size, f) != fn_size)
+    if (fread(buf, sizeof(uint8_t), fn_size, f->f) != fn_size)
         goto BRA_IO_READ_ERR;
 
     buf[fn_size]        = '\0';
@@ -134,12 +134,12 @@ bool bra_file_decode_and_write_to_disk(FILE* f)
 
     // 3. data size
     uintmax_t ds = 0;
-    if (fread(&ds, sizeof(uintmax_t), 1, f) != 1)
+    if (fread(&ds, sizeof(uintmax_t), 1, f->f) != 1)
         goto BRA_IO_READ_ERR;
 
     cout << format("Extracting file: {} ...", out_fn);
-    FILE* f2 = fopen(out_fn.c_str(), "wb");
-    if (f2 == nullptr)
+    bra_file_t f2{};
+    if (!bra_io_open(&f2, out_fn.c_str(), "wb"))
     {
         cerr << format("unable to write file: {}", out_fn.c_str()) << endl;
         goto BRA_IO_READ_ERR;
@@ -149,25 +149,16 @@ bool bra_file_decode_and_write_to_disk(FILE* f)
     for (uintmax_t i = 0; i < ds;)
     {
         uint32_t s = std::min(static_cast<uintmax_t>(MAX_BUF_SIZE), ds - i);
-        if (fread(buf, sizeof(char), s, f) != s)
+        if (!bra_io_copy_file_chunks(&f2, f, s))
         {
-            cerr << format("unable to decode file: {}", out_fn.c_str()) << endl;
-            fclose(f2);
-            return false;
-        }
-
-        if (fwrite(buf, sizeof(char), s, f2) != s)
-        {
-            cerr << format("unable to write file: {}", out_fn.c_str()) << endl;
-            fclose(f2);
-            // fclose(f);
+            bra_io_close(&f2);
             return false;
         }
 
         i += s;
     }
 
-    fclose(f2);
+    bra_io_close(&f2);
     cout << "OK" << endl;
     return true;
 }
@@ -183,20 +174,20 @@ int main(int argc, char* argv[])
 
     // header
     bra_header_t bh{};
-    FILE*        f = bra_file_open_and_read_header(g_bra_file.string().c_str(), &bh);
-    if (f == nullptr)
+    bra_file_t   f{};
+    if (!bra_io_open(&f, g_bra_file.string().c_str(), "rb"))
         return 1;
 
-    cout << format("BRa containing num files: {}", bh.num_files) << endl;
+    cout << format("{} containing num files: {}", BRA_NAME, bh.num_files) << endl;
     for (uint32_t i = 0; i < bh.num_files; i++)
     {
-        if (!bra_file_decode_and_write_to_disk(f))
+        if (!bra_file_decode_and_write_to_disk(&f))
         {
-            fclose(f);
+            bra_io_close(&f);
             return 1;
         }
     }
 
-    fclose(f);
+    bra_io_close(&f);
     return 0;
 }

@@ -148,15 +148,20 @@ FILE* bra_file_open_and_read_footer_header(const char* fn, bra_header_t* out_bh)
     }
 
     // read header and check
-    // TODO: refactor in a read header function alone
-    // duplicated from unbra.cpp:
-    // FILE* bra_file_open_and_read_header(const char* fn, bra_header_t* out_bh)
-    if (fread(out_bh, sizeof(bra_header_t), 1, f) != 1)
+    if (fseek(f, bf.data_offset, SEEK_SET) != 0)
     {
+    BRA_SFX_IO_READ_ERROR:
         cout << format("unable to read {} {} file", fn, BRA_NAME) << endl;
         fclose(f);
         return nullptr;
     }
+
+
+    // TODO: refactor in a read header function alone
+    // duplicated from unbra.cpp:
+    // FILE* bra_file_open_and_read_header(const char* fn, bra_header_t* out_bh)
+    if (fread(out_bh, sizeof(bra_header_t), 1, f) != 1)
+        goto BRA_SFX_IO_READ_ERROR;
 
     // check header magic
     if (out_bh->magic != BRA_MAGIC)
@@ -165,7 +170,6 @@ FILE* bra_file_open_and_read_footer_header(const char* fn, bra_header_t* out_bh)
         fclose(f);
         return nullptr;
     }
-
 
     return f;
 }

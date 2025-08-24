@@ -45,7 +45,7 @@ bool bra_io_open(bra_file_t* bf, const char* fn, const char* mode)
     if (bf->f == NULL)
     {
     BRA_IO_OPEN_ERROR:
-        printf("unable to open file %s\n", fn);
+        printf("ERROR: unable to open file %s\n", fn);
         return false;
     }
 
@@ -114,7 +114,7 @@ bool bra_io_write_header(bra_file_t* bf, const uint32_t num_files)
 
     if (fwrite(&header, sizeof(bra_header_t), 1, bf->f) != 1)
     {
-        printf("unable to write %s %s file\n", bf->fn, BRA_NAME);
+        printf("ERROR: unable to write %s %s file\n", bf->fn, BRA_NAME);
         bra_io_close(bf);
         return false;
     }
@@ -162,6 +162,7 @@ bool bra_io_write_footer(bra_file_t* f, const unsigned long data_offset)
     if (fwrite(&bf, sizeof(bra_footer_t), 1, f->f) != 1)
     {
         printf("ERROR: unable to write footer in %s.\n", f->fn);
+        bra_io_close(f);
         return false;
     }
 
@@ -180,6 +181,8 @@ bool bra_io_copy_file_chunks(bra_file_t* dst, bra_file_t* src, const uintmax_t d
         if (fread(buf, sizeof(char), s, src->f) != s)
         {
             printf("ERROR: unable to read %s file\n", src->fn);
+            bra_io_close(dst);
+            bra_io_close(src);
             return false;
         }
 
@@ -187,6 +190,8 @@ bool bra_io_copy_file_chunks(bra_file_t* dst, bra_file_t* src, const uintmax_t d
         if (fwrite(buf, sizeof(char), s, dst->f) != s)
         {
             printf("ERROR: writing to file: %s\n", dst->fn);
+            bra_io_close(dst);
+            bra_io_close(src);
             return false;
         }
 
@@ -242,8 +247,6 @@ bool bra_io_decode_and_write_to_disk(bra_file_t* f)
 
     if (!bra_io_copy_file_chunks(&f2, f, ds))
     {
-        bra_io_close(f);
-        bra_io_close(&f2);
         free(out_fn);
         return false;
     }

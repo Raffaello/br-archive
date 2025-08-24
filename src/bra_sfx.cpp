@@ -149,58 +149,6 @@ bool bra_file_open_and_read_footer_header(const char* fn, bra_header_t* out_bh, 
     return true;
 }
 
-// bool bra_file_decode_and_write_to_disk(bra_file_t* f)
-// {
-//     char buf[MAX_BUF_SIZE];
-
-// // 1. filename size
-// uint8_t fn_size = 0;
-// if (fread(&fn_size, sizeof(uint8_t), 1, f->f) != 1)
-// {
-// BRA_IO_READ_ERR:
-//     cout << format("unable to read {} {} file", f->fn, BRA_NAME) << endl;
-//     // fclose(f);
-//     return false;
-// }
-
-// // 2. filename
-// if (fread(buf, sizeof(uint8_t), fn_size, f->f) != fn_size)
-//     goto BRA_IO_READ_ERR;
-
-// buf[fn_size]        = '\0';
-// const string out_fn = buf;
-
-// // 3. data size
-// uintmax_t ds = 0;
-// if (fread(&ds, sizeof(uintmax_t), 1, f->f) != 1)
-//     goto BRA_IO_READ_ERR;
-
-// cout << format("Extracting file: {} ...", out_fn);
-// bra_file_t f2{};
-// if (!bra_io_open(&f2, out_fn.c_str(), "wb"))
-// {
-//     cerr << format("unable to write file: {}", out_fn.c_str()) << endl;
-//     goto BRA_IO_READ_ERR;
-// }
-
-// // 4. read and write in chunk data
-// for (uintmax_t i = 0; i < ds;)
-// {
-//     uint32_t s = std::min(static_cast<uintmax_t>(MAX_BUF_SIZE), ds - i);
-//     if (!bra_io_copy_file_chunks(&f2, f, s))
-//     {
-//         bra_io_close(&f2);
-//         return false;
-//     }
-
-// i += s;
-// }
-
-// bra_io_close(&f2);
-// cout << "OK" << endl;
-// return true;
-// }
-
 int main(int argc, char* argv[])
 {
     // TODO: add output directory where to decode

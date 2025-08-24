@@ -140,11 +140,10 @@ bool bra_file_encode_and_write_to_disk(bra_file_t* f, const string& fn)
         return false;
     }
 
-    const bool res = bra_io_copy_file_chunks(f, &f2, ds);
-    bra_io_close(&f2);
-    if (!res)
+    if (!bra_io_copy_file_chunks(f, &f2, ds))
         return false;
 
+    bra_io_close(&f2);
     cout << "OK" << endl;
     return true;
 }
@@ -219,22 +218,15 @@ int main(int argc, char* argv[])
         if (!bra_io_open(&f2, out_fn.c_str(), "rb"))
             goto BRA_SFX_IO_F_ERROR;
 
-        bool res = bra_io_copy_file_chunks(&f, &f2, fs::file_size(out_fn));
-        bra_io_close(&f2);
-        if (!res)
+        if (!bra_io_copy_file_chunks(&f, &f2, fs::file_size(out_fn)))
             goto BRA_SFX_IO_F_ERROR;
 
+        bra_io_close(&f2);
         // write footer
-        bra_footer_t bf = {
-            .magic       = BRA_FOOTER_MAGIC,
-            .data_offset = data_offset,
-        };
-
-        res = bra_io_write_footer(&f, data_offset);
-        bra_io_close(&f);
-        if (!res)
+        if (!bra_io_write_footer(&f, data_offset))
             goto BRA_SFX_IO_ERROR;
 
+        bra_io_close(&f);
         cout << "OK" << endl;
     }
 

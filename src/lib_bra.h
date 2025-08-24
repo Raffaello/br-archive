@@ -123,6 +123,7 @@ bool bra_io_read_footer(bra_file_t* f, bra_footer_t* bf_out);
 
 /**
  * @brief write the footer into the file @p f.
+ *        Close the file @p f in case of failure.s
  *
  *
  * @param f
@@ -136,6 +137,7 @@ bool bra_io_write_footer(bra_file_t* f, const unsigned long data_offset);
  * @brief copy the file @src into @dst in a size of chunks of #MAX_BUF_SIZE for @p data_size
  *        the files must be positioned from where to be read for @p src
  *        and where to be written for @p dst
+ *        In case of failure close both file @p dst and @p src
  *
  * @param dst
  * @param src
@@ -147,7 +149,7 @@ bool bra_io_copy_file_chunks(bra_file_t* dst, bra_file_t* src, const uintmax_t d
 
 /**
  * @brief decode the current pointed file contained in @p f and write them to their disk relative location.
- *        In case of error calls @ref bra_io_close with param @p f. Closing the file.
+ *        In case of error calls @ref bra_io_close with param @p f closing it.
  *
  * @param f
  * @return true

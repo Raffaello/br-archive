@@ -72,6 +72,9 @@ bool parse_args(int argc, char* argv[])
             }
 
             fs::path p = s;
+
+            // check file path
+            // TODO: missing to check absolute path
             if (p.generic_string().starts_with("../"))
             {
                 cerr << format("ERROR: parent directory detected: {}", s) << endl;

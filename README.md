@@ -14,11 +14,11 @@ The self extracting archive will be done in the following formats:
 
 ### EXE
 
-an `.EXE` SFX will be generated for MS Windows oriented.
+an `.EXE` SFX will be generated for MS Windows oriented systems.
 
 
 
 ### ELF
 
-an `.BRa.sfx` or `.BRe` (?)
+an `.BRx` SFX will be generated for Linux oriented systems.
 

@@ -14,7 +14,7 @@ namespace fs = std::filesystem;
 
 fs::path g_bra_file;
 
-bool isElf(const char* fn)
+bool bra_isElf(const char* fn)
 {
     FILE* f = fopen(fn, "rb");
     if (f == nullptr)
@@ -37,7 +37,7 @@ bool isElf(const char* fn)
     return magic[0] == 0x7F && magic[1] == 'E' && magic[2] == 'L' && magic[3] == 'F';
 }
 
-bool isExe(const char* fn)
+bool bra_isExe(const char* fn)
 {
     FILE* f = fopen(fn, "rb");
     if (f == nullptr)
@@ -82,11 +82,11 @@ void help()
 bool parse_args(int argc, char* argv[])
 {
     // Supporting only EXE and ELF file type for now
-    if (isElf(argv[0]))
+    if (bra_isElf(argv[0]))
     {
         cout << "[debug] ELF file detected" << endl;
     }
-    else if (isExe(argv[0]))
+    else if (bra_isExe(argv[0]))
     {
         cout << "[debug] EXE file detected" << endl;
     }
@@ -156,8 +156,6 @@ int main(int argc, char* argv[])
     // TODO: ask to overwrite files, etc..
     // TODO: all these functionalities are common among the utilities
 
-    // TODO: this utility shares functionalties with 'unbra'
-
     if (!parse_args(argc, argv))
         return 1;
 
@@ -172,8 +170,6 @@ int main(int argc, char* argv[])
         return 1;
 
     // extract payload, encoded data
-    // NOTE: extract payload and copy into a temp file first?
-    // TODO: refactor with unbra
     for (uint32_t i = 0; i < bh.num_files; ++i)
     {
         if (!bra_io_decode_and_write_to_disk(&f))

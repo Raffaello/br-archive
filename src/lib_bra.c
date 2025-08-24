@@ -4,6 +4,16 @@
 #include <string.h>
 #include <stdlib.h>
 
+#define assert_bra_file_t(x) assert((x) != NULL && (x)->f != NULL && (x)->fn != NULL)
+
+static inline uintmax_t min(const uintmax_t a, const uintmax_t b)
+{
+    return a < b ? a : b;
+}
+
+/////////////////////////////////////////////////////////////////////////////
+
+
 /**
  * @brief strdup()
  * @todo remove when switching to C23
@@ -27,11 +37,6 @@ static void bra_io_read_error(bra_file_t* bf)
 {
     printf("ERROR: unable to read %s %s file\n", bf->fn, BRA_NAME);
     bra_io_close(bf);
-}
-
-static inline uintmax_t min(const uintmax_t a, const uintmax_t b)
-{
-    return a < b ? a : b;
 }
 
 bool bra_io_open(bra_file_t* bf, const char* fn, const char* mode)
@@ -79,9 +84,7 @@ void bra_io_close(bra_file_t* bf)
 
 bool bra_io_read_header(bra_file_t* bf, bra_header_t* out_bh)
 {
-    assert(bf != NULL);
-    assert(bf->f != NULL);
-    assert(bf->fn != NULL);
+    assert_bra_file_t(bf);
     assert(out_bh != NULL);
 
     if (fread(out_bh, sizeof(bra_header_t), 1, bf->f) != 1)
@@ -103,9 +106,7 @@ bool bra_io_read_header(bra_file_t* bf, bra_header_t* out_bh)
 
 bool bra_io_write_header(bra_file_t* bf, const uint32_t num_files)
 {
-    assert(bf != NULL);
-    assert(bf->f != NULL);
-    assert(bf->fn != NULL);
+    assert_bra_file_t(bf);
 
     const bra_header_t header = {
         .magic     = BRA_MAGIC,
@@ -124,9 +125,7 @@ bool bra_io_write_header(bra_file_t* bf, const uint32_t num_files)
 
 bool bra_io_read_footer(bra_file_t* f, bra_footer_t* bf_out)
 {
-    assert(f != NULL);
-    assert(f->f != NULL);
-    assert(f->fn != NULL);
+    assert_bra_file_t(f);
     assert(bf_out != NULL);
 
     memset(bf_out, 0, sizeof(bra_footer_t));
@@ -149,9 +148,7 @@ bool bra_io_read_footer(bra_file_t* f, bra_footer_t* bf_out)
 
 bool bra_io_write_footer(bra_file_t* f, const unsigned long data_offset)
 {
-    assert(f != NULL);
-    assert(f->f != NULL);
-    assert(f->fn != NULL);
+    assert_bra_file_t(f);
     assert(data_offset > 0);
 
     bra_footer_t bf = {
@@ -171,6 +168,9 @@ bool bra_io_write_footer(bra_file_t* f, const unsigned long data_offset)
 
 bool bra_io_copy_file_chunks(bra_file_t* dst, bra_file_t* src, const uintmax_t data_size)
 {
+    assert_bra_file_t(dst);
+    assert_bra_file_t(src);
+
     char buf[MAX_BUF_SIZE];
 
     for (uintmax_t i = 0; i < data_size;)
@@ -203,11 +203,10 @@ bool bra_io_copy_file_chunks(bra_file_t* dst, bra_file_t* src, const uintmax_t d
 
 bool bra_io_decode_and_write_to_disk(bra_file_t* f)
 {
-    assert(f != NULL);
-    assert(f->f != NULL);
-    assert(f->fn != NULL);
+    assert_bra_file_t(f);
 
     char buf[MAX_BUF_SIZE];
+
     // 1. filename size
     uint8_t fn_size = 0;
     if (fread(&fn_size, sizeof(uint8_t), 1, f->f) != 1)

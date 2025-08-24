@@ -46,3 +46,9 @@ set_target_properties(bra_sfx PROPERTIES
      OUTPUT_NAME "bra"
      SUFFIX ".sfx"
 )
+
+# if(BUILD_TESTING)
+#     include (CTest)
+#     enable_testing()
+#     add_subdirectory(test)
+# endif()

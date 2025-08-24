@@ -111,7 +111,7 @@ bool bra_file_encode_and_write_to_disk(bra_file_t* f, const string& fn)
     // 1. file name length
     if (fn.size() > std::numeric_limits<uint8_t>::max())
     {
-        cerr << std::format("filename too long: {}", fn) << endl;
+        cerr << std::format("ERROR: filename too long: {}", fn) << endl;
         return false;
     }
 
@@ -119,7 +119,8 @@ bool bra_file_encode_and_write_to_disk(bra_file_t* f, const string& fn)
     if (fwrite(&fn_size, sizeof(uint8_t), 1, f->f) != 1)
     {
     BRA_IO_ENCODE_WRITE_ERR:
-        cerr << format("error writing file: {}", fn) << endl;
+        cerr << format("ERROR: writing file: {}", fn) << endl;
+        bra_io_close(f);
         return false;
     }
 
@@ -136,7 +137,7 @@ bool bra_file_encode_and_write_to_disk(bra_file_t* f, const string& fn)
     bra_file_t f2{};
     if (!bra_io_open(&f2, fn.c_str(), "rb"))
     {
-        cerr << format("unable to open file: {}", fn) << endl;
+        bra_io_close(f);
         return false;
     }
 
@@ -174,10 +175,7 @@ int main(int argc, char* argv[])
     {
         const string fn = fs::relative(fn_).generic_string();
         if (!bra_file_encode_and_write_to_disk(&f, fn))
-        {
-            bra_io_close(&f);
             return 1;
-        }
     }
 
     bra_io_close(&f);
@@ -201,7 +199,7 @@ int main(int argc, char* argv[])
         if (!bra_io_open(&f, sfx_path.string().c_str(), "rb+"))
             goto BRA_SFX_IO_ERROR;
 
-        if (fseek(f.f, 0, SEEK_END) != 0)
+        if (fseeko(f.f, 0, SEEK_END) != 0)
         {
         BRA_SFX_IO_F_ERROR:
             bra_io_close(&f);
@@ -209,8 +207,8 @@ int main(int argc, char* argv[])
         }
 
         // save the start of the payload for later...
-        const unsigned long data_offset = ftell(f.f);
-        if (data_offset == -1L)
+        const _off_t data_offset = ftello(f.f);
+        if (data_offset < 0L)
             goto BRA_SFX_IO_ERROR;
 
         // append bra file
@@ -223,7 +221,7 @@ int main(int argc, char* argv[])
 
         bra_io_close(&f2);
         // write footer
-        if (!bra_io_write_footer(&f, data_offset))
+        if (!bra_io_write_footer(&f, static_cast<uint64_t long>(data_offset)))
             goto BRA_SFX_IO_ERROR;
 
         bra_io_close(&f);

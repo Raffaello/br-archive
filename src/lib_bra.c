@@ -3,10 +3,11 @@
 #include <assert.h>
 #include <string.h>
 #include <stdlib.h>
+#include <limits.h>
 
 #define assert_bra_file_t(x) assert((x) != NULL && (x)->f != NULL && (x)->fn != NULL)
 
-static inline uintmax_t min(const uintmax_t a, const uintmax_t b)
+static inline uintmax_t bra_min(const uintmax_t a, const uintmax_t b)
 {
     return a < b ? a : b;
 }
@@ -33,7 +34,7 @@ static char* bra_strdup(const char* str)
     return c;
 }
 
-static void bra_io_read_error(bra_file_t* bf)
+void bra_io_read_error(bra_file_t* bf)
 {
     printf("ERROR: unable to read %s %s file\n", bf->fn, BRA_NAME);
     bra_io_close(bf);
@@ -45,21 +46,13 @@ bool bra_io_open(bra_file_t* bf, const char* fn, const char* mode)
     assert(fn != NULL);
     assert(mode != NULL);
 
-    bf->fn = NULL;
-    bf->f  = fopen(fn, mode);
-    if (bf->f == NULL)
+    bf->f  = fopen(fn, mode);    // open file
+    bf->fn = bra_strdup(fn);     // copy filename
+    if (bf->f == NULL || bf->fn == NULL)
     {
-    BRA_IO_OPEN_ERROR:
         printf("ERROR: unable to open file %s\n", fn);
-        return false;
-    }
-
-    // copy filename
-    bf->fn = bra_strdup(fn);
-    if (bf->fn == NULL)
-    {
         bra_io_close(bf);
-        goto BRA_IO_OPEN_ERROR;
+        return false;
     }
 
     return true;
@@ -96,7 +89,7 @@ bool bra_io_read_header(bra_file_t* bf, bra_header_t* out_bh)
     // check header magic
     if (out_bh->magic != BRA_MAGIC)
     {
-        printf("ERROR: Not valid %s file\n", BRA_FILE_EXT);
+        printf("ERROR: Not valid %s file\n", BRA_NAME);
         bra_io_close(bf);
         return false;
     }
@@ -146,7 +139,7 @@ bool bra_io_read_footer(bra_file_t* f, bra_footer_t* bf_out)
     return true;
 }
 
-bool bra_io_write_footer(bra_file_t* f, const unsigned long data_offset)
+bool bra_io_write_footer(bra_file_t* f, const uint64_t data_offset)
 {
     assert_bra_file_t(f);
     assert(data_offset > 0);
@@ -175,7 +168,7 @@ bool bra_io_copy_file_chunks(bra_file_t* dst, bra_file_t* src, const uintmax_t d
 
     for (uintmax_t i = 0; i < data_size;)
     {
-        uint32_t s = min(MAX_BUF_SIZE, data_size - i);
+        uint32_t s = bra_min(MAX_BUF_SIZE, data_size - i);
 
         // read source chunk
         if (fread(buf, sizeof(char), s, src->f) != s)
@@ -205,7 +198,7 @@ bool bra_io_decode_and_write_to_disk(bra_file_t* f)
 {
     assert_bra_file_t(f);
 
-    char out_fn[sizeof(uint8_t) + 1];
+    char out_fn[UINT8_MAX + 1];
 
     // 1. filename size
     uint8_t fn_size = 0;

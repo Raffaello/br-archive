@@ -12,14 +12,14 @@ using namespace std;
 
 namespace fs = std::filesystem;
 
-fs::path g_bra_file;
+// fs::path g_bra_file;
 
 bool bra_isElf(const char* fn)
 {
     FILE* f = fopen(fn, "rb");
     if (f == nullptr)
     {
-        cerr << format("unable to open file {}", fn) << endl;
+        cerr << format("ERROR: unable to open file {}", fn) << endl;
         return false;
     }
 
@@ -28,12 +28,12 @@ bool bra_isElf(const char* fn)
     char          magic[MAGIC_SIZE];
     if (fread(magic, sizeof(char), MAGIC_SIZE, f) != MAGIC_SIZE)
     {
-        cerr << format("unable to read file {}", fn) << endl;
+        fclose(f);
+        cerr << format("ERROR: unable to read file {}", fn) << endl;
         return false;
     }
 
     fclose(f);
-
     return magic[0] == 0x7F && magic[1] == 'E' && magic[2] == 'L' && magic[3] == 'F';
 }
 
@@ -42,7 +42,7 @@ bool bra_isExe(const char* fn)
     FILE* f = fopen(fn, "rb");
     if (f == nullptr)
     {
-        cerr << format("unable to open file {}", fn) << endl;
+        cerr << format("ERROR: unable to open file {}", fn) << endl;
         return false;
     }
 
@@ -51,13 +51,13 @@ bool bra_isExe(const char* fn)
     char          magic[MAGIC_SIZE];
     if (fread(magic, sizeof(char), MAGIC_SIZE, f) != MAGIC_SIZE)
     {
-        cerr << format("unable to read file {}", fn) << endl;
+        fclose(f);
+        cerr << format("ERROR: unable to read file {}", fn) << endl;
         return false;
     }
 
     fclose(f);
-
-    return magic[0] = 'M' && magic[1] == 'Z';
+    return magic[0] == 'M' && magic[1] == 'Z';
 }
 
 void help()
@@ -84,16 +84,16 @@ bool parse_args(int argc, char* argv[])
     // Supporting only EXE and ELF file type for now
     if (bra_isElf(argv[0]))
     {
-        cout << "[debug] ELF file detected" << endl;
+        cout << "ELF file detected" << endl;
     }
     else if (bra_isExe(argv[0]))
     {
-        cout << "[debug] EXE file detected" << endl;
+        cout << "EXE file detected" << endl;
     }
     else
     {
-        cerr << format("unsupported file detected: {}", argv[0]) << endl;
-        return 1;
+        cerr << format("ERROR: unsupported file detected: {}", argv[0]) << endl;
+        return false;
     }
 
     for (int i = 1; i < argc; i++)
@@ -106,7 +106,7 @@ bool parse_args(int argc, char* argv[])
         }
         else
         {
-            cout << format("unknow argument: {}", s) << endl;
+            cerr << format("ERROR: unknow argument: {}", s) << endl;
             return false;
         }
     }
@@ -122,7 +122,7 @@ bool bra_file_open_and_read_footer_header(const char* fn, bra_header_t* out_bh, 
         return false;
     }
 
-    if (fseek(f->f, -1L * static_cast<long>(sizeof(bra_footer_t)), SEEK_END) != 0)
+    if (fseeko(f->f, -1L * static_cast<long>(sizeof(bra_footer_t)), SEEK_END) != 0)
     {
     BRA_IO_READ_ERROR:
         cerr << format("unable to read file {}", fn) << endl;
@@ -135,11 +135,10 @@ bool bra_file_open_and_read_footer_header(const char* fn, bra_header_t* out_bh, 
         return false;
 
     // read header and check
-    if (fseek(f->f, bf.data_offset, SEEK_SET) != 0)
+    if (fseeko(f->f, bf.data_offset, SEEK_SET) != 0)
     {
     BRA_SFX_IO_READ_ERROR:
-        cout << format("unable to read {} {} file", fn, BRA_NAME) << endl;
-        bra_io_close(f);
+        bra_io_read_error(f);
         return false;
     }
 

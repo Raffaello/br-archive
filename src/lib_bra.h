@@ -22,14 +22,14 @@ extern "C" {
 #define BRA_NAME         "BRa"
 #define BRA_SFX_FILENAME "bra.sfx"    // @todo: generate it through cmake conf
 
-#ifdef _linux_
+#if defined(__APPLE__) || defined(__linux__) || defined(__linux)
 #define BRA_SFX_FILE_EXT ".brx"
-#elif __WIN32__
+#elif defined(_WIN32) || defined(_WIN64)
 #define BRA_SFX_FILE_EXT ".exe"
 #else
 #error "unsupported platform" // maybe it could work anyway, but did't test it.
 #endif
-// #define BRA_SFX_FILE_TMP ".tmp"
+
 
 #define MAX_BUF_SIZE (1024 * 1024)    // 1M
 
@@ -55,8 +55,8 @@ typedef struct bra_header_t
 
 typedef struct bra_footer_t
 {
-    uint32_t      magic;          //!< 'BR-x'
-    unsigned long data_offset;    //!< where the data chunk start from the beginning of the file
+    uint32_t magic;          //!< 'BR-x'
+    uint64_t data_offset;    //!< where the data chunk start from the beginning of the file
 } bra_footer_t;
 
 typedef struct bra_file_t
@@ -68,20 +68,27 @@ typedef struct bra_file_t
 // bool bra_encode(const char* file, const uint8_t buf);
 
 /**
+ * @brief print error message and close file.
+ *
+ * @param bf
+ */
+void bra_io_read_error(bra_file_t* bf);
+
+/**
  * @brief open the file @p fn in the @p mode
  *        the @p will be overwritten.
- *        if it fails there is no need to call @ref bra_io_close
+ *        On failure there is no need to call @ref bra_io_close
  *
  * @param bf
  * @param fn
  * @param mode
- * @return true
- * @return false
+ * @return true on success
+ * @return false on error
  */
 bool bra_io_open(bra_file_t* bf, const char* fn, const char* mode);
 
 /**
- * @brief close file, free internal memory and set internal values to NULL.
+ * @brief close file, free internal memory and set fields to NULL.
  *
  * @param bf
  */
@@ -89,19 +96,19 @@ void bra_io_close(bra_file_t* bf);
 
 /**
  * @brief read the header from the give @p bf file.
- *        the file must be position at the beginning of the header.
- *        In case of error return false and close the file.
+ *        the file must be positioned at the beginning of the header.
+ *        On error returns false and closes the file via @ref bra_io_close.
  *
  * @param bf
  * @param out_bh
- * @return true when successful
+ * @return true on success
  * @return false on error
  */
 bool bra_io_read_header(bra_file_t* bf, bra_header_t* out_bh);
 
 /**
- * @brief write the bra header into @p bf with @p num_files.
- *        In case of error will close @p bf calling @ref bra_io_close
+ * @brief Write the bra header into @p bf with @p num_files.
+ *        On error closes @p bf via @ref bra_io_close
  *
  * @param bf
  * @param num_files
@@ -111,8 +118,8 @@ bool bra_io_read_header(bra_file_t* bf, bra_header_t* out_bh);
 bool bra_io_write_header(bra_file_t* bf, const uint32_t num_files);
 
 /**
- * @brief read thr bra footer into @p bf_out.
- *        in case of error call @ref bra_io_close with @p f
+ * @brief Read thr bra footer into @p bf_out.
+ *        On error calls @ref bra_io_close with @p f
  *
  * @param f
  * @param bf_out
@@ -122,8 +129,8 @@ bool bra_io_write_header(bra_file_t* bf, const uint32_t num_files);
 bool bra_io_read_footer(bra_file_t* f, bra_footer_t* bf_out);
 
 /**
- * @brief write the footer into the file @p f.
- *        Close the file @p f in case of failure.s
+ * @brief Write the footer into the file @p f.
+ *        On Error closes the file @p f via @ref bra_io_close
  *
  *
  * @param f
@@ -131,13 +138,12 @@ bool bra_io_read_footer(bra_file_t* f, bra_footer_t* bf_out);
  * @return true
  * @return false
  */
-bool bra_io_write_footer(bra_file_t* f, const unsigned long data_offset);
+bool bra_io_write_footer(bra_file_t* f, const uint64_t data_offset);
 
 /**
- * @brief copy the file @src into @dst in a size of chunks of #MAX_BUF_SIZE for @p data_size
- *        the files must be positioned from where to be read for @p src
- *        and where to be written for @p dst
- *        In case of failure close both file @p dst and @p src
+ * @brief Copy from @p src to @p dst in chunks size of #MAX_BUF_SIZE for @p data_size bytes
+ *        the files must be positioned at the correct read/write offsets.
+ *        On failure closes both @p dst and @p src
  *
  * @param dst
  * @param src
@@ -148,12 +154,12 @@ bool bra_io_write_footer(bra_file_t* f, const unsigned long data_offset);
 bool bra_io_copy_file_chunks(bra_file_t* dst, bra_file_t* src, const uintmax_t data_size);
 
 /**
- * @brief decode the current pointed file contained in @p f and write them to their disk relative location.
- *        In case of error calls @ref bra_io_close with param @p f closing it.
+ * @brief Decode the current pointed internal file contained in @p f and write it to its relative path on disk.
+ *        On error calls @ref bra_io_close with param @p f closing it.
  *
  * @param f
- * @return true
- * @return false
+ * @return true on success
+ * @return false on error
  */
 bool bra_io_decode_and_write_to_disk(bra_file_t* f);
 

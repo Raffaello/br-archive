@@ -7,18 +7,34 @@ extern "C" {
 
 #include <stdint.h>
 #include <stdbool.h>
-
-// #include <stdio.h>
+#include <stdio.h>
 
 
 /**
- * @brief
+ * @brief Support only little endian machine at the moment
  *
  * @todo issue with big endian (not supporting it for now)
+ * @todo can use a magic string instead so it will be endian independent
  */
-#define BRA_MAGIC    0x612D5242    // 0x61='a' 0x2D='-' 0x52='R' 0x42='B'
-#define BRA_FILE_EXT ".BRa"
-#define BRA_NAME     "BRa"
+#if defined(__BYTE_ORDER__) && (__BYTE_ORDER__ == __ORDER_BIG_ENDIAN__)
+#error "Big-endian is not supported yet; add endian-neutral (LE) serialization."
+#endif
+
+
+#define BRA_MAGIC        0x612D5242    // 0x61='a' 0x2D='-' 0x52='R' 0x42='B'
+#define BRA_FOOTER_MAGIC 0x782D5242    // 0x78='x' 0x2D='-' 0x52='R' 0x42='B'
+#define BRA_FILE_EXT     ".BRa"
+#define BRA_NAME         "BRa"
+#define BRA_SFX_FILENAME "bra.sfx"    // @todo: generate it through cmake conf
+
+#if defined(__APPLE__) || defined(__linux__) || defined(__linux)
+#define BRA_SFX_FILE_EXT ".brx"
+#elif defined(_WIN32) || defined(_WIN64)
+#define BRA_SFX_FILE_EXT ".exe"
+#else
+#error "unsupported platform" // maybe it could work anyway, but did't test it.
+#endif
+
 
 #define MAX_BUF_SIZE (1024 * 1024)    // 1M
 
@@ -31,19 +47,150 @@ typedef struct bra_file_name_t
 
 typedef struct bra_data_t
 {
-    uintmax_t data_size;
+    uint64_t data_size;
     // uint8_t* data;
 } bra_data_t;
 
+#pragma pack(push, 1)
+
 typedef struct bra_header_t
 {
-    uint32_t magic;        // !< 'BR-a' => 0x41522D61
+    uint32_t magic;        //!< 'BR-a'
     uint32_t num_files;    // just 1 for now
     // bra_file_t* files;
 } bra_header_t;
 
+typedef struct bra_footer_t
+{
+    uint32_t magic;          //!< 'BR-x'
+    int64_t  data_offset;    //!< where the data chunk start from the beginning of the file
+} bra_footer_t;
+
+#pragma pack(pop)
+
+typedef struct bra_file_t
+{
+    FILE* f;
+    char* fn;
+} bra_file_t;
+
 // bool bra_encode(const char* file, const uint8_t buf);
 
+/**
+ * @brief print error message and close file.
+ *
+ * @param bf
+ */
+void bra_io_read_error(bra_file_t* bf);
+
+/**
+ * @brief open the file @p fn in the @p mode
+ *        the @p will be overwritten.
+ *        On failure there is no need to call @ref bra_io_close
+ *
+ * @param bf
+ * @param fn
+ * @param mode
+ * @return true on success
+ * @return false on error
+ */
+bool bra_io_open(bra_file_t* bf, const char* fn, const char* mode);
+
+/**
+ * @brief close file, free internal memory and set fields to NULL.
+ *
+ * @param bf
+ */
+void bra_io_close(bra_file_t* bf);
+
+/**
+ * @brief seek file at position @p offs.
+ *  *
+ * @param f
+ * @param offs
+ * @param origin SEEK_SET, SEEK_CUR, SEEK_END
+ * @return true
+ * @return false
+ */
+bool bra_io_seek(bra_file_t* f, const int64_t offs, const int origin);
+
+/**
+ * @brief tell the file position.
+ *        On error returns -1
+ *
+ * @param f
+ * @return int64_t
+ */
+int64_t bra_io_tell(bra_file_t* f);
+
+/**
+ * @brief read the header from the give @p bf file.
+ *        the file must be positioned at the beginning of the header.
+ *        On error returns false and closes the file via @ref bra_io_close.
+ *
+ * @param bf
+ * @param out_bh
+ * @return true on success
+ * @return false on error
+ */
+bool bra_io_read_header(bra_file_t* bf, bra_header_t* out_bh);
+
+/**
+ * @brief Write the bra header into @p bf with @p num_files.
+ *        On error closes @p bf via @ref bra_io_close
+ *
+ * @param bf
+ * @param num_files
+ * @return true
+ * @return false
+ */
+bool bra_io_write_header(bra_file_t* bf, const uint32_t num_files);
+
+/**
+ * @brief Read thr bra footer into @p bf_out.
+ *        On error calls @ref bra_io_close with @p f
+ *
+ * @param f
+ * @param bf_out
+ * @return true
+ * @return false
+ */
+bool bra_io_read_footer(bra_file_t* f, bra_footer_t* bf_out);
+
+/**
+ * @brief Write the footer into the file @p f.
+ *        On Error closes the file @p f via @ref bra_io_close
+ *
+ *
+ * @param f
+ * @param data_offset
+ * @return true
+ * @return false
+ */
+bool bra_io_write_footer(bra_file_t* f, const int64_t data_offset);
+
+/**
+ * @brief Copy from @p src to @p dst in chunks size of #MAX_BUF_SIZE for @p data_size bytes
+ *        the files must be positioned at the correct read/write offsets.
+ *        On failure closes both @p dst and @p src
+ *
+ * @param dst
+ * @param src
+ * @param data_size
+ * @return true
+ * @return false
+ */
+bool bra_io_copy_file_chunks(bra_file_t* dst, bra_file_t* src, const uint64_t data_size);
+
+/**
+ * @brief Decode the current pointed internal file contained in @p f and write it to its relative path on disk.
+ *        On error calls @ref bra_io_close with param @p f closing it.
+ *
+ * @param f
+ * @return true on success
+ * @return false on error
+ */
+bool bra_io_decode_and_write_to_disk(bra_file_t* f);
 
 #ifdef __cplusplus
 }

@@ -4,8 +4,9 @@ BR-Archive (BRa) is an educational project to compress files with the `DEFLATE` 
 
 The Default extension for the archive format is `.BRa`
 
-> The Focus is to creating self-extracting archives
-> First Phase is just an archive of 1 single file
+> The Focus is to creating self-extracting archives.
+
+> The 1st Phase is just an archive of 1 single file due to CLI parsing arguments limitations.
 
 ## Self-Extracting Archive
 
@@ -13,11 +14,11 @@ The self extracting archive will be done in the following formats:
 
 ### EXE
 
-an `.EXE` SFX will be generated for MS Windows oriented.
+an `.EXE` SFX will be generated for MS Windows oriented systems.
 
 
 
 ### ELF
 
-an `.BRa.sfx` or `.BRe` (?)
+an `.BRx` SFX will be generated for Linux oriented systems.
 

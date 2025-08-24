@@ -36,7 +36,7 @@ set_property(TARGET unbra PROPERTY COMPILE_WARNING_AS_ERROR ON)
 # target_compile_options(bra ...)
 target_link_libraries(unbra PRIVATE lib_bra)
 
-add_executable(bra_sfx src/bra_sfx.c)
+add_executable(bra_sfx src/bra_sfx.cpp)
 set_property(TARGET bra_sfx PROPERTY COMPILE_WARNING_AS_ERROR ON)
 # target_include_directories(bra_sfx PRIVATE)
 # target_sources(bra PRIVATE ...)
@@ -46,3 +46,9 @@ set_target_properties(bra_sfx PROPERTIES
      OUTPUT_NAME "bra"
      SUFFIX ".sfx"
 )
+
+# if(BUILD_TESTING)
+#     include (CTest)
+#     enable_testing()
+#     add_subdirectory(test)
+# endif()

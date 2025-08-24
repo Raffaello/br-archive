@@ -4,6 +4,10 @@
     "dictionaryDefinitions": [],
     "dictionaries": [],
     "words": [
+        "fseeki",
+        "ftelli",
+        "gmock",
+        "gtest",
         "STREQUAL",
         "unbra"
     ],

@@ -8,6 +8,7 @@
 #include <list>
 #include <algorithm>
 #include <limits>
+#include <system_error>
 
 #include <cstdint>
 #include <cstdio>
@@ -71,6 +72,16 @@ bool parse_args(int argc, char* argv[])
                 return false;
             }
 
+            fs::path p = s;
+
+            // check file path
+            // TODO: missing to check absolute path
+            if (p.generic_string().starts_with("../"))
+            {
+                cerr << format("ERROR: parent directory detected: {}", s) << endl;
+                return false;
+            }
+
             g_files.push_back(s);
         }
         else
@@ -86,93 +97,66 @@ bool parse_args(int argc, char* argv[])
         return false;
     }
 
+    if (g_sfx)
+    {
+        // locate sfx bin
+        if (!fs::exists(BRA_SFX_FILENAME))
+        {
+            cerr << "unable to find BRa-SFX module" << endl;
+            return false;
+        }
+    }
+
+    if (g_files.size() > numeric_limits<uint32_t>::max())
+    {
+        cerr << format("Too many files, not supported yet: {}/{}", g_files.size(), numeric_limits<uint32_t>::max());
+        return false;
+    }
+
     return true;
 }
 
-FILE* bra_file_open_and_write_header(const char* fn)
+bool bra_file_encode_and_write_to_disk(bra_file_t* f, const string& fn)
 {
-    FILE* f = fopen(fn, "wb");
-    if (f == nullptr)
-    {
-        cout << format("unable to write {} {} file", fn, BRA_NAME) << endl;
-        return nullptr;
-    }
-
-    bra_header_t header = {
-        .magic     = BRA_MAGIC,
-        .num_files = static_cast<uint32_t>(g_files.size()),
-    };
-
-    if (fwrite(&header, sizeof(bra_header_t), 1, f) != 1)
-    {
-        cout << format("unable to write {} {} file", fn, BRA_NAME) << endl;
-        fclose(f);
-        return nullptr;
-    }
-
-    return f;
-}
-
-bool bra_file_encode_and_write_to_disk(FILE* f, const string& fn)
-{
-    char buf[MAX_BUF_SIZE];
-
     cout << format("Archiving File: {}...", fn);
     // 1. file name length
     if (fn.size() > std::numeric_limits<uint8_t>::max())
     {
-        cerr << std::format("filename too long: {}", fn) << endl;
+        cerr << std::format("ERROR: filename too long: {}", fn) << endl;
         return false;
     }
 
     const uint8_t fn_size = static_cast<uint8_t>(fn.size());
-    if (fwrite(&fn_size, sizeof(uint8_t), 1, f) != 1)
+    if (fwrite(&fn_size, sizeof(uint8_t), 1, f->f) != 1)
     {
     BRA_IO_ENCODE_WRITE_ERR:
-        cerr << format("error writing file: {}", fn) << endl;
+        cerr << format("ERROR: writing file: {}", fn) << endl;
+        bra_io_close(f);
         return false;
     }
 
     // 2. file name
-    if (fwrite(fn.c_str(), sizeof(char), fn_size, f) != fn_size)
+    if (fwrite(fn.c_str(), sizeof(char), fn_size, f->f) != fn_size)
         goto BRA_IO_ENCODE_WRITE_ERR;
 
     // 3. data size
-    const uintmax_t ds = fs::file_size(fn);
-    if (fwrite(&ds, sizeof(uintmax_t), 1, f) != 1)
+    std::error_code ec;
+    const uint64_t  ds = fs::file_size(fn, ec);
+    if (ec || fwrite(&ds, sizeof(uint64_t), 1, f->f) != 1)
         goto BRA_IO_ENCODE_WRITE_ERR;
 
     // 4. data
-    FILE* f2 = fopen(fn.c_str(), "rb");
-    if (f2 == nullptr)
+    bra_file_t f2{};
+    if (!bra_io_open(&f2, fn.c_str(), "rb"))
     {
-        cerr << format("unable to open file: {}", fn) << endl;
+        bra_io_close(f);
         return false;
     }
 
-    for (uintmax_t i = 0; i < ds;)
-    {
-        uint32_t s = std::min(static_cast<uintmax_t>(MAX_BUF_SIZE), ds - i);
+    if (!bra_io_copy_file_chunks(f, &f2, ds))
+        return false;
 
-        // read source chunk
-        if (fread(buf, sizeof(char), s, f2) != s)
-        {
-            cout << format("unable to read {} file", fn) << endl;
-            fclose(f2);
-            return false;
-        }
-
-        // write source chunk
-        if (fwrite(buf, sizeof(char), s, f) != s)
-        {
-            fclose(f2);
-            goto BRA_IO_ENCODE_WRITE_ERR;
-        }
-
-        i += s;
-    }
-
-    fclose(f2);
+    bra_io_close(&f2);
     cout << "OK" << endl;
     return true;
 }
@@ -184,32 +168,79 @@ int main(int argc, char* argv[])
 
     // header
     fs::path p = g_files.front();
+
     // adjust input file extension
     if (p.extension() != BRA_FILE_EXT)
         p += BRA_FILE_EXT;
 
-    string out_fn = p.generic_string();    // TODO: add output file without extension
+    string     out_fn = p.generic_string();    // TODO: add output file without extension
+    bra_file_t f{};
 
-    FILE* f = bra_file_open_and_write_header(out_fn.c_str());
-    if (f == nullptr)
+    // TODO: check if the file exists and ask to overwrite
+    if (!bra_io_open(&f, out_fn.c_str(), "wb"))
+        return 1;
+
+    if (!bra_io_write_header(&f, static_cast<uint32_t>(g_files.size())))
         return 1;
 
     for (const auto& fn_ : g_files)
     {
-        const string fn = fn_.generic_string();
-        if (!bra_file_encode_and_write_to_disk(f, fn))
-        {
-            fclose(f);
+        const string fn = fs::relative(fn_).generic_string();
+
+        if (!bra_file_encode_and_write_to_disk(&f, fn))
             return 1;
-        }
     }
 
-    fclose(f);
+    bra_io_close(&f);
 
     if (g_sfx)
     {
-        cout << "SFX NOT IMPLEMENTED YET" << endl;
-        return 3;
+        fs::path sfx_path  = p;
+        sfx_path          += BRA_SFX_FILE_EXT;
+
+        cout << format("creating Self-extracting archive {}...", sfx_path.string());
+
+        // TODO: ask to overwrite instead
+        if (!fs::copy_file(BRA_SFX_FILENAME, sfx_path, fs::copy_options::overwrite_existing))
+        {
+        BRA_SFX_IO_ERROR:
+            cerr << "unable to create a BRa-SFX file" << endl;
+            return 2;
+        }
+
+        bra_file_t f{};
+        if (!bra_io_open(&f, sfx_path.string().c_str(), "rb+"))
+            goto BRA_SFX_IO_ERROR;
+
+        if (!bra_io_seek(&f, 0, SEEK_END))
+        {
+        BRA_SFX_IO_F_ERROR:
+            bra_io_close(&f);
+            goto BRA_SFX_IO_ERROR;
+        }
+
+        // save the start of the payload for later...
+        const int64_t data_offset = bra_io_tell(&f);
+        if (data_offset < 0L)
+            goto BRA_SFX_IO_F_ERROR;
+
+        // append bra file
+        bra_file_t f2{};
+        if (!bra_io_open(&f2, out_fn.c_str(), "rb"))
+            goto BRA_SFX_IO_F_ERROR;
+
+        error_code ec;
+        auto       file_size = fs::file_size(out_fn, ec);
+        if (ec || !bra_io_copy_file_chunks(&f, &f2, file_size))
+            goto BRA_SFX_IO_F_ERROR;
+
+        bra_io_close(&f2);
+        // write footer
+        if (!bra_io_write_footer(&f, data_offset))
+            goto BRA_SFX_IO_ERROR;
+
+        bra_io_close(&f);
+        cout << "OK" << endl;
     }
 
     return 0;

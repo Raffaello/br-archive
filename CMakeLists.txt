@@ -17,37 +17,28 @@ configure_file(src/version.h.in src/version.h)
 add_library(lib_bra STATIC src/lib_bra.c)
 set_property(TARGET lib_bra PROPERTY COMPILE_WARNING_AS_ERROR ON)
 target_include_directories(lib_bra 
-    PRIVATE
+    PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/src> # for configure_file (version.h)
         ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
 
 add_executable(bra src/bra.cpp)
 set_property(TARGET bra PROPERTY COMPILE_WARNING_AS_ERROR ON)
-target_include_directories(bra PRIVATE
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/src> # for configure_file (version.h)
-    ${CMAKE_CURRENT_SOURCE_DIR}/src
-)
+# target_include_directories(bra PRIVATE)
 # target_sources(bra PRIVATE ...)
 # target_compile_options(bra ...)
 target_link_libraries(bra PRIVATE lib_bra)
 
 add_executable(unbra src/unbra.cpp)
 set_property(TARGET unbra PROPERTY COMPILE_WARNING_AS_ERROR ON)
-target_include_directories(unbra PRIVATE
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/src> # for configure_file (version.h)
-    ${CMAKE_CURRENT_SOURCE_DIR}/src
-)
+# target_include_directories(unbra PRIVATE)
 # target_sources(bra PRIVATE ...)
 # target_compile_options(bra ...)
 target_link_libraries(unbra PRIVATE lib_bra)
 
 add_executable(bra_sfx src/bra_sfx.c)
 set_property(TARGET bra_sfx PROPERTY COMPILE_WARNING_AS_ERROR ON)
-target_include_directories(bra_sfx PRIVATE
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/src> # for configure_file (version.h)
-    ${CMAKE_CURRENT_SOURCE_DIR}/src
-)
+# target_include_directories(bra_sfx PRIVATE)
 # target_sources(bra PRIVATE ...)
 # target_compile_options(bra ...)
 target_link_libraries(bra_sfx PRIVATE lib_bra)

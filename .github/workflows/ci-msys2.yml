@@ -1,0 +1,63 @@
+name: ci-msys2
+on:
+  # release:
+  #   types: [created]
+  pull_request:
+    branches: [main]
+    paths-ignore:
+      - "doc/**"
+      - ".gitignore"
+      - ".gitattributes"
+      - "README.md"
+      - "LICENSE"
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        build_type: [Debug, Release]
+        os: ["2022"]
+    name: Build Windows
+    runs-on: windows-${{ matrix.os }}
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: UCRT64
+          update: true
+          install: |
+            base-devel mingw-w64-ucrt-x86_64-toolchain
+            git
+            mingw-w64-ucrt-x86_64-gcc
+            mingw-w64-ucrt-x86_64-ninja
+            mingw-w64-ucrt-x86_64-cmake
+      - name: create build dir
+        run: mkdir build
+      - name: cmake generator
+        run: |
+          cmake -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} ..
+        working-directory: build
+      - name: cmake build
+        run: |
+          cmake --build . --config=${{ matrix.build_type }} -j4
+        working-directory: build
+      - name: CTest
+        run: ctest --output-on-failure
+        working-directory: build
+      # - name: cmake install
+      #   run: cmake --build . --target install --config ${{ matrix.build_type }} -j4
+      #   working-directory: build
+      # - name: cmake package
+      #   run: cmake --build . --target package --config ${{ matrix.build_type }} -j4
+      #   working-directory: build
+      # - name: Release
+      #   uses: softprops/action-gh-release@v2
+      #   if: startsWith(github.ref, 'refs/tags/')
+      #   with:
+      #       generate_release_notes: true
+      #       prerelease: false
+      #       files: "build/*.zip"

@@ -47,8 +47,8 @@ set_target_properties(bra_sfx PROPERTIES
      SUFFIX ".sfx"
 )
 
-# if(BUILD_TESTING)
-#     include (CTest)
-#     enable_testing()
-#     add_subdirectory(test)
-# endif()
+if(BUILD_TESTING)
+    include (CTest)
+    enable_testing()
+    add_subdirectory(test)
+endif()

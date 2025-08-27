@@ -10,6 +10,13 @@
 
 namespace fs = std::filesystem;
 
+#if defined(__unix__) || defined(__APPLE__)
+constexpr const std::string CMD_PREFIX = "./";
+#else
+constexpr const std::string CMD_PREFIX = "";
+
+#endif
+
 bool AreFilesContentEquals(const std::filesystem::path& file1, const std::filesystem::path& file2)
 {
     // Open both files in binary mode
@@ -35,7 +42,7 @@ bool AreFilesContentEquals(const std::filesystem::path& file1, const std::filesy
     {
         if (ch1 != ch2)
         {
-            std::cout << std::format("'{}' != '{}'", ch1, ch2) << std::endl;
+            std::cout << std::format("'{}' != '{}", ch1, ch2) << std::endl;
             return false;    // Files are different
         }
     }
@@ -48,8 +55,8 @@ bool AreFilesContentEquals(const std::filesystem::path& file1, const std::filesy
 
 int test_bra_unbra()
 {
-    const std::string bra      = "bra";
-    const std::string unbra    = "unbra";
+    const std::string bra      = CMD_PREFIX + "bra";
+    const std::string unbra    = CMD_PREFIX + "unbra";
     const std::string in_file  = "./test.txt";
     const std::string out_file = "./test.txt.BRa";
     const std::string exp_file = "./test.txt.exp";
@@ -84,10 +91,10 @@ int test_bra_unbra()
 
 int test_bra_sfx()
 {
-    const std::string bra = "bra --sfx";
+    const std::string bra = CMD_PREFIX + "bra --sfx";
     // const std::string bra_sfx  = "test.txt.BRa" BRA_SFX_FILE_EXT;
     const std::string in_file  = "./test.txt";
-    const std::string out_file = "test.txt.BRa" BRA_SFX_FILE_EXT;
+    const std::string out_file = CMD_PREFIX + "test.txt.BRa" BRA_SFX_FILE_EXT;
     const std::string exp_file = "./test.txt.exp";
 
     if (fs::exists(out_file))

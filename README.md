@@ -8,8 +8,9 @@ The Default extension for the archive format is `.BRa`
 
 > The 1st Phase is just an archive of 1 single file due to CLI parsing arguments limitations.
 
-the current version implements only a single file archive to set up the foundations of
-encoding, decoding and self-extracting.
+The actual version doesn't implement wildcards input for the files selections, but manually each file must be specified.
+
+This is just the foundations of encoding, decoding and self-extracting archives.
 
 ## Self-Extracting Archive
 

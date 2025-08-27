@@ -240,6 +240,16 @@ int main(int argc, char* argv[])
             goto BRA_SFX_IO_ERROR;
 
         bra_io_close(&f);
+
+// add executable permission on UNIX
+#if defined(__unix__) || defined(__APPLE__)
+        fs::permissions(sfx_path,
+                        fs::perms::owner_exec | fs::perms::owner_read | fs::perms::owner_write |
+                            fs::perms::group_exec | fs::perms::group_read |
+                            fs::perms::others_exec | fs::perms::others_read,
+                        fs::perm_options::add);
+#endif
+
         cout << "OK" << endl;
     }
 

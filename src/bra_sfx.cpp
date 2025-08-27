@@ -37,7 +37,7 @@ bool bra_isElf(const char* fn)
     return magic[0] == 0x7F && magic[1] == 'E' && magic[2] == 'L' && magic[3] == 'F';
 }
 
-bool bra_isExe(const char* fn)
+bool bra_isPE(const char* fn)
 {
     FILE* f = fopen(fn, "rb");
     if (f == nullptr)
@@ -106,9 +106,9 @@ bool parse_args(int argc, char* argv[])
     {
         cout << "ELF file detected" << endl;
     }
-    else if (bra_isExe(argv[0]))
+    else if (bra_isPE(argv[0]))
     {
-        cout << "EXE file detected" << endl;
+        cout << "PE file detected" << endl;
     }
     else
     {

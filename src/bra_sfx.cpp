@@ -108,7 +108,7 @@ bool parse_args(int argc, char* argv[])
     }
     else if (bra_isPE(argv[0]))
     {
-        cout << "EXE file detected" << endl;
+        cout << "PE file detected" << endl;
     }
     else
     {

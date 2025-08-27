@@ -38,26 +38,21 @@ extern "C" {
 
 #define MAX_BUF_SIZE (1024 * 1024)    // 1M
 
-typedef struct bra_file_name_t
-{
-    // TODO: add CRC ... file permissions, file attributes, etc...
-    uint8_t name_size;
-    // char*   name;
-} bra_file_name_t;
-
-typedef struct bra_data_t
-{
-    uint64_t data_size;
-    // uint8_t* data;
-} bra_data_t;
+// typedef struct bra_data_file_t
+// {
+//     // uint64_t data_size;
+//     // uint8_t* data;
+// } bra_data_file_t;
 
 #pragma pack(push, 1)
 
 typedef struct bra_header_t
 {
-    uint32_t magic;        //!< 'BR-a'
+    uint32_t magic;    //!< 'BR-a'
+    // version
+    // compression type ? (archive, best, fast, ... ??)
+    // crc32 / md5 ?
     uint32_t num_files;    // just 1 for now
-    // bra_file_t* files;
 } bra_header_t;
 
 typedef struct bra_footer_t
@@ -66,13 +61,25 @@ typedef struct bra_footer_t
     int64_t  data_offset;    //!< where the data chunk start from the beginning of the file
 } bra_footer_t;
 
+/**
+ * @brief This is the metadata of the file stored in the archive.
+ *        Its content follows of @p data_size bytes.
+ */
+typedef struct bra_meta_file_t
+{
+    // TODO: add CRC ... file permissions, file attributes, etc... ?
+    uint8_t  name_size;
+    char*    name;
+    uint64_t data_size;
+} bra_meta_file_t;
+
 #pragma pack(pop)
 
-typedef struct bra_file_t
+typedef struct bra_io_file_t
 {
     FILE* f;
     char* fn;
-} bra_file_t;
+} bra_io_file_t;
 
 // bool bra_encode(const char* file, const uint8_t buf);
 
@@ -81,7 +88,7 @@ typedef struct bra_file_t
  *
  * @param bf
  */
-void bra_io_read_error(bra_file_t* bf);
+void bra_io_read_error(bra_io_file_t* bf);
 
 /**
  * @brief open the file @p fn in the @p mode
@@ -94,14 +101,14 @@ void bra_io_read_error(bra_file_t* bf);
  * @return true on success
  * @return false on error
  */
-bool bra_io_open(bra_file_t* bf, const char* fn, const char* mode);
+bool bra_io_open(bra_io_file_t* bf, const char* fn, const char* mode);
 
 /**
  * @brief close file, free internal memory and set fields to NULL.
  *
  * @param bf
  */
-void bra_io_close(bra_file_t* bf);
+void bra_io_close(bra_io_file_t* bf);
 
 /**
  * @brief seek file at position @p offs.
@@ -112,7 +119,7 @@ void bra_io_close(bra_file_t* bf);
  * @return true
  * @return false
  */
-bool bra_io_seek(bra_file_t* f, const int64_t offs, const int origin);
+bool bra_io_seek(bra_io_file_t* f, const int64_t offs, const int origin);
 
 /**
  * @brief tell the file position.
@@ -121,7 +128,7 @@ bool bra_io_seek(bra_file_t* f, const int64_t offs, const int origin);
  * @param f
  * @return int64_t
  */
-int64_t bra_io_tell(bra_file_t* f);
+int64_t bra_io_tell(bra_io_file_t* f);
 
 /**
  * @brief read the header from the give @p bf file.
@@ -133,7 +140,7 @@ int64_t bra_io_tell(bra_file_t* f);
  * @return true on success
  * @return false on error
  */
-bool bra_io_read_header(bra_file_t* bf, bra_header_t* out_bh);
+bool bra_io_read_header(bra_io_file_t* bf, bra_header_t* out_bh);
 
 /**
  * @brief Write the bra header into @p bf with @p num_files.
@@ -144,7 +151,7 @@ bool bra_io_read_header(bra_file_t* bf, bra_header_t* out_bh);
  * @return true
  * @return false
  */
-bool bra_io_write_header(bra_file_t* bf, const uint32_t num_files);
+bool bra_io_write_header(bra_io_file_t* bf, const uint32_t num_files);
 
 /**
  * @brief Read thr bra footer into @p bf_out.
@@ -155,7 +162,7 @@ bool bra_io_write_header(bra_file_t* bf, const uint32_t num_files);
  * @return true
  * @return false
  */
-bool bra_io_read_footer(bra_file_t* f, bra_footer_t* bf_out);
+bool bra_io_read_footer(bra_io_file_t* f, bra_footer_t* bf_out);
 
 /**
  * @brief Write the footer into the file @p f.
@@ -167,7 +174,24 @@ bool bra_io_read_footer(bra_file_t* f, bra_footer_t* bf_out);
  * @return true
  * @return false
  */
-bool bra_io_write_footer(bra_file_t* f, const int64_t data_offset);
+bool bra_io_write_footer(bra_io_file_t* f, const int64_t data_offset);
+
+/**
+ * @brief Read the filename meta data information that is pointing in @p f and store it on @p mf.
+ *
+ * @param f
+ * @param mf
+ * @return true On success
+ * @return false On error
+ */
+bool bra_io_read_meta_file(bra_io_file_t* f, bra_meta_file_t* mf);
+
+/**
+ * @brief
+ *
+ * @param mf
+ */
+void bra_meta_file_free(bra_meta_file_t* mf);
 
 /**
  * @brief Copy from @p src to @p dst in chunks size of #MAX_BUF_SIZE for @p data_size bytes
@@ -180,7 +204,23 @@ bool bra_io_write_footer(bra_file_t* f, const int64_t data_offset);
  * @return true
  * @return false
  */
-bool bra_io_copy_file_chunks(bra_file_t* dst, bra_file_t* src, const uint64_t data_size);
+bool bra_io_copy_file_chunks(bra_io_file_t* dst, bra_io_file_t* src, const uint64_t data_size);
+
+/**
+ * @brief Read the filename actually pointing in @p f and store it on @p out_fn.
+ *        Read also its data size and store it in @p out_data_size.
+ *        Returns the @p out_fn length; 0 in case of error.
+ *
+ *
+ * @param f
+ * @param out_fn
+ * @param out_data_size
+ * @return uint8_t @p out_fn size.
+ * @return 0 on Error.
+ */
+// uint8_t bra_io_read_filename_and_data_size(bra_io_file_t* f, char out_fn[UINT8_MAX + 1], uint64_t* out_data_size);
+
+bool bra_io_skip_data(bra_io_file_t* f, const uint64_t data_size);
 
 /**
  * @brief Decode the current pointed internal file contained in @p f and write it to its relative path on disk.
@@ -190,7 +230,7 @@ bool bra_io_copy_file_chunks(bra_file_t* dst, bra_file_t* src, const uint64_t da
  * @return true on success
  * @return false on error
  */
-bool bra_io_decode_and_write_to_disk(bra_file_t* f);
+bool bra_io_decode_and_write_to_disk(bra_io_file_t* f);
 
 #ifdef __cplusplus
 }

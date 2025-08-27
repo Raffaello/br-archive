@@ -116,7 +116,7 @@ bool parse_args(int argc, char* argv[])
     return true;
 }
 
-bool bra_file_encode_and_write_to_disk(bra_file_t* f, const string& fn)
+bool bra_file_encode_and_write_to_disk(bra_io_file_t* f, const string& fn)
 {
     cout << format("Archiving File: {}...", fn);
     // 1. file name length
@@ -146,7 +146,7 @@ bool bra_file_encode_and_write_to_disk(bra_file_t* f, const string& fn)
         goto BRA_IO_ENCODE_WRITE_ERR;
 
     // 4. data
-    bra_file_t f2{};
+    bra_io_file_t f2{};
     if (!bra_io_open(&f2, fn.c_str(), "rb"))
     {
         bra_io_close(f);
@@ -173,8 +173,8 @@ int main(int argc, char* argv[])
     if (p.extension() != BRA_FILE_EXT)
         p += BRA_FILE_EXT;
 
-    string     out_fn = p.generic_string();    // TODO: add output file without extension
-    bra_file_t f{};
+    string        out_fn = p.generic_string();    // TODO: add output file without extension
+    bra_io_file_t f{};
 
     // TODO: check if the file exists and ask to overwrite
     if (!bra_io_open(&f, out_fn.c_str(), "wb"))
@@ -208,7 +208,7 @@ int main(int argc, char* argv[])
             return 2;
         }
 
-        bra_file_t f{};
+        bra_io_file_t f{};
         if (!bra_io_open(&f, sfx_path.string().c_str(), "rb+"))
             goto BRA_SFX_IO_ERROR;
 
@@ -225,7 +225,7 @@ int main(int argc, char* argv[])
             goto BRA_SFX_IO_F_ERROR;
 
         // append bra file
-        bra_file_t f2{};
+        bra_io_file_t f2{};
         if (!bra_io_open(&f2, out_fn.c_str(), "rb"))
             goto BRA_SFX_IO_F_ERROR;
 

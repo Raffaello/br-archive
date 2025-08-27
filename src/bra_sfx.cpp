@@ -134,7 +134,7 @@ bool parse_args(int argc, char* argv[])
     return true;
 }
 
-bool bra_file_open_and_read_footer_header(const char* fn, bra_header_t* out_bh, bra_file_t* f)
+bool bra_file_open_and_read_footer_header(const char* fn, bra_header_t* out_bh, bra_io_file_t* f)
 {
     if (!bra_io_open(f, fn, "rb"))
     {
@@ -183,8 +183,8 @@ int main(int argc, char* argv[])
     // so it can be extracted / dumped into a temporary file
     // and decoded
 
-    bra_header_t bh;
-    bra_file_t   f{};
+    bra_header_t  bh;
+    bra_io_file_t f{};
     if (!bra_file_open_and_read_footer_header(argv[0], &bh, &f))
         return 1;
 

@@ -19,6 +19,7 @@ namespace fs = std::filesystem;
 
 
 fs::path g_bra_file;
+bool     g_view = false;
 
 void help()
 {
@@ -36,6 +37,7 @@ void help()
     cout << endl;
     cout << format("Options:") << endl;
     cout << format("--help: display this page.") << endl;
+    cout << format("--view | -v : view archive content.") << endl;
     cout << endl;
 }
 
@@ -49,6 +51,7 @@ bool parse_args(int argc, char* argv[])
         return false;
     }
 
+    g_view = false;
     for (int i = 1; i < argc; i++)
     {
         string s = argv[i];
@@ -56,6 +59,11 @@ bool parse_args(int argc, char* argv[])
         {
             help();
             exit(0);
+        }
+        else if (s == "--view" || s == "-v")
+        {
+            // view content
+            g_view = true;
         }
         // check if it is a file
         else if (fs::exists(s))
@@ -94,8 +102,8 @@ int main(int argc, char* argv[])
         g_bra_file.append(BRA_FILE_EXT);
 
     // header
-    bra_header_t bh{};
-    bra_file_t   f{};
+    bra_header_t  bh{};
+    bra_io_file_t f{};
     if (!bra_io_open(&f, g_bra_file.string().c_str(), "rb"))
         return 1;
 
@@ -103,10 +111,31 @@ int main(int argc, char* argv[])
         return 1;
 
     cout << format("{} containing num files: {}", BRA_NAME, bh.num_files) << endl;
+
     for (uint32_t i = 0; i < bh.num_files; i++)
     {
-        if (!bra_io_decode_and_write_to_disk(&f))
-            return 1;
+        if (g_view)
+        {
+            bra_meta_file_t mf;
+
+            if (!bra_io_read_meta_file(&f, &mf))
+                return 1;
+
+            cout << format("{}. {} --- size: {} bytes", i + 1, mf.name, mf.data_size) << endl;
+            // skip data content
+            const uint64_t ds = mf.data_size;
+            bra_meta_file_free(&mf);
+            if (!bra_io_skip_data(&f, ds))
+            {
+                bra_io_read_error(&f);
+                return 2;
+            }
+        }
+        else
+        {
+            if (!bra_io_decode_and_write_to_disk(&f))
+                return 1;
+        }
     }
 
     bra_io_close(&f);

@@ -1,9 +1,9 @@
 name: ci-msys2
 on:
-  release:
-    types: [created]
+  # release:
+  #   types: [created]
   pull_request:
-    branches: [master]
+    branches: [main]
     paths-ignore:
       - "doc/**"
       - ".gitignore"

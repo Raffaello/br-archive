@@ -51,13 +51,33 @@ bool bra_isExe(const char* fn)
     char          magic[MAGIC_SIZE];
     if (fread(magic, sizeof(char), MAGIC_SIZE, f) != MAGIC_SIZE)
     {
+    BRA_IS_EXE_ERROR:
         fclose(f);
         cerr << format("ERROR: unable to read file {}", fn) << endl;
         return false;
     }
 
+    if (magic[0] != 'M' || magic[1] != 'Z')
+        goto BRA_IS_EXE_ERROR;
+
+    // Read the PE header offset from the DOS header
+    if (fseek(f, 0x3C, SEEK_SET) < 0)
+        goto BRA_IS_EXE_ERROR;
+
+    uint32_t pe_offset;
+    if (fread(&pe_offset, sizeof(uint32_t), 1, f) != 1)
+        goto BRA_IS_EXE_ERROR;
+
+    if (fseek(f, pe_offset, SEEK_SET) < 0)
+        goto BRA_IS_EXE_ERROR;
+
+    constexpr int PE_MAGIC_SIZE = 4;
+    char          pe_magic[PE_MAGIC_SIZE];
+    if (fread(pe_magic, sizeof(char), PE_MAGIC_SIZE, f) != PE_MAGIC_SIZE)
+        goto BRA_IS_EXE_ERROR;
+
     fclose(f);
-    return magic[0] == 'M' && magic[1] == 'Z';
+    return pe_magic[0] == 'P' && pe_magic[1] == 'E' && pe_magic[2] == '\0' && pe_magic[3] == '\0';
 }
 
 void help()

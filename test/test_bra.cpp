@@ -1,5 +1,4 @@
 #include <cstdlib>
-#include <cassert>
 #include <filesystem>
 #include <string>
 #include <fstream>

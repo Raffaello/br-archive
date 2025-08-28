@@ -51,6 +51,17 @@ typedef struct bra_header_t
     // compression type ? (archive, best, fast, ... ??)
     // crc32 / md5 ?
     uint32_t num_files;    // just 1 for now
+
+    // TODO: put num_directories. 1 must be always present and then
+    //       num_files inside the bra_meta_directory_t
+    //       it means that is an internal directory containing files.
+    //
+    //       this leads to save chars on the filename string,
+    //       for multiple files in the same directory
+    //       also it will mostly save the slash.
+    // TODO: ISSUE: how about nested sub-directories instead?
+    //       so the directory should contain a num_directory.
+    //       basically the header is just follow of a bra_directory_t instead.
 } bra_header_t;
 
 /**

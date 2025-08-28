@@ -253,7 +253,6 @@ int main(int argc, char* argv[])
 
         cout << format("creating Self-extracting archive {}...", sfx_path.string());
 
-        // TODO: ask to overwrite instead
         if (!fs::copy_file(BRA_SFX_FILENAME, sfx_path, fs::copy_options::overwrite_existing))
         {
         BRA_SFX_IO_ERROR:

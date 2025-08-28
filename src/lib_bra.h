@@ -36,16 +36,14 @@ extern "C" {
 #endif
 
 
-#define MAX_BUF_SIZE (1024 * 1024)    // 1M
+#define MAX_CHUNK_SIZE (256 * 1024)    // 256K
 
-// typedef struct bra_data_file_t
-// {
-//     // uint64_t data_size;
-//     // uint8_t* data;
-// } bra_data_file_t;
 
 #pragma pack(push, 1)
 
+/**
+ * @brief BR-Archive File Header.
+ */
 typedef struct bra_header_t
 {
     uint32_t magic;    //!< 'BR-a'
@@ -55,6 +53,9 @@ typedef struct bra_header_t
     uint32_t num_files;    // just 1 for now
 } bra_header_t;
 
+/**
+ * @brief BR-Sfx File Footer.
+ */
 typedef struct bra_footer_t
 {
     uint32_t magic;          //!< 'BR-x'
@@ -62,8 +63,8 @@ typedef struct bra_footer_t
 } bra_footer_t;
 
 /**
- * @brief This is the metadata of the file stored in the archive.
- *        Its content follows of @p data_size bytes.
+ * @brief This is the metadata of each file stored in a BR-archive.
+ *        The file data is just after for @p data_size bytes.
  */
 typedef struct bra_meta_file_t
 {
@@ -80,8 +81,6 @@ typedef struct bra_io_file_t
     FILE* f;
     char* fn;
 } bra_io_file_t;
-
-// bool bra_encode(const char* file, const uint8_t buf);
 
 /**
  * @brief print error message and close file.
@@ -131,8 +130,8 @@ bool bra_io_seek(bra_io_file_t* f, const int64_t offs, const int origin);
 int64_t bra_io_tell(bra_io_file_t* f);
 
 /**
- * @brief read the header from the give @p bf file.
- *        the file must be positioned at the beginning of the header.
+ * @brief Read the header from the give @p bf file.
+ *        The file must be positioned at the beginning of the header.
  *        On error returns false and closes the file via @ref bra_io_close.
  *
  * @param bf
@@ -144,18 +143,18 @@ bool bra_io_read_header(bra_io_file_t* bf, bra_header_t* out_bh);
 
 /**
  * @brief Write the bra header into @p bf with @p num_files.
- *        On error closes @p bf via @ref bra_io_close
+ *        On error closes @p f via @ref bra_io_close.
  *
- * @param bf
+ * @param f
  * @param num_files
  * @return true
  * @return false
  */
-bool bra_io_write_header(bra_io_file_t* bf, const uint32_t num_files);
+bool bra_io_write_header(bra_io_file_t* f, const uint32_t num_files);
 
 /**
  * @brief Read thr bra footer into @p bf_out.
- *        On error calls @ref bra_io_close with @p f
+ *        On error closes @p f via @ref bra_io_close.
  *
  * @param f
  * @param bf_out
@@ -166,7 +165,7 @@ bool bra_io_read_footer(bra_io_file_t* f, bra_footer_t* bf_out);
 
 /**
  * @brief Write the footer into the file @p f.
- *        On Error closes the file @p f via @ref bra_io_close
+ *        On error closes @p f via @ref bra_io_close.
  *
  *
  * @param f
@@ -178,6 +177,8 @@ bool bra_io_write_footer(bra_io_file_t* f, const int64_t data_offset);
 
 /**
  * @brief Read the filename meta data information that is pointing in @p f and store it on @p mf.
+ *        On error closes @p f via @ref bra_io_close.
+ *        On success @mf must be explicitly free via @ref bra_meta_file_free.
  *
  * @param f
  * @param mf
@@ -187,16 +188,16 @@ bool bra_io_write_footer(bra_io_file_t* f, const int64_t data_offset);
 bool bra_io_read_meta_file(bra_io_file_t* f, bra_meta_file_t* mf);
 
 /**
- * @brief
+ * @brief Free any eventual content on @p mf.
  *
  * @param mf
  */
 void bra_meta_file_free(bra_meta_file_t* mf);
 
 /**
- * @brief Copy from @p src to @p dst in chunks size of #MAX_BUF_SIZE for @p data_size bytes
+ * @brief Copy from @p src to @p dst in chunks size of #MAX_CHUNK_SIZE for @p data_size bytes
  *        the files must be positioned at the correct read/write offsets.
- *        On failure closes both @p dst and @p src
+ *        On failure closes both @p dst and @p src via @ref bra_io_close
  *
  * @param dst
  * @param src
@@ -207,24 +208,19 @@ void bra_meta_file_free(bra_meta_file_t* mf);
 bool bra_io_copy_file_chunks(bra_io_file_t* dst, bra_io_file_t* src, const uint64_t data_size);
 
 /**
- * @brief Read the filename actually pointing in @p f and store it on @p out_fn.
- *        Read also its data size and store it in @p out_data_size.
- *        Returns the @p out_fn length; 0 in case of error.
- *
+ * @brief Move @p f forward of @p data_size bytes.
  *
  * @param f
- * @param out_fn
- * @param out_data_size
- * @return uint8_t @p out_fn size.
- * @return 0 on Error.
+ * @param data_size
+ * @return true
+ * @return false
  */
-// uint8_t bra_io_read_filename_and_data_size(bra_io_file_t* f, char out_fn[UINT8_MAX + 1], uint64_t* out_data_size);
-
 bool bra_io_skip_data(bra_io_file_t* f, const uint64_t data_size);
 
 /**
  * @brief Decode the current pointed internal file contained in @p f and write it to its relative path on disk.
  *        On error calls @ref bra_io_close with param @p f closing it.
+ *
  *
  * @param f
  * @return true on success

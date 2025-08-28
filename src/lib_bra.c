@@ -127,19 +127,19 @@ bool bra_io_read_header(bra_io_file_t* bf, bra_header_t* out_bh)
     return true;
 }
 
-bool bra_io_write_header(bra_io_file_t* bf, const uint32_t num_files)
+bool bra_io_write_header(bra_io_file_t* f, const uint32_t num_files)
 {
-    assert_bra_io_file_t(bf);
+    assert_bra_io_file_t(f);
 
     const bra_header_t header = {
         .magic     = BRA_MAGIC,
         .num_files = num_files,
     };
 
-    if (fwrite(&header, sizeof(bra_header_t), 1, bf->f) != 1)
+    if (fwrite(&header, sizeof(bra_header_t), 1, f->f) != 1)
     {
-        printf("ERROR: unable to write %s %s file\n", bf->fn, BRA_NAME);
-        bra_io_close(bf);
+        printf("ERROR: unable to write %s %s file\n", f->fn, BRA_NAME);
+        bra_io_close(f);
         return false;
     }
 
@@ -209,19 +209,18 @@ bool bra_io_read_meta_file(bra_io_file_t* f, bra_meta_file_t* mf)
     if (mf->name == NULL)
         goto BRA_IO_READ_ERR;
 
-
     // 2. filename
     if (fread(mf->name, sizeof(uint8_t), mf->name_size, f->f) != mf->name_size)
-        goto BRA_IO_READ_ERR;
-
-    mf->name[mf->name_size] = '\0';
-
-    // 3. data size
-    if (fread(&mf->data_size, sizeof(uint64_t), 1, f->f) != 1)
     {
+    BRA_IO_READ_ERR_MF:
         bra_meta_file_free(mf);
         goto BRA_IO_READ_ERR;
     }
+
+    mf->name[mf->name_size] = '\0';
+    // 3. data size
+    if (fread(&mf->data_size, sizeof(uint64_t), 1, f->f) != 1)
+        goto BRA_IO_READ_ERR_MF;
 
     return true;
 }
@@ -244,11 +243,11 @@ bool bra_io_copy_file_chunks(bra_io_file_t* dst, bra_io_file_t* src, const uint6
     assert_bra_io_file_t(dst);
     assert_bra_io_file_t(src);
 
-    char buf[MAX_BUF_SIZE];
+    char buf[MAX_CHUNK_SIZE];
 
     for (uint64_t i = 0; i < data_size;)
     {
-        uint32_t s = bra_min(MAX_BUF_SIZE, data_size - i);
+        uint32_t s = bra_min(MAX_CHUNK_SIZE, data_size - i);
 
         // read source chunk
         if (fread(buf, sizeof(char), s, src->f) != s)
@@ -274,43 +273,11 @@ bool bra_io_copy_file_chunks(bra_io_file_t* dst, bra_io_file_t* src, const uint6
     return true;
 }
 
-// uint8_t bra_io_read_filename_and_data_size(bra_io_file_t* f, char out_fn[UINT8_MAX + 1], uint64_t* out_data_size)
-// {
-//     assert_bra_io_file_t(f);
-//     assert(out_data_size != NULL);
-
-// // 1. filename size
-// uint8_t fn_size = 0;
-// if (fread(&fn_size, sizeof(uint8_t), 1, f->f) != 1)
-// {
-// BRA_IO_READ_ERR:
-//     bra_io_read_error(f);
-//     return 0;
-// }
-
-// // 2. filename
-// if (fread(out_fn, sizeof(uint8_t), fn_size, f->f) != fn_size)
-//     goto BRA_IO_READ_ERR;
-
-// out_fn[fn_size] = '\0';
-
-// // 3. data size
-// if (fread(out_data_size, sizeof(uint64_t), 1, f->f) != 1)
-//     goto BRA_IO_READ_ERR;
-
-// return fn_size;
-// }
-
 bool bra_io_skip_data(bra_io_file_t* f, const uint64_t data_size)
 {
     assert_bra_io_file_t(f);
 
     return bra_io_seek(f, data_size, SEEK_CUR);
-}
-
-uint64_t bra_io_read_data_size(bra_io_file_t* f)
-{
-    assert_bra_io_file_t(f);
 }
 
 bool bra_io_decode_and_write_to_disk(bra_io_file_t* f)
@@ -332,7 +299,7 @@ bool bra_io_decode_and_write_to_disk(bra_io_file_t* f)
         bra_io_read_error(f);
         return false;
     }
-    // Reject common traversal patterns
+    // 2.2 Reject common traversal patterns
     if (strstr(mf.name, "/../") != NULL || strstr(mf.name, "\\..\\") != NULL ||
         strncmp(mf.name, "../", 3) == 0 || strncmp(mf.name, "..\\", 3) == 0)
     {

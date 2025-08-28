@@ -38,8 +38,8 @@ void help()
     // cout << format("(output_file): output file name without extension") << endl;
     cout << endl;
     cout << format("Options:") << endl;
-    cout << format("--help: display this page.") << endl;
-    cout << format("--sfx: generate a self-extracting archive") << endl;
+    cout << format("--help | -h : display this page.") << endl;
+    cout << format("--sfx  | -s : generate a self-extracting archive") << endl;
     cout << endl;
 }
 
@@ -54,12 +54,12 @@ bool parse_args(int argc, char* argv[])
     for (int i = 1; i < argc; i++)
     {
         string s = argv[i];
-        if (s == "--help")
+        if (s == "--help" || s == "-h")
         {
             help();
             exit(0);
         }
-        else if (s == "--sfx")
+        else if (s == "--sfx" || s == "-s")
         {
             g_sfx = true;
         }

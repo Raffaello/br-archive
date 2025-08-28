@@ -48,7 +48,7 @@ bool AreFilesContentEquals(const std::filesystem::path& file1, const std::filesy
     {
         if (ch1 != ch2)
         {
-            std::cout << std::format("'{}' != '{}", ch1, ch2) << std::endl;
+            std::cout << std::format("'{}' != '{}'", ch1, ch2) << std::endl;
             return false;    // Files are different
         }
     }

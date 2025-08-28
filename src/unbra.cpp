@@ -19,7 +19,7 @@ namespace fs = std::filesystem;
 
 
 fs::path g_bra_file;
-bool     g_view = false;
+bool     g_list = false;
 
 void help()
 {
@@ -37,7 +37,7 @@ void help()
     cout << endl;
     cout << format("Options:") << endl;
     cout << format("--help | -h : display this page.") << endl;
-    cout << format("--view | -v : view archive content.") << endl;
+    cout << format("--list | -l : view archive content.") << endl;
     cout << endl;
 }
 
@@ -51,7 +51,7 @@ bool parse_args(int argc, char* argv[])
         return false;
     }
 
-    g_view = false;
+    g_list = false;
     for (int i = 1; i < argc; i++)
     {
         string s = argv[i];
@@ -62,8 +62,8 @@ bool parse_args(int argc, char* argv[])
         }
         else if (s == "--view" || s == "-v")
         {
-            // view content
-            g_view = true;
+            // list content
+            g_list = true;
         }
         // check if it is a file
         else if (fs::exists(s))
@@ -83,9 +83,14 @@ bool parse_args(int argc, char* argv[])
         }
     }
 
+    return true;
+}
+
+bool validate_args()
+{
     if (g_bra_file.empty())
     {
-        cerr << "no input file provided" << endl;
+        cerr << "ERROR: no input file provided" << endl;
         return false;
     }
 
@@ -95,6 +100,9 @@ bool parse_args(int argc, char* argv[])
 int main(int argc, char* argv[])
 {
     if (!parse_args(argc, argv))
+        return 1;
+
+    if (!validate_args())
         return 1;
 
     // adjust input file extension
@@ -114,7 +122,7 @@ int main(int argc, char* argv[])
 
     for (uint32_t i = 0; i < bh.num_files; i++)
     {
-        if (g_view)
+        if (g_list)
         {
             bra_meta_file_t mf;
 

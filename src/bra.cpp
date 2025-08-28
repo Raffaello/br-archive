@@ -91,9 +91,14 @@ bool parse_args(int argc, char* argv[])
         }
     }
 
+    return true;
+}
+
+bool validate_args()
+{
     if (g_files.empty())
     {
-        cerr << "no input file provided" << endl;
+        cerr << "ERROR: no input file provided" << endl;
         return false;
     }
 
@@ -102,14 +107,14 @@ bool parse_args(int argc, char* argv[])
         // locate sfx bin
         if (!fs::exists(BRA_SFX_FILENAME))
         {
-            cerr << "unable to find BRa-SFX module" << endl;
+            cerr << "ERROR: unable to find BRa-SFX module" << endl;
             return false;
         }
     }
 
     if (g_files.size() > numeric_limits<uint32_t>::max())
     {
-        cerr << format("Too many files, not supported yet: {}/{}", g_files.size(), numeric_limits<uint32_t>::max());
+        cerr << format("ERROR: Too many files, not supported yet: {}/{}", g_files.size(), numeric_limits<uint32_t>::max());
         return false;
     }
 
@@ -164,6 +169,9 @@ bool bra_file_encode_and_write_to_disk(bra_io_file_t* f, const string& fn)
 int main(int argc, char* argv[])
 {
     if (!parse_args(argc, argv))
+        return 1;
+
+    if (!validate_args())
         return 1;
 
     // header

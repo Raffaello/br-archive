@@ -107,8 +107,9 @@ bool parse_args(int argc, char* argv[])
         // check if it is a wildcard
         else if (bra_fs_isWildcard(s))
         {
-            string pattern = bra_fs_wildcard_to_regexp(s);
-            if (!bra_fs_search("./", pattern))
+            const fs::path dir     = bra_fs_wildcard_extract_dir(s);
+            const string   pattern = bra_fs_wildcard_to_regexp(s);
+            if (!bra_fs_search(dir, pattern))
             {
                 cerr << "ERROR FS SEARCH FILES" << endl;
                 return false;

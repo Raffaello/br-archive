@@ -6,6 +6,7 @@
 
 #include <filesystem>
 #include <optional>
+#include <string>
 
 /**
  * @brief Check if the file exists and ask the user to overwrite.
@@ -19,8 +20,18 @@
  */
 std::optional<bool> bra_fs_file_exists_ask_overwrite(const std::filesystem::path& p);
 
-
+/**
+ * @brief
+ *
+ * @todo instead of bool return size_t: std::npos no wildcard, otherwise first wildcard char position.
+ *
+ * @param str
+ * @return true
+ * @return false
+ */
 bool bra_fs_isWildcard(const std::string& str);
+
+std::filesystem::path bra_fs_wildcard_extract_dir(std::string& wildcard);
 
 /**
  * @brief

@@ -5,6 +5,7 @@
 #include <string>
 #include <cctype>
 #include <regex>
+#include <algorithm>
 
 namespace fs = std::filesystem;
 
@@ -38,7 +39,21 @@ bool bra_fs_isWildcard(const std::string& str)
         if (c == '*' || c == '?')
             return true;
     }
+
     return false;
+}
+
+std::filesystem::path bra_fs_wildcard_extract_dir(std::string& wildcard)
+{
+    size_t pos = std::min(wildcard.find_first_of('?'), wildcard.find_first_of('*'));
+    if (pos == 0 || pos == string::npos)
+        return "./";
+
+    // instead if there is an explicit directory
+    string dir = wildcard.substr(0, pos);
+
+    wildcard = wildcard.substr(dir.length(), wildcard.size());
+    return fs::path(dir);
 }
 
 std::string bra_fs_wildcard_to_regexp(const std::string& wildcard)

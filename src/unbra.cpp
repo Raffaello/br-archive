@@ -60,7 +60,7 @@ bool parse_args(int argc, char* argv[])
             help();
             exit(0);
         }
-        else if (s == "--view" || s == "-v")
+        else if (s == "--list" || s == "-l")
         {
             // list content
             g_list = true;
@@ -107,7 +107,7 @@ int main(int argc, char* argv[])
 
     // adjust input file extension
     if (g_bra_file.extension() != BRA_FILE_EXT)
-        g_bra_file.append(BRA_FILE_EXT);
+        g_bra_file += BRA_FILE_EXT;
 
     // header
     bra_header_t  bh{};

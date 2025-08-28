@@ -5,7 +5,8 @@
 #include <iostream>
 #include <filesystem>
 #include <string>
-#include <list>
+// #include <list>
+#include <set>
 #include <algorithm>
 #include <limits>
 #include <system_error>
@@ -19,7 +20,7 @@ using namespace std;
 namespace fs = std::filesystem;
 
 
-std::list<fs::path> g_files;    // it is just 1 for now but...
+std::set<fs::path> g_files;
 // std::string         g_out_filename; // TODO
 
 bool g_sfx = false;
@@ -82,7 +83,7 @@ bool parse_args(int argc, char* argv[])
                 return false;
             }
 
-            g_files.push_back(s);
+            g_files.insert(fs::relative(p).generic_string());
         }
         else
         {
@@ -175,7 +176,7 @@ int main(int argc, char* argv[])
         return 1;
 
     // header
-    fs::path p = g_files.front();
+    fs::path p = *g_files.begin();
 
     // adjust input file extension
     if (p.extension() != BRA_FILE_EXT)

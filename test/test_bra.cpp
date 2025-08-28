@@ -4,6 +4,7 @@
 #include <fstream>
 #include <format>
 #include <iostream>
+#include <cstdio>
 
 #include <lib_bra.h>
 
@@ -75,7 +76,6 @@ int test_bra_unbra()
     fs::rename(in_file, exp_file);
     if (fs::exists(in_file))
         return 3;
-
     if (system((unbra + " " + out_file).c_str()) != 0)
         return 4;
 
@@ -124,6 +124,44 @@ int test_bra_sfx()
     return 0;
 }
 
+int test_bra_not_more_than_1_same_file()
+{
+    const std::string bra      = CMD_PREFIX + "bra";
+    const std::string unbra    = CMD_PREFIX + "unbra";
+    const std::string in_file  = "./test.txt ./test.txt test.txt test.txt";
+    const std::string out_file = "./test.txt.BRa";
+    const std::string exp_file = "./test.txt.exp";
+
+    if (fs::exists(out_file))
+        fs::remove(out_file);
+
+    if (fs::exists(exp_file))
+        fs::remove(exp_file);
+
+    if (system((bra + " " + in_file).c_str()) != 0)
+        return 1;
+
+    if (!fs::exists(out_file))
+        return 2;
+
+    FILE* output = popen((unbra + " -l " + out_file).c_str(), "r");
+    if (output == nullptr)
+        return 4;
+
+    char        buf[1024];
+    char*       line = fgets(buf, sizeof(buf), output);
+    std::string str  = line;
+    if (!str.ends_with("num files: 1\n"))
+    {
+        std::cerr << std::format("expected ends with num files: 1\n actual: {}", str) << std::endl;
+        return 5;
+    }
+
+    pclose(output);
+
+    return 0;
+}
+
 int main(int argc, char* argv[])
 {
     int ret = 0;
@@ -134,14 +172,16 @@ int main(int argc, char* argv[])
             ret += test_bra_unbra();
         else if (std::string(argv[1]) == std::string("test_bra_sfx"))
             ret += test_bra_sfx();
+        else if (std::string(argv[1]) == std::string("test_bra_not_more_than_1_same_file"))
+            ret += test_bra_not_more_than_1_same_file();
     }
     else
     {
         std::cout << "Executing all tests..." << std::endl;
         ret += test_bra_unbra();
         ret += test_bra_sfx();
+        ret += test_bra_not_more_than_1_same_file();
     }
-
 
     return ret;
 }

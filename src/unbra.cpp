@@ -97,6 +97,28 @@ bool validate_args()
     return true;
 }
 
+bool bra_io_list_meta_file(bra_io_file_t& f)
+{
+    bra_meta_file_t mf;
+
+    if (!bra_io_read_meta_file(&f, &mf))
+        return false;
+
+    cout << format("- size: {} bytes | {}", mf.name, mf.data_size) << endl;
+    bra_meta_file_free(&mf);
+
+    // skip data content
+    const uint64_t ds = mf.data_size;
+    if (!bra_io_skip_data(&f, ds))
+    {
+        bra_io_read_error(&f);
+        return false;
+    }
+
+
+    return true;
+}
+
 int main(int argc, char* argv[])
 {
     if (!parse_args(argc, argv))
@@ -124,20 +146,25 @@ int main(int argc, char* argv[])
     {
         if (g_list)
         {
-            bra_meta_file_t mf;
+            // bra_meta_file_t mf;
 
-            if (!bra_io_read_meta_file(&f, &mf))
-                return 1;
+            // if (!bra_io_read_meta_file(&f, &mf))
+            //     return 1;
 
-            cout << format("{}. {} --- size: {} bytes", i + 1, mf.name, mf.data_size) << endl;
-            // skip data content
-            const uint64_t ds = mf.data_size;
-            bra_meta_file_free(&mf);
-            if (!bra_io_skip_data(&f, ds))
-            {
-                bra_io_read_error(&f);
+            // const uint64_t ds = mf.data_size;
+            // bra_meta_file_free(&mf);
+
+            // // skip data content
+            // if (!bra_io_skip_data(&f, ds))
+            // {
+            //     bra_io_read_error(&f);
+            //     return 2;
+            // }
+
+            // cout << format("{}.  size: {} bytes | {}", i + 1, mf.name, ds) << endl;
+
+            if (!bra_io_list_meta_file(f))
                 return 2;
-            }
         }
         else
         {

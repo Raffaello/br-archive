@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <limits.h>
 
-#define assert_bra_file_t(x) assert((x) != NULL && (x)->f != NULL && (x)->fn != NULL)
+#define assert_bra_io_file_t(x) assert((x) != NULL && (x)->f != NULL && (x)->fn != NULL)
 
 static inline uint64_t bra_min(const uint64_t a, const uint64_t b)
 {
@@ -34,13 +34,13 @@ static char* bra_strdup(const char* str)
     return c;
 }
 
-void bra_io_read_error(bra_file_t* bf)
+void bra_io_read_error(bra_io_file_t* bf)
 {
     printf("ERROR: unable to read %s %s file\n", bf->fn, BRA_NAME);
     bra_io_close(bf);
 }
 
-bool bra_io_open(bra_file_t* bf, const char* fn, const char* mode)
+bool bra_io_open(bra_io_file_t* bf, const char* fn, const char* mode)
 {
     assert(bf != NULL);
     assert(fn != NULL);
@@ -58,7 +58,7 @@ bool bra_io_open(bra_file_t* bf, const char* fn, const char* mode)
     return true;
 }
 
-void bra_io_close(bra_file_t* bf)
+void bra_io_close(bra_io_file_t* bf)
 {
     assert(bf != NULL);
 
@@ -75,9 +75,9 @@ void bra_io_close(bra_file_t* bf)
     }
 }
 
-bool bra_io_seek(bra_file_t* f, const int64_t offs, const int origin)
+bool bra_io_seek(bra_io_file_t* f, const int64_t offs, const int origin)
 {
-    assert_bra_file_t(f);
+    assert_bra_io_file_t(f);
 
     // return fseek(f->f, offs, origin) == 0;
 
@@ -90,9 +90,9 @@ bool bra_io_seek(bra_file_t* f, const int64_t offs, const int origin)
 #endif
 }
 
-int64_t bra_io_tell(bra_file_t* f)
+int64_t bra_io_tell(bra_io_file_t* f)
 {
-    assert_bra_file_t(f);
+    assert_bra_io_file_t(f);
 
     // return ftell(f->f);
 
@@ -105,9 +105,9 @@ int64_t bra_io_tell(bra_file_t* f)
 #endif
 }
 
-bool bra_io_read_header(bra_file_t* bf, bra_header_t* out_bh)
+bool bra_io_read_header(bra_io_file_t* bf, bra_header_t* out_bh)
 {
-    assert_bra_file_t(bf);
+    assert_bra_io_file_t(bf);
     assert(out_bh != NULL);
 
     if (fread(out_bh, sizeof(bra_header_t), 1, bf->f) != 1)
@@ -127,28 +127,28 @@ bool bra_io_read_header(bra_file_t* bf, bra_header_t* out_bh)
     return true;
 }
 
-bool bra_io_write_header(bra_file_t* bf, const uint32_t num_files)
+bool bra_io_write_header(bra_io_file_t* f, const uint32_t num_files)
 {
-    assert_bra_file_t(bf);
+    assert_bra_io_file_t(f);
 
     const bra_header_t header = {
         .magic     = BRA_MAGIC,
         .num_files = num_files,
     };
 
-    if (fwrite(&header, sizeof(bra_header_t), 1, bf->f) != 1)
+    if (fwrite(&header, sizeof(bra_header_t), 1, f->f) != 1)
     {
-        printf("ERROR: unable to write %s %s file\n", bf->fn, BRA_NAME);
-        bra_io_close(bf);
+        printf("ERROR: unable to write %s %s file\n", f->fn, BRA_NAME);
+        bra_io_close(f);
         return false;
     }
 
     return true;
 }
 
-bool bra_io_read_footer(bra_file_t* f, bra_footer_t* bf_out)
+bool bra_io_read_footer(bra_io_file_t* f, bra_footer_t* bf_out)
 {
-    assert_bra_file_t(f);
+    assert_bra_io_file_t(f);
     assert(bf_out != NULL);
 
     memset(bf_out, 0, sizeof(bra_footer_t));
@@ -169,9 +169,9 @@ bool bra_io_read_footer(bra_file_t* f, bra_footer_t* bf_out)
     return true;
 }
 
-bool bra_io_write_footer(bra_file_t* f, const int64_t data_offset)
+bool bra_io_write_footer(bra_io_file_t* f, const int64_t data_offset)
 {
-    assert_bra_file_t(f);
+    assert_bra_io_file_t(f);
     assert(data_offset > 0);
 
     bra_footer_t bf = {
@@ -189,16 +189,65 @@ bool bra_io_write_footer(bra_file_t* f, const int64_t data_offset)
     return true;
 }
 
-bool bra_io_copy_file_chunks(bra_file_t* dst, bra_file_t* src, const uint64_t data_size)
+bool bra_io_read_meta_file(bra_io_file_t* f, bra_meta_file_t* mf)
 {
-    assert_bra_file_t(dst);
-    assert_bra_file_t(src);
+    assert_bra_io_file_t(f);
+    assert(mf != NULL);
 
-    char buf[MAX_BUF_SIZE];
+    mf->name      = NULL;
+    mf->name_size = 0;
+    mf->data_size = 0;
+    // 1. filename size
+    if (fread(&mf->name_size, sizeof(uint8_t), 1, f->f) != 1 || mf->name_size == 0)
+    {
+    BRA_IO_READ_ERR:
+        bra_io_read_error(f);
+        return false;
+    }
+
+    mf->name = malloc(sizeof(char) * (mf->name_size + 1));    // !< one extra for '\0'
+    if (mf->name == NULL)
+        goto BRA_IO_READ_ERR;
+
+    // 2. filename
+    if (fread(mf->name, sizeof(uint8_t), mf->name_size, f->f) != mf->name_size)
+    {
+    BRA_IO_READ_ERR_MF:
+        bra_meta_file_free(mf);
+        goto BRA_IO_READ_ERR;
+    }
+
+    mf->name[mf->name_size] = '\0';
+    // 3. data size
+    if (fread(&mf->data_size, sizeof(uint64_t), 1, f->f) != 1)
+        goto BRA_IO_READ_ERR_MF;
+
+    return true;
+}
+
+void bra_meta_file_free(bra_meta_file_t* mf)
+{
+    assert(mf != NULL);
+
+    mf->data_size = 0;
+    mf->name_size = 0;
+    if (mf->name != NULL)
+    {
+        free(mf->name);
+        mf->name = NULL;
+    }
+}
+
+bool bra_io_copy_file_chunks(bra_io_file_t* dst, bra_io_file_t* src, const uint64_t data_size)
+{
+    assert_bra_io_file_t(dst);
+    assert_bra_io_file_t(src);
+
+    char buf[MAX_CHUNK_SIZE];
 
     for (uint64_t i = 0; i < data_size;)
     {
-        uint32_t s = bra_min(MAX_BUF_SIZE, data_size - i);
+        uint32_t s = bra_min(MAX_CHUNK_SIZE, data_size - i);
 
         // read source chunk
         if (fread(buf, sizeof(char), s, src->f) != s)
@@ -224,57 +273,51 @@ bool bra_io_copy_file_chunks(bra_file_t* dst, bra_file_t* src, const uint64_t da
     return true;
 }
 
-bool bra_io_decode_and_write_to_disk(bra_file_t* f)
+bool bra_io_skip_data(bra_io_file_t* f, const uint64_t data_size)
 {
-    assert_bra_file_t(f);
+    assert_bra_io_file_t(f);
 
-    char out_fn[UINT8_MAX + 1];
+    return bra_io_seek(f, data_size, SEEK_CUR);
+}
 
-    // 1. filename size
-    uint8_t fn_size = 0;
-    if (fread(&fn_size, sizeof(uint8_t), 1, f->f) != 1)
-    {
-    BRA_IO_READ_ERR:
-        bra_io_read_error(f);
+bool bra_io_decode_and_write_to_disk(bra_io_file_t* f)
+{
+    assert_bra_io_file_t(f);
+
+    bra_meta_file_t mf;
+    if (!bra_io_read_meta_file(f, &mf))
         return false;
-    }
-
-    // 2. filename
-    if (fread(out_fn, sizeof(uint8_t), fn_size, f->f) != fn_size)
-        goto BRA_IO_READ_ERR;
-
-    out_fn[fn_size] = '\0';
 
     // 2.1 sanitize output path: reject absolute or parent traversal
     //     POSIX absolute, Windows drive letter, and leading backslash
-    if (out_fn[0] == '/' || out_fn[0] == '\\' ||
-        (fn_size >= 2 && ((out_fn[1] == ':' && ((out_fn[0] >= 'A' && out_fn[0] <= 'Z') || (out_fn[0] >= 'a' && out_fn[0] <= 'z'))))))
+    if (mf.name[0] == '/' || mf.name[0] == '\\' ||
+        (mf.name_size >= 2 && ((mf.name[1] == ':' && ((mf.name[0] >= 'A' && mf.name[0] <= 'Z') || (mf.name[0] >= 'a' && mf.name[0] <= 'z'))))))
     {
-        printf("ERROR: absolute output path: %s\n", out_fn);
+        printf("ERROR: absolute output path: %s\n", mf.name);
+    BRA_IO_READ_ERR:
+        bra_meta_file_free(&mf);
+        bra_io_read_error(f);
+        return false;
+    }
+    // 2.2 Reject common traversal patterns
+    if (strstr(mf.name, "/../") != NULL || strstr(mf.name, "\\..\\") != NULL ||
+        strncmp(mf.name, "../", 3) == 0 || strncmp(mf.name, "..\\", 3) == 0)
+    {
+        printf("ERROR: invalid output path (contains '..'): %s\n", mf.name);
         goto BRA_IO_READ_ERR;
     }
-    // Reject common traversal patterns
-    if (strstr(out_fn, "/../") != NULL || strstr(out_fn, "\\..\\") != NULL ||
-        strncmp(out_fn, "../", 3) == 0 || strncmp(out_fn, "..\\", 3) == 0)
-    {
-        printf("ERROR: invalid output path (contains '..'): %s\n", out_fn);
-        goto BRA_IO_READ_ERR;
-    }
-
-    // 3. data size
-    uint64_t ds = 0;
-    if (fread(&ds, sizeof(uint64_t), 1, f->f) != 1)
-        goto BRA_IO_READ_ERR;
 
     // 4. read and write in chunk data
-    printf("Extracting file: %s ...", out_fn);
-    bra_file_t f2;
-    if (!bra_io_open(&f2, out_fn, "wb"))
+    printf("Extracting file: %s ...", mf.name);
+    bra_io_file_t f2;
+    if (!bra_io_open(&f2, mf.name, "wb"))
     {
-        printf("ERROR: unable to write file: %s\n", out_fn);
+        printf("ERROR: unable to write file: %s\n", mf.name);
         goto BRA_IO_READ_ERR;
     }
 
+    const uint64_t ds = mf.data_size;
+    bra_meta_file_free(&mf);
     if (!bra_io_copy_file_chunks(&f2, f, ds))
         return false;
 

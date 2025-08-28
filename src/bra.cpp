@@ -5,7 +5,7 @@
 #include <iostream>
 #include <filesystem>
 #include <string>
-#include <list>
+#include <set>
 #include <algorithm>
 #include <limits>
 #include <system_error>
@@ -19,7 +19,7 @@ using namespace std;
 namespace fs = std::filesystem;
 
 
-std::list<fs::path> g_files;    // it is just 1 for now but...
+std::set<fs::path> g_files;
 // std::string         g_out_filename; // TODO
 
 bool g_sfx = false;
@@ -38,8 +38,8 @@ void help()
     // cout << format("(output_file): output file name without extension") << endl;
     cout << endl;
     cout << format("Options:") << endl;
-    cout << format("--help: display this page.") << endl;
-    cout << format("--sfx: generate a self-extracting archive") << endl;
+    cout << format("--help | -h : display this page.") << endl;
+    cout << format("--sfx  | -s : generate a self-extracting archive") << endl;
     cout << endl;
 }
 
@@ -54,12 +54,12 @@ bool parse_args(int argc, char* argv[])
     for (int i = 1; i < argc; i++)
     {
         string s = argv[i];
-        if (s == "--help")
+        if (s == "--help" || s == "-h")
         {
             help();
             exit(0);
         }
-        else if (s == "--sfx")
+        else if (s == "--sfx" || s == "-s")
         {
             g_sfx = true;
         }
@@ -82,18 +82,26 @@ bool parse_args(int argc, char* argv[])
                 return false;
             }
 
-            g_files.push_back(s);
+            auto p_ = fs::relative(p).generic_string();
+            if (g_files.contains(p_))
+                cout << format("WARNING: duplicate file given in input: {}", p_) << endl;
+            g_files.insert(p_);
         }
         else
         {
-            cout << format("unknow argument: {}", s) << endl;
+            cout << format("unknown argument: {}", s) << endl;
             return false;
         }
     }
 
+    return true;
+}
+
+bool validate_args()
+{
     if (g_files.empty())
     {
-        cerr << "no input file provided" << endl;
+        cerr << "ERROR: no input file provided" << endl;
         return false;
     }
 
@@ -102,21 +110,21 @@ bool parse_args(int argc, char* argv[])
         // locate sfx bin
         if (!fs::exists(BRA_SFX_FILENAME))
         {
-            cerr << "unable to find BRa-SFX module" << endl;
+            cerr << "ERROR: unable to find BRa-SFX module" << endl;
             return false;
         }
     }
 
     if (g_files.size() > numeric_limits<uint32_t>::max())
     {
-        cerr << format("Too many files, not supported yet: {}/{}", g_files.size(), numeric_limits<uint32_t>::max());
+        cerr << format("ERROR: Too many files, not supported yet: {}/{}", g_files.size(), numeric_limits<uint32_t>::max());
         return false;
     }
 
     return true;
 }
 
-bool bra_file_encode_and_write_to_disk(bra_file_t* f, const string& fn)
+bool bra_file_encode_and_write_to_disk(bra_io_file_t* f, const string& fn)
 {
     cout << format("Archiving File: {}...", fn);
     // 1. file name length
@@ -146,7 +154,7 @@ bool bra_file_encode_and_write_to_disk(bra_file_t* f, const string& fn)
         goto BRA_IO_ENCODE_WRITE_ERR;
 
     // 4. data
-    bra_file_t f2{};
+    bra_io_file_t f2{};
     if (!bra_io_open(&f2, fn.c_str(), "rb"))
     {
         bra_io_close(f);
@@ -166,15 +174,18 @@ int main(int argc, char* argv[])
     if (!parse_args(argc, argv))
         return 1;
 
+    if (!validate_args())
+        return 1;
+
     // header
-    fs::path p = g_files.front();
+    fs::path p = *g_files.begin();
 
     // adjust input file extension
     if (p.extension() != BRA_FILE_EXT)
         p += BRA_FILE_EXT;
 
-    string     out_fn = p.generic_string();    // TODO: add output file without extension
-    bra_file_t f{};
+    string        out_fn = p.generic_string();    // TODO: add output file without extension
+    bra_io_file_t f{};
 
     // TODO: check if the file exists and ask to overwrite
     if (!bra_io_open(&f, out_fn.c_str(), "wb"))
@@ -208,7 +219,7 @@ int main(int argc, char* argv[])
             return 2;
         }
 
-        bra_file_t f{};
+        bra_io_file_t f{};
         if (!bra_io_open(&f, sfx_path.string().c_str(), "rb+"))
             goto BRA_SFX_IO_ERROR;
 
@@ -225,7 +236,7 @@ int main(int argc, char* argv[])
             goto BRA_SFX_IO_F_ERROR;
 
         // append bra file
-        bra_file_t f2{};
+        bra_io_file_t f2{};
         if (!bra_io_open(&f2, out_fn.c_str(), "rb"))
             goto BRA_SFX_IO_F_ERROR;
 

@@ -95,7 +95,7 @@ void help()
     // cout << format("(output_file): output file name without extension") << endl;
     cout << endl;
     cout << format("Options:") << endl;
-    cout << format("--help: display this page.") << endl;
+    cout << format("--help | -h : display this page.") << endl;
     cout << endl;
 }
 
@@ -119,14 +119,14 @@ bool parse_args(int argc, char* argv[])
     for (int i = 1; i < argc; i++)
     {
         string s = argv[i];
-        if (s == "--help")
+        if (s == "--help" | s == "-h")
         {
             help();
             exit(0);
         }
         else
         {
-            cerr << format("ERROR: unknow argument: {}", s) << endl;
+            cerr << format("unknown argument: {}", s) << endl;
             return false;
         }
     }
@@ -134,7 +134,7 @@ bool parse_args(int argc, char* argv[])
     return true;
 }
 
-bool bra_file_open_and_read_footer_header(const char* fn, bra_header_t* out_bh, bra_file_t* f)
+bool bra_file_open_and_read_footer_header(const char* fn, bra_header_t* out_bh, bra_io_file_t* f)
 {
     if (!bra_io_open(f, fn, "rb"))
     {
@@ -171,7 +171,6 @@ bool bra_file_open_and_read_footer_header(const char* fn, bra_header_t* out_bh, 
 int main(int argc, char* argv[])
 {
     // TODO: add output directory where to decode
-    // TODO: add test the archive?
     // TODO: ask to overwrite files, etc..
     // TODO: all these functionalities are common among the utilities
 
@@ -183,8 +182,8 @@ int main(int argc, char* argv[])
     // so it can be extracted / dumped into a temporary file
     // and decoded
 
-    bra_header_t bh;
-    bra_file_t   f{};
+    bra_header_t  bh;
+    bra_io_file_t f{};
     if (!bra_file_open_and_read_footer_header(argv[0], &bh, &f))
         return 1;
 

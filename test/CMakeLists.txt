@@ -5,6 +5,7 @@ add_executable(test_bra test_bra.cpp)
 add_dependencies(test_bra bra unbra bra_sfx)
 add_test(NAME test_bra_unbra COMMAND test_bra test_bra_unbra)
 add_test(NAME test_bra_sfx COMMAND test_bra test_bra_sfx)
+add_test(NAME test_bra_not_more_than_1_same_file COMMAND test_bra test_bra_not_more_than_1_same_file)
 
 set_tests_properties(
     test_bra_unbra

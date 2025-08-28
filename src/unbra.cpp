@@ -19,6 +19,7 @@ namespace fs = std::filesystem;
 
 
 fs::path g_bra_file;
+bool     g_list = false;
 
 void help()
 {
@@ -35,7 +36,8 @@ void help()
     // cout << format("(output_file): output file name without extension") << endl;
     cout << endl;
     cout << format("Options:") << endl;
-    cout << format("--help: display this page.") << endl;
+    cout << format("--help | -h : display this page.") << endl;
+    cout << format("--list | -l : view archive content.") << endl;
     cout << endl;
 }
 
@@ -49,13 +51,19 @@ bool parse_args(int argc, char* argv[])
         return false;
     }
 
+    g_list = false;
     for (int i = 1; i < argc; i++)
     {
         string s = argv[i];
-        if (s == "--help")
+        if (s == "--help" || s == "-h")
         {
             help();
             exit(0);
+        }
+        else if (s == "--list" || s == "-l")
+        {
+            // list content
+            g_list = true;
         }
         // check if it is a file
         else if (fs::exists(s))
@@ -70,14 +78,40 @@ bool parse_args(int argc, char* argv[])
         }
         else
         {
-            cout << format("unknow argument: {}", s) << endl;
+            cout << format("unknown argument: {}", s) << endl;
             return false;
         }
     }
 
+    return true;
+}
+
+bool validate_args()
+{
     if (g_bra_file.empty())
     {
-        cerr << "no input file provided" << endl;
+        cerr << "ERROR: no input file provided" << endl;
+        return false;
+    }
+
+    return true;
+}
+
+bool unbra_list_meta_file(bra_io_file_t& f)
+{
+    bra_meta_file_t mf;
+
+    if (!bra_io_read_meta_file(&f, &mf))
+        return false;
+
+    cout << format("- size: {} bytes | {}", mf.name, mf.data_size) << endl;
+    bra_meta_file_free(&mf);
+
+    // skip data content
+    const uint64_t ds = mf.data_size;
+    if (!bra_io_skip_data(&f, ds))
+    {
+        bra_io_read_error(&f);
         return false;
     }
 
@@ -89,13 +123,16 @@ int main(int argc, char* argv[])
     if (!parse_args(argc, argv))
         return 1;
 
+    if (!validate_args())
+        return 1;
+
     // adjust input file extension
     if (g_bra_file.extension() != BRA_FILE_EXT)
-        g_bra_file.append(BRA_FILE_EXT);
+        g_bra_file += BRA_FILE_EXT;
 
     // header
-    bra_header_t bh{};
-    bra_file_t   f{};
+    bra_header_t  bh{};
+    bra_io_file_t f{};
     if (!bra_io_open(&f, g_bra_file.string().c_str(), "rb"))
         return 1;
 
@@ -105,8 +142,16 @@ int main(int argc, char* argv[])
     cout << format("{} containing num files: {}", BRA_NAME, bh.num_files) << endl;
     for (uint32_t i = 0; i < bh.num_files; i++)
     {
-        if (!bra_io_decode_and_write_to_disk(&f))
-            return 1;
+        if (g_list)
+        {
+            if (!unbra_list_meta_file(f))
+                return 2;
+        }
+        else
+        {
+            if (!bra_io_decode_and_write_to_disk(&f))
+                return 1;
+        }
     }
 
     bra_io_close(&f);

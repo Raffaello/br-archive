@@ -22,9 +22,19 @@ set_target_properties(lib_bra PROPERTIES
     PREFIX ""
 )
 
+add_library(bra_fs OBJECT src/bra_fs.cpp)
+set_property(TARGET lib_bra PROPERTY COMPILE_WARNING_AS_ERROR ON)
+# target_include_directories(bra_fs
+    # PUBLIC
+        # ${CMAKE_CURRENT_SOURCE_DIR}/src
+# )
+# set_target_properties(bra_fs PROPERTIES
+#     PREFIX ""
+# )
+
 add_executable(bra src/bra.cpp)
 set_property(TARGET bra PROPERTY COMPILE_WARNING_AS_ERROR ON)
-target_link_libraries(bra PRIVATE lib_bra)
+target_link_libraries(bra PRIVATE lib_bra bra_fs)
 
 add_executable(unbra src/unbra.cpp)
 set_property(TARGET unbra PROPERTY COMPILE_WARNING_AS_ERROR ON)

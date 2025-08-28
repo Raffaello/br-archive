@@ -1,6 +1,8 @@
 #include <lib_bra.h>
 #include <version.h>
 
+#include <bra_fs.hpp>
+
 #include <format>
 #include <iostream>
 #include <filesystem>
@@ -126,16 +128,6 @@ bool validate_args()
         return false;
     }
 
-    if (g_sfx)
-    {
-        // locate sfx bin
-        if (!fs::exists(BRA_SFX_FILENAME))
-        {
-            cerr << "ERROR: unable to find BRa-SFX module" << endl;
-            return false;
-        }
-    }
-
     if (g_out_filename.empty())
     {
         cerr << "ERROR: no output file provided" << endl;
@@ -146,10 +138,34 @@ bool validate_args()
     if (g_out_filename.extension() != BRA_FILE_EXT)
         g_out_filename += BRA_FILE_EXT;
 
-    if (fs::exists(g_out_filename))
+    if (g_sfx)
     {
-        // TODO: create overwrite rule or whatever.
-        cout << "Overwriting file: {}" << g_out_filename << endl;
+        g_out_filename += BRA_SFX_TMP_FILE_EXT;
+        // locate sfx bin
+        if (!fs::exists(BRA_SFX_FILENAME))
+        {
+            cerr << "ERROR: unable to find BRa-SFX module" << endl;
+            return false;
+        }
+
+        if (fs::exists(g_out_filename))
+        {
+            cerr << format("ERROR: Temporary SFX File {} already exists.", g_out_filename.string()) << endl;
+            return false;
+        }
+    }
+
+    fs::path p = g_out_filename;
+
+    if (g_sfx)
+        p.replace_extension(BRA_FILE_EXT) += BRA_SFX_FILE_EXT;
+
+    if (auto res = bra_fs_file_exists_ask_overwrite(p))
+    {
+        if (!*res)
+            return false;
+
+        cout << format("Overwriting file: {}", p.string()) << endl;
     }
 
     return true;
@@ -212,11 +228,10 @@ int main(int argc, char* argv[])
     bra_io_file_t f{};
 
     // header
-    // TODO: check if the file exists and ask to overwrite
     if (!bra_io_open(&f, out_fn.c_str(), "wb"))
         return 1;
 
-    cout << format("Archiving into {} ...", out_fn) << endl;
+    cout << format("Archiving into {}", out_fn) << endl;
     if (!bra_io_write_header(&f, static_cast<uint32_t>(g_files.size())))
         return 1;
 
@@ -232,8 +247,9 @@ int main(int argc, char* argv[])
 
     if (g_sfx)
     {
-        fs::path sfx_path  = g_out_filename;
-        sfx_path          += BRA_SFX_FILE_EXT;
+        fs::path sfx_path = g_out_filename;
+        sfx_path.replace_extension(BRA_FILE_EXT);
+        sfx_path += BRA_SFX_FILE_EXT;
 
         cout << format("creating Self-extracting archive {}...", sfx_path.string());
 
@@ -286,6 +302,10 @@ int main(int argc, char* argv[])
                             fs::perms::others_exec | fs::perms::others_read,
                         fs::perm_options::add);
 #endif
+
+        // remove TMP SFX FILE
+        if (!fs::remove(g_out_filename))
+            cout << format("WARN: unable to remove temporary file {}", g_out_filename.string()) << endl;
 
         cout << "OK" << endl;
     }

@@ -21,11 +21,12 @@ extern "C" {
 #endif
 
 
-#define BRA_MAGIC        0x612D5242    //!< 0x61='a' 0x2D='-' 0x52='R' 0x42='B'
-#define BRA_FOOTER_MAGIC 0x782D5242    //!< 0x78='x' 0x2D='-' 0x52='R' 0x42='B'
-#define BRA_FILE_EXT     ".BRa"
-#define BRA_NAME         "BRa"
-#define BRA_SFX_FILENAME "bra.sfx"    // @todo: generate it through cmake conf
+#define BRA_MAGIC            0x612D5242    //!< 0x61='a' 0x2D='-' 0x52='R' 0x42='B'
+#define BRA_FOOTER_MAGIC     0x782D5242    //!< 0x78='x' 0x2D='-' 0x52='R' 0x42='B'
+#define BRA_FILE_EXT         ".BRa"
+#define BRA_NAME             "BRa"
+#define BRA_SFX_FILENAME     "bra.sfx"    // @todo: generate it through cmake conf
+#define BRA_SFX_TMP_FILE_EXT "tmp"
 
 #if defined(__APPLE__) || defined(__linux__) || defined(__linux)
 #define BRA_SFX_FILE_EXT ".brx"

@@ -171,7 +171,6 @@ bool bra_file_open_and_read_footer_header(const char* fn, bra_header_t* out_bh, 
 int main(int argc, char* argv[])
 {
     // TODO: add output directory where to decode
-    // TODO: add test the archive?
     // TODO: ask to overwrite files, etc..
     // TODO: all these functionalities are common among the utilities
 

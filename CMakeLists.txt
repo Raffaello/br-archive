@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.27)
 
-project(BRa VERSION 0.2.0 DESCRIPTION "BR-Archive")
+project(BRa VERSION 0.3.0 DESCRIPTION "BR-Archive")
 
 include (CTest)
 enable_testing()

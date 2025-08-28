@@ -32,7 +32,7 @@ extern "C" {
 #elif defined(_WIN32) || defined(_WIN64)
 #define BRA_SFX_FILE_EXT ".exe"
 #else
-#error "unsupported platform" // maybe it could work anyway, but did't test it.
+#error "unsupported platform" // maybe it could work anyway, but I did't test it.
 #endif
 
 

@@ -55,6 +55,7 @@ bool parse_args(int argc, char* argv[])
     for (int i = 1; i < argc; i++)
     {
         string s = argv[i];
+
         if (s == "--help" || s == "-h")
         {
             help();
@@ -66,20 +67,27 @@ bool parse_args(int argc, char* argv[])
             g_list = true;
         }
         // check if it is a file
-        else if (fs::exists(s))
-        {
-            if (!fs::is_regular_file(s))
-            {
-                cout << format("{} is not a file!", s) << endl;
-                return 2;
-            }
-
-            g_bra_file = s;
-        }
         else
         {
-            cout << format("unknown argument: {}", s) << endl;
-            return false;
+            fs::path p = s;
+            if (p.extension() != BRA_FILE_EXT)
+                p += BRA_FILE_EXT;
+
+            if (fs::exists(p))
+            {
+                if (!fs::is_regular_file(p))
+                {
+                    cout << format("{} is not a file!", p.string()) << endl;
+                    return 2;
+                }
+
+                g_bra_file = p;
+            }
+            else
+            {
+                cout << format("unknown argument: {}", s) << endl;
+                return false;
+            }
         }
     }
 
@@ -128,7 +136,10 @@ int main(int argc, char* argv[])
 
     // adjust input file extension
     if (g_bra_file.extension() != BRA_FILE_EXT)
-        g_bra_file += BRA_FILE_EXT;
+    {
+        cerr << "CRITICAL: unexpected" << endl;
+        return 99;
+    }
 
     // header
     bra_header_t  bh{};

@@ -20,7 +20,7 @@ namespace fs = std::filesystem;
 
 
 std::set<fs::path> g_files;
-// std::string         g_out_filename; // TODO
+fs::path           g_out_filename;
 
 bool g_sfx = false;
 
@@ -40,6 +40,8 @@ void help()
     cout << format("Options:") << endl;
     cout << format("--help | -h : display this page.") << endl;
     cout << format("--sfx  | -s : generate a self-extracting archive") << endl;
+    cout << format("--out  | -o : <output_filename> it takes the path of the output file.") << endl;
+    cout << format("              If the extension {} ism missing it will automatically added.", BRA_FILE_EXT) << endl;
     cout << endl;
 }
 
@@ -51,9 +53,10 @@ bool parse_args(int argc, char* argv[])
         return false;
     }
 
-    for (int i = 1; i < argc; i++)
+    for (int i = 1; i < argc; ++i)
     {
         string s = argv[i];
+
         if (s == "--help" || s == "-h")
         {
             help();
@@ -62,6 +65,18 @@ bool parse_args(int argc, char* argv[])
         else if (s == "--sfx" || s == "-s")
         {
             g_sfx = true;
+        }
+        else if (s == "--output" || s == "-o")
+        {
+            // next arg is output file
+            ++i;
+            if (i >= argc)
+            {
+                cout << format("ERROR: {} missing argument <output_filename>", s) << endl;
+                return false;
+            }
+
+            g_out_filename = argv[i];
         }
         // check if it is file
         else if (fs::exists(s))
@@ -105,6 +120,12 @@ bool validate_args()
         return false;
     }
 
+    if (g_files.size() > numeric_limits<uint32_t>::max())
+    {
+        cerr << format("ERROR: Too many files, not supported yet: {}/{}", g_files.size(), numeric_limits<uint32_t>::max());
+        return false;
+    }
+
     if (g_sfx)
     {
         // locate sfx bin
@@ -113,12 +134,6 @@ bool validate_args()
             cerr << "ERROR: unable to find BRa-SFX module" << endl;
             return false;
         }
-    }
-
-    if (g_files.size() > numeric_limits<uint32_t>::max())
-    {
-        cerr << format("ERROR: Too many files, not supported yet: {}/{}", g_files.size(), numeric_limits<uint32_t>::max());
-        return false;
     }
 
     return true;
@@ -178,19 +193,21 @@ int main(int argc, char* argv[])
         return 1;
 
     // header
-    fs::path p = *g_files.begin();
+    // fs::path p = *g_files.begin();
+    fs::path p = g_out_filename;
 
     // adjust input file extension
     if (p.extension() != BRA_FILE_EXT)
         p += BRA_FILE_EXT;
 
-    string        out_fn = p.generic_string();    // TODO: add output file without extension
+    string        out_fn = p.generic_string();
     bra_io_file_t f{};
 
     // TODO: check if the file exists and ask to overwrite
     if (!bra_io_open(&f, out_fn.c_str(), "wb"))
         return 1;
 
+    cout << format("Archiving into {} ...", out_fn) << endl;
     if (!bra_io_write_header(&f, static_cast<uint32_t>(g_files.size())))
         return 1;
 

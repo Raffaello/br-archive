@@ -136,6 +136,22 @@ bool validate_args()
         }
     }
 
+    if (g_out_filename.empty())
+    {
+        cerr << "ERROR: no output file provided" << endl;
+        return false;
+    }
+
+    // adjust input file extension
+    if (g_out_filename.extension() != BRA_FILE_EXT)
+        g_out_filename += BRA_FILE_EXT;
+
+    if (fs::exists(g_out_filename))
+    {
+        // TODO: create overwrite rule or whatever.
+        cout << "Overwriting file: {}" << g_out_filename << endl;
+    }
+
     return true;
 }
 
@@ -192,17 +208,10 @@ int main(int argc, char* argv[])
     if (!validate_args())
         return 1;
 
-    // header
-    // fs::path p = *g_files.begin();
-    fs::path p = g_out_filename;
-
-    // adjust input file extension
-    if (p.extension() != BRA_FILE_EXT)
-        p += BRA_FILE_EXT;
-
-    string        out_fn = p.generic_string();
+    string        out_fn = g_out_filename.generic_string();
     bra_io_file_t f{};
 
+    // header
     // TODO: check if the file exists and ask to overwrite
     if (!bra_io_open(&f, out_fn.c_str(), "wb"))
         return 1;
@@ -223,7 +232,7 @@ int main(int argc, char* argv[])
 
     if (g_sfx)
     {
-        fs::path sfx_path  = p;
+        fs::path sfx_path  = g_out_filename;
         sfx_path          += BRA_SFX_FILE_EXT;
 
         cout << format("creating Self-extracting archive {}...", sfx_path.string());

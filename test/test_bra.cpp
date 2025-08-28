@@ -67,11 +67,14 @@ int test_bra_unbra()
     if (fs::exists(exp_file))
         fs::remove(exp_file);
 
-    if (system((bra + " " + in_file).c_str()) != 0)
+    if (system((bra + " -o " + out_file + " " + in_file).c_str()) != 0)
         return 1;
 
     if (!fs::exists(out_file))
+    {
+        std::cerr << std::format("TEST FAILED: missing out_file {}", out_file) << std::endl;
         return 2;
+    }
 
     fs::rename(in_file, exp_file);
     if (fs::exists(in_file))
@@ -92,27 +95,28 @@ int test_bra_sfx()
 {
     const std::string bra = CMD_PREFIX + "bra --sfx";
     // const std::string bra_sfx  = "test.txt.BRa" BRA_SFX_FILE_EXT;
-    const std::string in_file  = "./test.txt";
-    const std::string out_file = CMD_PREFIX + "test.txt.BRa" BRA_SFX_FILE_EXT;
-    const std::string exp_file = "./test.txt.exp";
+    const std::string in_file      = "./test.txt";
+    const std::string out_file     = CMD_PREFIX + "test.txt.BRa";
+    const std::string out_file_sfx = out_file + BRA_SFX_FILE_EXT;
+    const std::string exp_file     = "./test.txt.exp";
 
-    if (fs::exists(out_file))
-        fs::remove(out_file);
+    if (fs::exists(out_file_sfx))
+        fs::remove(out_file_sfx);
 
     if (fs::exists(exp_file))
         fs::remove(exp_file);
 
-    if (system((bra + " " + in_file).c_str()) != 0)
+    if (system((bra + " -o " + out_file + " " + in_file).c_str()) != 0)
         return 1;
 
-    if (!fs::exists(out_file))
+    if (!fs::exists(out_file_sfx))
         return 2;
 
     fs::rename(in_file, exp_file);
     if (fs::exists(in_file))
         return 3;
 
-    if (system((out_file).c_str()) != 0)
+    if (system((out_file_sfx).c_str()) != 0)
         return 4;
 
     if (!fs::exists(in_file))
@@ -138,7 +142,7 @@ int test_bra_not_more_than_1_same_file()
     if (fs::exists(exp_file))
         fs::remove(exp_file);
 
-    if (system((bra + " " + in_file).c_str()) != 0)
+    if (system((bra + " -o " + out_file + " " + in_file).c_str()) != 0)
         return 1;
 
     if (!fs::exists(out_file))

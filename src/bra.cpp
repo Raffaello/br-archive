@@ -41,7 +41,7 @@ void help()
     cout << format("--help | -h : display this page.") << endl;
     cout << format("--sfx  | -s : generate a self-extracting archive") << endl;
     cout << format("--out  | -o : <output_filename> it takes the path of the output file.") << endl;
-    cout << format("              If the extension {} ism missing it will automatically added.", BRA_FILE_EXT) << endl;
+    cout << format("              If the extension {} is missing it will be automatically added.", BRA_FILE_EXT) << endl;
     cout << endl;
 }
 
@@ -66,7 +66,7 @@ bool parse_args(int argc, char* argv[])
         {
             g_sfx = true;
         }
-        else if (s == "--output" || s == "-o")
+        else if (s == "--out" || s == "-o")
         {
             // next arg is output file
             ++i;

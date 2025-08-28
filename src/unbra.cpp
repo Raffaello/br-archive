@@ -78,7 +78,7 @@ bool parse_args(int argc, char* argv[])
                 if (!fs::is_regular_file(p))
                 {
                     cout << format("{} is not a file!", p.string()) << endl;
-                    return 2;
+                    return false;
                 }
 
                 g_bra_file = p;

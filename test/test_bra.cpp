@@ -93,8 +93,7 @@ int test_bra_unbra()
 
 int test_bra_sfx()
 {
-    const std::string bra = CMD_PREFIX + "bra --sfx";
-    // const std::string bra_sfx  = "test.txt.BRa" BRA_SFX_FILE_EXT;
+    const std::string bra          = CMD_PREFIX + "bra --sfx";
     const std::string in_file      = "./test.txt";
     const std::string out_file     = CMD_PREFIX + "test.txt.BRa";
     const std::string out_file_sfx = out_file + BRA_SFX_FILE_EXT;

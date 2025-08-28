@@ -6,6 +6,12 @@
 #include <iostream>
 #include <cstdio>
 
+#ifdef __linux__
+#include <sys/wait.h>
+#else
+#define WEXITSTATUS(ret)
+#endif
+
 #include <lib_bra.h>
 
 namespace fs = std::filesystem;
@@ -57,7 +63,8 @@ int test_bra_no_output_file()
     const std::string bra     = CMD_PREFIX + "bra";
     const std::string in_file = "./test.txt";
 
-    if (system((bra + " " + in_file).c_str()) != 1)
+    const int ret = system((bra + " " + in_file).c_str());
+    if (WEXITSTATUS(ret) != 1)
         return 1;
 
     return 0;

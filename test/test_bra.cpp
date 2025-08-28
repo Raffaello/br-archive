@@ -52,6 +52,16 @@ bool AreFilesContentEquals(const std::filesystem::path& file1, const std::filesy
 
 /////////////////////////////////////////////////////./////////////////////////
 
+int test_bra_no_output_file()
+{
+    const std::string bra     = CMD_PREFIX + "bra";
+    const std::string in_file = "./test.txt";
+
+    if (system((bra + " " + in_file).c_str()) != 1)
+        return 1;
+
+    return 0;
+}
 
 int test_bra_unbra()
 {
@@ -171,7 +181,9 @@ int main(int argc, char* argv[])
 
     if (argc >= 2)
     {
-        if (std::string(argv[1]) == std::string("test_bra_unbra"))
+        if (std::string(argv[1]) == std::string("test_bra_no_output_file"))
+            ret += test_bra_no_output_file();
+        else if (std::string(argv[1]) == std::string("test_bra_unbra"))
             ret += test_bra_unbra();
         else if (std::string(argv[1]) == std::string("test_bra_sfx"))
             ret += test_bra_sfx();
@@ -181,6 +193,7 @@ int main(int argc, char* argv[])
     else
     {
         std::cout << "Executing all tests..." << std::endl;
+        ret += test_bra_no_output_file();
         ret += test_bra_unbra();
         ret += test_bra_sfx();
         ret += test_bra_not_more_than_1_same_file();

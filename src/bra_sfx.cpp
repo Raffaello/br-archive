@@ -126,7 +126,7 @@ bool parse_args(int argc, char* argv[])
         }
         else
         {
-            cerr << format("ERROR: unknow argument: {}", s) << endl;
+            cerr << format("unknown argument: {}", s) << endl;
             return false;
         }
     }

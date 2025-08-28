@@ -78,7 +78,7 @@ bool parse_args(int argc, char* argv[])
         }
         else
         {
-            cout << format("unknow argument: {}", s) << endl;
+            cout << format("unknown argument: {}", s) << endl;
             return false;
         }
     }

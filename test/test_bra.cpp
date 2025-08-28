@@ -6,10 +6,10 @@
 #include <iostream>
 #include <cstdio>
 
-#ifdef __linux__
+#if defined(__unix__) || defined(__APPLE__)
 #include <sys/wait.h>
 #else
-#define WEXITSTATUS(ret)
+#define WEXITSTATUS(ret) ret
 #endif
 
 #include <lib_bra.h>

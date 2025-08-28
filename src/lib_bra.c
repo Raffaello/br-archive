@@ -316,7 +316,9 @@ bool bra_io_decode_and_write_to_disk(bra_io_file_t* f)
         goto BRA_IO_READ_ERR;
     }
 
-    if (!bra_io_copy_file_chunks(&f2, f, mf.data_size))
+    const uint64_t ds = mf.data_size;
+    bra_meta_file_free(&mf);
+    if (!bra_io_copy_file_chunks(&f2, f, ds))
         return false;
 
     bra_io_close(&f2);

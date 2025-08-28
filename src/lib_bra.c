@@ -205,7 +205,7 @@ bool bra_io_read_meta_file(bra_io_file_t* f, bra_meta_file_t* mf)
         return false;
     }
 
-    mf->name = malloc(sizeof(char) * mf->name_size);
+    mf->name = malloc(sizeof(char) * (mf->name_size + 1));    // !< one extra for '\0'
     if (mf->name == NULL)
         goto BRA_IO_READ_ERR;
 

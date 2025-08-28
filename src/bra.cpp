@@ -83,7 +83,10 @@ bool parse_args(int argc, char* argv[])
                 return false;
             }
 
-            g_files.insert(fs::relative(p).generic_string());
+            auto p_ = fs::relative(p).generic_string();
+            if (g_files.contains(p_))
+                cout << format("WARNING: duplicate file given in input: {}", p_) << endl;
+            g_files.insert(p_);
         }
         else
         {

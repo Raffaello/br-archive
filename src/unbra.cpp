@@ -97,7 +97,7 @@ bool validate_args()
     return true;
 }
 
-bool bra_io_list_meta_file(bra_io_file_t& f)
+bool unbra_list_meta_file(bra_io_file_t& f)
 {
     bra_meta_file_t mf;
 
@@ -114,7 +114,6 @@ bool bra_io_list_meta_file(bra_io_file_t& f)
         bra_io_read_error(&f);
         return false;
     }
-
 
     return true;
 }
@@ -141,29 +140,11 @@ int main(int argc, char* argv[])
         return 1;
 
     cout << format("{} containing num files: {}", BRA_NAME, bh.num_files) << endl;
-
     for (uint32_t i = 0; i < bh.num_files; i++)
     {
         if (g_list)
         {
-            // bra_meta_file_t mf;
-
-            // if (!bra_io_read_meta_file(&f, &mf))
-            //     return 1;
-
-            // const uint64_t ds = mf.data_size;
-            // bra_meta_file_free(&mf);
-
-            // // skip data content
-            // if (!bra_io_skip_data(&f, ds))
-            // {
-            //     bra_io_read_error(&f);
-            //     return 2;
-            // }
-
-            // cout << format("{}.  size: {} bytes | {}", i + 1, mf.name, ds) << endl;
-
-            if (!bra_io_list_meta_file(f))
+            if (!unbra_list_meta_file(f))
                 return 2;
         }
         else

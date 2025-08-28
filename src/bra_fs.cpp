@@ -31,11 +31,21 @@ std::optional<bool> bra_fs_file_exists_ask_overwrite(const std::filesystem::path
     return nullopt;
 }
 
+bool bra_fs_isWildcard(const std::string& str)
+{
+    for (const char& c : str)
+    {
+        if (c == '*' || c == '?')
+            return true;
+    }
+    return false;
+}
+
 std::string bra_fs_wildcard_to_regexp(const std::string& wildcard)
 {
     std::string regex;
 
-    for (char c : wildcard)
+    for (const char& c : wildcard)
     {
         switch (c)
         {
@@ -91,9 +101,13 @@ bool bra_fs_search(const std::filesystem::path& dir, const std::string& pattern)
     catch (const fs::filesystem_error& e)
     {
         cerr << "Filesystem error: " << e.what() << endl;
+        return false;
     }
     catch (const std::regex_error& e)
     {
         cerr << "Regex error: " << e.what() << endl;
+        return false;
     }
+
+    return true;
 }

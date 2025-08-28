@@ -19,6 +19,9 @@
  */
 std::optional<bool> bra_fs_file_exists_ask_overwrite(const std::filesystem::path& p);
 
+
+bool bra_fs_isWildcard(const std::string& str);
+
 /**
  * @brief
  *
@@ -27,4 +30,4 @@ std::optional<bool> bra_fs_file_exists_ask_overwrite(const std::filesystem::path
  */
 std::string bra_fs_wildcard_to_regexp(const std::string& wildcard);
 
-bool bra_fs_search();
+bool bra_fs_search(const std::filesystem::path& dir, const std::string& pattern);

@@ -31,12 +31,12 @@ void help()
     cout << format("BR-Archive Utility Version: {}", VERSION) << endl;
     cout << endl;
     cout << format("Usage:") << endl;
-    cout << format("  bra (input_file)") << endl;
+    cout << format("  bra [-s] [-o <output_file> <input_file1> [input_file2] ...") << endl;
     cout << format("The [output_file] will be with a .BRa extension") << endl;
     cout << format("Example:") << endl;
-    cout << format("  bra test.txt") << endl;
+    cout << format("  bra -o test test.txt") << endl;
     cout << endl;
-    cout << format("(input_file) : (single file only for now) the output") << endl;
+    cout << format("(input_file) : is any file present in the disk or a wildcard search on fs") << endl;
     // cout << format("(output_file): output file name without extension") << endl;
     cout << endl;
     cout << format("Options:") << endl;
@@ -103,6 +103,19 @@ bool parse_args(int argc, char* argv[])
             if (g_files.contains(p_))
                 cout << format("WARNING: duplicate file given in input: {}", p_) << endl;
             g_files.insert(p_);
+        }
+        // check if it is a wildcard
+        else if (bra_fs_isWildcard(s))
+        {
+            string pattern = bra_fs_wildcard_to_regexp(s);
+            if (!bra_fs_search("./", pattern))
+            {
+                cerr << "ERROR FS SEARCH FILES" << endl;
+                return false;
+            }
+
+            // TODO:
+            return false;    // for now just testing it
         }
         else
         {

@@ -17,7 +17,9 @@
         "softprops",
         "STREQUAL",
         "ucrt",
-        "unbra"
+        "unbra",
+        "Wextra",
+        "Wpedantic"
     ],
     "ignoreWords": [],
     "import": []

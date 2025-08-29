@@ -26,7 +26,7 @@ extern "C" {
 #define BRA_FILE_EXT         ".BRa"
 #define BRA_NAME             "BRa"
 #define BRA_SFX_FILENAME     "bra.sfx"    // @todo: generate it through cmake conf
-#define BRA_SFX_TMP_FILE_EXT "tmp"
+#define BRA_SFX_TMP_FILE_EXT ".tmp"
 
 #if defined(__APPLE__) || defined(__linux__) || defined(__linux)
 #define BRA_SFX_FILE_EXT ".brx"

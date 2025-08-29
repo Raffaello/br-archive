@@ -30,7 +30,8 @@ constexpr const std::string CMD_PREFIX = "";
 #endif
 #endif
 
-#define PRINT_TEST_NAME std::cout << "[TEST] Running Test: " << __FUNCTION_NAME__ << std::endl
+#define PRINT_TEST_NAME          std::cout << "[TEST] Running Test: " << __FUNCTION_NAME__ << std::endl
+#define PRINT_TEST_SUITE_NAME(x) std::cout << "[TEST] Running Test: " << __FUNCTION_NAME__ << "->" << std::string(x) << std::endl
 
 bool AreFilesContentEquals(const std::filesystem::path& file1, const std::filesystem::path& file2)
 {
@@ -121,15 +122,20 @@ int test_bra_unbra()
     return 0;
 }
 
-int test_bra_sfx()
+int _test_bra_sfx(const std::string& out_file)
 {
-    PRINT_TEST_NAME;
+    PRINT_TEST_SUITE_NAME(out_file);
 
-    const std::string bra          = CMD_PREFIX + "bra --sfx";
-    const std::string in_file      = "./test.txt";
-    const std::string out_file     = CMD_PREFIX + "test.txt.BRa";
-    const std::string out_file_sfx = out_file + BRA_SFX_FILE_EXT;
-    const std::string exp_file     = "./test.txt.exp";
+    const std::string bra       = CMD_PREFIX + "bra --sfx";
+    const std::string in_file   = "./test.txt";
+    const std::string out_file_ = CMD_PREFIX + out_file;
+    const std::string exp_file  = "./test.txt.exp";
+    std::string       out_file_sfx;
+
+    if (out_file_.ends_with(".BRa"))
+        out_file_sfx = out_file_ + BRA_SFX_FILE_EXT;
+    else
+        out_file_sfx = out_file_ + ".BRA" + BRA_SFX_FILE_EXT;
 
     if (fs::exists(out_file_sfx))
         fs::remove(out_file_sfx);
@@ -137,7 +143,7 @@ int test_bra_sfx()
     if (fs::exists(exp_file))
         fs::remove(exp_file);
 
-    if (system((bra + " -o " + out_file + " " + in_file).c_str()) != 0)
+    if (system((bra + " -o " + out_file_ + " " + in_file).c_str()) != 0)
         return 1;
 
     if (!fs::exists(out_file_sfx))
@@ -157,6 +163,16 @@ int test_bra_sfx()
         return 6;
 
     return 0;
+}
+
+int test_suite_bra_sfx()
+{
+    int ret  = 0;
+    ret     += _test_bra_sfx("test.txt.BRa");
+    ret     += _test_bra_sfx("test.txt");
+    ret     += _test_bra_sfx("test");
+
+    return ret;
 }
 
 int test_bra_not_more_than_1_same_file()
@@ -209,8 +225,8 @@ int main(int argc, char* argv[])
             ret += test_bra_no_output_file();
         else if (std::string(argv[1]) == std::string("test_bra_unbra"))
             ret += test_bra_unbra();
-        else if (std::string(argv[1]) == std::string("test_bra_sfx"))
-            ret += test_bra_sfx();
+        else if (std::string(argv[1]) == std::string("test_suite_bra_sfx"))
+            ret += test_suite_bra_sfx();
         else if (std::string(argv[1]) == std::string("test_bra_not_more_than_1_same_file"))
             ret += test_bra_not_more_than_1_same_file();
     }
@@ -219,7 +235,7 @@ int main(int argc, char* argv[])
         std::cout << "Executing all tests..." << std::endl;
         ret += test_bra_no_output_file();
         ret += test_bra_unbra();
-        ret += test_bra_sfx();
+        ret += test_suite_bra_sfx();
         ret += test_bra_not_more_than_1_same_file();
     }
 

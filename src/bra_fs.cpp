@@ -17,7 +17,8 @@ std::optional<bool> bra_fs_file_exists_ask_overwrite(const std::filesystem::path
     {
         char c;
 
-        cout << format("File {} already exists. Overwrite? [Y/N] ", p.string());
+        cout << format("File {} already exists. Overwrite? [Y/N] ", p.string()) << flush;
+
         do
         {
             cin >> c;
@@ -93,19 +94,15 @@ std::string bra_fs_wildcard_to_regexp(const std::string& wildcard)
 
 bool bra_fs_search(const std::filesystem::path& dir, const std::string& pattern)
 {
-    // Define the regex pattern (e.g., files ending with ".txt")
     std::regex r(pattern);
 
     try
     {
-        // Iterate through the directory
         for (const auto& entry : fs::directory_iterator(dir))
         {
             if (entry.is_regular_file())
-            {    // Check if it's a file
+            {
                 const std::string filename = entry.path().filename().string();
-
-                // Match the filename with the regex pattern
                 if (std::regex_match(filename, r))
                 {
                     std::cout << "Matched file: " << filename << endl;
@@ -115,12 +112,12 @@ bool bra_fs_search(const std::filesystem::path& dir, const std::string& pattern)
     }
     catch (const fs::filesystem_error& e)
     {
-        cerr << "Filesystem error: " << e.what() << endl;
+        cerr << "ERROR: Filesystem error: " << e.what() << endl;
         return false;
     }
     catch (const std::regex_error& e)
     {
-        cerr << "Regex error: " << e.what() << endl;
+        cerr << "ERROR: Regex error: " << e.what() << endl;
         return false;
     }
 

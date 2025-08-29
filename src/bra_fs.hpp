@@ -18,7 +18,7 @@
  * @return true overwrite
  * @return false don't overwrite
  */
-std::optional<bool> bra_fs_file_exists_ask_overwrite(const std::filesystem::path& p);
+[[nodiscard]] std::optional<bool> bra_fs_file_exists_ask_overwrite(const std::filesystem::path& p);
 
 /**
  * @brief

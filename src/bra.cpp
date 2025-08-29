@@ -31,12 +31,13 @@ void help()
     cout << format("BR-Archive Utility Version: {}", VERSION) << endl;
     cout << endl;
     cout << format("Usage:") << endl;
-    cout << format("  bra [-s] [-o <output_file> <input_file1> [input_file2] ...") << endl;
+    cout << format("  bra [-s] -o <output_file> <input_file 1> [<input_file 2> ...]") << endl;
     cout << format("The [output_file] will be with a .BRa extension") << endl;
     cout << format("Example:") << endl;
     cout << format("  bra -o test test.txt") << endl;
+    cout << format("  bra -o text *.txt") << endl;
     cout << endl;
-    cout << format("(input_file) : is any file present in the disk or a wildcard search on fs") << endl;
+    cout << format("(input_file) : path to an existing file or a wildcard pattern") << endl;
     // cout << format("(output_file): output file name without extension") << endl;
     cout << endl;
     cout << format("Options:") << endl;

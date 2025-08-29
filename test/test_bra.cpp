@@ -20,8 +20,17 @@ namespace fs = std::filesystem;
 constexpr const std::string CMD_PREFIX = "./";
 #else
 constexpr const std::string CMD_PREFIX = "";
-
 #endif
+
+#ifndef __FUNCTION_NAME__
+#ifdef WIN32    // WINDOWS
+#define __FUNCTION_NAME__ __FUNCTION__
+#else           //*NIX
+#define __FUNCTION_NAME__ __func__
+#endif
+#endif
+
+#define PRINT_TEST_NAME std::cout << "[TEST] Running Test: " << __FUNCTION_NAME__ << std::endl
 
 bool AreFilesContentEquals(const std::filesystem::path& file1, const std::filesystem::path& file2)
 {
@@ -60,6 +69,8 @@ bool AreFilesContentEquals(const std::filesystem::path& file1, const std::filesy
 
 int test_bra_no_output_file()
 {
+    PRINT_TEST_NAME;
+
     const std::string bra     = CMD_PREFIX + "bra";
     const std::string in_file = "./test.txt";
 
@@ -72,6 +83,8 @@ int test_bra_no_output_file()
 
 int test_bra_unbra()
 {
+    PRINT_TEST_NAME;
+
     const std::string bra      = CMD_PREFIX + "bra";
     const std::string unbra    = CMD_PREFIX + "unbra";
     const std::string in_file  = "./test.txt";
@@ -110,6 +123,8 @@ int test_bra_unbra()
 
 int test_bra_sfx()
 {
+    PRINT_TEST_NAME;
+
     const std::string bra          = CMD_PREFIX + "bra --sfx";
     const std::string in_file      = "./test.txt";
     const std::string out_file     = CMD_PREFIX + "test.txt.BRa";
@@ -146,6 +161,8 @@ int test_bra_sfx()
 
 int test_bra_not_more_than_1_same_file()
 {
+    PRINT_TEST_NAME;
+
     const std::string bra      = CMD_PREFIX + "bra";
     const std::string unbra    = CMD_PREFIX + "unbra";
     const std::string in_file  = "./test.txt ./test.txt test.txt test.txt";

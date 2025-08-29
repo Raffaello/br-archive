@@ -38,7 +38,6 @@ void help()
     cout << format("  bra -o text *.txt") << endl;
     cout << endl;
     cout << format("(input_file) : path to an existing file or a wildcard pattern") << endl;
-    // cout << format("(output_file): output file name without extension") << endl;
     cout << endl;
     cout << format("Options:") << endl;
     cout << format("--help | -h : display this page.") << endl;
@@ -150,6 +149,7 @@ bool validate_args()
     }
 
     // adjust input file extension
+    // TODO: if it is an sfx and someone added BRA_SFX_FILE_EXT,  it should be removed (on windows only though)
     if (g_out_filename.extension() != BRA_FILE_EXT)
         g_out_filename += BRA_FILE_EXT;
 
@@ -173,7 +173,7 @@ bool validate_args()
     fs::path p = g_out_filename;
 
     if (g_sfx)
-        p.replace_extension(BRA_FILE_EXT) += BRA_SFX_FILE_EXT;
+        p.replace_extension(BRA_SFX_FILE_EXT);
 
     if (auto res = bra_fs_file_exists_ask_overwrite(p))
     {
@@ -263,8 +263,7 @@ int main(int argc, char* argv[])
     if (g_sfx)
     {
         fs::path sfx_path = g_out_filename;
-        sfx_path.replace_extension(BRA_FILE_EXT);
-        sfx_path += BRA_SFX_FILE_EXT;
+        sfx_path.replace_extension(BRA_SFX_FILE_EXT);
 
         cout << format("creating Self-extracting archive {}...", sfx_path.string());
 

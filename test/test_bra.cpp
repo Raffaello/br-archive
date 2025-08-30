@@ -66,8 +66,7 @@ int test_bra_no_output_file()
     const std::string in_file = "./test.txt";
 
     const int ret = system((bra + " " + in_file).c_str());
-    if (WEXITSTATUS(ret) != 1)
-        return 1;
+    ASSERT_TRUE(WEXITSTATUS(ret) == 1);
 
     return 0;
 }
@@ -102,8 +101,6 @@ int test_bra_unbra()
 
 int _test_bra_sfx(const std::string& out_file)
 {
-    // PRINT_TEST_SUITE_NAME(out_file);
-
     const std::string bra       = CMD_PREFIX + "bra --sfx";
     const std::string in_file   = "./test.txt";
     const std::string out_file_ = CMD_PREFIX + out_file;

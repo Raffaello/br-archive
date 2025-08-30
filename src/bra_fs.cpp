@@ -1,4 +1,5 @@
 #include "bra_fs.hpp"
+#include "lib_bra_defs.h"
 
 #include <iostream>
 #include <format>
@@ -11,12 +12,32 @@ namespace fs = std::filesystem;
 
 using namespace std;
 
+std::filesystem::path bra_fs_filename_sfx_adjust(const std::filesystem::path& out_file, const bool tmp)
+{
+    fs::path p;
+    fs::path sfx_ext = tmp ? BRA_SFX_TMP_FILE_EXT : BRA_SFX_FILE_EXT;
+
+    if (out_file.extension() == BRA_SFX_FILE_EXT)
+        p = out_file.stem();
+    else
+        p = out_file;
+
+
+    if (p.extension() == BRA_FILE_EXT)
+        p += sfx_ext;
+
+    else
+        p += string(BRA_FILE_EXT) + sfx_ext.string();
+
+    return p;
+}
+
 bool bra_fs_file_exists(const std::filesystem::path& p)
 {
     return fs::exists(p) && fs::is_regular_file(p);
 }
 
-std::optional<bool> bra_fs_file_exists_ask_overwrite(const std::filesystem::path& p)
+std::optional<bool> bra_fs_file_exists_ask_overwrite(const std::filesystem::path& p, const bool always_yes)
 {
     if (!bra_fs_file_exists(p))
         return nullopt;
@@ -24,6 +45,11 @@ std::optional<bool> bra_fs_file_exists_ask_overwrite(const std::filesystem::path
     char c;
 
     cout << format("File {} already exists. Overwrite? [Y/N] ", p.string()) << flush;
+    if (always_yes)
+    {
+        cout << 'y' << endl;
+        return true;
+    }
 
     do
     {

@@ -43,4 +43,5 @@ add_executable(test_bra_fs test_bra_fs.cpp)
 target_include_directories(test_bra_fs PRIVATE ${CMAKE_SOURCE_DIR}/src)
 target_link_libraries(test_bra_fs PRIVATE bra_fs)
 
-add_test(NAME test_bra_fs_wildcards     COMMAND test_bra_fs test_bra_fs_wildcards)
+add_test(NAME test_bra_fs_wildcards             COMMAND test_bra_fs test_bra_fs_wildcards)
+add_test(NAME test_bra_fs_sfx_filename_adjust    COMMAND test_bra_fs test_bra_fs_sfx_filename_adjust)

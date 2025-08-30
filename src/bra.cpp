@@ -149,33 +149,34 @@ bool validate_args()
     }
 
     // adjust input file extension
-    // TODO: if it is an sfx and someone added BRA_SFX_FILE_EXT,  it should be removed (on windows only though)
-    if (g_out_filename.extension() != BRA_FILE_EXT)
-        g_out_filename += BRA_FILE_EXT;
-
     if (g_sfx)
     {
-        g_out_filename += BRA_SFX_TMP_FILE_EXT;
+        g_out_filename = bra_fs_filename_sfx_adjust(g_out_filename, true);
         // locate sfx bin
-        if (!fs::exists(BRA_SFX_FILENAME))
+        if (!bra_fs_file_exists(BRA_SFX_FILENAME))
         {
             cerr << "ERROR: unable to find BRa-SFX module" << endl;
             return false;
         }
 
-        if (fs::exists(g_out_filename))
+        if (bra_fs_file_exists(g_out_filename))
         {
             cerr << format("ERROR: Temporary SFX File {} already exists.", g_out_filename.string()) << endl;
             return false;
         }
     }
+    else
+    {
+        if (g_out_filename.extension() != BRA_FILE_EXT)
+            g_out_filename += BRA_FILE_EXT;
+    }
 
     fs::path p = g_out_filename;
-
     if (g_sfx)
-        p.replace_extension(BRA_SFX_FILE_EXT);
+        p = g_out_filename.replace_extension(BRA_SFX_FILE_EXT);
 
-    if (auto res = bra_fs_file_exists_ask_overwrite(p))
+    // TODO: this might not be ok
+    if (auto res = bra_fs_file_exists_ask_overwrite(p, false))
     {
         if (!*res)
             return false;

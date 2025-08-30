@@ -9,6 +9,18 @@
 #include <string>
 #include <functional>
 
+
+/**
+ * @brief Return the given filename ending always with the correct extension.
+ *        if @p tmp is true the extension is #BRA_FILE_EXT #BRA_SFX_TMP_FILE_EXT
+ *        otherwise                       is #BRA_FILE_EXT #BRA_SFX_FILE_EXT
+ *
+ * @param out_file
+ * @param tmp
+ * @return std::filesystem::path the adjusted path.
+ */
+std::filesystem::path bra_fs_filename_sfx_adjust(const std::filesystem::path& out_file, const bool tmp);
+
 /**
  * @brief Check if a regular file exists.
  *
@@ -24,11 +36,12 @@ bool bra_fs_file_exists(const std::filesystem::path& p);
  * @note The file is considered a 'regular_file' it won't check if it is a directory.
  *
  * @param p
+ * @param always_yes if true, assumes yes without asking.
  * @return std::optional<bool> when has no value the file doesn't exist.
  * @return true overwrite
  * @return false don't overwrite
  */
-[[nodiscard]] std::optional<bool> bra_fs_file_exists_ask_overwrite(const std::filesystem::path& p);
+[[nodiscard]] std::optional<bool> bra_fs_file_exists_ask_overwrite(const std::filesystem::path& p, const bool always_yes);
 
 /**
  * @brief

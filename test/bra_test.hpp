@@ -12,17 +12,34 @@
 
 #define TEST_FUNC(x) #x, x
 
-#define ASSERT_TRUE(x)                                                           \
-    if (!(x))                                                                    \
-    {                                                                            \
-        auto l = std::source_location::current();                                \
-        std::cerr << std::format("[TEST FAILED {}] Expected true: '{}' ({}:{})", \
-                                 l.function_name(),                              \
-                                 #x,                                             \
-                                 l.file_name(),                                  \
-                                 l.line())                                       \
-                  << std::endl;                                                  \
-        return 1;                                                                \
+#define ASSERT_TRUE(x)                                                            \
+    if (!(x))                                                                     \
+    {                                                                             \
+        auto l = std::source_location::current();                                 \
+        std::cerr << std::format("[TEST FAILED {}] Expected true: '{}'\n({}:{})", \
+                                 l.function_name(),                               \
+                                 #x,                                              \
+                                 l.file_name(),                                   \
+                                 l.line())                                        \
+                  << std::endl;                                                   \
+        return 1;                                                                 \
+    }
+
+#define ASSERT_EQ(x, y)                                                        \
+    {                                                                          \
+        auto res_x = x;                                                        \
+        auto res_y = y;                                                        \
+        if ((res_x) != (res_y))                                                \
+        {                                                                      \
+            auto l = std::source_location::current();                          \
+            std::cerr << std::format("[TEST] {} FAILED:\n", l.function_name()) \
+                      << std::format("--> '{}' != '{}'\n", #x, #y)             \
+                      << std::format("Expected eq: '{}'\n", res_x)             \
+                      << std::format("             '{}'\n", res_y)             \
+                      << std::format("({}:{})\n", l.file_name(), l.line())     \
+                      << std::endl;                                            \
+            return 1;                                                          \
+        }                                                                      \
     }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

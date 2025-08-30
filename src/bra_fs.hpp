@@ -9,7 +9,13 @@
 #include <string>
 #include <functional>
 
-
+/**
+ * @brief Check if a regular file exists.
+ *
+ * @param p
+ * @return true
+ * @return false
+ */
 bool bra_fs_file_exists(const std::filesystem::path& p);
 
 /**

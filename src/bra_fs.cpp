@@ -28,7 +28,13 @@ std::optional<bool> bra_fs_file_exists_ask_overwrite(const std::filesystem::path
     do
     {
         cin >> c;
-        c = static_cast<char>(tolower(c));
+        if (cin.fail())
+        {
+            cin.clear();
+            c = 'n';
+        }
+        else
+            c = static_cast<char>(tolower(c));
     }
     while (c != 'y' && c != 'n');
 

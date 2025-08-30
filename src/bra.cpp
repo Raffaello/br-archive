@@ -270,7 +270,7 @@ int main(int argc, char* argv[])
         if (!fs::copy_file(BRA_SFX_FILENAME, sfx_path, fs::copy_options::overwrite_existing))
         {
         BRA_SFX_IO_ERROR:
-            cerr << "unable to create a BRa-SFX file" << endl;
+            cerr << "ERROR: unable to create a BRa-SFX file" << endl;
             return 2;
         }
 

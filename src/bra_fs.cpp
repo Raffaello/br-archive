@@ -7,6 +7,7 @@
 #include <cctype>
 #include <regex>
 #include <algorithm>
+#include <coroutine>
 
 namespace fs = std::filesystem;
 
@@ -240,4 +241,46 @@ bool bra_fs_search(const std::filesystem::path& dir, const std::string& pattern)
     }
 
     return res;
+}
+
+std::generator<std::filesystem::path> bra_fs_co_search(const std::filesystem::path& dir, [[maybe_unused]] const std::string& pattern)
+{
+    const std::regex r(pattern);
+
+    try
+    {
+        for (const auto& entry : fs::directory_iterator(dir))
+        {
+
+            // const bool is_dir = entry.is_directory();
+            const bool is_dir = false;    // TODO: must be done later, requires to struct into dir the archive too first.
+            if (!(entry.is_regular_file() || is_dir))
+                continue;
+
+            // const fs::path    ep       = entry.path();
+            // const std::string filename = ep.filename().string();
+            if (!std::regex_match(entry.path().filename().string(), r))
+                continue;
+
+            // if (is_dir)
+            // {
+            //     std::cout << "Matched dir: " << filename << endl;
+            //     const std::string p  = pattern.substr(ep.string().size());
+            //     res                 &= bra_fs_search(ep, p);
+            // }
+            //  else
+            // std::cout << "Matched file: " << filename << endl;
+            co_yield entry.path();
+        }
+    }
+    catch (const fs::filesystem_error& e)
+    {
+        cerr << "ERROR: Filesystem error: " << e.what() << endl;
+        co_return;
+    }
+    catch (const std::regex_error& e)
+    {
+        cerr << "ERROR: Regex error: " << e.what() << endl;
+        co_return;
+    }
 }

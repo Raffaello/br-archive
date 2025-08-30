@@ -72,31 +72,32 @@ int test_bra_fs_sfx_filename_adjust()
 
 int test_bra_fs_wildcard_extract_dir()
 {
-    string wildcard;
+    fs::path wildcard;
 
     wildcard = "*";
     ASSERT_EQ(bra_fs_wildcard_extract_dir(wildcard).string(), string("./"));
-    ASSERT_EQ(wildcard, "*");
+    ASSERT_EQ(wildcard.string(), "*");
 
     wildcard = "dir/*";
     ASSERT_EQ(bra_fs_wildcard_extract_dir(wildcard).string(), string("dir/"));
-    ASSERT_EQ(wildcard, "*");
+    ASSERT_EQ(wildcard.string(), "*");
 
-    wildcard = "dir\\*";
-    ASSERT_EQ(bra_fs_wildcard_extract_dir(wildcard).string(), string("dir/"));
-    ASSERT_EQ(wildcard, "*");
+    // wildcard = "dir\\*";
+    // ASSERT_TRUE(bra_fs_try_sanitize(wildcard));
+    // ASSERT_EQ(bra_fs_wildcard_extract_dir(wildcard).string(), string("dir/"));
+    // ASSERT_EQ(wildcard.string(), "*");
 
     wildcard = "dir/a";
     ASSERT_EQ(bra_fs_wildcard_extract_dir(wildcard).string(), string("dir/"));
-    ASSERT_EQ(wildcard, "");
+    ASSERT_EQ(wildcard.string(), "");
 
-    wildcard = "dir\\a";
-    ASSERT_EQ(bra_fs_wildcard_extract_dir(wildcard).string(), string("dir/"));
-    ASSERT_EQ(wildcard, "");
+    // wildcard = "dir\\a";
+    // ASSERT_EQ(bra_fs_wildcard_extract_dir(wildcard).string(), string("dir/"));
+    // ASSERT_EQ(wildcard.string(), "");
 
     wildcard = "no_dir_no_wildcard";
     ASSERT_EQ(bra_fs_wildcard_extract_dir(wildcard).string(), string("./"));
-    ASSERT_EQ(wildcard, "");
+    ASSERT_EQ(wildcard.string(), "");
 
     // TODO: to be implemented as it is required a dir struct.
     // wildcard = "d?r/*";

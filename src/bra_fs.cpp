@@ -42,15 +42,25 @@ bool bra_fs_try_sanitize(std::filesystem::path& path)
     return true;
 }
 
-std::filesystem::path bra_fs_filename_sfx_adjust(const std::filesystem::path& out_file, const bool tmp)
+std::filesystem::path bra_fs_filename_archive_adjust(const std::filesystem::path& path)
+{
+    fs::path p = path;
+
+    if (p.extension() != BRA_FILE_EXT)
+        p += BRA_FILE_EXT;
+
+    return p;
+}
+
+std::filesystem::path bra_fs_filename_sfx_adjust(const std::filesystem::path& path, const bool tmp)
 {
     fs::path p;
     fs::path sfx_ext = tmp ? BRA_SFX_TMP_FILE_EXT : BRA_SFX_FILE_EXT;
 
-    if (out_file.extension() == BRA_SFX_FILE_EXT)
-        p = out_file.stem();
+    if (path.extension() == BRA_SFX_FILE_EXT)
+        p = path.stem();
     else
-        p = out_file;
+        p = path;
 
 
     if (p.extension() == BRA_FILE_EXT)
@@ -98,16 +108,17 @@ std::optional<bool> bra_fs_file_exists_ask_overwrite(const std::filesystem::path
     return c == 'y';
 }
 
-bool bra_fs_isWildcard(const std::string& str)
+bool bra_fs_isWildcard(const std::filesystem::path& path)
 {
-    return str.find_first_of("?*") != string::npos;
+    return path.string().find_first_of("?*") != string::npos;
 }
 
-std::filesystem::path bra_fs_wildcard_extract_dir(std::string& wildcard)
+std::filesystem::path bra_fs_wildcard_extract_dir(std::filesystem::path& path_wildcard)
 {
     string       dir;
-    const size_t pos     = wildcard.find_first_of("?*");
-    const size_t dir_pos = wildcard.find_last_of('/', pos);
+    string       wildcard = path_wildcard.string();
+    const size_t pos      = wildcard.find_first_of("?*");
+    const size_t dir_pos  = wildcard.find_last_of('/', pos);
 
     if (dir_pos != string::npos)
         dir = wildcard.substr(0, dir_pos + 1);    // including '/'
@@ -127,6 +138,7 @@ std::filesystem::path bra_fs_wildcard_extract_dir(std::string& wildcard)
     if (!wildcard.empty() && dir_pos < pos)
         wildcard = wildcard.substr(pos, wildcard.size());
 
+    path_wildcard = wildcard;
     return fs::path(dir);
 }
 

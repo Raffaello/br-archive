@@ -12,6 +12,9 @@
 
 /**
  * @brief Try to sanitize the @p path.
+ *        It must be relative to the current directory.
+ *        It can't escape the current directory.
+ *        If it doesn't exists it will return false;
  *
  * @param path
  * @return true if it is successful
@@ -20,15 +23,23 @@
 bool bra_fs_try_sanitize(std::filesystem::path& path);
 
 /**
+ * @brief
+ *
+ * @param path
+ * @return std::filesystem::path
+ */
+[[nodiscard]] std::filesystem::path bra_fs_filename_archive_adjust(const std::filesystem::path& path);
+
+/**
  * @brief Return the given filename ending always with the correct extension.
  *        if @p tmp is true the extension is #BRA_FILE_EXT #BRA_SFX_TMP_FILE_EXT
  *        otherwise                       is #BRA_FILE_EXT #BRA_SFX_FILE_EXT
  *
- * @param out_file
+ * @param path
  * @param tmp
  * @return std::filesystem::path the adjusted path.
  */
-[[nodiscard]] std::filesystem::path bra_fs_filename_sfx_adjust(const std::filesystem::path& out_file, const bool tmp);
+[[nodiscard]] std::filesystem::path bra_fs_filename_sfx_adjust(const std::filesystem::path& path, const bool tmp);
 
 /**
  * @brief Check if a regular file exists.
@@ -57,13 +68,21 @@ bool bra_fs_try_sanitize(std::filesystem::path& path);
  *
  * @todo instead of bool return size_t: std::npos no wildcard, otherwise first wildcard char position.
  *
- * @param str
+ * @param path
  * @return true
  * @return false
  */
-[[nodiscard]] bool bra_fs_isWildcard(const std::string& str);
+[[nodiscard]] bool bra_fs_isWildcard(const std::filesystem::path& path);
 
-[[nodiscard]] std::filesystem::path bra_fs_wildcard_extract_dir(std::string& wildcard);
+/**
+ * @brief Extract the directory from a wildcard if it contains any.
+ *        The @p path_wildcard must have been sanitized with @ref bra_fs_try_sanitize,
+ *        otherwise results are undefined.
+ *
+ * @param path_wildcard
+ * @return std::filesystem::path
+ */
+[[nodiscard]] std::filesystem::path bra_fs_wildcard_extract_dir(std::filesystem::path& path_wildcard);
 
 /**
  * @brief

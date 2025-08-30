@@ -81,37 +81,31 @@ bool parse_args(int argc, char* argv[])
             g_out_filename = argv[i];
         }
         // check if it is file
-        else if (fs::exists(s))
+        else if (bra_fs_file_exists(s))
         {
-            if (!fs::is_regular_file(s))
-            {
-                cout << format("{} is not a file!", s) << endl;
-                return false;
-            }
-
             fs::path p = s;
 
             // check file path
-            // TODO: missing to check absolute path
-            if (p.generic_string().starts_with("../"))
+            if (!bra_fs_try_sanitize(p))
             {
-                cerr << format("ERROR: parent directory detected: {}", s) << endl;
+                cerr << format("ERROR: path not valid: {}", p.string()) << endl;
                 return false;
             }
 
-            auto p_ = fs::relative(p).generic_string();
-            if (g_files.contains(p_))
-                cout << format("WARNING: duplicate file given in input: {}", p_) << endl;
-            g_files.insert(p_);
+            // auto p_ = fs::relative(p).generic_string();
+            if (g_files.contains(p))
+                cout << format("WARNING: duplicate file given in input: {}", p.string()) << endl;
+            g_files.insert(p);
         }
         // check if it is a wildcard
         else if (bra_fs_isWildcard(s))
         {
-            const fs::path dir     = bra_fs_wildcard_extract_dir(s);
-            const string   pattern = bra_fs_wildcard_to_regexp(s);
+            fs::path       p       = s;
+            const fs::path dir     = bra_fs_wildcard_extract_dir(p);
+            const string   pattern = bra_fs_wildcard_to_regexp(p.string());
             if (!bra_fs_search(dir, pattern))
             {
-                cerr << "ERROR FS SEARCH FILES" << endl;
+                cerr << "ERROR: FS SEARCH FILES" << endl;
                 return false;
             }
 
@@ -167,8 +161,7 @@ bool validate_args()
     }
     else
     {
-        if (g_out_filename.extension() != BRA_FILE_EXT)
-            g_out_filename += BRA_FILE_EXT;
+        g_out_filename = bra_fs_filename_archive_adjust(g_out_filename);
     }
 
     fs::path p = g_out_filename;
@@ -187,6 +180,16 @@ bool validate_args()
     return true;
 }
 
+/**
+ * @brief
+ *
+ * @todo move into lib_bra
+ *
+ * @param f
+ * @param fn
+ * @return true
+ * @return false
+ */
 bool bra_file_encode_and_write_to_disk(bra_io_file_t* f, const string& fn)
 {
     cout << format("Archiving File: {}...", fn);

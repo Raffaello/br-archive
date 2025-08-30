@@ -44,7 +44,7 @@ target_link_libraries(bra PRIVATE lib_bra bra_fs)
 
 add_executable(unbra src/unbra.cpp)
 # set_property(TARGET unbra PROPERTY COMPILE_WARNING_AS_ERROR ON)
-target_link_libraries(unbra PRIVATE lib_bra)
+target_link_libraries(unbra PRIVATE lib_bra bra_fs)
 
 add_executable(bra_sfx src/bra_sfx.cpp)
 # set_property(TARGET bra_sfx PROPERTY COMPILE_WARNING_AS_ERROR ON)

@@ -99,6 +99,10 @@ int test_bra_fs_wildcard_extract_dir()
     ASSERT_EQ(bra_fs_wildcard_extract_dir(wildcard).string(), string("./"));
     ASSERT_EQ(wildcard.string(), "");
 
+    wildcard = "dir/file?.txt";
+    ASSERT_EQ(bra_fs_wildcard_extract_dir(wildcard).string(), string("dir/"));
+    ASSERT_EQ(wildcard.string(), "file?.txt");
+
     // TODO: to be implemented as it is required a dir struct.
     // wildcard = "d?r/*";
     // ASSERT_EQ(bra_fs_wildcard_extract_dir(wildcard).string(), string("d?r/"));

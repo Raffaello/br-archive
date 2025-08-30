@@ -90,6 +90,6 @@ bool bra_fs_try_sanitize(std::filesystem::path& path);
  * @param wildcard
  * @return std::string
  */
-std::string bra_fs_wildcard_to_regexp(const std::string& wildcard);
+[[nodiscard]] std::string bra_fs_wildcard_to_regexp(const std::string& wildcard);
 
 bool bra_fs_search(const std::filesystem::path& dir, const std::string& pattern);

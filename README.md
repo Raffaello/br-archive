@@ -8,7 +8,7 @@ This version doesn't support wildcard inputs for file selection; each file must 
 This lays the foundation for encoding, decoding, and self-extracting archives.
 
 > [!NOTE]
-> :information_source: **NOTE**: The project is aiming to do not use any 3rd-part library.
+> This project aims to avoid using third-party libraries.
 
 
 ## Self-Extracting Archive
@@ -26,4 +26,9 @@ an `.BRx` SFX will be generated for Linux oriented systems.
 
 ## Wildcard Expansions
 
-The supported wildcards at the moment are: `'*'`, `'?'`.
+Currently supported wildcards: `*` and `?`.
+
+> Notes:
+> - On POSIX shells, the shell may expand patterns; quote them to let BRa expand: `bra '*.br?'`.
+> - Recursive `**` and character classes like `[]` are not supported.
+> - Examples: `*.txt`, `image_??.png`

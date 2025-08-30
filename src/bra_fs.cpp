@@ -251,7 +251,6 @@ std::generator<std::filesystem::path> bra_fs_co_search(const std::filesystem::pa
     {
         for (const auto& entry : fs::directory_iterator(dir))
         {
-
             // const bool is_dir = entry.is_directory();
             const bool is_dir = false;    // TODO: must be done later, requires to struct into dir the archive too first.
             if (!(entry.is_regular_file() || is_dir))

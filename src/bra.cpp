@@ -110,14 +110,14 @@ bool parse_args(int argc, char* argv[])
                 return false;
             }
 
-            // // TODO:
-            // return false;    // for now just testing it
 
             for (auto const& fn : bra_fs_co_search(dir, pattern))
             {
                 cout << format("FILE {}", fn.string()) << endl;
             }
-            return false;
+
+            // // TODO:
+            // return false;    // for now just testing it
         }
         else
         {

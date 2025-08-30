@@ -102,11 +102,12 @@ bool unbra_list_meta_file(bra_io_file_t& f)
     if (!bra_io_read_meta_file(&f, &mf))
         return false;
 
+    const uint64_t ds = mf.data_size;
     cout << format("- size: {} bytes | {}", mf.name, mf.data_size) << endl;
+
     bra_meta_file_free(&mf);
 
     // skip data content
-    const uint64_t ds = mf.data_size;
     if (!bra_io_skip_data(&f, ds))
     {
         bra_io_read_error(&f);

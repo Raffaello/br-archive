@@ -20,12 +20,12 @@ add_test(NAME test_bra.sfx_2                        COMMAND test_bra test_bra_sf
 add_test(NAME test_bra.not_more_than_1_same_file    COMMAND test_bra test_bra_not_more_than_1_same_file)
 
 # set_tests_properties(
-#     test_bra_no_output_file
-#     test_bra_unbra
-#     test_bra_sfx_0
-#     test_bra_sfx_1
-#     test_bra_sfx_2
-#     test_bra_not_more_than_1_same_file
+#     test_bra.no_output_file
+#     test_bra.unbra
+#     test_bra.sfx_0
+#     test_bra.sfx_1
+#     test_bra.sfx_2
+#     test_bra.not_more_than_1_same_file
 #     PROPERTIES WORKING_DIRECTORY
 #     ${CMAKE_CURRENT_BINARY_DIR}
 # )

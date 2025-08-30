@@ -122,24 +122,16 @@ int _test_bra_sfx(const std::string& out_file)
     if (fs::exists(exp_file))
         fs::remove(exp_file);
 
-    if (system((bra + " -o " + out_file_ + " " + in_file).c_str()) != 0)
-        return 1;
-
-    if (!fs::exists(out_file_sfx))
-        return 2;
+    std::string sys_args = (bra + " -o " + out_file_ + " " + in_file);
+    std::cout << std::format("[TEST] CALLING: {}", sys_args) << std::endl;
+    ASSERT_TRUE(system(sys_args.c_str()) == 0);
+    ASSERT_TRUE(fs::exists(out_file_sfx));
 
     fs::rename(in_file, exp_file);
-    if (fs::exists(in_file))
-        return 3;
-
-    if (system((out_file_sfx).c_str()) != 0)
-        return 4;
-
-    if (!fs::exists(in_file))
-        return 5;
-
-    if (!AreFilesContentEquals(in_file, exp_file))
-        return 6;
+    ASSERT_TRUE(!fs::exists(in_file));
+    ASSERT_TRUE(system((out_file_sfx).c_str()) == 0);
+    ASSERT_TRUE(fs::exists(in_file));
+    ASSERT_TRUE(AreFilesContentEquals(in_file, exp_file));
 
     return 0;
 }
@@ -178,11 +170,8 @@ int test_bra_not_more_than_1_same_file()
     if (fs::exists(exp_file))
         fs::remove(exp_file);
 
-    if (system((bra + " -o " + out_file + " " + in_file).c_str()) != 0)
-        return 1;
-
-    if (!fs::exists(out_file))
-        return 2;
+    ASSERT_EQ(system((bra + " -o " + out_file + " " + in_file).c_str()), 0);
+    ASSERT_TRUE(fs::exists(out_file));
 
     FILE* output = popen((unbra + " -l " + out_file).c_str(), "r");
     if (output == nullptr)

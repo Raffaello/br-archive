@@ -173,7 +173,7 @@ bool validate_args()
 
     fs::path p = g_out_filename;
     if (g_sfx)
-        p = g_out_filename.replace_extension(BRA_SFX_FILE_EXT);
+        p = p.replace_extension(BRA_SFX_FILE_EXT);
 
     // TODO: this might not be ok
     if (auto res = bra_fs_file_exists_ask_overwrite(p, false))

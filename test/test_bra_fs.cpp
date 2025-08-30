@@ -5,6 +5,8 @@
 
 using namespace std;
 
+namespace fs = std::filesystem;
+
 int test_bra_fs_is_wildcards()
 {
     PRINT_TEST_NAME;
@@ -15,6 +17,34 @@ int test_bra_fs_is_wildcards()
 
     ASSERT_TRUE(!bra_fs_isWildcard(""));
     ASSERT_TRUE(!bra_fs_isWildcard("1234"));
+
+    return 0;
+}
+
+int test_bra_fs_try_sanitize_path()
+{
+    fs::path p;
+
+    p = "c:\\not_sane";
+    ASSERT_TRUE(!bra_fs_try_sanitize(p));
+    p = "..\\not_sane";
+    ASSERT_TRUE(!bra_fs_try_sanitize(p));
+
+    p = fs::current_path();
+    ASSERT_TRUE(bra_fs_try_sanitize(p));
+    ASSERT_EQ(p.string(), ".");
+
+    p = fs::current_path() / "test.txt";
+    ASSERT_TRUE(bra_fs_try_sanitize(p));
+    ASSERT_EQ(p.string(), "test.txt");
+
+    p = fs::current_path() / "not_existing_dir" / ".." / "test.txt";
+    ASSERT_TRUE(bra_fs_try_sanitize(p));
+    ASSERT_EQ(p.string(), "test.txt");
+
+    p = "./wildcards/*";
+    ASSERT_TRUE(bra_fs_try_sanitize(p));
+    ASSERT_EQ(p.string(), "wildcards/*");
 
     return 0;
 }
@@ -92,6 +122,7 @@ int main(int argc, char* argv[])
 {
     return test_main(argc, argv, {
                                      {TEST_FUNC(test_bra_fs_is_wildcards)},
+                                     {TEST_FUNC(test_bra_fs_try_sanitize_path)},
                                      {TEST_FUNC(test_bra_fs_sfx_filename_adjust)},
                                      {TEST_FUNC(test_bra_fs_wildcard_extract_dir)},
                                  });

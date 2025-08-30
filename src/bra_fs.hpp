@@ -11,6 +11,15 @@
 
 
 /**
+ * @brief Try to sanitize the @p path.
+ *
+ * @param path
+ * @return true if it is successful
+ * @return false otherwise
+ */
+bool bra_fs_try_sanitize(std::filesystem::path& path);
+
+/**
  * @brief Return the given filename ending always with the correct extension.
  *        if @p tmp is true the extension is #BRA_FILE_EXT #BRA_SFX_TMP_FILE_EXT
  *        otherwise                       is #BRA_FILE_EXT #BRA_SFX_FILE_EXT

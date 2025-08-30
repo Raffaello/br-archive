@@ -12,6 +12,36 @@ namespace fs = std::filesystem;
 
 using namespace std;
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+bool bra_fs_try_sanitize(std::filesystem::path& path)
+{
+    {
+        auto p = path;
+
+        path = fs::relative(path, "./");
+        if (!p.string().empty() && path.string().empty())
+            return false;
+    }
+
+    for (const auto& p : path)
+    {
+        if (p == "..")
+            return false;
+    }
+
+    string s = path.string();
+
+    if (s.size() >= 2 && s[1] == ':')
+        return false;
+
+    replace(s.begin(), s.end(), '\\', '/');
+
+    path = s;
+
+    return true;
+}
+
 std::filesystem::path bra_fs_filename_sfx_adjust(const std::filesystem::path& out_file, const bool tmp)
 {
     fs::path p;
@@ -75,8 +105,6 @@ bool bra_fs_isWildcard(const std::string& str)
 
 std::filesystem::path bra_fs_wildcard_extract_dir(std::string& wildcard)
 {
-    replace(wildcard.begin(), wildcard.end(), '\\', '/');
-
     string       dir;
     const size_t pos     = wildcard.find_first_of("?*");
     const size_t dir_pos = wildcard.find_last_of('/', pos);

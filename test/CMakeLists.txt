@@ -6,6 +6,8 @@ target_include_directories(test_bra_fs PRIVATE ${CMAKE_SOURCE_DIR}/src)
 target_link_libraries(test_bra_fs PRIVATE bra_fs)
 
 add_test(NAME test_bra_fs.is_wildcards          COMMAND test_bra_fs test_bra_fs_is_wildcards)
+add_test(NAME test_bra_fs.try_sanitize_path     COMMAND test_bra_fs test_bra_fs_try_sanitize_path)
+
 add_test(NAME test_bra_fs.sfx_filename_adjust   COMMAND test_bra_fs test_bra_fs_sfx_filename_adjust)
 add_test(NAME test_bra_fs_wildcard_extract_dir  COMMAND test_bra_fs test_bra_fs_wildcard_extract_dir)
 

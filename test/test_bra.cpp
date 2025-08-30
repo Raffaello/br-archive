@@ -138,10 +138,10 @@ int _test_bra_sfx(const std::string& out_file)
     const std::string exp_file  = "./test.txt.exp";
     std::string       out_file_sfx;
 
-    if (out_file_.ends_with(".BRa"))
+    if (out_file_.ends_with(BRA_FILE_EXT))
         out_file_sfx = out_file_ + BRA_SFX_FILE_EXT;
     else
-        out_file_sfx = out_file_ + ".BRA" + BRA_SFX_FILE_EXT;
+        out_file_sfx = out_file_ + BRA_FILE_EXT + BRA_SFX_FILE_EXT;
 
     std::cout << std::format("out_file_sfx: {}", out_file_sfx) << std::endl;
     if (fs::exists(out_file_sfx))

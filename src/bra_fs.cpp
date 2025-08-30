@@ -84,7 +84,7 @@ std::filesystem::path bra_fs_wildcard_extract_dir(std::string& wildcard)
     if (dir_pos != string::npos)
         dir = wildcard.substr(0, dir_pos + 1);    // including '/'
     else
-        dir = "./";
+        dir = "./";                               // the wildcard is before the directory separator or there is no directory
 
     switch (pos)
     {
@@ -96,7 +96,7 @@ std::filesystem::path bra_fs_wildcard_extract_dir(std::string& wildcard)
         break;
     }
 
-    if (!wildcard.empty())
+    if (!wildcard.empty() && dir_pos < pos)
         wildcard = wildcard.substr(pos, wildcard.size());
 
     return fs::path(dir);
@@ -141,18 +141,29 @@ bool bra_fs_search(const std::filesystem::path& dir, const std::string& pattern)
 {
     std::regex r(pattern);
 
+    bool res = true;
     try
     {
         for (const auto& entry : fs::directory_iterator(dir))
         {
-            if (entry.is_regular_file())
-            {
-                const std::string filename = entry.path().filename().string();
-                if (std::regex_match(filename, r))
-                {
-                    std::cout << "Matched file: " << filename << endl;
-                }
-            }
+            // const bool is_dir = entry.is_directory();
+            const bool is_dir = false;    // TODO: must be done later, requires to struct into dir the archive too first.
+            if (!(entry.is_regular_file() || is_dir))
+                continue;
+
+            const fs::path    ep       = entry.path();
+            const std::string filename = ep.filename().string();
+            if (!std::regex_match(filename, r))
+                continue;
+
+            // if (is_dir)
+            // {
+            //     std::cout << "Matched dir: " << filename << endl;
+            //     const std::string p  = pattern.substr(ep.string().size());
+            //     res                 &= bra_fs_search(ep, p);
+            // }
+            // else
+            std::cout << "Matched file: " << filename << endl;
         }
     }
     catch (const fs::filesystem_error& e)
@@ -166,5 +177,5 @@ bool bra_fs_search(const std::filesystem::path& dir, const std::string& pattern)
         return false;
     }
 
-    return true;
+    return res;
 }

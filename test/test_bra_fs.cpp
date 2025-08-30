@@ -68,6 +68,23 @@ int test_bra_fs_wildcard_extract_dir()
     ASSERT_EQ(bra_fs_wildcard_extract_dir(wildcard).string(), string("./"));
     ASSERT_EQ(wildcard, "");
 
+    // TODO: to be implemented as it is required a dir struct.
+    // wildcard = "d?r/*";
+    // ASSERT_EQ(bra_fs_wildcard_extract_dir(wildcard).string(), string("d?r/"));
+    // ASSERT_EQ(wildcard, "*");
+
+    // wildcard = "dir\\*";
+    // ASSERT_EQ(bra_fs_wildcard_extract_dir(wildcard).string(), string("dir/"));
+    // ASSERT_EQ(wildcard, "*");
+
+    // wildcard = "dir/a";
+    // ASSERT_EQ(bra_fs_wildcard_extract_dir(wildcard).string(), string("dir/"));
+    // ASSERT_EQ(wildcard, "");
+
+    // wildcard = "dir\\a";
+    // ASSERT_EQ(bra_fs_wildcard_extract_dir(wildcard).string(), string("dir/"));
+    // ASSERT_EQ(wildcard, "");
+
     return 0;
 }
 

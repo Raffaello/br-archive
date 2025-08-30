@@ -226,7 +226,7 @@ bool bra_fs_search(const std::filesystem::path& dir, const std::string& pattern)
             //     res                 &= bra_fs_search(ep, p);
             // }
             // else
-            std::cout << "Matched file: " << filename << endl;
+            std::cout << "[DEBUG] Expected file: " << filename << endl;
         }
     }
     catch (const fs::filesystem_error& e)

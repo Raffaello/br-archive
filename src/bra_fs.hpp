@@ -92,6 +92,6 @@ bool bra_fs_try_sanitize(std::filesystem::path& path);
  */
 [[nodiscard]] std::string bra_fs_wildcard_to_regexp(const std::string& wildcard);
 
-bool bra_fs_search(const std::filesystem::path& dir, const std::string& pattern);
+[[deprecated]] bool bra_fs_search(const std::filesystem::path& dir, const std::string& pattern);
 
 std::generator<std::filesystem::path> bra_fs_co_search(const std::filesystem::path& dir, const std::string& pattern);

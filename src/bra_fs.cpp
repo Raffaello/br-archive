@@ -110,7 +110,35 @@ std::optional<bool> bra_fs_file_exists_ask_overwrite(const std::filesystem::path
 
 bool bra_fs_isWildcard(const std::filesystem::path& path)
 {
-    return path.string().find_first_of("?*") != string::npos;
+    if (path.empty())
+        return false;
+
+    const string s = path.string();
+
+    // TODO: to be implemented in extract dir too
+
+    // bool par   = false;
+    // int  count = 0;
+    // for (const char& c : s)
+    // {
+    //     if (c == '[')
+    //     {
+    //         ++count;
+    //         par = true;
+    //     }
+    //     else if (c == ']')
+    //     {
+    //         --count;
+    //         if (count < 0)
+    //             break;
+    //     }
+    // }
+
+    // if (par && count == 0)
+    //     return true;
+
+    // TODO; to be integrated in the for loop above
+    return s.find_first_of("?*") != string::npos;
 }
 
 std::filesystem::path bra_fs_wildcard_extract_dir(std::filesystem::path& path_wildcard)

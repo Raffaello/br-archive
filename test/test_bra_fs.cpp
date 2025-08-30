@@ -14,9 +14,11 @@ int test_bra_fs_is_wildcards()
     ASSERT_TRUE(bra_fs_isWildcard("*"));
     ASSERT_TRUE(bra_fs_isWildcard(".*"));
     ASSERT_TRUE(bra_fs_isWildcard("AbcD?"));
+    // ASSERT_TRUE(bra_fs_isWildcard("t[1-9]")); // TODO
 
     ASSERT_TRUE(!bra_fs_isWildcard(""));
     ASSERT_TRUE(!bra_fs_isWildcard("1234"));
+    // ASSERT_TRUE(!bra_fs_isWildcard("t]1-9["));
 
     return 0;
 }

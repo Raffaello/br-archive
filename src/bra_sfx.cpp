@@ -84,15 +84,6 @@ void help()
 {
     cout << format("BR-Archive Utility Version: {}", VERSION) << endl;
     cout << endl;
-    // cout << format("Usage:") << endl;
-    // cout << endl;
-    // cout << format("  unbra (output_directory)") << endl;
-    // cout << format("The [output_file(s)] will be as they are stored in the archive") << endl;
-    // cout << format("Example:") << endl;
-    // cout << format("  unbra test.BRa") << endl;
-    // cout << endl;
-    // cout << format("(input_file) : (single file only for now) the output") << endl;
-    // cout << format("(output_file): output file name without extension") << endl;
     cout << endl;
     cout << format("Options:") << endl;
     cout << format("--help | -h : display this page.") << endl;

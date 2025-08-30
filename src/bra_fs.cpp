@@ -136,7 +136,7 @@ std::filesystem::path bra_fs_wildcard_extract_dir(std::filesystem::path& path_wi
     }
 
     if (!wildcard.empty() && dir_pos < pos)
-        wildcard = wildcard.substr(pos, wildcard.size());
+        wildcard = wildcard.substr(dir_pos + 1, wildcard.size());
 
     path_wildcard = wildcard;
     return fs::path(dir);

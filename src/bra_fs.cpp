@@ -16,13 +16,14 @@ using namespace std;
 
 bool bra_fs_try_sanitize(std::filesystem::path& path)
 {
-    {
-        auto p = path;
+    error_code ec;
 
-        path = fs::relative(path, "./");
-        if (!p.string().empty() && path.string().empty())
-            return false;
-    }
+    path = fs::relative(path, fs::current_path(), ec);
+    if (ec)
+        return false;
+
+    if (path.is_absolute() || path.has_root_name())
+        return false;
 
     for (const auto& p : path)
     {
@@ -30,16 +31,9 @@ bool bra_fs_try_sanitize(std::filesystem::path& path)
             return false;
     }
 
-    string s = path.string();
+    path = path.lexically_normal().generic_string();
 
-    if (s.size() >= 2 && s[1] == ':')
-        return false;
-
-    replace(s.begin(), s.end(), '\\', '/');
-
-    path = s;
-
-    return true;
+    return !path.empty();
 }
 
 std::filesystem::path bra_fs_filename_archive_adjust(const std::filesystem::path& path)

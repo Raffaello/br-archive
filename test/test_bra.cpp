@@ -5,6 +5,8 @@
 #include <format>
 #include <iostream>
 #include <cstdio>
+#include <source_location>
+
 
 #if defined(__unix__) || defined(__APPLE__)
 #include <sys/wait.h>
@@ -22,16 +24,19 @@ constexpr const std::string CMD_PREFIX = "./";
 constexpr const std::string CMD_PREFIX = "";
 #endif
 
-#ifndef __FUNCTION_NAME__
-#ifdef WIN32    // WINDOWS
-#define __FUNCTION_NAME__ __FUNCTION__
-#else           //*NIX
-#define __FUNCTION_NAME__ __func__
-#endif
-#endif
+// #ifndef __FUNCTION_NAME__
+// #ifdef _WIN32    // WINDOWS
+// #define __FUNCTION_NAME__ __FUNCTION__
+// #else            //*NIX
+// #define __FUNCTION_NAME__ __func__
+// #endif
+// #endif
 
-#define PRINT_TEST_NAME          std::cout << "[TEST] Running Test: " << __FUNCTION_NAME__ << std::endl
-#define PRINT_TEST_SUITE_NAME(x) std::cout << "[TEST] Running Test: " << __FUNCTION_NAME__ << "->" << std::string(x) << std::endl
+// #define PRINT_TEST_NAME          std::cout << "[TEST] Running Test: " << __FUNCTION_NAME__ << std::endl
+// #define PRINT_TEST_SUITE_NAME(x) std::cout << "[TEST] Running Test: " << __FUNCTION_NAME__ << "->" << std::string(x) << std::endl
+
+#define PRINT_TEST_NAME          std::cout << "[TEST] Running Test: " << std::source_location::current().function_name() << std::endl
+#define PRINT_TEST_SUITE_NAME(x) std::cout << "[TEST] Running Test: " << std::source_location::current().function_name() << "->" << std::string(x) << std::endl
 
 bool AreFilesContentEquals(const std::filesystem::path& file1, const std::filesystem::path& file2)
 {

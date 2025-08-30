@@ -7,6 +7,10 @@ The Default extension for the archive format is `.BRa`
 This version doesn't support wildcard inputs for file selection; each file must be specified explicitly.
 This lays the foundation for encoding, decoding, and self-extracting archives.
 
+> [!NOTE]
+> :information_source: **NOTE**: The project is aiming to do not use any 3rd-part library.
+
+
 ## Self-Extracting Archive
 
 The self extracting archive will be done in the following formats:
@@ -19,3 +23,7 @@ an `.EXE` SFX will be generated for MS Windows oriented systems.
 
 an `.BRx` SFX will be generated for Linux oriented systems.
 
+
+## Wildcard Expansions
+
+The supported wildcards at the moment are: `'*'`, `'?'`.

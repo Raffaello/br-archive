@@ -25,6 +25,8 @@ int test_bra_fs_is_wildcards()
 
 int test_bra_fs_try_sanitize_path()
 {
+    PRINT_TEST_NAME;
+
     fs::path p;
 
     p = "c:\\not_sane";
@@ -74,6 +76,8 @@ int test_bra_fs_sfx_filename_adjust()
 
 int test_bra_fs_wildcard_extract_dir()
 {
+    PRINT_TEST_NAME;
+
     fs::path wildcard;
 
     wildcard = "*";

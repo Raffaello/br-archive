@@ -172,10 +172,11 @@ int _test_bra_sfx(const std::string& out_file)
 
 int test_suite_bra_sfx()
 {
-    int ret  = 0;
-    ret     += _test_bra_sfx("test.txt.BRa");
-    ret     += _test_bra_sfx("test.txt");
-    ret     += _test_bra_sfx("test");
+    int ret = 0;
+
+    ret += _test_bra_sfx("test.txt.BRa");
+    ret += _test_bra_sfx("test.txt");
+    ret += _test_bra_sfx("test");
 
     return ret;
 }

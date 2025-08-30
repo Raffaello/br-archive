@@ -7,6 +7,10 @@
 #include <filesystem>
 #include <optional>
 #include <string>
+#include <functional>
+
+
+bool bra_fs_file_exists(const std::filesystem::path& p);
 
 /**
  * @brief Check if the file exists and ask the user to overwrite.

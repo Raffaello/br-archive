@@ -11,26 +11,29 @@ namespace fs = std::filesystem;
 
 using namespace std;
 
+bool bra_fs_file_exists(const std::filesystem::path& p)
+{
+    return fs::exists(p) && fs::is_regular_file(p);
+}
+
 std::optional<bool> bra_fs_file_exists_ask_overwrite(const std::filesystem::path& p)
 {
-    if (fs::exists(p) && fs::is_regular_file(p))
+    if (!bra_fs_file_exists(p))
+        return nullopt;
+
+    char c;
+
+    cout << format("File {} already exists. Overwrite? [Y/N] ", p.string()) << flush;
+
+    do
     {
-        char c;
-
-        cout << format("File {} already exists. Overwrite? [Y/N] ", p.string()) << flush;
-
-        do
-        {
-            cin >> c;
-            c = tolower(c);
-        }
-        while (c != 'y' && c != 'n');
-
-        cout << endl;
-        return c == 'y';
+        cin >> c;
+        c = static_cast<char>(tolower(c));
     }
+    while (c != 'y' && c != 'n');
 
-    return nullopt;
+    cout << endl;
+    return c == 'y';
 }
 
 bool bra_fs_isWildcard(const std::string& str)

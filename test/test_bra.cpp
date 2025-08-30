@@ -1,10 +1,12 @@
+#include "bra_test.hpp"
+
+#include <bra_fs.hpp>
+
 #include <cstdlib>
 #include <filesystem>
-#include <string>
 #include <fstream>
-#include <format>
-#include <iostream>
 #include <cstdio>
+
 
 #if defined(__unix__) || defined(__APPLE__)
 #include <sys/wait.h>
@@ -20,8 +22,8 @@ namespace fs = std::filesystem;
 constexpr const std::string CMD_PREFIX = "./";
 #else
 constexpr const std::string CMD_PREFIX = "";
-
 #endif
+
 
 bool AreFilesContentEquals(const std::filesystem::path& file1, const std::filesystem::path& file2)
 {
@@ -56,22 +58,25 @@ bool AreFilesContentEquals(const std::filesystem::path& file1, const std::filesy
     return true;    // Files are identical
 }
 
-/////////////////////////////////////////////////////./////////////////////////
+///////////////////////////////////////////////////////////////////////////////
 
 int test_bra_no_output_file()
 {
+    PRINT_TEST_NAME;
+
     const std::string bra     = CMD_PREFIX + "bra";
     const std::string in_file = "./test.txt";
 
     const int ret = system((bra + " " + in_file).c_str());
-    if (WEXITSTATUS(ret) != 1)
-        return 1;
+    ASSERT_TRUE(WEXITSTATUS(ret) == 1);
 
     return 0;
 }
 
 int test_bra_unbra()
 {
+    PRINT_TEST_NAME;
+
     const std::string bra      = CMD_PREFIX + "bra";
     const std::string unbra    = CMD_PREFIX + "unbra";
     const std::string in_file  = "./test.txt";
@@ -84,68 +89,75 @@ int test_bra_unbra()
     if (fs::exists(exp_file))
         fs::remove(exp_file);
 
-    if (system((bra + " -o " + out_file + " " + in_file).c_str()) != 0)
-        return 1;
-
-    if (!fs::exists(out_file))
-    {
-        std::cerr << std::format("TEST FAILED: missing out_file {}", out_file) << std::endl;
-        return 2;
-    }
+    ASSERT_TRUE(system((bra + " -o " + out_file + " " + in_file).c_str()) == 0);
+    ASSERT_TRUE(fs::exists(out_file));
 
     fs::rename(in_file, exp_file);
-    if (fs::exists(in_file))
-        return 3;
-    if (system((unbra + " " + out_file).c_str()) != 0)
-        return 4;
-
-    if (!fs::exists(in_file))
-        return 5;
-
-    if (!AreFilesContentEquals(in_file, exp_file))
-        return 6;
+    ASSERT_TRUE(!fs::exists(in_file));
+    ASSERT_TRUE(system((unbra + " " + out_file).c_str()) == 0);
+    ASSERT_TRUE(fs::exists(in_file));
+    ASSERT_TRUE(AreFilesContentEquals(in_file, exp_file));
 
     return 0;
 }
 
-int test_bra_sfx()
+int _test_bra_sfx(const std::string& out_file)
 {
-    const std::string bra          = CMD_PREFIX + "bra --sfx";
-    const std::string in_file      = "./test.txt";
-    const std::string out_file     = CMD_PREFIX + "test.txt.BRa";
-    const std::string out_file_sfx = out_file + BRA_SFX_FILE_EXT;
-    const std::string exp_file     = "./test.txt.exp";
+    const std::string bra       = CMD_PREFIX + "bra --sfx";
+    const std::string in_file   = "./test.txt";
+    const std::string out_file_ = CMD_PREFIX + out_file;
+    const std::string exp_file  = "./test.txt.exp";
+    std::string       out_file_sfx;
 
+    // if (out_file_.ends_with(BRA_FILE_EXT))
+    //     out_file_sfx = out_file_ + BRA_SFX_FILE_EXT;
+    // else
+    //     out_file_sfx = out_file_ + BRA_FILE_EXT + BRA_SFX_FILE_EXT;
+    out_file_sfx = bra_fs_filename_sfx_adjust(out_file_, false).string();
+
+    std::cout << std::format("out_file_sfx: {}", out_file_sfx) << std::endl;
     if (fs::exists(out_file_sfx))
         fs::remove(out_file_sfx);
 
     if (fs::exists(exp_file))
         fs::remove(exp_file);
 
-    if (system((bra + " -o " + out_file + " " + in_file).c_str()) != 0)
-        return 1;
-
-    if (!fs::exists(out_file_sfx))
-        return 2;
+    std::string sys_args = (bra + " -o " + out_file_ + " " + in_file);
+    std::cout << std::format("[TEST] CALLING: {}", sys_args) << std::endl;
+    ASSERT_TRUE(system(sys_args.c_str()) == 0);
+    ASSERT_TRUE(fs::exists(out_file_sfx));
 
     fs::rename(in_file, exp_file);
-    if (fs::exists(in_file))
-        return 3;
-
-    if (system((out_file_sfx).c_str()) != 0)
-        return 4;
-
-    if (!fs::exists(in_file))
-        return 5;
-
-    if (!AreFilesContentEquals(in_file, exp_file))
-        return 6;
+    ASSERT_TRUE(!fs::exists(in_file));
+    ASSERT_TRUE(system((out_file_sfx).c_str()) == 0);
+    ASSERT_TRUE(fs::exists(in_file));
+    ASSERT_TRUE(AreFilesContentEquals(in_file, exp_file));
 
     return 0;
 }
 
+int test_bra_sfx_0()
+{
+    PRINT_TEST_NAME;
+    return _test_bra_sfx("test.txt.BRa");
+}
+
+int test_bra_sfx_1()
+{
+    PRINT_TEST_NAME;
+    return _test_bra_sfx("test.txt");
+}
+
+int test_bra_sfx_2()
+{
+    PRINT_TEST_NAME;
+    return _test_bra_sfx("test");
+}
+
 int test_bra_not_more_than_1_same_file()
 {
+    PRINT_TEST_NAME;
+
     const std::string bra      = CMD_PREFIX + "bra";
     const std::string unbra    = CMD_PREFIX + "unbra";
     const std::string in_file  = "./test.txt ./test.txt test.txt test.txt";
@@ -158,11 +170,8 @@ int test_bra_not_more_than_1_same_file()
     if (fs::exists(exp_file))
         fs::remove(exp_file);
 
-    if (system((bra + " -o " + out_file + " " + in_file).c_str()) != 0)
-        return 1;
-
-    if (!fs::exists(out_file))
-        return 2;
+    ASSERT_EQ(system((bra + " -o " + out_file + " " + in_file).c_str()), 0);
+    ASSERT_TRUE(fs::exists(out_file));
 
     FILE* output = popen((unbra + " -l " + out_file).c_str(), "r");
     if (output == nullptr)
@@ -184,27 +193,14 @@ int test_bra_not_more_than_1_same_file()
 
 int main(int argc, char* argv[])
 {
-    int ret = 0;
+    const std::map<std::string, std::function<int()>> m = {
+        {TEST_FUNC(test_bra_no_output_file)},
+        {TEST_FUNC(test_bra_unbra)},
+        {TEST_FUNC(test_bra_sfx_0)},
+        {TEST_FUNC(test_bra_sfx_1)},
+        {TEST_FUNC(test_bra_sfx_2)},
+        {TEST_FUNC(test_bra_not_more_than_1_same_file)},
+    };
 
-    if (argc >= 2)
-    {
-        if (std::string(argv[1]) == std::string("test_bra_no_output_file"))
-            ret += test_bra_no_output_file();
-        else if (std::string(argv[1]) == std::string("test_bra_unbra"))
-            ret += test_bra_unbra();
-        else if (std::string(argv[1]) == std::string("test_bra_sfx"))
-            ret += test_bra_sfx();
-        else if (std::string(argv[1]) == std::string("test_bra_not_more_than_1_same_file"))
-            ret += test_bra_not_more_than_1_same_file();
-    }
-    else
-    {
-        std::cout << "Executing all tests..." << std::endl;
-        ret += test_bra_no_output_file();
-        ret += test_bra_unbra();
-        ret += test_bra_sfx();
-        ret += test_bra_not_more_than_1_same_file();
-    }
-
-    return ret;
+    return test_main(argc, argv, m);
 }

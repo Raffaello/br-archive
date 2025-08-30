@@ -19,7 +19,7 @@
  * @param tmp
  * @return std::filesystem::path the adjusted path.
  */
-std::filesystem::path bra_fs_filename_sfx_adjust(const std::filesystem::path& out_file, const bool tmp);
+[[nodiscard]] std::filesystem::path bra_fs_filename_sfx_adjust(const std::filesystem::path& out_file, const bool tmp);
 
 /**
  * @brief Check if a regular file exists.
@@ -28,7 +28,7 @@ std::filesystem::path bra_fs_filename_sfx_adjust(const std::filesystem::path& ou
  * @return true
  * @return false
  */
-bool bra_fs_file_exists(const std::filesystem::path& p);
+[[nodiscard]] bool bra_fs_file_exists(const std::filesystem::path& p);
 
 /**
  * @brief Check if the file exists and ask the user to overwrite.
@@ -52,9 +52,9 @@ bool bra_fs_file_exists(const std::filesystem::path& p);
  * @return true
  * @return false
  */
-bool bra_fs_isWildcard(const std::string& str);
+[[nodiscard]] bool bra_fs_isWildcard(const std::string& str);
 
-std::filesystem::path bra_fs_wildcard_extract_dir(std::string& wildcard);
+[[nodiscard]] std::filesystem::path bra_fs_wildcard_extract_dir(std::string& wildcard);
 
 /**
  * @brief

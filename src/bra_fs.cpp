@@ -70,25 +70,35 @@ std::optional<bool> bra_fs_file_exists_ask_overwrite(const std::filesystem::path
 
 bool bra_fs_isWildcard(const std::string& str)
 {
-    for (const char& c : str)
-    {
-        if (c == '*' || c == '?')
-            return true;
-    }
-
-    return false;
+    return str.find_first_of("?*") != string::npos;
 }
 
 std::filesystem::path bra_fs_wildcard_extract_dir(std::string& wildcard)
 {
-    size_t pos = std::min(wildcard.find_first_of('?'), wildcard.find_first_of('*'));
-    if (pos == 0 || pos == string::npos)
-        return "./";
+    replace(wildcard.begin(), wildcard.end(), '\\', '/');
 
-    // instead if there is an explicit directory
-    string dir = wildcard.substr(0, pos);
+    string       dir;
+    const size_t pos     = wildcard.find_first_of("?*");
+    const size_t dir_pos = wildcard.find_last_of('/', pos);
 
-    wildcard = wildcard.substr(dir.length(), wildcard.size());
+    if (dir_pos != string::npos)
+        dir = wildcard.substr(0, dir_pos + 1);    // including '/'
+    else
+        dir = "./";
+
+    switch (pos)
+    {
+    // case 0:
+    // return dir;
+    case string::npos:
+        cout << format("[DEBUG] No wildcard found in here: {}", wildcard) << endl;
+        wildcard.clear();
+        break;
+    }
+
+    if (!wildcard.empty())
+        wildcard = wildcard.substr(pos, wildcard.size());
+
     return fs::path(dir);
 }
 

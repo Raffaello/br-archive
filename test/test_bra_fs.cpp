@@ -5,7 +5,7 @@
 
 using namespace std;
 
-int test_bra_fs_wildcards()
+int test_bra_fs_is_wildcards()
 {
     PRINT_TEST_NAME;
 
@@ -40,10 +40,42 @@ int test_bra_fs_sfx_filename_adjust()
     return 0;
 }
 
+int test_bra_fs_wildcard_extract_dir()
+{
+    string wildcard;
+
+    wildcard = "*";
+    ASSERT_EQ(bra_fs_wildcard_extract_dir(wildcard).string(), string("./"));
+    ASSERT_EQ(wildcard, "*");
+
+    wildcard = "dir/*";
+    ASSERT_EQ(bra_fs_wildcard_extract_dir(wildcard).string(), string("dir/"));
+    ASSERT_EQ(wildcard, "*");
+
+    wildcard = "dir\\*";
+    ASSERT_EQ(bra_fs_wildcard_extract_dir(wildcard).string(), string("dir/"));
+    ASSERT_EQ(wildcard, "*");
+
+    wildcard = "dir/a";
+    ASSERT_EQ(bra_fs_wildcard_extract_dir(wildcard).string(), string("dir/"));
+    ASSERT_EQ(wildcard, "");
+
+    wildcard = "dir\\a";
+    ASSERT_EQ(bra_fs_wildcard_extract_dir(wildcard).string(), string("dir/"));
+    ASSERT_EQ(wildcard, "");
+
+    wildcard = "no_dir_no_wildcard";
+    ASSERT_EQ(bra_fs_wildcard_extract_dir(wildcard).string(), string("./"));
+    ASSERT_EQ(wildcard, "");
+
+    return 0;
+}
+
 int main(int argc, char* argv[])
 {
     return test_main(argc, argv, {
-                                     {TEST_FUNC(test_bra_fs_wildcards)},
+                                     {TEST_FUNC(test_bra_fs_is_wildcards)},
                                      {TEST_FUNC(test_bra_fs_sfx_filename_adjust)},
+                                     {TEST_FUNC(test_bra_fs_wildcard_extract_dir)},
                                  });
 }

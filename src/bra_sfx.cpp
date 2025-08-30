@@ -115,6 +115,11 @@ bool parse_args(int argc, char* argv[])
             help();
             exit(0);
         }
+        else if ((s == "--list") | (s == "-l"))
+        {
+            // TODO: this is mostly the same as unbra ..
+            //       so unbra could be just a class to be reused among the 2 programs.
+        }
         else
         {
             cerr << format("unknown argument: {}", s) << endl;

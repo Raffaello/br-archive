@@ -23,7 +23,7 @@ namespace fs = std::filesystem;
 
 
 std::set<fs::path> g_files;
-uint32_t           g_num_files;
+size_t             g_num_files;
 fs::path           g_out_filename;
 
 bool g_sfx = false;
@@ -96,7 +96,6 @@ bool parse_args(int argc, char* argv[])
                 return false;
             }
 
-            // auto p_ = fs::relative(p).generic_string();
             if (g_files.insert(p).second)
                 ++g_num_files;
             else
@@ -105,23 +104,21 @@ bool parse_args(int argc, char* argv[])
         // check if it is a wildcard
         else if (bra_fs_isWildcard(s))
         {
-            fs::path       p       = s;
+            fs::path p             = s;
+            p                      = p.generic_string();
             const fs::path dir     = bra_fs_wildcard_extract_dir(p);
             const string   pattern = bra_fs_wildcard_to_regexp(p.string());
-            // if (!bra_fs_search(dir, pattern))
-            // {
-            //     cerr << "ERROR: FS SEARCH FILES" << endl;
-            //     return false;
-            // }
 
+            size_t num_files = 0;
             for ([[maybe_unused]] auto const& fn : bra_fs_co_search(dir, pattern))
-                ++g_num_files;
+                ++num_files;
 
-            // // TODO:
-            // return false;    // for now just testing it
-
-            if (!g_files.insert(p).second)
-                cout << format("WARNING: duplicate file given in input: {}", p.string()) << endl;
+            if (num_files > 0)
+            {
+                g_num_files += num_files;
+                if (!g_files.insert(p).second)
+                    cout << format("WARNING: duplicate file given in input: {}", p.string()) << endl;
+            }
         }
         else
         {
@@ -270,12 +267,22 @@ int main(int argc, char* argv[])
     {
         if (bra_fs_isWildcard(fn_))
         {
-            fs::path       p       = fn_;
+            fs::path       p       = fn_.generic_string();
             const fs::path dir     = bra_fs_wildcard_extract_dir(p);
             const string   pattern = bra_fs_wildcard_to_regexp(p.string());
             for (auto const& fn2 : bra_fs_co_search(dir, pattern))
             {
-                const string fn = fs::relative(fn2).generic_string();
+                p = fn2;
+                if (!bra_fs_try_sanitize(p))
+                {
+                    cerr << format("ERROR: file not found or not valid: {}", fn2.string());
+                    return 1;
+                }
+
+                if (p == g_out_filename)
+                    continue;
+
+                const string fn = fs::relative(p).generic_string();
                 if (!bra_file_encode_and_write_to_disk(&f, fn))
                     return 1;
                 else

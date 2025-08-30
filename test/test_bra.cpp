@@ -1,11 +1,9 @@
+#include "bra_test.hpp"
+
 #include <cstdlib>
 #include <filesystem>
-#include <string>
 #include <fstream>
-#include <format>
-#include <iostream>
 #include <cstdio>
-#include <source_location>
 
 
 #if defined(__unix__) || defined(__APPLE__)
@@ -24,20 +22,6 @@ constexpr const std::string CMD_PREFIX = "./";
 constexpr const std::string CMD_PREFIX = "";
 #endif
 
-// #ifndef __FUNCTION_NAME__
-// #ifdef _WIN32    // WINDOWS
-// #define __FUNCTION_NAME__ __FUNCTION__
-// #else            //*NIX
-// #define __FUNCTION_NAME__ __func__
-// #endif
-// #endif
-
-// #define PRINT_TEST_NAME          std::cout << "[TEST] Running Test: " << __FUNCTION_NAME__ << std::endl
-// #define PRINT_TEST_SUITE_NAME(x) std::cout << "[TEST] Running Test: " << __FUNCTION_NAME__ << "->" << std::string(x) << std::endl
-
-#define PRINT_TEST_NAME std::cout << "[TEST] Running Test: " << std::source_location::current().function_name() << std::endl
-
-// #define PRINT_TEST_SUITE_NAME(x) std::cout << "[TEST] Running Test: " << std::source_location::current().function_name() << "->" << std::string(x) << std::endl
 
 bool AreFilesContentEquals(const std::filesystem::path& file1, const std::filesystem::path& file2)
 {
@@ -72,7 +56,7 @@ bool AreFilesContentEquals(const std::filesystem::path& file1, const std::filesy
     return true;    // Files are identical
 }
 
-/////////////////////////////////////////////////////./////////////////////////
+///////////////////////////////////////////////////////////////////////////////
 
 int test_bra_no_output_file()
 {
@@ -104,26 +88,14 @@ int test_bra_unbra()
     if (fs::exists(exp_file))
         fs::remove(exp_file);
 
-    if (system((bra + " -o " + out_file + " " + in_file).c_str()) != 0)
-        return 1;
-
-    if (!fs::exists(out_file))
-    {
-        std::cerr << std::format("TEST FAILED: missing out_file {}", out_file) << std::endl;
-        return 2;
-    }
+    ASSERT_TRUE(system((bra + " -o " + out_file + " " + in_file).c_str()) == 0);
+    ASSERT_TRUE(fs::exists(out_file));
 
     fs::rename(in_file, exp_file);
-    if (fs::exists(in_file))
-        return 3;
-    if (system((unbra + " " + out_file).c_str()) != 0)
-        return 4;
-
-    if (!fs::exists(in_file))
-        return 5;
-
-    if (!AreFilesContentEquals(in_file, exp_file))
-        return 6;
+    ASSERT_TRUE(!fs::exists(in_file));
+    ASSERT_TRUE(system((unbra + " " + out_file).c_str()) == 0);
+    ASSERT_TRUE(fs::exists(in_file));
+    ASSERT_TRUE(AreFilesContentEquals(in_file, exp_file));
 
     return 0;
 }
@@ -232,33 +204,14 @@ int test_bra_not_more_than_1_same_file()
 
 int main(int argc, char* argv[])
 {
-    int ret = 0;
+    const std::map<std::string, std::function<int()>> m = {
+        {TEST_FUNC(test_bra_no_output_file)},
+        {TEST_FUNC(test_bra_unbra)},
+        {TEST_FUNC(test_bra_sfx_0)},
+        {TEST_FUNC(test_bra_sfx_1)},
+        {TEST_FUNC(test_bra_sfx_2)},
+        {TEST_FUNC(test_bra_not_more_than_1_same_file)},
+    };
 
-    if (argc >= 2)
-    {
-        if (std::string(argv[1]) == std::string("test_bra_no_output_file"))
-            ret += test_bra_no_output_file();
-        else if (std::string(argv[1]) == std::string("test_bra_unbra"))
-            ret += test_bra_unbra();
-        else if (std::string(argv[1]) == std::string("test_bra_sfx_0"))
-            ret += test_bra_sfx_0();
-        else if (std::string(argv[1]) == std::string("test_bra_sfx_1"))
-            ret += test_bra_sfx_1();
-        else if (std::string(argv[1]) == std::string("test_bra_sfx_2"))
-            ret += test_bra_sfx_2();
-        else if (std::string(argv[1]) == std::string("test_bra_not_more_than_1_same_file"))
-            ret += test_bra_not_more_than_1_same_file();
-    }
-    else
-    {
-        std::cout << "Executing all tests..." << std::endl;
-        ret += test_bra_no_output_file();
-        ret += test_bra_unbra();
-        ret += test_bra_sfx_0();
-        ret += test_bra_sfx_1();
-        ret += test_bra_sfx_2();
-        ret += test_bra_not_more_than_1_same_file();
-    }
-
-    return ret;
+    return test_main(argc, argv, m);
 }

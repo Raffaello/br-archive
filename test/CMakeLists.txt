@@ -10,16 +10,16 @@ add_test(NAME test_bra_sfx_1                        COMMAND test_bra test_bra_sf
 add_test(NAME test_bra_sfx_2                        COMMAND test_bra test_bra_sfx_2)
 add_test(NAME test_bra_not_more_than_1_same_file    COMMAND test_bra test_bra_not_more_than_1_same_file)
 
-set_tests_properties(
-    test_bra_no_output_file
-    test_bra_unbra
-    test_bra_sfx_0
-    test_bra_sfx_1
-    test_bra_sfx_2
-    test_bra_not_more_than_1_same_file
-    PROPERTIES WORKING_DIRECTORY
-    ${CMAKE_CURRENT_BINARY_DIR}
-)
+# set_tests_properties(
+#     test_bra_no_output_file
+#     test_bra_unbra
+#     test_bra_sfx_0
+#     test_bra_sfx_1
+#     test_bra_sfx_2
+#     test_bra_not_more_than_1_same_file
+#     PROPERTIES WORKING_DIRECTORY
+#     ${CMAKE_CURRENT_BINARY_DIR}
+# )
 
 target_include_directories(test_bra PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../src)
 
@@ -38,3 +38,9 @@ foreach(fixture_i IN ITEMS test.txt)
                         ${CMAKE_CURRENT_BINARY_DIR}/${fixture_i}
             )
 endforeach()
+
+add_executable(test_bra_fs test_bra_fs.cpp)
+target_include_directories(test_bra_fs PRIVATE ${CMAKE_SOURCE_DIR}/src)
+target_link_libraries(test_bra_fs PRIVATE bra_fs)
+
+add_test(NAME test_bra_fs_wildcards     COMMAND test_bra_fs test_bra_fs_wildcards)

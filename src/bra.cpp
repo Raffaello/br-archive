@@ -33,13 +33,13 @@ void help()
     cout << format("BR-Archive Utility Version: {}", VERSION) << endl;
     cout << endl;
     cout << format("Usage:") << endl;
-    cout << format("  bra [-s] -o <output_file> <input_file 1> [<input_file 2> ...]") << endl;
-    cout << format("The [output_file] will be with a .BRa extension") << endl;
+    cout << format("  bra [-s] -o <output_file> <input_file1> [<input_file2> ...]") << endl;
+    cout << format("The [output_file] will be with a {} extension", BRA_FILE_EXT) << endl;
     cout << format("Example:") << endl;
     cout << format("  bra -o test test.txt") << endl;
-    cout << format("  bra -o text *.txt") << endl;
+    cout << format("  bra -o test *.txt") << endl;
     cout << endl;
-    cout << format("(input_file) : path to an existing file or a wildcard pattern") << endl;
+    cout << format("(input_file): path to an existing file or a wildcard pattern") << endl;
     cout << endl;
     cout << format("Options:") << endl;
     cout << format("--help | -h : display this page.") << endl;
@@ -153,7 +153,7 @@ bool validate_args()
 
     if (g_files.size() > numeric_limits<uint32_t>::max())
     {
-        cerr << format("ERROR: Too many files, not supported yet: {}/{}", g_files.size(), numeric_limits<uint32_t>::max());
+        cerr << format("ERROR: Too many files, not supported yet: {}/{}", g_files.size(), numeric_limits<uint32_t>::max()) << endl;
         return false;
     }
 

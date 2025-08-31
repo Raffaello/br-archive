@@ -176,6 +176,8 @@ int main(int argc, char* argv[])
     // so it can be extracted / dumped into a temporary file
     // and decoded
 
+    // TODO: when extracting should check to do not auto-overwrite itself.
+
     bra_header_t  bh;
     bra_io_file_t f{};
     if (!bra_file_open_and_read_footer_header(argv[0], &bh, &f))

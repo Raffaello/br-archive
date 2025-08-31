@@ -3,7 +3,7 @@
 
 namespace fs = std::filesystem;
 
-bool bra_fs_dir_make(const char* path)
+extern "C" bool bra_fs_dir_make(const char* path)
 {
     const fs::path p(path);
 

@@ -20,8 +20,9 @@
 #define BRA_SFX_TMP_FILE_EXT ".tmp"
 
 // File Attribute Flags
-#define BRA_ATTR_FILE 0    //!< Regular file.
-#define BRA_ATTR_DIR  1    //!< Directory
+#define BRA_ATTR_FILE 0       //!< Regular file.
+#define BRA_ATTR_DIR  1       //!< Directory
+#define BRA_ATTR_ERR  0xFF    //!< unknown or not implemented ATTR
 
 #if defined(__APPLE__) || defined(__linux__) || defined(__linux)
 #define BRA_SFX_FILE_EXT ".brx"

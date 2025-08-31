@@ -37,6 +37,16 @@ bool bra_fs_try_sanitize(std::filesystem::path& path)
     return !path.empty();
 }
 
+bool bra_fs_isWildcard(const std::filesystem::path& path)
+{
+    if (path.empty())
+        return false;
+
+    const string s = path.string();
+
+    return s.find_first_of("?*") != string::npos;
+}
+
 bool bra_fs_dir_exists(const std::filesystem::path& path)
 {
     error_code ec1, ec2;
@@ -106,14 +116,14 @@ bool bra_fs_file_exists(const std::filesystem::path& path)
     return res;
 }
 
-std::optional<bool> bra_fs_file_exists_ask_overwrite(const std::filesystem::path& p, const bool always_yes)
+std::optional<bool> bra_fs_file_exists_ask_overwrite(const std::filesystem::path& path, const bool always_yes)
 {
-    if (!bra_fs_file_exists(p))
+    if (!bra_fs_file_exists(path))
         return nullopt;
 
     char c;
 
-    cout << format("File {} already exists. Overwrite? [Y/N] ", p.string()) << flush;
+    cout << format("File {} already exists. Overwrite? [Y/N] ", path.string()) << flush;
     if (always_yes)
     {
         cout << 'y' << endl;
@@ -137,37 +147,35 @@ std::optional<bool> bra_fs_file_exists_ask_overwrite(const std::filesystem::path
     return c == 'y';
 }
 
-bool bra_fs_isWildcard(const std::filesystem::path& path)
+std::optional<uint8_t> bra_fs_file_attributes(const std::filesystem::path& path)
 {
-    if (path.empty())
-        return false;
+    if (fs::is_regular_file(path))
+        return BRA_ATTR_FILE;
+    else if (fs::is_directory(path))
+        return BRA_ATTR_DIR;
+    else
+        return nullopt;
+}
 
-    const string s = path.string();
+std::optional<size_t> bra_fs_file_size(const std::filesystem::path& path)
+{
+    std::error_code ec;
+    size_t          ds;
 
-    // TODO: to be implemented in extract dir too
+    if (fs::is_directory(path, ec))
+        ds = 0;
+    else if (fs::is_regular_file(path, ec))
+        ds = fs::file_size(path, ec);
+    else
+        return nullopt;
 
-    // bool par   = false;
-    // int  count = 0;
-    // for (const char& c : s)
-    // {
-    //     if (c == '[')
-    //     {
-    //         ++count;
-    //         par = true;
-    //     }
-    //     else if (c == ']')
-    //     {
-    //         --count;
-    //         if (count < 0)
-    //             break;
-    //     }
-    // }
+    if (ec)
+    {
+        cerr << format("ERROR: unable to read file size of {}: {}", path.string(), ec.message()) << endl;
+        return nullopt;
+    }
 
-    // if (par && count == 0)
-    //     return true;
-
-    // TODO; to be integrated in the for loop above
-    return s.find_first_of("?*") != string::npos;
+    return ds;
 }
 
 std::filesystem::path bra_fs_wildcard_extract_dir(std::filesystem::path& path_wildcard)
@@ -243,6 +251,8 @@ bool bra_fs_search(const std::filesystem::path& dir, const std::string& pattern,
     {
         for (const auto& entry : fs::directory_iterator(dir))
         {
+            // TODO: dir to search only if it is recursive (-r)
+
             // const bool is_dir = entry.is_directory();
             const bool is_dir = false;    // TODO: must be done later, requires to struct into dirs the archive too first.
             if (!(entry.is_regular_file() || is_dir))

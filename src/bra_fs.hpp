@@ -23,6 +23,17 @@
 bool bra_fs_try_sanitize(std::filesystem::path& path);
 
 /**
+ * @brief Check if the given @p path contains a wildcard supported pattern.
+ *
+ * @todo instead of bool return size_t: std::npos no wildcard, otherwise first wildcard char position.
+ *
+ * @param path
+ * @return true
+ * @return false
+ */
+[[nodiscard]] bool bra_fs_isWildcard(const std::filesystem::path& path);
+
+/**
  * @brief Check if the given @p path exists and is a directory.
  *
  * @see bra_fs_file_exists
@@ -78,28 +89,33 @@ bool bra_fs_try_sanitize(std::filesystem::path& path);
 [[nodiscard]] bool bra_fs_file_exists(const std::filesystem::path& path);
 
 /**
- * @brief Check if the file exists and ask the user to overwrite.
+ * @brief Check if the file in @p path exists and ask the user to overwrite.
  *
  * @note The file is considered a 'regular_file' it won't check if it is a directory.
  *
- * @param p
+ * @param path
  * @param always_yes if true, assumes yes without asking.
  * @return std::optional<bool> when has no value the file doesn't exist.
  * @return true overwrite
  * @return false don't overwrite
  */
-[[nodiscard]] std::optional<bool> bra_fs_file_exists_ask_overwrite(const std::filesystem::path& p, const bool always_yes);
+[[nodiscard]] std::optional<bool> bra_fs_file_exists_ask_overwrite(const std::filesystem::path& path, const bool always_yes);
 
 /**
- * @brief Check if the given @p path contains a wildcard supported pattern.
- *
- * @todo instead of bool return size_t: std::npos no wildcard, otherwise first wildcard char position.
+ * @brief
  *
  * @param path
- * @return true
- * @return false
+ * @return std::optional<uint8_t>
  */
-[[nodiscard]] bool bra_fs_isWildcard(const std::filesystem::path& path);
+[[nodiscard]] std::optional<uint8_t> bra_fs_file_attributes(const std::filesystem::path& path);
+
+/**
+ * @brief
+ *
+ * @param path
+ * @return std::optional<size_t>
+ */
+[[nodiscard]] std::optional<size_t> bra_fs_file_size(const std::filesystem::path& path);
 
 /**
  * @brief Extract the directory from a wildcard if it contains any and modify accordingly the @p path_wildcard.

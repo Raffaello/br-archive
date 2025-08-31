@@ -176,7 +176,7 @@ bool bra_io_write_footer(bra_io_file_t* f, const int64_t header_offset)
     assert(header_offset > 0);
 
     bra_io_footer_t bf = {
-        .magic       = BRA_FOOTER_MAGIC,
+        .magic         = BRA_FOOTER_MAGIC,
         .header_offset = header_offset,
     };
 

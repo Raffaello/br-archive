@@ -7,8 +7,8 @@
 #include <filesystem>
 #include <optional>
 #include <string>
-#include <generator>
-
+// #include <generator> // C++23 not supported in Ubuntu24 (due to older GCC version 13)
+#include <list>
 
 /**
  * @brief Try to sanitize the @p path.
@@ -92,6 +92,11 @@ bool bra_fs_try_sanitize(std::filesystem::path& path);
  */
 [[nodiscard]] std::string bra_fs_wildcard_to_regexp(const std::string& wildcard);
 
-[[deprecated]] bool bra_fs_search(const std::filesystem::path& dir, const std::string& pattern);
 
-std::generator<std::filesystem::path> bra_fs_co_search(const std::filesystem::path& dir, const std::string& pattern);
+bool bra_fs_search(const std::filesystem::path& dir, const std::string& pattern, std::list<std::filesystem::path>& out_files);
+
+/**
+ * @brief C++23 generator not supported yet in Ubuntu 24 ... pff!...
+ *
+ */
+// std::generator<std::filesystem::path> bra_fs_co_search(const std::filesystem::path& dir, const std::string& pattern);

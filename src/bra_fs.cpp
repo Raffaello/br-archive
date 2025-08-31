@@ -7,7 +7,7 @@
 #include <cctype>
 #include <regex>
 #include <algorithm>
-#include <coroutine>
+// #include <coroutine>
 
 namespace fs = std::filesystem;
 
@@ -95,7 +95,7 @@ std::optional<bool> bra_fs_file_exists_ask_overwrite(const std::filesystem::path
             c = 'n';
         }
         else
-            c = static_cast<char>(tolower(c));
+            c = static_cast<char>(tolower(static_cast<unsigned char>(c)));
     }
     while (c != 'y' && c != 'n');
 
@@ -200,7 +200,7 @@ std::string bra_fs_wildcard_to_regexp(const std::string& wildcard)
     return regex;
 }
 
-bool bra_fs_search(const std::filesystem::path& dir, const std::string& pattern)
+bool bra_fs_search(const std::filesystem::path& dir, const std::string& pattern, std::list<std::filesystem::path>& out_files)
 {
     std::regex r(pattern);
 
@@ -214,7 +214,7 @@ bool bra_fs_search(const std::filesystem::path& dir, const std::string& pattern)
             if (!(entry.is_regular_file() || is_dir))
                 continue;
 
-            const fs::path    ep       = entry.path();
+            fs::path          ep       = entry.path();
             const std::string filename = ep.filename().string();
             if (!std::regex_match(filename, r))
                 continue;
@@ -226,7 +226,15 @@ bool bra_fs_search(const std::filesystem::path& dir, const std::string& pattern)
             //     res                 &= bra_fs_search(ep, p);
             // }
             // else
-            std::cout << "[DEBUG] Expected file: " << filename << endl;
+            // std::cout << "[DEBUG] Expected file: " << filename << endl;
+
+            if (!bra_fs_try_sanitize(ep))
+            {
+                cerr << format("[ERROR] not a valid file: {}", ep.string()) << endl;
+                return false;
+            }
+
+            out_files.push_back(ep);
         }
     }
     catch (const fs::filesystem_error& e)
@@ -243,6 +251,7 @@ bool bra_fs_search(const std::filesystem::path& dir, const std::string& pattern)
     return res;
 }
 
+/*/
 std::generator<std::filesystem::path> bra_fs_co_search(const std::filesystem::path& dir, [[maybe_unused]] const std::string& pattern)
 {
     const std::regex r(pattern);
@@ -283,3 +292,4 @@ std::generator<std::filesystem::path> bra_fs_co_search(const std::filesystem::pa
         co_return;
     }
 }
+*/

@@ -37,12 +37,25 @@ bool bra_fs_try_sanitize(std::filesystem::path& path)
     return !path.empty();
 }
 
+bool bra_fs_dir_exists(const std::filesystem::path& path)
+{
+    error_code ec1, ec2;
+    const bool res = fs::exists(path, ec1) && fs::is_directory(path, ec2);
+
+    // TODO: can't know if it was an error, maybe use an optional instead?
+    if (ec1 || ec2)
+        return false;
+
+    return res;
+}
+
 bool bra_fs_dir_make(const std::filesystem::path& path)
 {
-    if (fs::exists(path) && fs::is_directory(path))
+    error_code ec;
+
+    if (bra_fs_dir_exists(path))
         return true;
 
-    error_code ec;
     const bool res = fs::create_directories(path, ec);
     if (ec)
     {
@@ -84,7 +97,13 @@ std::filesystem::path bra_fs_filename_sfx_adjust(const std::filesystem::path& pa
 
 bool bra_fs_file_exists(const std::filesystem::path& p)
 {
-    return fs::exists(p) && fs::is_regular_file(p);
+    error_code ec1, ec2;
+    const bool res = fs::exists(p, ec1) && fs::is_regular_file(p, ec2);
+
+    if (ec1 || ec2)
+        return false;
+
+    return res;
 }
 
 std::optional<bool> bra_fs_file_exists_ask_overwrite(const std::filesystem::path& p, const bool always_yes)

@@ -23,6 +23,17 @@
 bool bra_fs_try_sanitize(std::filesystem::path& path);
 
 /**
+ * @brief Check if the given @p path exists and is a directory.
+ *
+ * @see bra_fs_file_exists
+ *
+ * @param path
+ * @return true
+ * @return false
+ */
+bool bra_fs_dir_exists(const std::filesystem::path& path);
+
+/**
  * @brief Create a directory given by @p path.
  *        It creates also the parent directory if necessary.
  *
@@ -52,7 +63,9 @@ bool bra_fs_dir_make(const std::filesystem::path& path);
 [[nodiscard]] std::filesystem::path bra_fs_filename_sfx_adjust(const std::filesystem::path& path, const bool tmp);
 
 /**
- * @brief Check if a regular file exists.
+ * @brief Check if the given @p p is a regular file and exists.
+ *
+ * @see bra_fs_dir_exists
  *
  * @param p
  * @return true

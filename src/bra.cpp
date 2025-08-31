@@ -28,6 +28,46 @@ fs::path g_out_filename;
 
 bool g_sfx = false;
 
+//////////////////////////////////////////////////////////////////////////
+
+
+bool bra_expand_wildcards(const std::string& s)
+{
+    fs::path p             = s;
+    p                      = p.generic_string();
+    const fs::path dir     = bra_fs_wildcard_extract_dir(p);
+    const string   pattern = bra_fs_wildcard_to_regexp(p.string());
+
+    // size_t num_files = 0;
+    // for ([[maybe_unused]] auto const& fn : bra_fs_co_search(dir, pattern))
+    //     ++num_files;
+
+    // if (num_files > 0)
+    // {
+    //     g_num_files += num_files;
+    //     if (!g_files.insert(p).second)
+    //         cout << format("WARNING: duplicate file given in input: {}", p.string()) << endl;
+    // }
+
+    std::list<fs::path> files;
+    if (!bra_fs_search(dir, pattern, files))
+    {
+        cerr << format("ERROR: not a valid wildcard: {}", s) << endl;
+        return false;
+    }
+
+    for (const auto& p : files)
+    {
+        if (!g_files.insert(p).second)
+            cout << format("WARNING: duplicate file given in input: {}", p.string()) << endl;
+    }
+
+    files.clear();
+    return true;
+}
+
+/////////////////////////////////////////////////////////////////////////
+
 void help()
 {
     cout << format("BR-Archive Utility Version: {}", VERSION) << endl;
@@ -104,34 +144,8 @@ bool parse_args(int argc, char* argv[])
         // check if it is a wildcard
         else if (bra_fs_isWildcard(s))
         {
-            fs::path p             = s;
-            p                      = p.generic_string();
-            const fs::path dir     = bra_fs_wildcard_extract_dir(p);
-            const string   pattern = bra_fs_wildcard_to_regexp(p.string());
-
-            // size_t num_files = 0;
-            // for ([[maybe_unused]] auto const& fn : bra_fs_co_search(dir, pattern))
-            //     ++num_files;
-
-            // if (num_files > 0)
-            // {
-            //     g_num_files += num_files;
-            //     if (!g_files.insert(p).second)
-            //         cout << format("WARNING: duplicate file given in input: {}", p.string()) << endl;
-            // }
-
-            std::list<fs::path> files;
-            if (!bra_fs_search(dir, pattern, files))
-            {
-                cerr << format("ERROR: not a valid wildcard: {}", s) << endl;
+            if (!bra_expand_wildcards(s))
                 return false;
-            }
-
-            for (const auto& p : files)
-            {
-                if (!g_files.insert(p).second)
-                    cout << format("WARNING: duplicate file given in input: {}", p.string()) << endl;
-            }
         }
         else
         {

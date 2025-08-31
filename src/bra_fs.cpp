@@ -95,10 +95,10 @@ std::filesystem::path bra_fs_filename_sfx_adjust(const std::filesystem::path& pa
     return p;
 }
 
-bool bra_fs_file_exists(const std::filesystem::path& p)
+bool bra_fs_file_exists(const std::filesystem::path& path)
 {
     error_code ec1, ec2;
-    const bool res = fs::exists(p, ec1) && fs::is_regular_file(p, ec2);
+    const bool res = fs::exists(path, ec1) && fs::is_regular_file(path, ec2);
 
     if (ec1 || ec2)
         return false;

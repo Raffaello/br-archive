@@ -31,15 +31,19 @@ bool bra_fs_try_sanitize(std::filesystem::path& path);
  * @return true if the path exists and is a directory
  * @return false otherwise
  */
-bool bra_fs_dir_exists(const std::filesystem::path& path);
+[[nodiscard]] bool bra_fs_dir_exists(const std::filesystem::path& path);
 
 /**
- * @brief Create a directory given by @p path.
- *        It creates also the parent directory if necessary.
+ * @brief Create the directory at @p path.
+ *        Also creates parent directories as needed.
+ *
+ * @note Idempotent: returns true if the directory already exists.
+ *
+ * @see bra_fs_dir_exists
  *
  * @param path
  * @return true if the directory was created or already existed.
- * @return false On error
+ * @return false on error
  */
 [[nodiscard]] bool bra_fs_dir_make(const std::filesystem::path& path);
 
@@ -63,7 +67,7 @@ bool bra_fs_dir_exists(const std::filesystem::path& path);
 [[nodiscard]] std::filesystem::path bra_fs_filename_sfx_adjust(const std::filesystem::path& path, const bool tmp);
 
 /**
- * @brief Check if the given @p p is a regular file and exists.
+ * @brief Check if the given @p path is a regular file and exists.
  *
  * @see bra_fs_dir_exists
  *
@@ -71,7 +75,7 @@ bool bra_fs_dir_exists(const std::filesystem::path& path);
  * @return true
  * @return false
  */
-[[nodiscard]] bool bra_fs_file_exists(const std::filesystem::path& p);
+[[nodiscard]] bool bra_fs_file_exists(const std::filesystem::path& path);
 
 /**
  * @brief Check if the file exists and ask the user to overwrite.

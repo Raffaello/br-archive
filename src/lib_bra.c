@@ -236,6 +236,14 @@ bool bra_io_write_meta_file(bra_io_file_t* f, const bra_meta_file_t* mf)
     assert(mf != NULL);
     assert(mf->name != NULL);
 
+
+    const size_t len = strnlen(mf->name, UINT8_MAX + 1);
+    if (len != mf->name_size || mf->name_size == 0 || len > UINT8_MAX)
+        goto BRA_IO_WRITE_ERR;
+
+    if (mf->attributes == BRA_ATTR_DIR && mf->data_size != 0)
+        goto BRA_IO_WRITE_ERR;
+
     // 1. attributes
     if (fwrite(&mf->attributes, sizeof(uint8_t), 1, f->f) != 1)
     {
@@ -244,6 +252,7 @@ bool bra_io_write_meta_file(bra_io_file_t* f, const bra_meta_file_t* mf)
         printf("ERROR: Writing file: %s\n", mf->name);
         return false;
     }
+
 
     // 2. filename size
     if (fwrite(&mf->name_size, sizeof(uint8_t), 1, f->f) != 1)

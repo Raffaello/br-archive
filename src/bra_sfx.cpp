@@ -138,7 +138,7 @@ bool bra_file_open_and_read_footer_header(const char* fn, bra_io_header_t* out_b
         return false;
     }
 
-    if (!bra_io_seek(f, -1L * static_cast<off_t>(sizeof(bra_io_footer_t)), SEEK_END))
+    if (!bra_io_seek(f, -1L * static_cast<int64_t>(sizeof(bra_io_footer_t)), SEEK_END))
     {
         cerr << format("unable to read file {}", fn) << endl;
         bra_io_close(f);

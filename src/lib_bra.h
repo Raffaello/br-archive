@@ -50,7 +50,9 @@ typedef struct bra_io_header_t
     //       It should have attributes in the file and store the directory bit in it...
     //   SO: need to store file attributes first as well.
     //       and when file dir is an attribute, that file name became the prefix of the following files
-    //       until another file-dir name comes up. so the order will be important.
+    //       until another file-dir name comes up. so the order will be important
+    //       (DFS should be used to store files with the last entries to be directories).
+    //       Doing file at the current directory, then a directory recursively until the end.
 } bra_io_header_t;
 
 /**
@@ -64,10 +66,15 @@ typedef struct bra_io_footer_t
 
 #pragma pack(pop)
 
+/**
+ * @brief Type sued to perform I/O from the disk.
+ *        It is just a simple wrapper around @c FILE,
+ *        but it carries on the filename @p fn associated with it.
+ */
 typedef struct bra_io_file_t
 {
-    FILE* f;
-    char* fn;
+    FILE* f;     //!< File Pointer representing a file on the disk.
+    char* fn;    //!< the filename of the file on disk.
 } bra_io_file_t;
 
 /**
@@ -78,9 +85,9 @@ typedef struct bra_meta_file_t
 {
     // TODO: add CRC ... file permissions, file attributes, etc... ?
     uint8_t  attributes;    //!< file attributes: 0=regular file, 1=directory
-    uint8_t  name_size;
-    char*    name;
-    uint64_t data_size;
+    uint8_t  name_size;     //!< must be greater than zero. @todo it could be redundant
+    char*    name;          //!< filename
+    uint64_t data_size;     //!< file contents size in bytes
 } bra_meta_file_t;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -117,14 +124,14 @@ void bra_io_read_error(bra_io_file_t* bf);
 bool bra_io_open(bra_io_file_t* bf, const char* fn, const char* mode);
 
 /**
- * @brief close file, free internal memory and set fields to NULL.
+ * @brief Close the file, free the internal memory and set the fields to NULL.
  *
  * @param bf
  */
 void bra_io_close(bra_io_file_t* bf);
 
 /**
- * @brief seek file at position @p offs.
+ * @brief Seek file at position @p offs.
  *  *
  * @param f
  * @param offs
@@ -135,7 +142,7 @@ void bra_io_close(bra_io_file_t* bf);
 bool bra_io_seek(bra_io_file_t* f, const int64_t offs, const int origin);
 
 /**
- * @brief tell the file position.
+ * @brief Tell the file position.
  *        On error returns -1
  *
  * @param f

@@ -43,6 +43,9 @@ bool bra_io_open(bra_io_file_t* bf, const char* fn, const char* mode)
     assert(fn != NULL);
     assert(mode != NULL);
 
+    if (fn == NULL || bf == NULL || mode == NULL)
+        return false;
+
     bf->f  = fopen(fn, mode);    // open file
     bf->fn = bra_strdup(fn);     // copy filename
     if (bf->f == NULL || bf->fn == NULL)

@@ -159,23 +159,21 @@ std::optional<uint8_t> bra_fs_file_attributes(const std::filesystem::path& path)
 
 std::optional<size_t> bra_fs_file_size(const std::filesystem::path& path)
 {
-    std::error_code ec;
-    size_t          ds;
-
-    if (fs::is_directory(path, ec))
-        ds = 0;
-    else if (fs::is_regular_file(path, ec))
-        ds = fs::file_size(path, ec);
-    else
-        return nullopt;
-
-    if (ec)
+    try
     {
-        cerr << format("ERROR: unable to read file size of {}: {}", path.string(), ec.message()) << endl;
-        return nullopt;
+        if (fs::is_directory(path))
+            return 0;
+        else if (fs::is_regular_file(path))
+            return fs::file_size(path);
+        else
+            return nullopt;
+    }
+    catch (const fs::filesystem_error& e)
+    {
+        cerr << format("ERROR: unable to read file size of {}: {} ", path.string(), e.what()) << endl;
     }
 
-    return ds;
+    return nullopt;
 }
 
 std::filesystem::path bra_fs_wildcard_extract_dir(std::filesystem::path& path_wildcard)

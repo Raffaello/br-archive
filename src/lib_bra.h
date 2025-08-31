@@ -60,14 +60,14 @@ typedef struct bra_io_header_t
  */
 typedef struct bra_io_footer_t
 {
-    uint32_t magic;          //!< 'BR-x'
+    uint32_t magic;            //!< 'BR-x'
     int64_t  header_offset;    //!< absolute offset of the header chunk from file start.
 } bra_io_footer_t;
 
 #pragma pack(pop)
 
 /**
- * @brief Type sued to perform I/O from the disk.
+ * @brief Type used to perform I/O from the disk.
  *        It is just a simple wrapper around @c FILE,
  *        but it carries on the filename @p fn associated with it.
  */
@@ -84,9 +84,9 @@ typedef struct bra_io_file_t
 typedef struct bra_meta_file_t
 {
     // TODO: add CRC ... file permissions, file attributes, etc... ?
-    uint8_t  attributes;    //!< file attributes: 0=regular file, 1=directory
+    uint8_t  attributes;    //!< file attributes: BRA_ATTR_FILE (regular) or BRA_ATTR_DIR (directory)
     uint8_t  name_size;     //!< must be greater than zero. @todo it could be redundant
-    char*    name;          //!< filename
+    char*    name;          //!< filename (owned; free via @ref bra_meta_file_free)
     uint64_t data_size;     //!< file contents size in bytes
 } bra_meta_file_t;
 
@@ -96,6 +96,10 @@ typedef struct bra_meta_file_t
 
 /**
  * @brief strdup()
+ *
+ * @details Returns @c NULL if @p str is @c NULL or on allocation failure.
+ *          The caller owns the returned buffer and must free() it.
+ *
  * @todo remove when switching to C23
  *
  * @param str

@@ -12,6 +12,7 @@
         "ftelli",
         "gmock",
         "gtest",
+        "MSVC",
         "msys",
         "msystem",
         "softprops",

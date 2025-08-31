@@ -12,7 +12,11 @@ set(CMAKE_COMPILE_WARNING_AS_ERROR ON)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-add_compile_options(-Wall -Wextra -Wpedantic)
+    add_compile_options(-Wall -Wextra -Wpedantic)
+elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    add_compile_options(-Wall -Wextra -Wpedantic)
+elseif (MSVC)
+    add_compile_options(/W4)
 endif()
 
 configure_file(src/version.h.in src/version.h)
@@ -28,7 +32,6 @@ set_target_properties(lib_bra PROPERTIES
 )
 
 add_library(bra_fs STATIC src/bra_fs.cpp)
-
 
 add_executable(bra src/bra.cpp)
 target_link_libraries(bra PRIVATE lib_bra bra_fs)

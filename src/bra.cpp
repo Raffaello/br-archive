@@ -23,30 +23,25 @@ namespace fs = std::filesystem;
 
 
 std::set<fs::path> g_files;
-// size_t             g_num_files;
-fs::path g_out_filename;
-
-bool g_sfx = false;
+fs::path           g_out_filename;
+bool               g_sfx = false;
 
 //////////////////////////////////////////////////////////////////////////
 
-
+/**
+ * @brief
+ *
+ * @todo should be moved into bra_fs ?
+ *
+ * @param path
+ * @return true
+ * @return false
+ */
 bool bra_expand_wildcards(const fs::path& path)
 {
     fs::path       p       = path.generic_string();
     const fs::path dir     = bra_fs_wildcard_extract_dir(p);
     const string   pattern = bra_fs_wildcard_to_regexp(p.string());
-
-    // size_t num_files = 0;
-    // for ([[maybe_unused]] auto const& fn : bra_fs_co_search(dir, pattern))
-    //     ++num_files;
-
-    // if (num_files > 0)
-    // {
-    //     g_num_files += num_files;
-    //     if (!g_files.insert(p).second)
-    //         cout << format("WARNING: duplicate file given in input: {}", p.string()) << endl;
-    // }
 
     std::list<fs::path> files;
     if (!bra_fs_search(dir, pattern, files))
@@ -97,7 +92,6 @@ bool parse_args(int argc, char* argv[])
     }
 
     g_files.clear();
-    // g_num_files = 0;
     for (int i = 1; i < argc; ++i)
     {
         string s = argv[i];
@@ -137,8 +131,6 @@ bool parse_args(int argc, char* argv[])
 
             if (!g_files.insert(p).second)
                 cout << format("WARNING: duplicate file/dir given in input: {}", p.string()) << endl;
-            // else
-            // ++g_num_files;
         }
         else if (bra_fs_dir_exists(s))
         {
@@ -322,7 +314,7 @@ bool bra_file_encode_and_write_to_disk(bra_io_file_t* f, const string& fn)
     }
 
     const uint8_t fn_size = static_cast<uint8_t>(fn.size());
-    const auto    ds      = bra_fs_file_size(fn);    // fs::file_size(fn, ec);
+    const auto    ds      = bra_fs_file_size(fn);
     if (!ds)
         goto BRA_IO_WRITE_CLOSE_ERROR;
 
@@ -380,39 +372,12 @@ int main(int argc, char* argv[])
         return 1;
 
     cout << format("Archiving into {}", out_fn) << endl;
-    // if (!bra_io_write_header(&f, static_cast<uint32_t>(g_num_files)))
     if (!bra_io_write_header(&f, static_cast<uint32_t>(g_files.size())))
         return 1;
 
     uint32_t written_num_files = 0;
     for (const auto& fn_ : g_files)
     {
-        // if (bra_fs_isWildcard(fn_))
-        // {
-        //     fs::path       p       = fn_.generic_string();
-        //     const fs::path dir     = bra_fs_wildcard_extract_dir(p);
-        //     const string   pattern = bra_fs_wildcard_to_regexp(p.string());
-        //     for (auto const& fn2 : bra_fs_co_search(dir, pattern))
-        //     {
-        //         p = fn2;
-        //         if (!bra_fs_try_sanitize(p))
-        //         {
-        //             cerr << format("ERROR: file not found or not valid: {}", fn2.string());
-        //             return 1;
-        //         }
-
-        // if (p == g_out_filename)
-        //     continue;
-
-        // const string fn = fs::relative(p).generic_string();
-        // if (!bra_file_encode_and_write_to_disk(&f, fn))
-        //     return 1;
-        // else
-        //     ++written_num_files;
-        // }
-        // }
-        // else
-        // {
         const string fn = fs::relative(fn_).generic_string();
         if (!bra_file_encode_and_write_to_disk(&f, fn))
             return 1;
@@ -422,13 +387,6 @@ int main(int argc, char* argv[])
     }
 
     bra_io_close(&f);
-
-    // check num files
-    // if (written_num_files != g_num_files)
-    // {
-    //     cerr << format("ERROR: written files are not equal to expected ones: {}/{}", written_num_files, g_num_files) << endl;
-    //     return 2;
-    // }
 
     if (g_sfx)
     {

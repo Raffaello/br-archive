@@ -9,6 +9,8 @@
 #include <algorithm>
 // #include <coroutine>
 
+static_assert(sizeof(uintmax_t) == sizeof(size_t));
+
 namespace fs = std::filesystem;
 
 using namespace std;
@@ -149,30 +151,39 @@ std::optional<bool> bra_fs_file_exists_ask_overwrite(const std::filesystem::path
 
 std::optional<uint8_t> bra_fs_file_attributes(const std::filesystem::path& path)
 {
-    if (fs::is_regular_file(path))
+    std::error_code ec;
+
+    if (fs::is_regular_file(path, ec))
         return BRA_ATTR_FILE;
-    else if (fs::is_directory(path))
+    else if (ec)
+        goto BRA_FS_FILE_ATTRIBUTES_ERROR;
+    else if (fs::is_directory(path, ec))
         return BRA_ATTR_DIR;
-    else
-        return nullopt;
+
+BRA_FS_FILE_ATTRIBUTES_ERROR:
+    cerr << format("ERROR: unable to read file attributes of {}: {} ", path.string(), ec.message()) << endl;
+    return nullopt;
 }
 
-std::optional<size_t> bra_fs_file_size(const std::filesystem::path& path)
+std::optional<uint64_t> bra_fs_file_size(const std::filesystem::path& path)
 {
-    try
+    std::error_code ec;
+
+    if (fs::is_directory(path, ec))
+        return 0;
+    else if (ec)
+        goto BRA_FS_FILE_SIZE_ERROR;
+    else if (fs::is_regular_file(path, ec))
     {
-        if (fs::is_directory(path))
-            return 0;
-        else if (fs::is_regular_file(path))
-            return fs::file_size(path);
-        else
-            return nullopt;
-    }
-    catch (const fs::filesystem_error& e)
-    {
-        cerr << format("ERROR: unable to read file size of {}: {} ", path.string(), e.what()) << endl;
+        const auto size = fs::file_size(path, ec);
+        if (ec)
+            goto BRA_FS_FILE_SIZE_ERROR;
+
+        return size;
     }
 
+BRA_FS_FILE_SIZE_ERROR:
+    cerr << format("ERROR: unable to read file size of {}: {} ", path.string(), ec.message()) << endl;
     return nullopt;
 }
 

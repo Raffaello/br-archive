@@ -115,7 +115,7 @@ bool bra_fs_try_sanitize(std::filesystem::path& path);
  * @param path
  * @return std::optional<size_t> File size in bytes for regular files, 0 for directories, @c nullopt on error
  */
-[[nodiscard]] std::optional<size_t> bra_fs_file_size(const std::filesystem::path& path);
+[[nodiscard]] std::optional<uint64_t> bra_fs_file_size(const std::filesystem::path& path);
 
 /**
  * @brief Extract the directory from a wildcard if it contains any and modify accordingly the @p path_wildcard.

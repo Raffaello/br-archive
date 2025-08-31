@@ -98,12 +98,12 @@ int64_t bra_io_tell(bra_io_file_t* f)
 #endif
 }
 
-bool bra_io_read_header(bra_io_file_t* bf, bra_header_t* out_bh)
+bool bra_io_read_header(bra_io_file_t* bf, bra_io_header_t* out_bh)
 {
     assert_bra_io_file_t(bf);
     assert(out_bh != NULL);
 
-    if (fread(out_bh, sizeof(bra_header_t), 1, bf->f) != 1)
+    if (fread(out_bh, sizeof(bra_io_header_t), 1, bf->f) != 1)
     {
         bra_io_read_error(bf);
         return false;
@@ -124,13 +124,13 @@ bool bra_io_write_header(bra_io_file_t* f, const uint32_t num_files)
 {
     assert_bra_io_file_t(f);
 
-    const bra_header_t header = {
-        .magic     = BRA_MAGIC,
-        .version   = BRA_ARCHIVE_VERSION,
+    const bra_io_header_t header = {
+        .magic = BRA_MAGIC,
+        // .version   = BRA_ARCHIVE_VERSION,
         .num_files = num_files,
     };
 
-    if (fwrite(&header, sizeof(bra_header_t), 1, f->f) != 1)
+    if (fwrite(&header, sizeof(bra_io_header_t), 1, f->f) != 1)
     {
         printf("ERROR: unable to write %s %s file\n", f->fn, BRA_NAME);
         bra_io_close(f);
@@ -140,13 +140,13 @@ bool bra_io_write_header(bra_io_file_t* f, const uint32_t num_files)
     return true;
 }
 
-bool bra_io_read_footer(bra_io_file_t* f, bra_footer_t* bf_out)
+bool bra_io_read_footer(bra_io_file_t* f, bra_io_footer_t* bf_out)
 {
     assert_bra_io_file_t(f);
     assert(bf_out != NULL);
 
-    memset(bf_out, 0, sizeof(bra_footer_t));
-    if (fread(bf_out, sizeof(bra_footer_t), 1, f->f) != 1)
+    memset(bf_out, 0, sizeof(bra_io_footer_t));
+    if (fread(bf_out, sizeof(bra_io_footer_t), 1, f->f) != 1)
     {
         bra_io_read_error(f);
         return false;
@@ -168,12 +168,12 @@ bool bra_io_write_footer(bra_io_file_t* f, const int64_t data_offset)
     assert_bra_io_file_t(f);
     assert(data_offset > 0);
 
-    bra_footer_t bf = {
+    bra_io_footer_t bf = {
         .magic       = BRA_FOOTER_MAGIC,
         .data_offset = data_offset,
     };
 
-    if (fwrite(&bf, sizeof(bra_footer_t), 1, f->f) != 1)
+    if (fwrite(&bf, sizeof(bra_io_footer_t), 1, f->f) != 1)
     {
         printf("ERROR: unable to write footer in %s.\n", f->fn);
         bra_io_close(f);
@@ -192,7 +192,7 @@ bool bra_io_read_meta_file(bra_io_file_t* f, bra_meta_file_t* mf)
     mf->name_size = 0;
     mf->data_size = 0;
 
-    // 0. attributes
+    // 1. attributes
     if (fread(&mf->attributes, sizeof(uint8_t), 1, f->f) != 1)
     {
     BRA_IO_READ_ERR:
@@ -200,7 +200,7 @@ bool bra_io_read_meta_file(bra_io_file_t* f, bra_meta_file_t* mf)
         return false;
     }
 
-    // 1. filename size
+    // 2. filename size
     if (fread(&mf->name_size, sizeof(uint8_t), 1, f->f) != 1 || mf->name_size == 0)
         goto BRA_IO_READ_ERR;
 
@@ -208,8 +208,8 @@ bool bra_io_read_meta_file(bra_io_file_t* f, bra_meta_file_t* mf)
     if (mf->name == NULL)
         goto BRA_IO_READ_ERR;
 
-    // 2. filename
-    if (fread(mf->name, sizeof(uint8_t), mf->name_size, f->f) != mf->name_size)
+    // 3. filename
+    if (fread(mf->name, sizeof(char), mf->name_size, f->f) != mf->name_size)
     {
     BRA_IO_READ_ERR_MF:
         bra_meta_file_free(mf);
@@ -217,7 +217,7 @@ bool bra_io_read_meta_file(bra_io_file_t* f, bra_meta_file_t* mf)
     }
 
     mf->name[mf->name_size] = '\0';
-    // 3. data size
+    // 4. data size
     if (fread(&mf->data_size, sizeof(uint64_t), 1, f->f) != 1)
         goto BRA_IO_READ_ERR_MF;
 
@@ -229,7 +229,6 @@ bool bra_io_write_meta_file(bra_io_file_t* f, const bra_meta_file_t* mf)
     assert_bra_io_file_t(f);
     assert(mf != NULL);
     assert(mf->name != NULL);
-    assert(mf->data_size > 0);
 
     // 1. attributes
     if (fwrite(&mf->attributes, sizeof(uint8_t), 1, f->f) != 1)

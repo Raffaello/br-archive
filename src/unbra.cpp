@@ -103,7 +103,7 @@ bool unbra_list_meta_file(bra_io_file_t& f)
         return false;
 
     const uint64_t ds = mf.data_size;
-    cout << format("- size: {} bytes | {}", mf.data_size, mf.name) << endl;
+    cout << format("- attr: {} | size: {} bytes | {}", mf.attributes, mf.data_size, mf.name) << endl;
 
     bra_meta_file_free(&mf);
 
@@ -133,8 +133,8 @@ int main(int argc, char* argv[])
     }
 
     // header
-    bra_header_t  bh{};
-    bra_io_file_t f{};
+    bra_io_header_t bh{};
+    bra_io_file_t   f{};
     if (!bra_io_open(&f, g_bra_file.string().c_str(), "rb"))
         return 1;
 

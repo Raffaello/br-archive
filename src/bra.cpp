@@ -222,39 +222,44 @@ bool bra_file_encode_and_write_to_disk(bra_io_file_t* f, const string& fn)
     }
 
     std::error_code ec;
-    const uint8_t   attributes = fs::is_directory(fn) ? 1 : 0;    // TODO: now there are only regular files
+    const uint8_t   attributes = fs::is_directory(fn) ? BRA_ATTR_DIR : BRA_ATTR_FILE;    // TODO: now there are only regular files
     const uint8_t   fn_size    = static_cast<uint8_t>(fn.size());
     const uint64_t  ds         = fs::file_size(fn, ec);
+
+    if (attributes == BRA_ATTR_DIR)
+    {
+        cerr << format("ERROR: archiving directory not implemented yet") << endl;
+        goto BRA_IO_WRITE_CLOSE_ERROR;
+    }
 
     if (ec)
     {
         cerr << format("ERROR: unable to read file {}: {}", fn, ec.message()) << endl;
+    BRA_IO_WRITE_CLOSE_ERROR:
         bra_io_close(f);
         return false;
     }
 
-    bra_meta_file_t mf;
+    bra_meta_file_t mf{};
 
     mf.attributes = attributes;
     mf.name_size  = fn_size;
-    mf.name       = bra_strdup(fn.c_str());
     mf.data_size  = ds;
+    mf.name       = bra_strdup(fn.c_str());
+    if (mf.name == NULL)
+        goto BRA_IO_WRITE_CLOSE_ERROR;
 
     const bool res = bra_io_write_meta_file(f, &mf);
     bra_meta_file_free(&mf);
     if (!res)
-    {
-        cerr << format("ERROR: writing file: {}", fn) << endl;
-        bra_io_close(f);
         return false;
-    }
 
     // 4. data
     bra_io_file_t f2{};
     if (!bra_io_open(&f2, fn.c_str(), "rb"))
     {
-        bra_io_close(f);
-        return false;
+        cerr << format("unable to open file: {}", fn) << endl;
+        goto BRA_IO_WRITE_CLOSE_ERROR;
     }
 
     if (!bra_io_copy_file_chunks(f, &f2, ds))

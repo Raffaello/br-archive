@@ -14,19 +14,6 @@ extern "C" {
 
 #pragma pack(push, 1)
 
-/**
- * @brief This is the metadata of each file stored in a BR-archive.
- *        The file data is just after for @p data_size bytes.
- */
-typedef struct bra_meta_file_t
-{
-    // TODO: add CRC ... file permissions, file attributes, etc... ?
-    uint8_t  attributes;    //!< file attributes: 0=regular file, 1=directory
-    uint8_t  name_size;
-    char*    name;
-    uint64_t data_size;
-} bra_meta_file_t;
-
 // typedef struct bra_meta_directory_t
 // {
 //     uint32_t num_subdirs;    //!< subdirectories, it can be 0 if none.
@@ -38,10 +25,10 @@ typedef struct bra_meta_file_t
 /**
  * @brief BR-Archive File Header.
  */
-typedef struct bra_header_t
+typedef struct bra_io_header_t
 {
-    uint32_t magic;      //!< 'BR-a'
-    uint8_t  version;    //!< Archive format version
+    uint32_t magic;    //!< 'BR-a'
+    // uint8_t  version;    //!< Archive format version
 
     // compression type ? (archive, best, fast, ... ??)
     // crc32 / md5 ?
@@ -72,16 +59,16 @@ typedef struct bra_header_t
     //   SO: need to store file attributes first as well.
     //       and when file dir is an attribute, that file name became the prefix of the following files
     //       until another file-dir name comes up. so the order will be important.
-} bra_header_t;
+} bra_io_header_t;
 
 /**
  * @brief BR-Sfx File Footer.
  */
-typedef struct bra_footer_t
+typedef struct bra_io_footer_t
 {
     uint32_t magic;          //!< 'BR-x'
     int64_t  data_offset;    //!< where the data chunk start from the beginning of the file
-} bra_footer_t;
+} bra_io_footer_t;
 
 #pragma pack(pop)
 
@@ -90,6 +77,21 @@ typedef struct bra_io_file_t
     FILE* f;
     char* fn;
 } bra_io_file_t;
+
+/**
+ * @brief This is the metadata of each file stored in a BR-archive.
+ *        The file data is just after for @p data_size bytes.
+ */
+typedef struct bra_meta_file_t
+{
+    // TODO: add CRC ... file permissions, file attributes, etc... ?
+    uint8_t  attributes;    //!< file attributes: 0=regular file, 1=directory
+    uint8_t  name_size;
+    char*    name;
+    uint64_t data_size;
+} bra_meta_file_t;
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -159,7 +161,7 @@ int64_t bra_io_tell(bra_io_file_t* f);
  * @return true on success
  * @return false on error
  */
-bool bra_io_read_header(bra_io_file_t* bf, bra_header_t* out_bh);
+bool bra_io_read_header(bra_io_file_t* bf, bra_io_header_t* out_bh);
 
 /**
  * @brief Write the bra header into @p bf with @p num_files.
@@ -173,7 +175,7 @@ bool bra_io_read_header(bra_io_file_t* bf, bra_header_t* out_bh);
 bool bra_io_write_header(bra_io_file_t* f, const uint32_t num_files);
 
 /**
- * @brief Read thr bra footer into @p bf_out.
+ * @brief Read the bra footer into @p bf_out.
  *        On error closes @p f via @ref bra_io_close.
  *
  * @param f
@@ -181,7 +183,7 @@ bool bra_io_write_header(bra_io_file_t* f, const uint32_t num_files);
  * @return true
  * @return false
  */
-bool bra_io_read_footer(bra_io_file_t* f, bra_footer_t* bf_out);
+bool bra_io_read_footer(bra_io_file_t* f, bra_io_footer_t* bf_out);
 
 /**
  * @brief Write the footer into the file @p f.

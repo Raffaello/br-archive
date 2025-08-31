@@ -14,14 +14,6 @@ extern "C" {
 
 #pragma pack(push, 1)
 
-// typedef struct bra_meta_directory_t
-// {
-//     uint32_t num_subdirs;    //!< subdirectories, it can be 0 if none.
-//     // bra_meta_directory_t dirs[];
-//     uint32_t num_files;    //!< number of files, it must be at least 1.
-//     // bra_meta_file_t files[];
-// } bra_meta_directory_t;
-
 /**
  * @brief BR-Archive File Header.
  */

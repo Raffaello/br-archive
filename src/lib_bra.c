@@ -239,7 +239,7 @@ bool bra_io_read_meta_file(bra_io_file_t* f, bra_meta_file_t* mf)
     mf->name[mf->name_size] = '\0';
     // 4. data size
     // NOTE: for directory not saving data_size, nor data,
-    //       unless data_size will be a valuable for specific directory info
+    //       unless data_size will be valuable for specific directory info
     if (mf->attributes == BRA_ATTR_FILE)
     {
         if (fread(&mf->data_size, sizeof(uint64_t), 1, f->f) != 1)
@@ -254,7 +254,6 @@ bool bra_io_write_meta_file(bra_io_file_t* f, const bra_meta_file_t* mf)
     assert_bra_io_file_t(f);
     assert(mf != NULL);
     assert(mf->name != NULL);
-
 
     const size_t len = strnlen(mf->name, UINT8_MAX + 1);
     if (len != mf->name_size || mf->name_size == 0 || len > UINT8_MAX)
@@ -271,7 +270,6 @@ bool bra_io_write_meta_file(bra_io_file_t* f, const bra_meta_file_t* mf)
         printf("ERROR: Writing file: %s\n", mf->name);
         return false;
     }
-
 
     // 2. filename size
     if (fwrite(&mf->name_size, sizeof(uint8_t), 1, f->f) != 1)
@@ -398,12 +396,8 @@ bool bra_io_decode_and_write_to_disk(bra_io_file_t* f)
     else if (mf.attributes == BRA_ATTR_DIR)
     {
         printf("Creating dir: %s", mf.name);
-        // TODO: create the directory
-        //       use bra_fs lib with the c wrapper
         if (!bra_fs_dir_make(mf.name))
-        {
             goto BRA_IO_READ_ERR;
-        }
 
         bra_meta_file_free(&mf);
     }

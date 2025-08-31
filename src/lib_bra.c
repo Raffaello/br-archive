@@ -13,6 +13,30 @@ static inline uint64_t bra_min(const uint64_t a, const uint64_t b)
     return a < b ? a : b;
 }
 
+static inline bool bra_validate_meta_filename(const bra_meta_file_t* mf)
+{
+    // sanitize output path: reject absolute or parent traversal
+    // POSIX absolute, Windows drive letter, and leading backslash
+    if (mf->name[0] == '/' || mf->name[0] == '\\' ||
+        (mf->name_size >= 2 &&
+         ((mf->name[1] == ':' &&
+           ((mf->name[0] >= 'A' && mf->name[0] <= 'Z') ||
+            (mf->name[0] >= 'a' && mf->name[0] <= 'z'))))))
+    {
+        printf("ERROR: absolute output path: %s\n", mf->name);
+        return false;
+    }
+    // 2.2 Reject common traversal patterns
+    if (strstr(mf->name, "/../") != NULL || strstr(mf->name, "\\..\\") != NULL ||
+        strncmp(mf->name, "../", 3) == 0 || strncmp(mf->name, "..\\", 3) == 0)
+    {
+        printf("ERROR: invalid output path (contains '..'): %s\n", mf->name);
+        return false;
+    }
+
+    return true;
+}
+
 /////////////////////////////////////////////////////////////////////////////
 
 
@@ -351,28 +375,19 @@ bool bra_io_decode_and_write_to_disk(bra_io_file_t* f)
     if (!bra_io_read_meta_file(f, &mf))
         return false;
 
-    // 2.1 sanitize output path: reject absolute or parent traversal
-    //     POSIX absolute, Windows drive letter, and leading backslash
-    if (mf.name[0] == '/' || mf.name[0] == '\\' ||
-        (mf.name_size >= 2 && ((mf.name[1] == ':' && ((mf.name[0] >= 'A' && mf.name[0] <= 'Z') || (mf.name[0] >= 'a' && mf.name[0] <= 'z'))))))
+    if (!bra_validate_meta_filename(&mf))
     {
-        printf("ERROR: absolute output path: %s\n", mf.name);
     BRA_IO_READ_ERR:
         bra_meta_file_free(&mf);
         bra_io_read_error(f);
         return false;
     }
-    // 2.2 Reject common traversal patterns
-    if (strstr(mf.name, "/../") != NULL || strstr(mf.name, "\\..\\") != NULL ||
-        strncmp(mf.name, "../", 3) == 0 || strncmp(mf.name, "..\\", 3) == 0)
-    {
-        printf("ERROR: invalid output path (contains '..'): %s\n", mf.name);
-        goto BRA_IO_READ_ERR;
-    }
 
     // 4. read and write in chunk data
     // NOTE: nothing to extract for a directory, but only to create it
-    if (mf.attributes == BRA_ATTR_FILE)
+    switch (mf.attributes)
+    {
+    case BRA_ATTR_FILE:
     {
         printf("Extracting file: %s ...", mf.name);
 
@@ -390,7 +405,8 @@ bool bra_io_decode_and_write_to_disk(bra_io_file_t* f)
 
         bra_io_close(&f2);
     }
-    else if (mf.attributes == BRA_ATTR_DIR)
+    break;
+    case BRA_ATTR_DIR:
     {
         printf("Creating dir: %s", mf.name);
         if (!bra_fs_dir_make(mf.name))
@@ -398,8 +414,11 @@ bool bra_io_decode_and_write_to_disk(bra_io_file_t* f)
 
         bra_meta_file_free(&mf);
     }
-    else
+    break;
+    default:
         goto BRA_IO_READ_ERR;
+        break;
+    }
 
     printf("OK\n");
     return true;

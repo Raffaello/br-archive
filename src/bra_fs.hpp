@@ -28,8 +28,8 @@ bool bra_fs_try_sanitize(std::filesystem::path& path);
  * @see bra_fs_file_exists
  *
  * @param path
- * @return true
- * @return false
+ * @return true if the path exists and is a directory
+ * @return false otherwise
  */
 bool bra_fs_dir_exists(const std::filesystem::path& path);
 
@@ -38,7 +38,7 @@ bool bra_fs_dir_exists(const std::filesystem::path& path);
  *        It creates also the parent directory if necessary.
  *
  * @param path
- * @return true On if the directory was created or already existed.
+ * @return true if the directory was created or already existed.
  * @return false On error
  */
 [[nodiscard]] bool bra_fs_dir_make(const std::filesystem::path& path);

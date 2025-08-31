@@ -233,7 +233,6 @@ bool bra_file_encode_and_write_to_disk(bra_io_file_t* f, const string& fn)
         return false;
     }
 
-
     bra_meta_file_t mf;
 
     mf.attributes = attributes;

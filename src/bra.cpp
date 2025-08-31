@@ -1,6 +1,8 @@
 #include <lib_bra.h>
 #include <version.h>
 
+#include <bra_fs.hpp>
+
 #include <format>
 #include <iostream>
 #include <filesystem>
@@ -9,6 +11,7 @@
 #include <algorithm>
 #include <limits>
 #include <system_error>
+// #include <print>   // doesn't work smoothly on MSYS2
 
 #include <cstdint>
 #include <cstdio>
@@ -20,7 +23,8 @@ namespace fs = std::filesystem;
 
 
 std::set<fs::path> g_files;
-fs::path           g_out_filename;
+// size_t             g_num_files;
+fs::path g_out_filename;
 
 bool g_sfx = false;
 
@@ -29,13 +33,13 @@ void help()
     cout << format("BR-Archive Utility Version: {}", VERSION) << endl;
     cout << endl;
     cout << format("Usage:") << endl;
-    cout << format("  bra (input_file)") << endl;
-    cout << format("The [output_file] will be with a .BRa extension") << endl;
+    cout << format("  bra [-s] -o <output_file> <input_file1> [<input_file2> ...]") << endl;
+    cout << format("The [output_file] will be with a {} extension", BRA_FILE_EXT) << endl;
     cout << format("Example:") << endl;
-    cout << format("  bra test.txt") << endl;
+    cout << format("  bra -o test test.txt") << endl;
+    cout << format("  bra -o test *.txt") << endl;
     cout << endl;
-    cout << format("(input_file) : (single file only for now) the output") << endl;
-    // cout << format("(output_file): output file name without extension") << endl;
+    cout << format("(input_file): path to an existing file or a wildcard pattern") << endl;
     cout << endl;
     cout << format("Options:") << endl;
     cout << format("--help | -h : display this page.") << endl;
@@ -53,6 +57,8 @@ bool parse_args(int argc, char* argv[])
         return false;
     }
 
+    g_files.clear();
+    // g_num_files = 0;
     for (int i = 1; i < argc; ++i)
     {
         string s = argv[i];
@@ -79,28 +85,53 @@ bool parse_args(int argc, char* argv[])
             g_out_filename = argv[i];
         }
         // check if it is file
-        else if (fs::exists(s))
+        else if (bra_fs_file_exists(s))
         {
-            if (!fs::is_regular_file(s))
-            {
-                cout << format("{} is not a file!", s) << endl;
-                return false;
-            }
-
             fs::path p = s;
 
             // check file path
-            // TODO: missing to check absolute path
-            if (p.generic_string().starts_with("../"))
+            if (!bra_fs_try_sanitize(p))
             {
-                cerr << format("ERROR: parent directory detected: {}", s) << endl;
+                cerr << format("ERROR: path not valid: {}", p.string()) << endl;
                 return false;
             }
 
-            auto p_ = fs::relative(p).generic_string();
-            if (g_files.contains(p_))
-                cout << format("WARNING: duplicate file given in input: {}", p_) << endl;
-            g_files.insert(p_);
+            if (!g_files.insert(p).second)
+                cout << format("WARNING: duplicate file given in input: {}", p.string()) << endl;
+            // else
+            // ++g_num_files;
+        }
+        // check if it is a wildcard
+        else if (bra_fs_isWildcard(s))
+        {
+            fs::path p             = s;
+            p                      = p.generic_string();
+            const fs::path dir     = bra_fs_wildcard_extract_dir(p);
+            const string   pattern = bra_fs_wildcard_to_regexp(p.string());
+
+            // size_t num_files = 0;
+            // for ([[maybe_unused]] auto const& fn : bra_fs_co_search(dir, pattern))
+            //     ++num_files;
+
+            // if (num_files > 0)
+            // {
+            //     g_num_files += num_files;
+            //     if (!g_files.insert(p).second)
+            //         cout << format("WARNING: duplicate file given in input: {}", p.string()) << endl;
+            // }
+
+            std::list<fs::path> files;
+            if (!bra_fs_search(dir, pattern, files))
+            {
+                cerr << format("ERROR: not a valid wildcard: {}", s) << endl;
+                return false;
+            }
+
+            for (const auto& p : files)
+            {
+                if (!g_files.insert(p).second)
+                    cout << format("WARNING: duplicate file given in input: {}", p.string()) << endl;
+            }
         }
         else
         {
@@ -122,18 +153,8 @@ bool validate_args()
 
     if (g_files.size() > numeric_limits<uint32_t>::max())
     {
-        cerr << format("ERROR: Too many files, not supported yet: {}/{}", g_files.size(), numeric_limits<uint32_t>::max());
+        cerr << format("ERROR: Too many files, not supported yet: {}/{}", g_files.size(), numeric_limits<uint32_t>::max()) << endl;
         return false;
-    }
-
-    if (g_sfx)
-    {
-        // locate sfx bin
-        if (!fs::exists(BRA_SFX_FILENAME))
-        {
-            cerr << "ERROR: unable to find BRa-SFX module" << endl;
-            return false;
-        }
     }
 
     if (g_out_filename.empty())
@@ -143,18 +164,53 @@ bool validate_args()
     }
 
     // adjust input file extension
-    if (g_out_filename.extension() != BRA_FILE_EXT)
-        g_out_filename += BRA_FILE_EXT;
-
-    if (fs::exists(g_out_filename))
+    if (g_sfx)
     {
-        // TODO: create overwrite rule or whatever.
-        cout << "Overwriting file: {}" << g_out_filename << endl;
+        g_out_filename = bra_fs_filename_sfx_adjust(g_out_filename, true);
+        // locate sfx bin
+        if (!bra_fs_file_exists(BRA_SFX_FILENAME))
+        {
+            cerr << "ERROR: unable to find BRa-SFX module" << endl;
+            return false;
+        }
+
+        if (bra_fs_file_exists(g_out_filename))
+        {
+            cerr << format("ERROR: Temporary SFX File {} already exists.", g_out_filename.string()) << endl;
+            return false;
+        }
+    }
+    else
+    {
+        g_out_filename = bra_fs_filename_archive_adjust(g_out_filename);
+    }
+
+    fs::path p = g_out_filename;
+    if (g_sfx)
+        p = p.replace_extension(BRA_SFX_FILE_EXT);
+
+    // TODO: this might not be ok
+    if (auto res = bra_fs_file_exists_ask_overwrite(p, false))
+    {
+        if (!*res)
+            return false;
+
+        cout << format("Overwriting file: {}", p.string()) << endl;
     }
 
     return true;
 }
 
+/**
+ * @brief
+ *
+ * @todo move into lib_bra
+ *
+ * @param f
+ * @param fn
+ * @return true
+ * @return false
+ */
 bool bra_file_encode_and_write_to_disk(bra_io_file_t* f, const string& fn)
 {
     cout << format("Archiving File: {}...", fn);
@@ -212,36 +268,72 @@ int main(int argc, char* argv[])
     bra_io_file_t f{};
 
     // header
-    // TODO: check if the file exists and ask to overwrite
     if (!bra_io_open(&f, out_fn.c_str(), "wb"))
         return 1;
 
-    cout << format("Archiving into {} ...", out_fn) << endl;
+    cout << format("Archiving into {}", out_fn) << endl;
+    // if (!bra_io_write_header(&f, static_cast<uint32_t>(g_num_files)))
     if (!bra_io_write_header(&f, static_cast<uint32_t>(g_files.size())))
         return 1;
 
+    uint32_t written_num_files = 0;
     for (const auto& fn_ : g_files)
     {
+        // if (bra_fs_isWildcard(fn_))
+        // {
+        //     fs::path       p       = fn_.generic_string();
+        //     const fs::path dir     = bra_fs_wildcard_extract_dir(p);
+        //     const string   pattern = bra_fs_wildcard_to_regexp(p.string());
+        //     for (auto const& fn2 : bra_fs_co_search(dir, pattern))
+        //     {
+        //         p = fn2;
+        //         if (!bra_fs_try_sanitize(p))
+        //         {
+        //             cerr << format("ERROR: file not found or not valid: {}", fn2.string());
+        //             return 1;
+        //         }
+
+        // if (p == g_out_filename)
+        //     continue;
+
+        // const string fn = fs::relative(p).generic_string();
+        // if (!bra_file_encode_and_write_to_disk(&f, fn))
+        //     return 1;
+        // else
+        //     ++written_num_files;
+        // }
+        // }
+        // else
+        // {
         const string fn = fs::relative(fn_).generic_string();
 
         if (!bra_file_encode_and_write_to_disk(&f, fn))
             return 1;
+        else
+            ++written_num_files;
+        // }
     }
 
     bra_io_close(&f);
 
+    // check num files
+    // if (written_num_files != g_num_files)
+    // {
+    //     cerr << format("ERROR: written files are not equal to expected ones: {}/{}", written_num_files, g_num_files) << endl;
+    //     return 2;
+    // }
+
     if (g_sfx)
     {
-        fs::path sfx_path  = g_out_filename;
-        sfx_path          += BRA_SFX_FILE_EXT;
+        fs::path sfx_path = g_out_filename;
+        sfx_path.replace_extension(BRA_SFX_FILE_EXT);
 
         cout << format("creating Self-extracting archive {}...", sfx_path.string());
 
-        // TODO: ask to overwrite instead
         if (!fs::copy_file(BRA_SFX_FILENAME, sfx_path, fs::copy_options::overwrite_existing))
         {
         BRA_SFX_IO_ERROR:
-            cerr << "unable to create a BRa-SFX file" << endl;
+            cerr << "ERROR: unable to create a BRa-SFX file" << endl;
             return 2;
         }
 
@@ -286,6 +378,10 @@ int main(int argc, char* argv[])
                             fs::perms::others_exec | fs::perms::others_read,
                         fs::perm_options::add);
 #endif
+
+        // remove TMP SFX FILE
+        if (!fs::remove(g_out_filename))
+            cout << format("WARN: unable to remove temporary file {}", g_out_filename.string()) << endl;
 
         cout << "OK" << endl;
     }

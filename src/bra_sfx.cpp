@@ -84,15 +84,6 @@ void help()
 {
     cout << format("BR-Archive Utility Version: {}", VERSION) << endl;
     cout << endl;
-    // cout << format("Usage:") << endl;
-    // cout << endl;
-    // cout << format("  unbra (output_directory)") << endl;
-    // cout << format("The [output_file(s)] will be as they are stored in the archive") << endl;
-    // cout << format("Example:") << endl;
-    // cout << format("  unbra test.BRa") << endl;
-    // cout << endl;
-    // cout << format("(input_file) : (single file only for now) the output") << endl;
-    // cout << format("(output_file): output file name without extension") << endl;
     cout << endl;
     cout << format("Options:") << endl;
     cout << format("--help | -h : display this page.") << endl;
@@ -119,11 +110,16 @@ bool parse_args(int argc, char* argv[])
     for (int i = 1; i < argc; i++)
     {
         string s = argv[i];
-        if (s == "--help" | s == "-h")
+        if ((s == "--help") | (s == "-h"))
         {
             help();
             exit(0);
         }
+        // else if ((s == "--list") | (s == "-l"))
+        // {
+        //     // TODO: this is mostly the same as unbra ..
+        //     //       so unbra could be just a class to be reused among the 2 programs.
+        // }
         else
         {
             cerr << format("unknown argument: {}", s) << endl;
@@ -144,7 +140,6 @@ bool bra_file_open_and_read_footer_header(const char* fn, bra_header_t* out_bh, 
 
     if (!bra_io_seek(f, -1L * static_cast<off_t>(sizeof(bra_footer_t)), SEEK_END))
     {
-    BRA_IO_READ_ERROR:
         cerr << format("unable to read file {}", fn) << endl;
         bra_io_close(f);
         return false;
@@ -157,7 +152,6 @@ bool bra_file_open_and_read_footer_header(const char* fn, bra_header_t* out_bh, 
     // read header and check
     if (!bra_io_seek(f, bf.data_offset, SEEK_SET))
     {
-    BRA_SFX_IO_READ_ERROR:
         bra_io_read_error(f);
         return false;
     }
@@ -181,6 +175,8 @@ int main(int argc, char* argv[])
     // The footer contain the location where the embedded data is
     // so it can be extracted / dumped into a temporary file
     // and decoded
+
+    // TODO: when extracting should check to do not auto-overwrite itself.
 
     bra_header_t  bh;
     bra_io_file_t f{};

@@ -12,12 +12,15 @@
         "ftelli",
         "gmock",
         "gtest",
+        "MSVC",
         "msys",
         "msystem",
         "softprops",
         "STREQUAL",
         "ucrt",
-        "unbra"
+        "unbra",
+        "Wextra",
+        "Wpedantic"
     ],
     "ignoreWords": [],
     "import": []

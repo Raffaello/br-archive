@@ -1,4 +1,5 @@
 #include <lib_bra.h>
+#include <bra_fs.hpp>
 #include <version.h>
 
 #include <format>
@@ -19,7 +20,7 @@ namespace fs = std::filesystem;
 
 
 fs::path g_bra_file;
-bool     g_list = false;
+bool     g_listContent = false;
 
 void help()
 {
@@ -51,7 +52,7 @@ bool parse_args(int argc, char* argv[])
         return false;
     }
 
-    g_list = false;
+    g_listContent = false;
     for (int i = 1; i < argc; i++)
     {
         string s = argv[i];
@@ -64,25 +65,14 @@ bool parse_args(int argc, char* argv[])
         else if (s == "--list" || s == "-l")
         {
             // list content
-            g_list = true;
+            g_listContent = true;
         }
         // check if it is a file
         else
         {
-            fs::path p = s;
-            if (p.extension() != BRA_FILE_EXT)
-                p += BRA_FILE_EXT;
-
-            if (fs::exists(p))
-            {
-                if (!fs::is_regular_file(p))
-                {
-                    cout << format("{} is not a file!", p.string()) << endl;
-                    return false;
-                }
-
+            fs::path p = bra_fs_filename_archive_adjust(s);
+            if (bra_fs_file_exists(p))
                 g_bra_file = p;
-            }
             else
             {
                 cout << format("unknown argument: {}", s) << endl;
@@ -112,11 +102,12 @@ bool unbra_list_meta_file(bra_io_file_t& f)
     if (!bra_io_read_meta_file(&f, &mf))
         return false;
 
+    const uint64_t ds = mf.data_size;
     cout << format("- size: {} bytes | {}", mf.name, mf.data_size) << endl;
+
     bra_meta_file_free(&mf);
 
     // skip data content
-    const uint64_t ds = mf.data_size;
     if (!bra_io_skip_data(&f, ds))
     {
         bra_io_read_error(&f);
@@ -134,7 +125,7 @@ int main(int argc, char* argv[])
     if (!validate_args())
         return 1;
 
-    // adjust input file extension
+    // forcing to work only on BRA_FILE_EXT
     if (g_bra_file.extension() != BRA_FILE_EXT)
     {
         cerr << "CRITICAL: unexpected" << endl;
@@ -153,7 +144,7 @@ int main(int argc, char* argv[])
     cout << format("{} containing num files: {}", BRA_NAME, bh.num_files) << endl;
     for (uint32_t i = 0; i < bh.num_files; i++)
     {
-        if (g_list)
+        if (g_listContent)
         {
             if (!unbra_list_meta_file(f))
                 return 2;

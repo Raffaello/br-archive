@@ -6,7 +6,16 @@ extern "C" {
 
 #include <stdbool.h>
 
-
+/**
+ * @brief Create a directory given by @p path.
+ *        It creates also the parent directory if necessary.
+ *
+ * @overload bool bra_fs_mkdir(const std::filesystem::path& path)
+ *
+ * @param path
+ * @return true On success
+ * @return false On error
+ */
 bool bra_fs_mkdir(const char* path);
 
 #ifdef __cplusplus

@@ -201,9 +201,22 @@ bool bra_io_read_meta_file(bra_io_file_t* f, bra_meta_file_t* mf)
         return false;
     }
 
+    switch (mf->attributes)
+    {
+    case BRA_ATTR_FILE:
+        // [[fallthrough]];
+    case BRA_ATTR_DIR:
+        break;
+    default:
+        goto BRA_IO_READ_ERR;
+    }
+
     // 2. filename size
     if (fread(&mf->name_size, sizeof(uint8_t), 1, f->f) != 1 || mf->name_size == 0)
         goto BRA_IO_READ_ERR;
+
+    // if (memchr(mf->name, '\0', mf->name_size) != NULL)
+    // goto BRA_IO_READ_ERR_MF;
 
     mf->name = malloc(sizeof(char) * (mf->name_size + 1));    // !< one extra for '\0'
     if (mf->name == NULL)
@@ -383,12 +396,13 @@ bool bra_io_decode_and_write_to_disk(bra_io_file_t* f)
         //       use bra_fs lib with the c wrapper
         if (!bra_fs_mkdir(mf.name))
         {
-            printf("ERROR: unable to create\n");
             goto BRA_IO_READ_ERR;
         }
 
         bra_meta_file_free(&mf);
     }
+    else
+        goto BRA_IO_READ_ERR;
 
     printf("OK\n");
     return true;

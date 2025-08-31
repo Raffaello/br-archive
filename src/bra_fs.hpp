@@ -23,11 +23,12 @@
 bool bra_fs_try_sanitize(std::filesystem::path& path);
 
 /**
- * @brief
+ * @brief Create a directory given by @p path.
+ *        It creates also the parent directory if necessary.
  *
  * @param path
- * @return true
- * @return false
+ * @return true On success
+ * @return false On error
  */
 bool bra_fs_mkdir(const std::filesystem::path& path);
 

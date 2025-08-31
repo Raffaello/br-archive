@@ -39,7 +39,15 @@ bool bra_fs_try_sanitize(std::filesystem::path& path)
 
 bool bra_fs_mkdir(const std::filesystem::path& path)
 {
-    return fs::create_directories(path);
+    error_code ec;
+    const bool res = fs::create_directories(path, ec);
+    if (ec)
+    {
+        cerr << format("ERROR: can't mkdir {}: {}", path.string(), ec.message()) << endl;
+        return false;
+    }
+
+    return res;
 }
 
 std::filesystem::path bra_fs_filename_archive_adjust(const std::filesystem::path& path)

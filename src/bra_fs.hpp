@@ -102,18 +102,18 @@ bool bra_fs_try_sanitize(std::filesystem::path& path);
 [[nodiscard]] std::optional<bool> bra_fs_file_exists_ask_overwrite(const std::filesystem::path& path, const bool always_yes);
 
 /**
- * @brief
+ * @brief Get the file attributes for the given @p path.
  *
  * @param path
- * @return std::optional<uint8_t>
+ * @return std::optional<uint8_t> #BRA_ATTR_FILE for regular files, #BRA_ATTR_DIR for directories, @c nullopt for errors or unknown types.
  */
 [[nodiscard]] std::optional<uint8_t> bra_fs_file_attributes(const std::filesystem::path& path);
 
 /**
- * @brief
+ * @brief Get the size of a file or directory.
  *
  * @param path
- * @return std::optional<size_t>
+ * @return std::optional<size_t> File size in bytes for regular files, 0 for directories, @c nullopt on error
  */
 [[nodiscard]] std::optional<size_t> bra_fs_file_size(const std::filesystem::path& path);
 

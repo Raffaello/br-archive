@@ -115,15 +115,15 @@ char* bra_strdup(const char* str);
 void bra_io_read_error(bra_io_file_t* bf);
 
 /**
- * @brief open the file @p fn in the @p mode
- *        the @p will be overwritten.
+ * @brief open the file @p fn in the @p mode.
+ *        The file @p bf will be overwritten if it exists.
  *        On failure there is no need to call @ref bra_io_close
  *
  * @param bf
  * @param fn
  * @param mode
  * @return true on success
- * @return false on error
+ * @return false on error and close @p bf via @ref bra_io_close.
  */
 bool bra_io_open(bra_io_file_t* bf, const char* fn, const char* mode);
 
@@ -136,7 +136,7 @@ void bra_io_close(bra_io_file_t* bf);
 
 /**
  * @brief Seek file at position @p offs.
- *  *
+ *
  * @param f
  * @param offs
  * @param origin SEEK_SET, SEEK_CUR, SEEK_END

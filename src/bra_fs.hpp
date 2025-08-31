@@ -41,7 +41,7 @@ bool bra_fs_dir_exists(const std::filesystem::path& path);
  * @return true On if the directory was created or already existed.
  * @return false On error
  */
-[[no_discard]] bool bra_fs_dir_make(const std::filesystem::path& path);
+[[nodiscard]] bool bra_fs_dir_make(const std::filesystem::path& path);
 
 /**
  * @brief

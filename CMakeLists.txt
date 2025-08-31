@@ -27,7 +27,7 @@ set_target_properties(lib_bra PROPERTIES
     PREFIX ""
 )
 
-add_library(bra_fs OBJECT src/bra_fs.cpp)
+add_library(bra_fs STATIC src/bra_fs.cpp)
 
 
 add_executable(bra src/bra.cpp)

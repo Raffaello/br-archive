@@ -51,14 +51,14 @@ bool bra_fs_isWildcard(const std::filesystem::path& path)
 
 bool bra_fs_dir_exists(const std::filesystem::path& path)
 {
-    error_code ec1, ec2;
-    const bool res = fs::exists(path, ec1) && fs::is_directory(path, ec2);
+    error_code ec;
+    const bool isDir = fs::is_directory(path, ec);
 
     // TODO: can't know if it was an error, maybe use an optional instead?
-    if (ec1 || ec2)
+    if (ec)
         return false;
 
-    return res;
+    return isDir;
 }
 
 bool bra_fs_dir_make(const std::filesystem::path& path)
@@ -109,13 +109,13 @@ std::filesystem::path bra_fs_filename_sfx_adjust(const std::filesystem::path& pa
 
 bool bra_fs_file_exists(const std::filesystem::path& path)
 {
-    error_code ec1, ec2;
-    const bool res = fs::exists(path, ec1) && fs::is_regular_file(path, ec2);
+    error_code ec;
+    const bool isRegFile = fs::is_regular_file(path, ec);
 
-    if (ec1 || ec2)
+    if (ec)
         return false;
 
-    return res;
+    return isRegFile;
 }
 
 std::optional<bool> bra_fs_file_exists_ask_overwrite(const std::filesystem::path& path, const bool always_yes)

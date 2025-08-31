@@ -37,8 +37,11 @@ bool bra_fs_try_sanitize(std::filesystem::path& path)
     return !path.empty();
 }
 
-bool bra_fs_mkdir(const std::filesystem::path& path)
+bool bra_fs_dir_make(const std::filesystem::path& path)
 {
+    if (fs::exists(path) && fs::is_directory(path))
+        return true;
+
     error_code ec;
     const bool res = fs::create_directories(path, ec);
     if (ec)

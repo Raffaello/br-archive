@@ -18,6 +18,9 @@ static inline uint64_t bra_min(const uint64_t a, const uint64_t b)
 
 char* bra_strdup(const char* str)
 {
+    if (str == NULL)
+        return NULL;
+
     const size_t sz = strlen(str) + 1;
     char*        c  = malloc(sz);
 
@@ -394,7 +397,7 @@ bool bra_io_decode_and_write_to_disk(bra_io_file_t* f)
         printf("Creating dir: %s", mf.name);
         // TODO: create the directory
         //       use bra_fs lib with the c wrapper
-        if (!bra_fs_mkdir(mf.name))
+        if (!bra_fs_dir_make(mf.name))
         {
             goto BRA_IO_READ_ERR;
         }

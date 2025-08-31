@@ -30,7 +30,7 @@ bool bra_fs_try_sanitize(std::filesystem::path& path);
  * @return true On success
  * @return false On error
  */
-bool bra_fs_mkdir(const std::filesystem::path& path);
+bool bra_fs_dir_make(const std::filesystem::path& path);
 
 /**
  * @brief

@@ -3,9 +3,9 @@
 
 namespace fs = std::filesystem;
 
-bool bra_fs_mkdir(const char* path)
+bool bra_fs_dir_make(const char* path)
 {
     const fs::path p(path);
 
-    return bra_fs_mkdir(p);
+    return bra_fs_dir_make(p);
 }

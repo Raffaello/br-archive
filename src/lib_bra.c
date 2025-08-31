@@ -15,14 +15,7 @@ static inline uint64_t bra_min(const uint64_t a, const uint64_t b)
 /////////////////////////////////////////////////////////////////////////////
 
 
-/**
- * @brief strdup()
- * @todo remove when switching to C23
- *
- * @param str
- * @return char*
- */
-static char* bra_strdup(const char* str)
+char* bra_strdup(const char* str)
 {
     const size_t sz = strlen(str) + 1;
     char*        c  = malloc(sz);
@@ -198,16 +191,17 @@ bool bra_io_read_meta_file(bra_io_file_t* f, bra_meta_file_t* mf)
     mf->name      = NULL;
     mf->name_size = 0;
     mf->data_size = 0;
-    // 1. filename size
-    if (fread(&mf->name_size, sizeof(uint8_t), 1, f->f) != 1 || mf->name_size == 0)
+
+    // 0. attributes
+    if (fread(&mf->attributes, sizeof(uint8_t), 1, f->f) != 1)
     {
     BRA_IO_READ_ERR:
         bra_io_read_error(f);
         return false;
     }
 
-    // 1.5 attributes
-    if (fread(&mf->attributes, sizeof(uint8_t), 1, f->f) != 1)
+    // 1. filename size
+    if (fread(&mf->name_size, sizeof(uint8_t), 1, f->f) != 1 || mf->name_size == 0)
         goto BRA_IO_READ_ERR;
 
     mf->name = malloc(sizeof(char) * (mf->name_size + 1));    // !< one extra for '\0'
@@ -226,6 +220,37 @@ bool bra_io_read_meta_file(bra_io_file_t* f, bra_meta_file_t* mf)
     // 3. data size
     if (fread(&mf->data_size, sizeof(uint64_t), 1, f->f) != 1)
         goto BRA_IO_READ_ERR_MF;
+
+    return true;
+}
+
+bool bra_io_write_meta_file(bra_io_file_t* f, const bra_meta_file_t* mf)
+{
+    assert_bra_io_file_t(f);
+    assert(mf != NULL);
+    assert(mf->name != NULL);
+    assert(mf->data_size > 0);
+
+    // 1. attributes
+    if (fwrite(&mf->attributes, sizeof(uint8_t), 1, f->f) != 1)
+    {
+    BRA_IO_WRITE_ERR:
+        bra_io_close(f);
+        printf("ERROR: Writing file: %s\n", mf->name);
+        return false;
+    }
+
+    // 2. filename size
+    if (fwrite(&mf->name_size, sizeof(uint8_t), 1, f->f) != 1)
+        goto BRA_IO_WRITE_ERR;
+
+    // 3. filename
+    if (fwrite(mf->name, sizeof(char), mf->name_size, f->f) != mf->name_size)
+        goto BRA_IO_WRITE_ERR;
+
+    // 4. data size
+    if (fwrite(&mf->data_size, sizeof(uint64_t), 1, f->f) != 1)
+        goto BRA_IO_WRITE_ERR;
 
     return true;
 }

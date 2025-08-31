@@ -91,6 +91,17 @@ typedef struct bra_io_file_t
     char* fn;
 } bra_io_file_t;
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/**
+ * @brief strdup()
+ * @todo remove when switching to C23
+ *
+ * @param str
+ * @return char*
+ */
+char* bra_strdup(const char* str);
+
 /**
  * @brief print error message and close file.
  *
@@ -195,6 +206,16 @@ bool bra_io_write_footer(bra_io_file_t* f, const int64_t data_offset);
  * @return false On error
  */
 bool bra_io_read_meta_file(bra_io_file_t* f, bra_meta_file_t* mf);
+
+/**
+ * @brief
+ *
+ * @param f
+ * @param mf
+ * @return true
+ * @return false
+ */
+bool bra_io_write_meta_file(bra_io_file_t* f, const bra_meta_file_t* mf);
 
 /**
  * @brief Free any eventual content on @p mf.

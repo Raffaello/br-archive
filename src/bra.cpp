@@ -221,29 +221,34 @@ bool bra_file_encode_and_write_to_disk(bra_io_file_t* f, const string& fn)
         return false;
     }
 
-    const uint8_t fn_size = static_cast<uint8_t>(fn.size());
-    if (fwrite(&fn_size, sizeof(uint8_t), 1, f->f) != 1)
+    std::error_code ec;
+    const uint8_t   attributes = fs::is_directory(fn) ? 1 : 0;    // TODO: now there are only regular files
+    const uint8_t   fn_size    = static_cast<uint8_t>(fn.size());
+    const uint64_t  ds         = fs::file_size(fn, ec);
+
+    if (ec)
     {
-    BRA_IO_ENCODE_WRITE_ERR:
-        cerr << format("ERROR: writing file: {}", fn) << endl;
+        cerr << format("ERROR: unable to read file {}: {}", fn, ec.message()) << endl;
         bra_io_close(f);
         return false;
     }
 
-    // 1.5 file attribute
-    const uint8_t attributes = fs::is_directory(fn) ? 1 : 0;    // TODO: now there are only regular files
-    if (fwrite(&attributes, sizeof(uint8_t), 1, f->f) != 1)
-        goto BRA_IO_ENCODE_WRITE_ERR;
 
-    // 2. file name
-    if (fwrite(fn.c_str(), sizeof(char), fn_size, f->f) != fn_size)
-        goto BRA_IO_ENCODE_WRITE_ERR;
+    bra_meta_file_t mf;
 
-    // 3. data size
-    std::error_code ec;
-    const uint64_t  ds = fs::file_size(fn, ec);
-    if (ec || fwrite(&ds, sizeof(uint64_t), 1, f->f) != 1)
-        goto BRA_IO_ENCODE_WRITE_ERR;
+    mf.attributes = attributes;
+    mf.name_size  = fn_size;
+    mf.name       = bra_strdup(fn.c_str());
+    mf.data_size  = ds;
+
+    const bool res = bra_io_write_meta_file(f, &mf);
+    bra_meta_file_free(&mf);
+    if (!res)
+    {
+        cerr << format("ERROR: writing file: {}", fn) << endl;
+        bra_io_close(f);
+        return false;
+    }
 
     // 4. data
     bra_io_file_t f2{};

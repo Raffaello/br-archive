@@ -14,7 +14,7 @@
  * @brief Try to sanitize the @p path.
  *        It must be relative to the current directory.
  *        It can't escape the current directory.
- *        If it doesn't exists it will return false;
+ *        If it doesn't exist it will return false;
  *
  * @param path
  * @return true if it is successful
@@ -64,7 +64,7 @@ bool bra_fs_try_sanitize(std::filesystem::path& path);
 [[nodiscard]] std::optional<bool> bra_fs_file_exists_ask_overwrite(const std::filesystem::path& p, const bool always_yes);
 
 /**
- * @brief
+ * @brief Check if the given @p path contains a wildcard supported pattern.
  *
  * @todo instead of bool return size_t: std::npos no wildcard, otherwise first wildcard char position.
  *
@@ -85,14 +85,25 @@ bool bra_fs_try_sanitize(std::filesystem::path& path);
 [[nodiscard]] std::filesystem::path bra_fs_wildcard_extract_dir(std::filesystem::path& path_wildcard);
 
 /**
- * @brief
+ * @brief Convert the wildcard to a regular expression for internal use.
+ *
+ * @todo this should most likely be private. Paired with @ref bra_fs_wildcard_extract_dir
  *
  * @param wildcard
  * @return std::string
  */
 [[nodiscard]] std::string bra_fs_wildcard_to_regexp(const std::string& wildcard);
 
-
+/**
+ * @brief Search all the files in the given @p dir matching the regular expression @p pattern.
+ *        It stores the results in @p out_files.
+ *
+ * @param dir
+ * @param pattern
+ * @param out_files
+ * @return true if successful
+ * @return false otherwise
+ */
 bool bra_fs_search(const std::filesystem::path& dir, const std::string& pattern, std::list<std::filesystem::path>& out_files);
 
 /**

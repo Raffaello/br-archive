@@ -49,8 +49,8 @@ std::filesystem::path bra_fs_filename_archive_adjust(const std::filesystem::path
 
 std::filesystem::path bra_fs_filename_sfx_adjust(const std::filesystem::path& path, const bool tmp)
 {
-    fs::path p;
-    fs::path sfx_ext = tmp ? BRA_SFX_TMP_FILE_EXT : BRA_SFX_FILE_EXT;
+    fs::path       p;
+    const fs::path sfx_ext = tmp ? BRA_SFX_TMP_FILE_EXT : BRA_SFX_FILE_EXT;
 
     if (path.extension() == BRA_SFX_FILE_EXT)
         p = path.stem();
@@ -60,7 +60,6 @@ std::filesystem::path bra_fs_filename_sfx_adjust(const std::filesystem::path& pa
 
     if (p.extension() == BRA_FILE_EXT)
         p += sfx_ext;
-
     else
         p += string(BRA_FILE_EXT) + sfx_ext.string();
 
@@ -202,15 +201,15 @@ std::string bra_fs_wildcard_to_regexp(const std::string& wildcard)
 
 bool bra_fs_search(const std::filesystem::path& dir, const std::string& pattern, std::list<std::filesystem::path>& out_files)
 {
-    std::regex r(pattern);
+    const std::regex r(pattern);
+    bool             res = true;
 
-    bool res = true;
     try
     {
         for (const auto& entry : fs::directory_iterator(dir))
         {
             // const bool is_dir = entry.is_directory();
-            const bool is_dir = false;    // TODO: must be done later, requires to struct into dir the archive too first.
+            const bool is_dir = false;    // TODO: must be done later, requires to struct into dirs the archive too first.
             if (!(entry.is_regular_file() || is_dir))
                 continue;
 

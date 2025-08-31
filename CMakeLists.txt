@@ -18,7 +18,6 @@ endif()
 configure_file(src/version.h.in src/version.h)
 
 add_library(lib_bra STATIC src/lib_bra.c)
-# set_property(TARGET lib_bra PROPERTY COMPILE_WARNING_AS_ERROR ON)
 target_include_directories(lib_bra
     PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/src> # for configure_file (version.h)
@@ -29,25 +28,15 @@ set_target_properties(lib_bra PROPERTIES
 )
 
 add_library(bra_fs OBJECT src/bra_fs.cpp)
-# set_property(TARGET bra_fs PROPERTY COMPILE_WARNING_AS_ERROR ON)
-# target_include_directories(bra_fs
-    # PUBLIC
-        # ${CMAKE_CURRENT_SOURCE_DIR}/src
-# )
-# set_target_properties(bra_fs PROPERTIES
-#     PREFIX ""
-# )
+
 
 add_executable(bra src/bra.cpp)
-# set_property(TARGET bra PROPERTY COMPILE_WARNING_AS_ERROR ON)
 target_link_libraries(bra PRIVATE lib_bra bra_fs)
 
 add_executable(unbra src/unbra.cpp)
-# set_property(TARGET unbra PROPERTY COMPILE_WARNING_AS_ERROR ON)
 target_link_libraries(unbra PRIVATE lib_bra bra_fs)
 
 add_executable(bra_sfx src/bra_sfx.cpp)
-# set_property(TARGET bra_sfx PROPERTY COMPILE_WARNING_AS_ERROR ON)
 target_link_libraries(bra_sfx PRIVATE lib_bra)
 set_target_properties(bra_sfx PROPERTIES
     OUTPUT_NAME "bra"

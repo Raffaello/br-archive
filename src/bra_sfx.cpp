@@ -150,7 +150,7 @@ bool bra_file_open_and_read_footer_header(const char* fn, bra_io_header_t* out_b
         return false;
 
     // read header and check
-    if (!bra_io_seek(f, bf.data_offset, SEEK_SET))
+    if (!bra_io_seek(f, bf.header_offset, SEEK_SET))
     {
         bra_io_read_error(f);
         return false;

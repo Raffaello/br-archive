@@ -61,7 +61,7 @@ typedef struct bra_io_header_t
 typedef struct bra_io_footer_t
 {
     uint32_t magic;          //!< 'BR-x'
-    int64_t  data_offset;    //!< where the data chunk start from the beginning of the file
+    int64_t  header_offset;    //!< absolute offset of the header chunk from file start.
 } bra_io_footer_t;
 
 #pragma pack(pop)
@@ -190,11 +190,11 @@ bool bra_io_read_footer(bra_io_file_t* f, bra_io_footer_t* bf_out);
  *
  *
  * @param f
- * @param data_offset
+ * @param header_offset
  * @return true
  * @return false
  */
-bool bra_io_write_footer(bra_io_file_t* f, const int64_t data_offset);
+bool bra_io_write_footer(bra_io_file_t* f, const int64_t header_offset);
 
 /**
  * @brief Read the filename meta data information that is pointing in @p f and store it on @p mf.

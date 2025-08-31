@@ -380,8 +380,8 @@ int main(int argc, char* argv[])
         }
 
         // save the start of the payload for later...
-        const int64_t data_offset = bra_io_tell(&f);
-        if (data_offset < 0L)
+        const int64_t header_offset = bra_io_tell(&f);
+        if (header_offset < 0L)
             goto BRA_SFX_IO_F_ERROR;
 
         // append bra file
@@ -396,7 +396,7 @@ int main(int argc, char* argv[])
 
         bra_io_close(&f2);
         // write footer
-        if (!bra_io_write_footer(&f, data_offset))
+        if (!bra_io_write_footer(&f, header_offset))
             goto BRA_SFX_IO_ERROR;
 
         bra_io_close(&f);

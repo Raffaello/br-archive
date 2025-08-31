@@ -170,14 +170,14 @@ bool bra_io_read_footer(bra_io_file_t* f, bra_io_footer_t* bf_out)
     return true;
 }
 
-bool bra_io_write_footer(bra_io_file_t* f, const int64_t data_offset)
+bool bra_io_write_footer(bra_io_file_t* f, const int64_t header_offset)
 {
     assert_bra_io_file_t(f);
-    assert(data_offset > 0);
+    assert(header_offset > 0);
 
     bra_io_footer_t bf = {
         .magic       = BRA_FOOTER_MAGIC,
-        .data_offset = data_offset,
+        .header_offset = header_offset,
     };
 
     if (fwrite(&bf, sizeof(bra_io_footer_t), 1, f->f) != 1)
@@ -379,6 +379,7 @@ bool bra_io_decode_and_write_to_disk(bra_io_file_t* f)
     if (mf.attributes == BRA_ATTR_FILE)
     {
         printf("Extracting file: %s ...", mf.name);
+
         bra_io_file_t f2;
         if (!bra_io_open(&f2, mf.name, "wb"))
         {

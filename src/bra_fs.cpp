@@ -37,6 +37,11 @@ bool bra_fs_try_sanitize(std::filesystem::path& path)
     return !path.empty();
 }
 
+bool bra_fs_mkdir(const std::filesystem::path& path)
+{
+    return fs::create_directories(path);
+}
+
 std::filesystem::path bra_fs_filename_archive_adjust(const std::filesystem::path& path)
 {
     fs::path p = path;

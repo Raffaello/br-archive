@@ -199,23 +199,21 @@ bool bra_io_write_footer(bra_io_file_t* f, const int64_t data_offset);
 
 /**
  * @brief Read the filename meta data information that is pointing in @p f and store it on @p mf.
- *        On error closes @p f via @ref bra_io_close.
- *        On success @mf must be explicitly free via @ref bra_meta_file_free.
  *
  * @param f
  * @param mf
- * @return true On success
- * @return false On error
+ * @return true On success @p mf must be explicitly free via @ref bra_meta_file_free.
+ * @return false On error closes @p f via @ref bra_io_close.
  */
 bool bra_io_read_meta_file(bra_io_file_t* f, bra_meta_file_t* mf);
 
 /**
- * @brief
+ * @brief Write the filename meta data information given from @p mf in @p f.
  *
  * @param f
  * @param mf
- * @return true
- * @return false
+ * @return true On success
+ * @return false On error closes @p f via @ref bra_io_close.
  */
 bool bra_io_write_meta_file(bra_io_file_t* f, const bra_meta_file_t* mf);
 

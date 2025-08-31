@@ -1,7 +1,7 @@
 #pragma once
 
 #ifndef __cplusplus
-#error "must be included in a cpp file unit"
+#error "must be included in a cpp file unit (use bra_fs.h instead)"
 #endif
 
 #include <filesystem>
@@ -21,6 +21,15 @@
  * @return false otherwise
  */
 bool bra_fs_try_sanitize(std::filesystem::path& path);
+
+/**
+ * @brief
+ *
+ * @param path
+ * @return true
+ * @return false
+ */
+bool bra_fs_mkdir(const std::filesystem::path& path);
 
 /**
  * @brief

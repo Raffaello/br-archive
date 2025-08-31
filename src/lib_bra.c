@@ -1,4 +1,5 @@
 #include <lib_bra.h>
+#include <bra_fs.h>
 
 #include <assert.h>
 #include <string.h>
@@ -155,7 +156,7 @@ bool bra_io_read_footer(bra_io_file_t* f, bra_io_footer_t* bf_out)
     // check footer magic
     if (bf_out->magic != BRA_FOOTER_MAGIC)
     {
-        printf("ERROR: corrupted or not valid BRA-SFX file: %s\n", f->fn);
+        printf("ERROR: corrupted or not valid %s-SFX file: %s\n", BRA_NAME, f->fn);
         bra_io_close(f);
         return false;
     }
@@ -218,8 +219,13 @@ bool bra_io_read_meta_file(bra_io_file_t* f, bra_meta_file_t* mf)
 
     mf->name[mf->name_size] = '\0';
     // 4. data size
-    if (fread(&mf->data_size, sizeof(uint64_t), 1, f->f) != 1)
-        goto BRA_IO_READ_ERR_MF;
+    // NOTE: for directory not saving data_size, nor data,
+    //       unless data_size will be a valuable for specific directory info
+    if (mf->attributes == BRA_ATTR_FILE)
+    {
+        if (fread(&mf->data_size, sizeof(uint64_t), 1, f->f) != 1)
+            goto BRA_IO_READ_ERR_MF;
+    }
 
     return true;
 }
@@ -248,8 +254,13 @@ bool bra_io_write_meta_file(bra_io_file_t* f, const bra_meta_file_t* mf)
         goto BRA_IO_WRITE_ERR;
 
     // 4. data size
-    if (fwrite(&mf->data_size, sizeof(uint64_t), 1, f->f) != 1)
-        goto BRA_IO_WRITE_ERR;
+    // NOTE: for directory makes sense to be zero, but it could be used for something else.
+    //       actually for directory would be better not saving it at all if it is always zero.
+    if (mf->attributes == BRA_ATTR_FILE)
+    {
+        if (fwrite(&mf->data_size, sizeof(uint64_t), 1, f->f) != 1)
+            goto BRA_IO_WRITE_ERR;
+    }
 
     return true;
 }
@@ -338,20 +349,38 @@ bool bra_io_decode_and_write_to_disk(bra_io_file_t* f)
     }
 
     // 4. read and write in chunk data
-    printf("Extracting file: %s ...", mf.name);
-    bra_io_file_t f2;
-    if (!bra_io_open(&f2, mf.name, "wb"))
+    // NOTE: nothing to extract for a directory, but only to create it
+    if (mf.attributes == BRA_ATTR_FILE)
     {
-        printf("ERROR: unable to write file: %s\n", mf.name);
-        goto BRA_IO_READ_ERR;
+        printf("Extracting file: %s ...", mf.name);
+        bra_io_file_t f2;
+        if (!bra_io_open(&f2, mf.name, "wb"))
+        {
+            printf("ERROR: unable to write file: %s\n", mf.name);
+            goto BRA_IO_READ_ERR;
+        }
+
+        const uint64_t ds = mf.data_size;
+        bra_meta_file_free(&mf);
+        if (!bra_io_copy_file_chunks(&f2, f, ds))
+            return false;
+
+        bra_io_close(&f2);
+    }
+    else if (mf.attributes == BRA_ATTR_DIR)
+    {
+        printf("Creating dir: %s", mf.name);
+        // TODO: create the directory
+        //       use bra_fs lib with the c wrapper
+        if (!bra_fs_mkdir(mf.name))
+        {
+            printf("ERROR: unable to create\n");
+            goto BRA_IO_READ_ERR;
+        }
+
+        bra_meta_file_free(&mf);
     }
 
-    const uint64_t ds = mf.data_size;
-    bra_meta_file_free(&mf);
-    if (!bra_io_copy_file_chunks(&f2, f, ds))
-        return false;
-
-    bra_io_close(&f2);
     printf("OK\n");
     return true;
 }

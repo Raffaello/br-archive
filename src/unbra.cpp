@@ -95,6 +95,19 @@ bool validate_args()
     return true;
 }
 
+char unbra_list_meta_file_attributes(const uint8_t attributes)
+{
+    switch (attributes)
+    {
+    case 0:
+        return 'f';
+    case 1:
+        return 'd';
+    default:
+        return '?';
+    }
+}
+
 bool unbra_list_meta_file(bra_io_file_t& f)
 {
     bra_meta_file_t mf;
@@ -103,7 +116,7 @@ bool unbra_list_meta_file(bra_io_file_t& f)
         return false;
 
     const uint64_t ds = mf.data_size;
-    cout << format("- attr: {} | size: {} bytes | {}", mf.attributes, mf.data_size, mf.name) << endl;
+    cout << format("- attr: {} | size: {} bytes | {}", unbra_list_meta_file_attributes(mf.attributes), mf.data_size, mf.name) << endl;
 
     bra_meta_file_free(&mf);
 

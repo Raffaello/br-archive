@@ -170,7 +170,7 @@ bool validate_args()
         // locate sfx bin
         if (!bra_fs_file_exists(BRA_SFX_FILENAME))
         {
-            cerr << "ERROR: unable to find BRa-SFX module" << endl;
+            cerr << format("ERROR: unable to find {}-SFX module", BRA_NAME) << endl;
             return false;
         }
 
@@ -255,17 +255,21 @@ bool bra_file_encode_and_write_to_disk(bra_io_file_t* f, const string& fn)
         return false;
 
     // 4. data
-    bra_io_file_t f2{};
-    if (!bra_io_open(&f2, fn.c_str(), "rb"))
+    // NOTE: Not saving for directory
+    if (attributes == BRA_ATTR_FILE)
     {
-        cerr << format("unable to open file: {}", fn) << endl;
-        goto BRA_IO_WRITE_CLOSE_ERROR;
+        bra_io_file_t f2{};
+        if (!bra_io_open(&f2, fn.c_str(), "rb"))
+        {
+            cerr << format("ERROR: unable to open file: {}", fn) << endl;
+            goto BRA_IO_WRITE_CLOSE_ERROR;
+        }
+
+        if (!bra_io_copy_file_chunks(f, &f2, ds))
+            return false;
+
+        bra_io_close(&f2);
     }
-
-    if (!bra_io_copy_file_chunks(f, &f2, ds))
-        return false;
-
-    bra_io_close(&f2);
     cout << "OK" << endl;
     return true;
 }
@@ -320,7 +324,6 @@ int main(int argc, char* argv[])
         // else
         // {
         const string fn = fs::relative(fn_).generic_string();
-
         if (!bra_file_encode_and_write_to_disk(&f, fn))
             return 1;
         else
@@ -347,7 +350,7 @@ int main(int argc, char* argv[])
         if (!fs::copy_file(BRA_SFX_FILENAME, sfx_path, fs::copy_options::overwrite_existing))
         {
         BRA_SFX_IO_ERROR:
-            cerr << "ERROR: unable to create a BRa-SFX file" << endl;
+            cerr << format("ERROR: unable to create a {}-SFX file", BRA_NAME) << endl;
             return 2;
         }
 
@@ -394,6 +397,9 @@ int main(int argc, char* argv[])
 #endif
 
         // remove TMP SFX FILE
+        // TODO: better starting with the SFX file then append the file
+        //       it will save disk space as in this way requires twice the archive size
+        //       to do an SFX
         if (!fs::remove(g_out_filename))
             cout << format("WARN: unable to remove temporary file {}", g_out_filename.string()) << endl;
 

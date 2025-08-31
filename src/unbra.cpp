@@ -103,7 +103,7 @@ bool unbra_list_meta_file(bra_io_file_t& f)
         return false;
 
     const uint64_t ds = mf.data_size;
-    cout << format("- size: {} bytes | {}", mf.name, mf.data_size) << endl;
+    cout << format("- size: {} bytes | {}", mf.data_size, mf.name) << endl;
 
     bra_meta_file_free(&mf);
 

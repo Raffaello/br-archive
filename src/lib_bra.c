@@ -133,6 +133,7 @@ bool bra_io_write_header(bra_io_file_t* f, const uint32_t num_files)
 
     const bra_header_t header = {
         .magic     = BRA_MAGIC,
+        .version   = BRA_ARCHIVE_VERSION,
         .num_files = num_files,
     };
 
@@ -205,6 +206,10 @@ bool bra_io_read_meta_file(bra_io_file_t* f, bra_meta_file_t* mf)
         return false;
     }
 
+    // 1.5 attributes
+    if (fread(&mf->attributes, sizeof(uint8_t), 1, f->f) != 1)
+        goto BRA_IO_READ_ERR;
+
     mf->name = malloc(sizeof(char) * (mf->name_size + 1));    // !< one extra for '\0'
     if (mf->name == NULL)
         goto BRA_IO_READ_ERR;
@@ -229,8 +234,9 @@ void bra_meta_file_free(bra_meta_file_t* mf)
 {
     assert(mf != NULL);
 
-    mf->data_size = 0;
-    mf->name_size = 0;
+    mf->data_size  = 0;
+    mf->name_size  = 0;
+    mf->attributes = 0;
     if (mf->name != NULL)
     {
         free(mf->name);

@@ -230,6 +230,11 @@ bool bra_file_encode_and_write_to_disk(bra_io_file_t* f, const string& fn)
         return false;
     }
 
+    // 1.5 file attribute
+    const uint8_t attributes = fs::is_directory(fn) ? 1 : 0;    // TODO: now there are only regular files
+    if (fwrite(&attributes, sizeof(uint8_t), 1, f->f) != 1)
+        goto BRA_IO_ENCODE_WRITE_ERR;
+
     // 2. file name
     if (fwrite(fn.c_str(), sizeof(char), fn_size, f->f) != fn_size)
         goto BRA_IO_ENCODE_WRITE_ERR;

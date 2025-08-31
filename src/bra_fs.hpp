@@ -1,7 +1,7 @@
 #pragma once
 
 #ifndef __cplusplus
-#error "must be included in a cpp file unit (use bra_fs.h instead)"
+#error "bra_fs.hpp must be included from a C++ translation unit. Use bra_fs.h when compiling as C."
 #endif
 
 #include <filesystem>
@@ -38,10 +38,10 @@ bool bra_fs_dir_exists(const std::filesystem::path& path);
  *        It creates also the parent directory if necessary.
  *
  * @param path
- * @return true On success
+ * @return true On if the directory was created or already existed.
  * @return false On error
  */
-bool bra_fs_dir_make(const std::filesystem::path& path);
+[[no_discard]] bool bra_fs_dir_make(const std::filesystem::path& path);
 
 /**
  * @brief

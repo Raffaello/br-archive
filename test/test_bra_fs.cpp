@@ -93,6 +93,7 @@ int test_bra_fs_wildcard_extract_dir()
     // ASSERT_EQ(bra_fs_wildcard_extract_dir(wildcard).string(), string("dir/"));
     // ASSERT_EQ(wildcard.string(), "*");
 
+    // not a wild card, in this case this function shouldn't be called.
     wildcard = "dir/a";
     ASSERT_EQ(bra_fs_wildcard_extract_dir(wildcard).string(), string("dir/"));
     ASSERT_EQ(wildcard.string(), "");

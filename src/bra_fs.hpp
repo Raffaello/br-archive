@@ -75,11 +75,15 @@ bool bra_fs_try_sanitize(std::filesystem::path& path);
 [[nodiscard]] bool bra_fs_isWildcard(const std::filesystem::path& path);
 
 /**
- * @brief Extract the directory from a wildcard if it contains any.
+ * @brief Extract the directory from a wildcard if it contains any and modify accordingly the @p path_wildcard.
+ *        If there is no wildcard, @p path_wildcard will result to be empty.
  *        The @p path_wildcard must have been sanitized with @ref bra_fs_try_sanitize,
  *        otherwise results are undefined.
  *
- * @param path_wildcard
+ * @note this function doesn't fail if @p path_wildcard doesn't contain any wildcards,
+ *       it will just modify to be an empty string.
+ *
+ * @param path_wildcard this is changed stripping the dir. If it wasn't a wildcard it will be empty
  * @return std::filesystem::path
  */
 [[nodiscard]] std::filesystem::path bra_fs_wildcard_extract_dir(std::filesystem::path& path_wildcard);

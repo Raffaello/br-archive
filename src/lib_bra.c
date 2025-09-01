@@ -138,6 +138,7 @@ bool bra_io_read_header(bra_io_file_t* bf, bra_io_header_t* out_bh)
 
     // Good point to clean the variable, even if it is not needed.
     memset(g_last_dir, 0, sizeof(g_last_dir));
+    g_last_dir_size = 0;
 
     if (fread(out_bh, sizeof(bra_io_header_t), 1, bf->f) != 1)
     {
@@ -254,7 +255,9 @@ bool bra_io_read_meta_file(bra_io_file_t* f, bra_meta_file_t* mf)
     }
 
     // 2. filename size
-    if (fread(&buf_size, sizeof(uint8_t), 1, f->f) != 1 && buf_size != 0)
+    if (fread(&buf_size, sizeof(uint8_t), 1, f->f) != 1)
+        goto BRA_IO_READ_ERR;
+    if (buf_size == 0)
         goto BRA_IO_READ_ERR;
 
     // 3. filename

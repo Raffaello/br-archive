@@ -10,6 +10,8 @@
 #error "Big-endian is not supported yet; add endian-neutral (LE) serialization."
 #endif
 
+// typedef uint8_t bra_attr_t;    //!< file attribute type
+
 
 #define BRA_MAGIC        0x612D5242    //!< 0x61='a' 0x2D='-' 0x52='R' 0x42='B'
 #define BRA_FOOTER_MAGIC 0x782D5242    //!< 0x78='x' 0x2D='-' 0x52='R' 0x42='B'
@@ -20,9 +22,9 @@
 #define BRA_SFX_TMP_FILE_EXT ".tmp"
 
 // File Attribute Flags
-#define BRA_ATTR_FILE 0       //!< Regular file.
-#define BRA_ATTR_DIR  1       //!< Directory
-#define BRA_ATTR_ERR  0xFF    //!< unknown or not implemented ATTR
+#define BRA_ATTR_FILE 0    //!< Regular file.
+#define BRA_ATTR_DIR  1    //!< Directory
+// #define BRA_ATTR_ERR  0xFF    //!< unknown or not implemented ATTR
 
 #if defined(__APPLE__) || defined(__linux__) || defined(__linux)
 #define BRA_SFX_FILE_EXT ".brx"

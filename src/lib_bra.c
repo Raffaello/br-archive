@@ -8,6 +8,8 @@
 
 #define assert_bra_io_file_t(x) assert((x) != NULL && (x)->f != NULL && (x)->fn != NULL)
 
+// TODO: how to understand if the next dir is a sub-dir or a sibling dir?
+// (i should have all the path so it should be possible to get it)
 char    g_last_dir[UINT8_MAX];
 uint8_t g_last_dir_size;
 

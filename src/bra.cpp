@@ -326,20 +326,34 @@ bool bra_file_encode_and_write_to_disk(bra_io_file_t* f, const string& fn)
     if (mf.name == NULL)
         goto BRA_IO_WRITE_CLOSE_ERROR;
 
+    // TODO: has to track internally the last directory written
+    //       and correct name accordingly for files
     const bool res = bra_io_write_meta_file(f, &mf);
     bra_meta_file_free(&mf);
     if (!res)
-        return false;
+        return false;    // f closed already
 
     // 4. data
-    // NOTE: Not saving for directory
     if (attributes == BRA_ATTR_DIR)
     {
-        // TODO: store the directory for the next file, to be removed from the name
+        // NOTE: Directory doesn't have the data part
     }
     else if (attributes == BRA_ATTR_FILE)
     {
         bra_io_file_t f2{};
+
+        // TODO: to be move into write_meta_file
+        //       already written the filename here
+        // Preprocess file to remove the directory
+        // if (!fn.starts_with(g_last_dir.string()))
+        // {
+        //     cerr << format("ERROR: file doesn't match dir: {} <-> {}", fn, g_last_dir.string()) << endl;
+        //     goto BRA_IO_WRITE_CLOSE_ERROR;
+        // }
+
+        // const std::string fn_ = fn.substr(g_last_dir.string().size() + 1);
+        //////////////////////////
+
         if (!bra_io_open(&f2, fn.c_str(), "rb"))
         {
             cerr << format("ERROR: unable to open file: {}", fn) << endl;
@@ -347,7 +361,7 @@ bool bra_file_encode_and_write_to_disk(bra_io_file_t* f, const string& fn)
         }
 
         if (!bra_io_copy_file_chunks(f, &f2, *ds))
-            return false;
+            return false;    // f, f2 closed already
 
         bra_io_close(&f2);
     }

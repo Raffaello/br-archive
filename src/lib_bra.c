@@ -294,10 +294,10 @@ bool bra_io_read_meta_file(bra_io_file_t* f, bra_meta_file_t* mf)
         if (mf->name == NULL)
             goto BRA_IO_READ_ERR;
 
-        strncpy(mf->name, g_last_dir, g_last_dir_size);
         char* b = NULL;
         if (g_last_dir_size > 0)
         {
+            strncpy(mf->name, g_last_dir, g_last_dir_size);
             mf->name[g_last_dir_size] = '/';
             // strncpy(&mf->name[g_last_dir_size + 1], buf, buf_size);
             b = &mf->name[g_last_dir_size + 1];

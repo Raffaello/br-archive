@@ -334,11 +334,11 @@ bool bra_file_encode_and_write_to_disk(bra_io_file_t* f, const string& fn)
         return false;    // f closed already
 
     // 4. data
-    if (attributes == BRA_ATTR_DIR)
+    if (mf.attributes == BRA_ATTR_DIR)
     {
         // NOTE: Directory doesn't have the data part
     }
-    else if (attributes == BRA_ATTR_FILE)
+    else if (mf.attributes == BRA_ATTR_FILE)
     {
         bra_io_file_t f2{};
 

@@ -297,10 +297,10 @@ bool bra_file_encode_and_write_to_disk(bra_io_file_t* f, const string& fn)
     switch (*attributes)
     {
     case BRA_ATTR_DIR:
-        cout << format("dir: {}...", fn);
+        cout << format("dir: {} ...", fn);
         break;
     case BRA_ATTR_FILE:
-        cout << format("file: {}...", fn);
+        cout << format("file: {} ...", fn);
         break;
     default:
         goto BRA_IO_WRITE_CLOSE_ERROR;
@@ -334,25 +334,14 @@ bool bra_file_encode_and_write_to_disk(bra_io_file_t* f, const string& fn)
         return false;    // f closed already
 
     // 4. data
-    if (mf.attributes == BRA_ATTR_DIR)
+    switch (*attributes)
     {
+    case BRA_ATTR_DIR:
         // NOTE: Directory doesn't have the data part
-    }
-    else if (mf.attributes == BRA_ATTR_FILE)
+        break;
+    case BRA_ATTR_FILE:
     {
         bra_io_file_t f2{};
-
-        // TODO: to be move into write_meta_file
-        //       already written the filename here
-        // Preprocess file to remove the directory
-        // if (!fn.starts_with(g_last_dir.string()))
-        // {
-        //     cerr << format("ERROR: file doesn't match dir: {} <-> {}", fn, g_last_dir.string()) << endl;
-        //     goto BRA_IO_WRITE_CLOSE_ERROR;
-        // }
-
-        // const std::string fn_ = fn.substr(g_last_dir.string().size() + 1);
-        //////////////////////////
 
         if (!bra_io_open(&f2, fn.c_str(), "rb"))
         {
@@ -364,6 +353,8 @@ bool bra_file_encode_and_write_to_disk(bra_io_file_t* f, const string& fn)
             return false;    // f, f2 closed already
 
         bra_io_close(&f2);
+    }
+    break;
     }
 
     cout << "OK" << endl;

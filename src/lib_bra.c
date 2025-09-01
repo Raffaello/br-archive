@@ -353,7 +353,9 @@ bool bra_io_write_meta_file(bra_io_file_t* f, const bra_meta_file_t* mf)
 
         buf_size = mf->name_size;
         strncpy(buf, mf->name, buf_size);
+        buf[buf_size] = '\0';
         strncpy(g_last_dir, buf, buf_size);
+        g_last_dir_size = buf_size;
     }
     break;
     default:
@@ -374,7 +376,7 @@ bool bra_io_write_meta_file(bra_io_file_t* f, const bra_meta_file_t* mf)
         goto BRA_IO_WRITE_ERR;
 
     // 3. filename
-    if (fwrite(buf, sizeof(char), mf->name_size, f->f) != mf->name_size)
+    if (fwrite(buf, sizeof(char), buf_size, f->f) != buf_size)
         goto BRA_IO_WRITE_ERR;
 
     // 4. data size

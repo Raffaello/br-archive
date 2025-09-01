@@ -113,7 +113,7 @@ int test_bra_wildcard_dir_unbra_list()
     if (fs::exists(out_file))
         fs::remove(out_file);
 
-    ASSERT_TRUE(system((bra + " -o " + out_file + " " + "CMakeFiles/*").c_str()) == 0);
+    ASSERT_TRUE(system((bra + " -o " + out_file + " " + "dir1/*").c_str()) == 0);
     ASSERT_TRUE(fs::exists(out_file));
     ASSERT_TRUE(system((unbra + " -l " + out_file).c_str()) == 0);
 

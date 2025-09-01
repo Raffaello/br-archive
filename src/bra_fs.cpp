@@ -149,7 +149,7 @@ std::optional<bool> bra_fs_file_exists_ask_overwrite(const std::filesystem::path
     return c == 'y';
 }
 
-std::optional<uint8_t> bra_fs_file_attributes(const std::filesystem::path& path)
+std::optional<bra_attr_t> bra_fs_file_attributes(const std::filesystem::path& path)
 {
     std::error_code ec;
 

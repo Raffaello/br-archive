@@ -5,12 +5,13 @@
 extern "C" {
 #endif
 
+#include <lib_bra_defs.h>
+#include <lib_bra_types.h>
 
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdio.h>
 
-#include <lib_bra_defs.h>
 
 #pragma pack(push, 1)
 
@@ -57,10 +58,10 @@ typedef struct bra_io_file_t
 typedef struct bra_meta_file_t
 {
     // TODO: add CRC ... file permissions, etc... ?
-    uint8_t  attributes;    //!< file attributes: #BRA_ATTR_FILE (regular) or #BRA_ATTR_DIR (directory)
-    uint8_t  name_size;     //!< must be greater than zero. @todo it could be redundant
-    char*    name;          //!< filename (owned; free via @ref bra_meta_file_free)
-    uint64_t data_size;     //!< file contents size in bytes
+    bra_attr_t attributes;    //!< file attributes: #BRA_ATTR_FILE (regular) or #BRA_ATTR_DIR (directory)
+    uint8_t    name_size;     //!< length in bytes excluding the trailing NUL; [1..UINT8_MAX]
+    char*      name;          //!< filename (owned; free via @ref bra_meta_file_free)
+    uint64_t   data_size;     //!< file contents size in bytes
 } bra_meta_file_t;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////

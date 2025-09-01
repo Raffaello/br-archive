@@ -4,6 +4,9 @@
 #error "bra_fs.hpp must be included from a C++ translation unit. Use bra_fs.h when compiling as C."
 #endif
 
+#include "lib_bra_types.h"
+
+
 #include <filesystem>
 #include <optional>
 #include <string>
@@ -105,9 +108,9 @@ bool bra_fs_try_sanitize(std::filesystem::path& path);
  * @brief Get the file attributes for the given @p path.
  *
  * @param path
- * @return std::optional<uint8_t> #BRA_ATTR_FILE for regular files, #BRA_ATTR_DIR for directories, @c nullopt for errors or unknown types.
+ * @return std::optional<bra_attr_t> #BRA_ATTR_FILE for regular files, #BRA_ATTR_DIR for directories, @c nullopt for errors or unknown types.
  */
-[[nodiscard]] std::optional<uint8_t> bra_fs_file_attributes(const std::filesystem::path& path);
+[[nodiscard]] std::optional<bra_attr_t> bra_fs_file_attributes(const std::filesystem::path& path);
 
 /**
  * @brief Get the size of a file or directory.

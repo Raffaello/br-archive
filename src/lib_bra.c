@@ -18,8 +18,8 @@
  *
  * @bug  having a global variable can't be thread safe
  */
-char    g_last_dir[BRA_MAX_PATH_LENGTH];
-uint8_t g_last_dir_size;
+char         g_last_dir[BRA_MAX_PATH_LENGTH];
+unsigned int g_last_dir_size;
 
 static inline uint64_t bra_min(const uint64_t a, const uint64_t b)
 {
@@ -232,8 +232,8 @@ bool bra_io_read_meta_file(bra_io_file_t* f, bra_meta_file_t* mf)
     assert_bra_io_file_t(f);
     assert(mf != NULL);
 
-    char    buf[BRA_MAX_PATH_LENGTH];
-    uint8_t buf_size = 0;
+    char     buf[BRA_MAX_PATH_LENGTH];
+    unsigned buf_size = 0;
 
     mf->name      = NULL;
     mf->name_size = 0;
@@ -260,24 +260,19 @@ bool bra_io_read_meta_file(bra_io_file_t* f, bra_meta_file_t* mf)
     // 2. filename size
     if (fread(&buf_size, sizeof(uint8_t), 1, f->f) != 1)
         goto BRA_IO_READ_ERR;
-    if (buf_size == 0)
+    if (buf_size == 0 || buf_size >= BRA_MAX_PATH_LENGTH)
         goto BRA_IO_READ_ERR;
 
     // 3. filename
     if (fread(buf, sizeof(char), buf_size, f->f) != buf_size)
-    {
-    BRA_IO_READ_ERR_MF:
-        bra_meta_file_free(mf);
         goto BRA_IO_READ_ERR;
-    }
 
     buf[buf_size] = '\0';
 
     // 4. data size
-    // NOTE: for directory not saving data_size, nor data,
-    //       unless data_size will be valuable for specific directory info
     if (mf->attributes == BRA_ATTR_DIR)
     {
+        // NOTE: for directory doesn have data-size nor data,
         // NOTE: here if it is a sub-dir
         //       it could cut some extra chars, and be constructed from the other dir
         //       but the file won't be able to reconstruct its full relative path.
@@ -289,27 +284,27 @@ bool bra_io_read_meta_file(bra_io_file_t* f, bra_meta_file_t* mf)
         g_last_dir_size      = buf_size;
         g_last_dir[buf_size] = '\0';
 
-        mf->name_size = buf_size;
-        mf->name      = malloc(sizeof(char) * (mf->name_size + 1));    // !< one extra for '\0'
+        mf->name_size = (uint8_t) buf_size;
+        mf->name      = malloc(sizeof(char) * (buf_size + 1));    // !< one extra for '\0'
         if (mf->name == NULL)
-            goto BRA_IO_READ_ERR_MF;
+            goto BRA_IO_READ_ERR;
 
-        strncpy(mf->name, buf, mf->name_size);
+        strncpy(mf->name, buf, buf_size);
     }
     else if (mf->attributes == BRA_ATTR_FILE)
     {
         if (fread(&mf->data_size, sizeof(uint64_t), 1, f->f) != 1)
-            goto BRA_IO_READ_ERR_MF;
+            goto BRA_IO_READ_ERR;
 
         const size_t total_size =
-            g_last_dir_size + buf_size + (g_last_dir_size > 0) ? 1u : 0u;    // one extra for '/'
+            g_last_dir_size + buf_size + (g_last_dir_size > 0);    // one extra for '/'
         if (total_size == 0 || total_size > UINT8_MAX)
-            goto BRA_IO_READ_ERR_MF;
+            goto BRA_IO_READ_ERR;
 
         mf->name_size = (uint8_t) total_size;
         mf->name      = malloc(sizeof(char) * (mf->name_size + 1));    // !< one extra for '\0'
         if (mf->name == NULL)
-            goto BRA_IO_READ_ERR_MF;
+            goto BRA_IO_READ_ERR;
 
         char* b = NULL;
         if (g_last_dir_size > 0)

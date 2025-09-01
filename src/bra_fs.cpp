@@ -9,7 +9,6 @@
 #include <algorithm>
 // #include <coroutine>
 
-static_assert(sizeof(uintmax_t) == sizeof(size_t));
 
 namespace fs = std::filesystem;
 
@@ -68,14 +67,16 @@ bool bra_fs_dir_make(const std::filesystem::path& path)
     if (bra_fs_dir_exists(path))
         return true;
 
-    const bool res = fs::create_directories(path, ec);
+    const bool created = fs::create_directories(path, ec);
     if (ec)
     {
         cerr << format("ERROR: can't mkdir {}: {}", path.string(), ec.message()) << endl;
         return false;
     }
 
-    return res;
+    // TOCTOU-Safe: maybe created elsewhere? (but what's the point?)
+    // return created || bra_fs_dir_exists(path);
+    return created;
 }
 
 std::filesystem::path bra_fs_filename_archive_adjust(const std::filesystem::path& path)

@@ -82,7 +82,7 @@ bool bra_fs_try_sanitize(std::filesystem::path& path);
  *
  * @see bra_fs_dir_exists
  *
- * @param p
+ * @param path
  * @return true
  * @return false
  */
@@ -113,7 +113,7 @@ bool bra_fs_try_sanitize(std::filesystem::path& path);
  * @brief Get the size of a file or directory.
  *
  * @param path
- * @return std::optional<size_t> File size in bytes for regular files, 0 for directories, @c nullopt on error
+ * @return std::optional<uint64_t> File size in bytes for regular files, 0 for directories, @c nullopt on error
  */
 [[nodiscard]] std::optional<uint64_t> bra_fs_file_size(const std::filesystem::path& path);
 

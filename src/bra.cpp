@@ -289,7 +289,7 @@ bool bra_file_encode_and_write_to_disk(bra_io_file_t* f, const string& fn)
     auto attributes = bra_fs_file_attributes(fn);
     if (!attributes)
     {
-        cerr << format("ERROR: {} attribute unknown:", fn) << endl;
+        cerr << format("ERROR: {} has unknown attribute", fn) << endl;
     BRA_IO_WRITE_CLOSE_ERROR:
         bra_io_close(f);
         return false;

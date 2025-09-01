@@ -17,6 +17,7 @@
         "msystem",
         "softprops",
         "STREQUAL",
+        "TOCTOU",
         "ucrt",
         "unbra",
         "Wextra",

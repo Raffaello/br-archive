@@ -283,15 +283,16 @@ bool bra_io_read_meta_file(bra_io_file_t* f, bra_meta_file_t* mf)
         //       but the file won't be able to reconstruct its full relative path.
         //   SO: I can't optimize sub-dir length with this struct
         //       I must replicated the parent-dir too
-        // TODO: unless dir must have a 2nd bit to tell sub-dir or dir
+        // TODO: unless dir attribute has a 2nd bit to tell sub-dir or dir
         //       but then must track the sub-dir (postponed for now until recursive)
         strncpy(g_last_dir, buf, buf_size);
-        g_last_dir_size = buf_size;
+        g_last_dir_size      = buf_size;
+        g_last_dir[buf_size] = '\0';
 
         mf->name_size = buf_size;
         mf->name      = malloc(sizeof(char) * (mf->name_size + 1));    // !< one extra for '\0'
         if (mf->name == NULL)
-            goto BRA_IO_READ_ERR;
+            goto BRA_IO_READ_ERR_MF;
 
         strncpy(mf->name, buf, mf->name_size);
     }
@@ -300,13 +301,15 @@ bool bra_io_read_meta_file(bra_io_file_t* f, bra_meta_file_t* mf)
         if (fread(&mf->data_size, sizeof(uint64_t), 1, f->f) != 1)
             goto BRA_IO_READ_ERR_MF;
 
-        mf->name_size = g_last_dir_size + buf_size;
-        if (g_last_dir_size > 0)
-            ++mf->name_size;                                      // one extra for '/'
+        const size_t total_size =
+            g_last_dir_size + buf_size + (g_last_dir_size > 0) ? 1u : 0u;    // one extra for '/'
+        if (total_size == 0 || total_size > UINT8_MAX)
+            goto BRA_IO_READ_ERR_MF;
 
-        mf->name = malloc(sizeof(char) * (mf->name_size + 1));    // !< one extra for '\0'
+        mf->name_size = (uint8_t) total_size;
+        mf->name      = malloc(sizeof(char) * (mf->name_size + 1));    // !< one extra for '\0'
         if (mf->name == NULL)
-            goto BRA_IO_READ_ERR;
+            goto BRA_IO_READ_ERR_MF;
 
         char* b = NULL;
         if (g_last_dir_size > 0)

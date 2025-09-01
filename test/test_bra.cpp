@@ -109,7 +109,6 @@ int test_bra_wildcard_dir_unbra_list()
     const std::string unbra    = CMD_PREFIX + "unbra";
     const std::string out_file = "./dir.BRa";
 
-
     if (fs::exists(out_file))
         fs::remove(out_file);
 

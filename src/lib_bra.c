@@ -8,10 +8,17 @@
 
 #define assert_bra_io_file_t(x) assert((x) != NULL && (x)->f != NULL && (x)->fn != NULL)
 
-// TODO: how to understand if the next dir is a sub-dir or a sibling dir?
-// (i should have all the path so it should be possible to get it)
-// NOTE: Not thread safe
-char    g_last_dir[BRA_MAX_PATH_LENGTH];    //!< for '\0' char
+/**
+ * @brief the last encoded or decoded directory.
+ *
+ * @note To understand if the next dir is a sub-dir or a sibling dir
+ *       there is always the full relative path.
+ *
+ * @todo the sub-dir though must be processed like the file contained in a directory
+ *
+ * @bug  having a global variable can't be thread safe
+ */
+char    g_last_dir[BRA_MAX_PATH_LENGTH];
 uint8_t g_last_dir_size;
 
 static inline uint64_t bra_min(const uint64_t a, const uint64_t b)
@@ -32,7 +39,7 @@ static inline bool bra_validate_meta_filename(const bra_meta_file_t* mf)
         printf("ERROR: absolute output path: %s\n", mf->name);
         return false;
     }
-    // 2.2 Reject common traversal patterns
+    // Reject common traversal patterns
     if (strstr(mf->name, "/../") != NULL || strstr(mf->name, "\\..\\") != NULL ||
         strncmp(mf->name, "../", 3) == 0 || strncmp(mf->name, "..\\", 3) == 0)
     {
@@ -225,10 +232,6 @@ bool bra_io_read_meta_file(bra_io_file_t* f, bra_meta_file_t* mf)
     assert_bra_io_file_t(f);
     assert(mf != NULL);
 
-    // TODO: load the filename and filesize
-    // in the buffer first
-    // then adjust it if needed for files with g_last_dir
-    // then copy those values into mf
     char    buf[BRA_MAX_PATH_LENGTH];
     uint8_t buf_size = 0;
 
@@ -275,6 +278,13 @@ bool bra_io_read_meta_file(bra_io_file_t* f, bra_meta_file_t* mf)
     //       unless data_size will be valuable for specific directory info
     if (mf->attributes == BRA_ATTR_DIR)
     {
+        // NOTE: here if it is a sub-dir
+        //       it could cut some extra chars, and be constructed from the other dir
+        //       but the file won't be able to reconstruct its full relative path.
+        //   SO: I can't optimize sub-dir length with this struct
+        //       I must replicated the parent-dir too
+        // TODO: unless dir must have a 2nd bit to tell sub-dir or dir
+        //       but then must track the sub-dir (postponed for now until recursive)
         strncpy(g_last_dir, buf, buf_size);
         g_last_dir_size = buf_size;
 
@@ -301,16 +311,17 @@ bool bra_io_read_meta_file(bra_io_file_t* f, bra_meta_file_t* mf)
         char* b = NULL;
         if (g_last_dir_size > 0)
         {
+            // strncpy(&mf->name[g_last_dir_size + 1], buf, buf_size);
             strncpy(mf->name, g_last_dir, g_last_dir_size);
             mf->name[g_last_dir_size] = '/';
-            // strncpy(&mf->name[g_last_dir_size + 1], buf, buf_size);
-            b = &mf->name[g_last_dir_size + 1];
+            b                         = &mf->name[g_last_dir_size + 1];
         }
         else
         {
             // strncpy(mf->name, buf, buf_size);
             b = mf->name;
         }
+
         strncpy(b, buf, buf_size);
     }
 

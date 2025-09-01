@@ -43,9 +43,7 @@ bool bra_fs_isWildcard(const std::filesystem::path& path)
     if (path.empty())
         return false;
 
-    const string s = path.string();
-
-    return s.find_first_of("?*") != string::npos;
+    return path.string().find_first_of("?*") != string::npos;
 }
 
 bool bra_fs_dir_exists(const std::filesystem::path& path)

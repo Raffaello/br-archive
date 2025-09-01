@@ -74,7 +74,8 @@ bool bra_fs_dir_make(const std::filesystem::path& path)
         return false;
     }
 
-    // TOCTOU-Safe: maybe created elsewhere? (but what's the point?)
+    // TOCTOU-Safe: Handle race condition: directory may have been created by another process.
+    //              Commented-out as it is pointless for this application.
     // return created || bra_fs_dir_exists(path);
     return created;
 }

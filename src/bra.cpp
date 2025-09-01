@@ -187,7 +187,7 @@ bool validate_args()
         }
         if (!(bra_fs_file_exists(f)))
         {
-            cerr << format("ERROR: what is this? {}", f.string()) << endl;
+            cerr << format("ERROR: {} is neither a regular file nor a directory", f.string()) << endl;
             continue;
         }
 

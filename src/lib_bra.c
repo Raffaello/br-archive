@@ -11,7 +11,7 @@
 // TODO: how to understand if the next dir is a sub-dir or a sibling dir?
 // (i should have all the path so it should be possible to get it)
 // NOTE: Not thread safe
-char    g_last_dir[UINT8_MAX];
+char    g_last_dir[BRA_MAX_PATH_LENGTH];    //!< for '\0' char
 uint8_t g_last_dir_size;
 
 static inline uint64_t bra_min(const uint64_t a, const uint64_t b)
@@ -228,7 +228,7 @@ bool bra_io_read_meta_file(bra_io_file_t* f, bra_meta_file_t* mf)
     // in the buffer first
     // then adjust it if needed for files with g_last_dir
     // then copy those values into mf
-    char    buf[UINT8_MAX];
+    char    buf[BRA_MAX_PATH_LENGTH];
     uint8_t buf_size = 0;
 
     mf->name      = NULL;
@@ -254,7 +254,7 @@ bool bra_io_read_meta_file(bra_io_file_t* f, bra_meta_file_t* mf)
     }
 
     // 2. filename size
-    if (fread(&buf_size, sizeof(uint8_t), 1, f->f) != 1 || buf_size == 0)
+    if (fread(&buf_size, sizeof(uint8_t), 1, f->f) != 1 && buf_size != 0)
         goto BRA_IO_READ_ERR;
 
     // 3. filename
@@ -321,11 +321,11 @@ bool bra_io_write_meta_file(bra_io_file_t* f, const bra_meta_file_t* mf)
     assert(mf != NULL);
     assert(mf->name != NULL);
 
-    char    buf[UINT8_MAX];
+    char    buf[BRA_MAX_PATH_LENGTH];
     uint8_t buf_size;
 
-    const size_t len = strnlen(mf->name, UINT8_MAX + 1);
-    if (len != mf->name_size || len == 0 || len > UINT8_MAX)
+    const size_t len = strnlen(mf->name, BRA_MAX_PATH_LENGTH + 1);
+    if (len != mf->name_size || len == 0 || len > BRA_MAX_PATH_LENGTH)
         goto BRA_IO_WRITE_ERR;
 
     // Processing data
@@ -339,7 +339,7 @@ bool bra_io_write_meta_file(bra_io_file_t* f, const bra_meta_file_t* mf)
         if (strncmp(mf->name, g_last_dir, g_last_dir_size) != 0)    // g_last_dir doesn't have '/'
             goto BRA_IO_WRITE_ERR;
 
-        size_t l = g_last_dir_size;    // strnlen(g_last_dir, UINT8_MAX);
+        size_t l = g_last_dir_size;    // strnlen(g_last_dir, BRA_MAX_PATH_LENGTH);
         if (mf->name[l] == '/')        // or when l == 0
             ++l;                       // skip also '/'
 
@@ -473,6 +473,11 @@ bool bra_io_decode_and_write_to_disk(bra_io_file_t* f)
         printf("Extracting file: %s ...", mf.name);
 
         bra_io_file_t f2;
+        // NOTE: the directory must have been created in the previous file
+        //       otherwise here it will fail to crete the fle.
+        //       There is an order in the archive that the last directory used,
+        //       is created, and then its files are following.
+        //       no need to create the parent directory for each file each time.
         if (!bra_io_open(&f2, mf.name, "wb"))
         {
             printf("ERROR: unable to write file: %s\n", mf.name);

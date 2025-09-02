@@ -239,96 +239,6 @@ bool validate_args()
     return true;
 }
 
-/**
- * @brief
- *
- * @todo move into lib_bra
- *
- * @param f
- * @param fn
- * @return true
- * @return false
- */
-bool bra_file_encode_and_write_to_disk(bra_io_file_t* f, const string& fn)
-{
-    cout << format("Archiving ");
-
-    // 1. attributes
-    auto attributes = bra::fs::file_attributes(fn);
-    if (!attributes)
-    {
-        cerr << format("ERROR: {} has unknown attribute", fn) << endl;
-    BRA_IO_WRITE_CLOSE_ERROR:
-        bra_io_close(f);
-        return false;
-    }
-    switch (*attributes)
-    {
-    case BRA_ATTR_DIR:
-        cout << format("dir: {} ...", fn);
-        break;
-    case BRA_ATTR_FILE:
-        cout << format("file: {} ...", fn);
-        break;
-    default:
-        goto BRA_IO_WRITE_CLOSE_ERROR;
-    }
-
-    // 2. file name length
-    if (fn.size() > std::numeric_limits<uint8_t>::max())
-    {
-        cerr << std::format("ERROR: filename too long: {}", fn) << endl;
-        return false;
-    }
-
-    const uint8_t fn_size = static_cast<uint8_t>(fn.size());
-    const auto    ds      = bra::fs::file_size(fn);
-    if (!ds)
-        goto BRA_IO_WRITE_CLOSE_ERROR;
-
-    bra_meta_file_t mf{};
-    mf.attributes = *attributes;
-    mf.name_size  = fn_size;
-    mf.data_size  = *ds;
-    mf.name       = bra_strdup(fn.c_str());
-    if (mf.name == NULL)
-        goto BRA_IO_WRITE_CLOSE_ERROR;
-
-    // TODO: has to track internally the last directory written
-    //       and correct name accordingly for files
-    const bool res = bra_io_write_meta_file(f, &mf);
-    bra_meta_file_free(&mf);
-    if (!res)
-        return false;    // f closed already
-
-    // 4. data
-    switch (*attributes)
-    {
-    case BRA_ATTR_DIR:
-        // NOTE: Directory doesn't have the data part
-        break;
-    case BRA_ATTR_FILE:
-    {
-        bra_io_file_t f2{};
-
-        if (!bra_io_open(&f2, fn.c_str(), "rb"))
-        {
-            cerr << format("ERROR: unable to open file: {}", fn) << endl;
-            goto BRA_IO_WRITE_CLOSE_ERROR;
-        }
-
-        if (!bra_io_copy_file_chunks(f, &f2, *ds))
-            return false;    // f, f2 closed already
-
-        bra_io_close(&f2);
-    }
-    break;
-    }
-
-    cout << "OK" << endl;
-    return true;
-}
-
 int main(int argc, char* argv[])
 {
     if (!parse_args(argc, argv))
@@ -352,7 +262,7 @@ int main(int argc, char* argv[])
     for (const auto& fn_ : g_files)
     {
         const string fn = fs::relative(fn_).generic_string();
-        if (!bra_file_encode_and_write_to_disk(&f, fn))
+        if (!bra_file_encode_and_write_to_disk(&f, fn.c_str()))
             return 1;
         else
             ++written_num_files;

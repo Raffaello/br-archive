@@ -468,6 +468,10 @@ bool bra_io_encode_and_write_to_disk(bra_io_file_t* f, const char* fn)
     assert(fn != NULL);
 
     // TODO: create a print_callback to defer from printf
+    //       use a function pointer prototype like printf
+    //       create a function to register that function pointer here.
+    //       by default the library init that function pointer with printf.
+    //       (the problem i guess is windows how to initialize it...)
     printf("Archiving ");
 
     // 1. attributes

@@ -10,6 +10,7 @@
 #include <unistd.h>    // for isatty
 #elif defined(_WIN32) || defined(_WIN64)
 #include <io.h>
+#include <windows.h>
 #endif
 
 #ifndef NDEBUG
@@ -58,7 +59,16 @@ BRA_FUNC_ATTR_CONSTRUCTOR static void _init_bra_log()
     g_use_ansi_color = isatty(STDERR_FILENO) != 0;
 #elif defined(_WIN32) || defined(_WIN64)
     g_use_ansi_color = _isatty(_fileno(stderr)) != 0;
-    g_log_isInit     = true;
+    // enable ANSI VT sequences when available
+    // HANDLE h = GetStdHandle(STD_ERROR_HANDLE);
+    // if (h != INVALID_HANDLE_VALUE) {
+    //     DWORD mode = 0;
+    //     if (GetConsoleMode(h, &mode)) {
+    //         SetConsoleMode(h, mode | ENABLE_VIRTUAL_TERMINAL_PROCESSING);
+    //     }
+    // }
+
+    g_log_isInit = true;
 #endif
 
     // #ifndef NDEBUG
@@ -182,7 +192,7 @@ void bra_log(const bra_log_level_e level, const char* fmt, ...)
 
 void bra_log_v(const bra_log_level_e level, const char* fmt, va_list args)
 {
-    if (g_log_level > level)
+    if (g_log_level > level /*|| level == BRA_LOG_LEVEL_QUIET*/)
         return;
 
 #if !defined(__GNUC__) && (defined(_WIN32) || defined(_WIN64))

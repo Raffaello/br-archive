@@ -42,7 +42,7 @@ bool bra_isPE(const char* fn)
     FILE* f = fopen(fn, "rb");
     if (f == nullptr)
     {
-        bra_log_error("unable to open file %", fn);
+        bra_log_error("unable to open file %s", fn);
         return false;
     }
 

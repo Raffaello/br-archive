@@ -187,7 +187,7 @@ void bra_log_v(const bra_log_level_e level, const char* fmt, va_list args)
     if (g_use_ansi_color)
         _bra_log_set_ansi_color(level);
 
-    switch (g_log_level)
+    switch (level)
     {
     case BRA_LOG_LEVEL_VERBOSE:
         fprintf(stderr, "VERBOSE: ");

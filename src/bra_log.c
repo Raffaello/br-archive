@@ -1,24 +1,64 @@
 #include "bra_log.h"
+#include "lib_bra_defs.h"
 
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
+#ifdef __GNUC__
 #include <unistd.h>    // for isatty
+#elif defined(_WIN32) || defined(_WIN64)
+#include <io.h>
+#endif
 
-static bra_log_level_e g_log_level;
-static bool            g_use_ansi_color;
+#ifndef NDEBUG
+static bra_log_level_e g_log_level = BRA_LOG_LEVEL_DEBUG;
+#else
+static bra_log_level_e g_log_level = BRA_LOG_LEVEL_INFO;
+#endif
+
+static bool g_use_ansi_color;
+
+/**
+ * @brief Define ANSI color codes https://en.wikipedia.org/wiki/ANSI_escape_code#SGR
+ */
+#define RESET       0
+#define BOLD        1
+#define FAINT       2
+#define ITALIC      3
+#define UNDERLINE   4
+#define SLOW_BLINK  5
+#define RAPID_BLINK 6
+// #define INVERT      7
+
+#define BLACK   30
+#define RED     31
+#define GREEN   32
+#define YELLOW  33
+#define BLUE    34
+#define MAGENTA 35
+#define CYAN    36
+#define WHITE   37
+
+#define BG_COL(x)        (x + 10)
+#define BRIGHT_COL(x)    (x + 60)
+#define BRIGHT_BG_COL(x) (BRIGHT_COL(BG_COL(x)))
 
 ////////////////////////////////////////////////////////////////////////////
 
-// Function to be executed before main()
-void __attribute__((constructor)) _init_bra_log()
+// Function to be executed before main() (in GCC)
+BRA_FUNC_ATTR_CONSTRUCTOR void _init_bra_log()
 {
-    g_use_ansi_color = isatty(2) != 0;
-#ifndef NDEBUG
-    g_log_level = BRA_LOG_LEVEL_DEBUG;
-#else
-    g_log_level = BRA_LOG_LEVEL_INFO;
+#ifdef __GNUC__
+    g_use_ansi_color = isatty(STDERR_FILENO) != 0;
+#elif defined(_WIN32) || defined(_WIN64)
+    g_use_ansi_color = _isatty(STDERR_FILENO) != 0;
 #endif
+
+    // #ifndef NDEBUG
+    //     g_log_level = BRA_LOG_LEVEL_DEBUG;
+    // #else
+    //     g_log_level = BRA_LOG_LEVEL_INFO;
+    // #endif
 }
 
 static inline void _bra_log_set_no_color(void)
@@ -126,7 +166,7 @@ void bra_log_critical(const char* fmt, ...)
     va_end(args);
 }
 
-void bra_logger(const bra_log_level_e level, const char* fmt, ...)
+void bra_log(const bra_log_level_e level, const char* fmt, ...)
 {
     va_list args;
 
@@ -140,25 +180,57 @@ void bra_log_v(const bra_log_level_e level, const char* fmt, va_list args)
     if (g_log_level > level)
         return;
 
-    // g_use_ansi_color = isatty(2) != 0;
+#if !defined(__GNUC__) && (defined(_WIN32) || defined(_WIN64))
+    _init_bra_log();
+#endif
+
     if (g_use_ansi_color)
         _bra_log_set_ansi_color(level);
 
-    bra_logger(level, fmt, args);
+    switch (g_log_level)
+    {
+    case BRA_LOG_LEVEL_VERBOSE:
+        fprintf(stderr, "VERBOSE: ");
+        break;
+    case BRA_LOG_LEVEL_DEBUG:
+        fprintf(stderr, "DEBUG: ");
+        break;
+    case BRA_LOG_LEVEL_INFO:
+        fprintf(stderr, "INFO: ");
+        break;
+    case BRA_LOG_LEVEL_WARN:
+        fprintf(stderr, "WARN: ");
+        break;
+    case BRA_LOG_LEVEL_ERROR:
+        fprintf(stderr, "ERROR: ");
+        break;
+    case BRA_LOG_LEVEL_CRITICAL:
+        fprintf(stderr, "CRITICAL: ");
+    default:
+        break;
+    case BRA_LOG_LEVEL_QUIET:
+        break;
+    }
+
+    vfprintf(stderr, fmt, args);
 
     if (g_use_ansi_color)
     {
         _bra_log_set_no_color();
         fprintf(stderr, "\033[K");
     }
+
+    fprintf(stderr, "\n");
 }
 
 void bra_log_set_level(const bra_log_level_e level)
 {
-    g_log_level = level;
+    // it won't log anything if using level quiet.
+    if (level != BRA_LOG_LEVEL_QUIET)
+        g_log_level = level;
 }
 
-bra_log_level_e bra_log_get_level()
+bra_log_level_e bra_log_get_level(void)
 {
     return g_log_level;
 }

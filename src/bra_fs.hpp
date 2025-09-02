@@ -76,8 +76,8 @@ namespace bra::fs
 
 /**
  * @brief Return the given filename ending always with the correct extension.
- *        if @p tmp is true the extension is #BRA_FILE_EXT #BRA_SFX_TMP_FILE_EXT
- *        otherwise                       is #BRA_FILE_EXT #BRA_SFX_FILE_EXT
+ *        if @p tmp is true the extension is #BRA_FILE_EXT #BRA_SFX_TMP_FILE_EXT (.BRa.tmp)
+ *        otherwise                       is #BRA_FILE_EXT #BRA_SFX_FILE_EXT     (.BRa.exe)/(BRa.BRx)
  *
  * @param path
  * @param tmp

@@ -24,7 +24,8 @@ namespace fs = std::filesystem;
 
 std::set<fs::path> g_files;
 fs::path           g_out_filename;
-bool               g_sfx = false;
+bool               g_sfx        = false;
+bool               g_always_yes = false;
 
 //////////////////////////////////////////////////////////////////////////
 
@@ -46,6 +47,7 @@ void help()
     cout << format("Options:") << endl;
     cout << format("--help | -h : display this page.") << endl;
     cout << format("--sfx  | -s : generate a self-extracting archive") << endl;
+    cout << format("--yes  | -y : this will force a 'yes' respond to all the user questions.") << endl;
     cout << format("--out  | -o : <output_filename> it takes the path of the output file.") << endl;
     cout << format("              If the extension {} is missing it will be automatically added.", BRA_FILE_EXT) << endl;
     cout << endl;
@@ -60,6 +62,7 @@ bool parse_args(int argc, char* argv[])
     }
 
     g_files.clear();
+    g_always_yes = false;
     for (int i = 1; i < argc; ++i)
     {
         string s = argv[i];
@@ -84,6 +87,10 @@ bool parse_args(int argc, char* argv[])
             }
 
             g_out_filename = argv[i];
+        }
+        else if (s == "--yes" || s == "-y")
+        {
+            g_always_yes = true;
         }
         // check if it is file or a dir
         else if (bra::fs::file_exists(s))
@@ -163,7 +170,7 @@ bool validate_args()
         fs::path f_ = f;
         if (!bra::fs::try_sanitize(f_))
         {
-            cerr << format("ERROR: what is this? {} - {}", f.string(), f_.string()) << endl;
+            cerr << format("ERROR: path not valid: {} - ({})", f.string(), f_.string()) << endl;
             return false;
         }
 
@@ -228,8 +235,7 @@ bool validate_args()
     if (g_sfx)
         p = p.replace_extension(BRA_SFX_FILE_EXT);
 
-    // TODO: this might not be ok
-    if (auto res = bra::fs::file_exists_ask_overwrite(p, false))
+    if (auto res = bra::fs::file_exists_ask_overwrite(p, g_always_yes))
     {
         if (!*res)
             return false;

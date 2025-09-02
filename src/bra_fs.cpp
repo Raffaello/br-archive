@@ -227,6 +227,7 @@ std::filesystem::path wildcard_extract_dir(std::filesystem::path& path_wildcard)
 std::string wildcard_to_regexp(const std::string& wildcard)
 {
     std::string regex;
+    // regex.reserve(wildcard.size() * 2);
 
     for (const char& c : wildcard)
     {
@@ -295,6 +296,8 @@ bool search(const std::filesystem::path& dir, const std::string& pattern, std::l
     {
         const std::regex r(pattern);
 
+        // TODO: add a cli flag for fs::directory_options::skip_permission_denied
+        // TODO: add a cli flag for fs::directory_options::follow_directory_symlink
         for (const auto& entry : fs::directory_iterator(dir))
         {
             // TODO: dir to search only if it is recursive (-r)

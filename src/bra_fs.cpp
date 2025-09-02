@@ -7,8 +7,11 @@
 #include <cctype>
 #include <regex>
 #include <algorithm>
+
 // #include <coroutine>
 
+namespace bra::fs
+{
 
 namespace fs = std::filesystem;
 
@@ -16,7 +19,8 @@ using namespace std;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-bool bra_fs_try_sanitize(std::filesystem::path& path)
+
+bool try_sanitize(std::filesystem::path& path)
 {
     error_code ec;
 
@@ -38,7 +42,7 @@ bool bra_fs_try_sanitize(std::filesystem::path& path)
     return !path.empty();
 }
 
-bool bra_fs_isWildcard(const std::filesystem::path& path)
+bool isWildcard(const std::filesystem::path& path)
 {
     if (path.empty())
         return false;
@@ -46,7 +50,7 @@ bool bra_fs_isWildcard(const std::filesystem::path& path)
     return path.string().find_first_of("?*") != string::npos;
 }
 
-bool bra_fs_dir_exists(const std::filesystem::path& path)
+bool dir_exists(const std::filesystem::path& path)
 {
     error_code ec;
     const bool isDir = fs::is_directory(path, ec);
@@ -58,11 +62,11 @@ bool bra_fs_dir_exists(const std::filesystem::path& path)
     return isDir;
 }
 
-bool bra_fs_dir_make(const std::filesystem::path& path)
+bool dir_make(const std::filesystem::path& path)
 {
     error_code ec;
 
-    if (bra_fs_dir_exists(path))
+    if (dir_exists(path))
         return true;
 
     const bool created = fs::create_directories(path, ec);
@@ -74,11 +78,11 @@ bool bra_fs_dir_make(const std::filesystem::path& path)
 
     // TOCTOU-Safe: Handle race condition: directory may have been created by another process.
     //              Commented-out as it is pointless for this application.
-    // return created || bra_fs_dir_exists(path);
+    // return created || dir_exists(path);
     return created;
 }
 
-std::filesystem::path bra_fs_filename_archive_adjust(const std::filesystem::path& path)
+std::filesystem::path filename_archive_adjust(const std::filesystem::path& path)
 {
     fs::path p = path;
 
@@ -88,7 +92,7 @@ std::filesystem::path bra_fs_filename_archive_adjust(const std::filesystem::path
     return p;
 }
 
-std::filesystem::path bra_fs_filename_sfx_adjust(const std::filesystem::path& path, const bool tmp)
+std::filesystem::path filename_sfx_adjust(const std::filesystem::path& path, const bool tmp)
 {
     fs::path       p;
     const fs::path sfx_ext = tmp ? BRA_SFX_TMP_FILE_EXT : BRA_SFX_FILE_EXT;
@@ -107,7 +111,7 @@ std::filesystem::path bra_fs_filename_sfx_adjust(const std::filesystem::path& pa
     return p;
 }
 
-bool bra_fs_file_exists(const std::filesystem::path& path)
+bool file_exists(const std::filesystem::path& path)
 {
     error_code ec;
     const bool isRegFile = fs::is_regular_file(path, ec);
@@ -118,9 +122,9 @@ bool bra_fs_file_exists(const std::filesystem::path& path)
     return isRegFile;
 }
 
-std::optional<bool> bra_fs_file_exists_ask_overwrite(const std::filesystem::path& path, const bool always_yes)
+std::optional<bool> file_exists_ask_overwrite(const std::filesystem::path& path, const bool always_yes)
 {
-    if (!bra_fs_file_exists(path))
+    if (!file_exists(path))
         return nullopt;
 
     char c;
@@ -149,7 +153,7 @@ std::optional<bool> bra_fs_file_exists_ask_overwrite(const std::filesystem::path
     return c == 'y';
 }
 
-std::optional<bra_attr_t> bra_fs_file_attributes(const std::filesystem::path& path)
+std::optional<bra_attr_t> file_attributes(const std::filesystem::path& path)
 {
     std::error_code ec;
     auto            err = [&path, &ec]() {
@@ -167,7 +171,7 @@ std::optional<bra_attr_t> bra_fs_file_attributes(const std::filesystem::path& pa
     return err();
 }
 
-std::optional<uint64_t> bra_fs_file_size(const std::filesystem::path& path)
+std::optional<uint64_t> file_size(const std::filesystem::path& path)
 {
     std::error_code ec;
 
@@ -189,7 +193,7 @@ BRA_FS_FILE_SIZE_ERROR:
     return nullopt;
 }
 
-std::filesystem::path bra_fs_wildcard_extract_dir(std::filesystem::path& path_wildcard)
+std::filesystem::path wildcard_extract_dir(std::filesystem::path& path_wildcard)
 {
     string       dir;
     string       wildcard = path_wildcard.string();
@@ -218,7 +222,7 @@ std::filesystem::path bra_fs_wildcard_extract_dir(std::filesystem::path& path_wi
     return fs::path(dir);
 }
 
-std::string bra_fs_wildcard_to_regexp(const std::string& wildcard)
+std::string wildcard_to_regexp(const std::string& wildcard)
 {
     std::string regex;
 
@@ -253,7 +257,7 @@ std::string bra_fs_wildcard_to_regexp(const std::string& wildcard)
     return regex;
 }
 
-bool bra_fs_search(const std::filesystem::path& dir, const std::string& pattern, std::list<std::filesystem::path>& out_files)
+bool search(const std::filesystem::path& dir, const std::string& pattern, std::list<std::filesystem::path>& out_files)
 {
     const std::regex r(pattern);
     bool             res = true;
@@ -278,12 +282,12 @@ bool bra_fs_search(const std::filesystem::path& dir, const std::string& pattern,
             // {
             //     std::cout << "Matched dir: " << filename << endl;
             //     const std::string p  = pattern.substr(ep.string().size());
-            //     res                 &= bra_fs_search(ep, p);
+            //     res                 &= search(ep, p);
             // }
             // else
             // std::cout << "[DEBUG] Expected file: " << filename << endl;
 
-            if (!bra_fs_try_sanitize(ep))
+            if (!try_sanitize(ep))
             {
                 cerr << format("[ERROR] not a valid file: {}", ep.string()) << endl;
                 return false;
@@ -329,7 +333,7 @@ std::generator<std::filesystem::path> bra_fs_co_search(const std::filesystem::pa
             // {
             //     std::cout << "Matched dir: " << filename << endl;
             //     const std::string p  = pattern.substr(ep.string().size());
-            //     res                 &= bra_fs_search(ep, p);
+            //     res                 &= search(ep, p);
             // }
             //  else
             // std::cout << "Matched file: " << filename << endl;
@@ -348,3 +352,5 @@ std::generator<std::filesystem::path> bra_fs_co_search(const std::filesystem::pa
     }
 }
 */
+
+}    // namespace bra::fs

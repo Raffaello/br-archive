@@ -16,6 +16,7 @@
 
 using namespace std;
 
+
 namespace fs = std::filesystem;
 
 
@@ -70,8 +71,8 @@ bool parse_args(int argc, char* argv[])
         // check if it is a file
         else
         {
-            fs::path p = bra_fs_filename_archive_adjust(s);
-            if (bra_fs_file_exists(p))
+            fs::path p = bra::fs::filename_archive_adjust(s);
+            if (bra::fs::file_exists(p))
                 g_bra_file = p;
             else
             {

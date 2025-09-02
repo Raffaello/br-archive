@@ -40,11 +40,11 @@ bool               g_sfx = false;
 bool bra_expand_wildcards(const fs::path& path)
 {
     fs::path       p       = path.generic_string();
-    const fs::path dir     = bra_fs_wildcard_extract_dir(p);
-    const string   pattern = bra_fs_wildcard_to_regexp(p.string());
+    const fs::path dir     = bra::fs::wildcard_extract_dir(p);
+    const string   pattern = bra::fs::wildcard_to_regexp(p.string());
 
     std::list<fs::path> files;
-    if (!bra_fs_search(dir, pattern, files))
+    if (!bra::fs::search(dir, pattern, files))
     {
         cerr << format("ERROR: not a valid wildcard: {}", p.string()) << endl;
         return false;
@@ -118,12 +118,12 @@ bool parse_args(int argc, char* argv[])
             g_out_filename = argv[i];
         }
         // check if it is file or a dir
-        else if (bra_fs_file_exists(s))
+        else if (bra::fs::file_exists(s))
         {
             fs::path p = s;
 
             // check file path
-            if (!bra_fs_try_sanitize(p))
+            if (!bra::fs::try_sanitize(p))
             {
                 cerr << format("ERROR: path not valid: {}", p.string()) << endl;
                 return false;
@@ -132,19 +132,19 @@ bool parse_args(int argc, char* argv[])
             if (!g_files.insert(p).second)
                 cout << format("WARNING: duplicate file/dir given in input: {}", p.string()) << endl;
         }
-        else if (bra_fs_dir_exists(s))
+        else if (bra::fs::dir_exists(s))
         {
             // This should match exactly the directory.
             // so need to be converted as a wildcard adding a `/*' at the end
             fs::path p = fs::path(s) / "*";
-            if (!bra_fs_try_sanitize(p) || !bra_fs_isWildcard(p) || !bra_expand_wildcards(p))
+            if (!bra::fs::try_sanitize(p) || !bra::fs::isWildcard(p) || !bra_expand_wildcards(p))
             {
                 cerr << format("ERROR: path not valid: {}", p.string()) << endl;
                 return false;
             }
         }
         // check if it is a wildcard
-        else if (bra_fs_isWildcard(s))
+        else if (bra::fs::isWildcard(s))
         {
             if (!bra_expand_wildcards(s))
                 return false;
@@ -179,20 +179,20 @@ bool validate_args()
         auto f = listFiles.front();
         listFiles.pop_front();
 
-        if (bra_fs_dir_exists(f))
+        if (bra::fs::dir_exists(f))
         {
             // TODO: only if recursive is not enabled
             //       recursive will also store empty directories.
             cout << format("DEBUG: removing empty directory") << endl;
         }
-        if (!(bra_fs_file_exists(f)))
+        if (!(bra::fs::file_exists(f)))
         {
             cerr << format("ERROR: {} is neither a regular file nor a directory", f.string()) << endl;
             continue;
         }
 
         fs::path f_ = f;
-        if (!bra_fs_try_sanitize(f_))
+        if (!bra::fs::try_sanitize(f_))
         {
             cerr << format("ERROR: what is this? {} - {}", f.string(), f_.string()) << endl;
             return false;
@@ -236,15 +236,15 @@ bool validate_args()
     // adjust input file extension
     if (g_sfx)
     {
-        g_out_filename = bra_fs_filename_sfx_adjust(g_out_filename, true);
+        g_out_filename = bra::fs::filename_sfx_adjust(g_out_filename, true);
         // locate sfx bin
-        if (!bra_fs_file_exists(BRA_SFX_FILENAME))
+        if (!bra::fs::file_exists(BRA_SFX_FILENAME))
         {
             cerr << format("ERROR: unable to find {}-SFX module", BRA_NAME) << endl;
             return false;
         }
 
-        if (bra_fs_file_exists(g_out_filename))
+        if (bra::fs::file_exists(g_out_filename))
         {
             cerr << format("ERROR: Temporary SFX File {} already exists.", g_out_filename.string()) << endl;
             return false;
@@ -252,7 +252,7 @@ bool validate_args()
     }
     else
     {
-        g_out_filename = bra_fs_filename_archive_adjust(g_out_filename);
+        g_out_filename = bra::fs::filename_archive_adjust(g_out_filename);
     }
 
     fs::path p = g_out_filename;
@@ -260,7 +260,7 @@ bool validate_args()
         p = p.replace_extension(BRA_SFX_FILE_EXT);
 
     // TODO: this might not be ok
-    if (auto res = bra_fs_file_exists_ask_overwrite(p, false))
+    if (auto res = bra::fs::file_exists_ask_overwrite(p, false))
     {
         if (!*res)
             return false;
@@ -286,7 +286,7 @@ bool bra_file_encode_and_write_to_disk(bra_io_file_t* f, const string& fn)
     cout << format("Archiving ");
 
     // 1. attributes
-    auto attributes = bra_fs_file_attributes(fn);
+    auto attributes = bra::fs::file_attributes(fn);
     if (!attributes)
     {
         cerr << format("ERROR: {} has unknown attribute", fn) << endl;
@@ -314,7 +314,7 @@ bool bra_file_encode_and_write_to_disk(bra_io_file_t* f, const string& fn)
     }
 
     const uint8_t fn_size = static_cast<uint8_t>(fn.size());
-    const auto    ds      = bra_fs_file_size(fn);
+    const auto    ds      = bra::fs::file_size(fn);
     if (!ds)
         goto BRA_IO_WRITE_CLOSE_ERROR;
 

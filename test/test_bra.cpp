@@ -131,7 +131,7 @@ int _test_bra_sfx(const std::string& out_file)
     //     out_file_sfx = out_file_ + BRA_SFX_FILE_EXT;
     // else
     //     out_file_sfx = out_file_ + BRA_FILE_EXT + BRA_SFX_FILE_EXT;
-    out_file_sfx = bra_fs_filename_sfx_adjust(out_file_, false).string();
+    out_file_sfx = bra::fs::filename_sfx_adjust(out_file_, false).string();
 
     std::cout << std::format("out_file_sfx: {}", out_file_sfx) << std::endl;
     if (fs::exists(out_file_sfx))

@@ -369,7 +369,8 @@ bool bra_io_write_meta_file(bra_io_file_t* f, const bra_meta_file_t* mf)
         strncpy(buf, mf->name, buf_size);
         buf[buf_size] = '\0';
         strncpy(g_last_dir, buf, buf_size);
-        g_last_dir_size = buf_size;
+        g_last_dir[buf_size] = '\0';
+        g_last_dir_size      = buf_size;
     }
     break;
     default:
@@ -492,9 +493,17 @@ bool bra_io_encode_and_write_to_disk(bra_io_file_t* f, const char* fn)
 
     // 2. file name length
     const size_t fn_len = strnlen(fn, BRA_MAX_PATH_LENGTH);
-    if (fn_len > UINT8_MAX)
+    // NOTE: fn_len >= BRA_MAX_PATH_LENGTH is redundant but as a safeguard
+    //       in case changing BRA_MAX_PATH_LENGTH to be UINT8_MAX
+    if (fn_len > UINT8_MAX || fn_len >= BRA_MAX_PATH_LENGTH)
     {
         bra_log_error("filename too long: %s", fn);
+        goto BRA_IO_WRITE_CLOSE_ERROR;
+    }
+
+    if (fn_len == 0)
+    {
+        bra_log_error("filename missing: %s", fn);
         goto BRA_IO_WRITE_CLOSE_ERROR;
     }
 

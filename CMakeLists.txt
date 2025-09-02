@@ -30,7 +30,6 @@ add_library(bra_fs_c STATIC src/bra_fs_c.cpp)
 target_link_libraries(bra_fs_c PRIVATE bra_fs)
 
 add_library(lib_bra STATIC src/lib_bra.c)
-# target_sources(lib_bra PRIVATE src/bra_log.c)
 target_include_directories(lib_bra
     PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/src> # for configure_file (version.h)

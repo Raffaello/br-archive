@@ -52,8 +52,7 @@ static bool g_log_isInit = false;
 ////////////////////////////////////////////////////////////////////////////
 
 // Function to be executed before main() (in GCC)
-BRA_FUNC_ATTR_CONSTRUCTOR void
-_init_bra_log()
+BRA_FUNC_ATTR_CONSTRUCTOR static void _init_bra_log()
 {
 #ifdef __GNUC__
     g_use_ansi_color = isatty(STDERR_FILENO) != 0;

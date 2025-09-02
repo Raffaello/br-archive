@@ -23,6 +23,8 @@ namespace fs = std::filesystem;
 fs::path g_bra_file;
 bool     g_listContent = false;
 
+// TODO: add output path as parameter
+
 void help()
 {
     cout << format("BR-Archive Utility Version: {}", VERSION) << endl;

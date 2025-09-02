@@ -144,9 +144,6 @@ bool validate_args()
         return false;
     }
 
-    //
-
-
     if (!bra::fs::file_set_add_dir(g_files))
         return false;
 
@@ -184,6 +181,7 @@ bool validate_args()
 
         if (bra::fs::file_exists(g_out_filename))
         {
+            // TODO: this should just delete it / ask to overwrite ?
             cerr << format("ERROR: Temporary SFX File {} already exists.", g_out_filename.string()) << endl;
             return false;
         }
@@ -204,6 +202,16 @@ bool validate_args()
             return false;
 
         cout << format("Overwriting file: {}", p.string()) << endl;
+    }
+    else    // the output directory might not exists...
+    {
+        // create the parent directory if needed.
+        const fs::path p = g_out_filename.parent_path();
+        if (!p.empty())
+        {
+            if (!bra::fs::dir_make(p))
+                return false;
+        }
     }
 
     return true;

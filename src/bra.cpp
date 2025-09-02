@@ -47,7 +47,7 @@ void help()
     cout << format("Options:") << endl;
     cout << format("--help | -h : display this page.") << endl;
     cout << format("--sfx  | -s : generate a self-extracting archive") << endl;
-    cout << format("--yes  | -y : this will force a 'yes' respond to all the user questions.") << endl;
+    cout << format("--yes  | -y : this will force a 'yes' response to all the user questions.") << endl;
     cout << format("--out  | -o : <output_filename> it takes the path of the output file.") << endl;
     cout << format("              If the extension {} is missing it will be automatically added.", BRA_FILE_EXT) << endl;
     cout << endl;
@@ -62,6 +62,8 @@ bool parse_args(int argc, char* argv[])
     }
 
     g_files.clear();
+    g_out_filename.clear();
+    g_sfx        = false;
     g_always_yes = false;
     for (int i = 1; i < argc; ++i)
     {
@@ -235,6 +237,7 @@ bool validate_args()
     if (g_sfx)
         p = p.replace_extension(BRA_SFX_FILE_EXT);
 
+    // TODO: this might not be ok
     if (auto res = bra::fs::file_exists_ask_overwrite(p, g_always_yes))
     {
         if (!*res)

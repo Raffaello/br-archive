@@ -212,7 +212,7 @@ bool file_set_add_dir(std::set<std::filesystem::path>& files)
         {
             // TODO: only if recursive is not enabled
             //       recursive will also store empty directories.
-            cout << format("DEBUG: removing empty directory") << endl;
+            cout << format("DEBUG: ignoring directory (non-recursive mode): {}", f.string()) << endl;
         }
         else if (!(bra::fs::file_exists(f)))
         {

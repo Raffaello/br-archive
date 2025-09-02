@@ -95,11 +95,11 @@ bool parse_args(int argc, char* argv[])
     // Supporting only EXE and ELF file type for now
     if (bra_isElf(argv[0]))
     {
-        cout << "ELF file detected" << endl;
+        bra_log_info("ELF file detected");
     }
     else if (bra_isPE(argv[0]))
     {
-        cout << "PE file detected" << endl;
+        bra_log_info("PE file detected");
     }
     else
     {
@@ -110,7 +110,7 @@ bool parse_args(int argc, char* argv[])
     for (int i = 1; i < argc; i++)
     {
         string s = argv[i];
-        if ((s == "--help") | (s == "-h"))
+        if ((s == "--help") || (s == "-h"))
         {
             help();
             exit(0);
@@ -122,7 +122,7 @@ bool parse_args(int argc, char* argv[])
         // }
         else
         {
-            cerr << format("unknown argument: {}", s) << endl;
+            bra_log_error("unknown argument: %s", s.c_str());
             return false;
         }
     }
@@ -134,13 +134,13 @@ bool bra_file_open_and_read_footer_header(const char* fn, bra_io_header_t* out_b
 {
     if (!bra_io_open(f, fn, "rb"))
     {
-        cerr << format("unable to open file {}", fn) << endl;
+        bra_log_error("unable to open file %s", fn);
         return false;
     }
 
     if (!bra_io_seek(f, -1L * static_cast<int64_t>(sizeof(bra_io_footer_t)), SEEK_END))
     {
-        cerr << format("unable to read file {}", fn) << endl;
+        bra_log_error("unable to read file %s", fn);
         bra_io_close(f);
         return false;
     }

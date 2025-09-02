@@ -6,6 +6,15 @@ extern "C" {
 
 #include <stdarg.h>
 
+// Enable printf-like format checking where supported
+#if defined(__clang__)
+#define BRA_ATTR_PRINTF(fmt_idx, va_idx) __attribute__((format(printf, fmt_idx, va_idx)))
+#elif defined(__GNUC__)
+#define BRA_ATTR_PRINTF(fmt_idx, va_idx) __attribute__((format(gnu_printf, fmt_idx, va_idx)))
+#else
+#define BRA_ATTR_PRINTF(fmt_idx, va_idx)
+#endif
+
 /**
  * @brief enum values for the log levels.
  *
@@ -23,15 +32,15 @@ typedef enum bra_log_level_e
 
 } bra_log_level_e;
 
-void bra_log_verbose(const char* fmt, ...);
-void bra_log_debug(const char* fmt, ...);
-void bra_log_info(const char* fmt, ...);
-void bra_log_warn(const char* fmt, ...);
-void bra_log_error(const char* fmt, ...);
-void bra_log_critical(const char* fmt, ...);
+void bra_log_verbose(const char* fmt, ...) BRA_ATTR_PRINTF(1, 2);
+void bra_log_debug(const char* fmt, ...) BRA_ATTR_PRINTF(1, 2);
+void bra_log_info(const char* fmt, ...) BRA_ATTR_PRINTF(1, 2);
+void bra_log_warn(const char* fmt, ...) BRA_ATTR_PRINTF(1, 2);
+void bra_log_error(const char* fmt, ...) BRA_ATTR_PRINTF(1, 2);
+void bra_log_critical(const char* fmt, ...) BRA_ATTR_PRINTF(1, 2);
 
-void bra_log(const bra_log_level_e level, const char* fmt, ...);
-void bra_log_v(const bra_log_level_e level, const char* fmt, va_list args);
+void bra_log(const bra_log_level_e level, const char* fmt, ...) BRA_ATTR_PRINTF(2, 3);
+void bra_log_v(const bra_log_level_e level, const char* fmt, va_list args) BRA_ATTR_PRINTF(2, 0);
 
 void            bra_log_set_level(const bra_log_level_e level);
 bra_log_level_e bra_log_get_level(void);

@@ -149,9 +149,9 @@ bool validate_args()
         return false;
 
 #ifndef NDEBUG
-    cout << format("files:") << endl;
+    bra_log_debug("Detected files:");
     for (const auto& f : g_files)
-        cout << format("- {}", f.string()) << endl;
+        bra_log_debug("- %s", f.string().c_str());
 #endif
 
     // TODO: Here could also start encoding the filenames

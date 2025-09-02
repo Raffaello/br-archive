@@ -244,7 +244,7 @@ bool file_set_add_dir(std::set<std::filesystem::path>& files)
 
     if (files.size() > numeric_limits<uint32_t>::max())
     {
-        bra_log_error("Too many files, not supported yet: %zu/%lu", files.size(), numeric_limits<uint32_t>::max());
+        bra_log_error("Too many files, not supported yet: %zu/%u", files.size(), numeric_limits<uint32_t>::max());
         return false;
     }
 
@@ -268,7 +268,7 @@ std::filesystem::path wildcard_extract_dir(std::filesystem::path& path_wildcard)
     // case 0:
     // return dir;
     case string::npos:
-        cout << format("[DEBUG] No wildcard found in here: {}", wildcard) << endl;
+        bra_log_debug("No wildcard found in here: %s", wildcard.c_str());
         wildcard.clear();
         break;
     }

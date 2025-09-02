@@ -244,7 +244,7 @@ bool file_set_add_dir(std::set<std::filesystem::path>& files)
 
     if (files.size() > numeric_limits<uint32_t>::max())
     {
-        bra_log_error("Too many files, not supported yet: %lu/%lu", files.size(), numeric_limits<uint32_t>::max());
+        bra_log_error("Too many files, not supported yet: %zu/%lu", files.size(), numeric_limits<uint32_t>::max());
         return false;
     }
 

@@ -4,6 +4,8 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <stdarg.h>
+
 #ifdef __GNUC__
 #include <unistd.h>    // for isatty
 #elif defined(_WIN32) || defined(_WIN64)
@@ -51,7 +53,7 @@ BRA_FUNC_ATTR_CONSTRUCTOR void _init_bra_log()
 #ifdef __GNUC__
     g_use_ansi_color = isatty(STDERR_FILENO) != 0;
 #elif defined(_WIN32) || defined(_WIN64)
-    g_use_ansi_color = _isatty(STDERR_FILENO) != 0;
+    g_use_ansi_color = _isatty(_fileno(stderr)) != 0;
 #endif
 
     // #ifndef NDEBUG
@@ -101,8 +103,6 @@ static inline void _bra_log_set_ansi_color(const bra_log_level_e level)
         _bra_log_set_color(RED);
         break;
     case BRA_LOG_LEVEL_CRITICAL:
-        _bra_log_set_color2(BRIGHT_COL(WHITE), BG_COL(RED));
-        // _bra_log_set_color(BRIGHT_COL(RED));
         _bra_log_set_color3(BRIGHT_COL(WHITE), BG_COL(RED), UNDERLINE);
         break;
     default:
@@ -205,8 +205,8 @@ void bra_log_v(const bra_log_level_e level, const char* fmt, va_list args)
         fprintf(stderr, "ERROR: ");
         break;
     case BRA_LOG_LEVEL_CRITICAL:
-        fprintf(stderr, "CRITICAL: ");
     default:
+        fprintf(stderr, "CRITICAL: ");
         break;
     case BRA_LOG_LEVEL_QUIET:
         break;

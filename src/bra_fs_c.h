@@ -22,7 +22,7 @@ extern "C" {
 bool bra_fs_dir_make(const char* path);
 
 /**
- * @brief get the file attributes from the given @p path and store them in @p attr.
+ * @brief Get the file attributes from the given @p path and store them in @p attr.
  *
  * @note Wrapper around @ref bra::fs::file_attributes.
  *
@@ -30,7 +30,7 @@ bool bra_fs_dir_make(const char* path);
  * @param path
  * @param attr
  * @return true on success.
- * @return false on error.
+ * @return false on error (including NULL @p path or @p attr).
  */
 bool bra_fs_file_attributes(const char* path, bra_attr_t* attr);
 
@@ -42,7 +42,7 @@ bool bra_fs_file_attributes(const char* path, bra_attr_t* attr);
  * @param path
  * @param file_size
  * @return true on success.
- * @return false on error.
+ * @return false on error (including NULL @p path or @p file_size).
  */
 bool bra_fs_file_size(const char* path, uint64_t* file_size);
 

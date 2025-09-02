@@ -14,7 +14,7 @@ extern "C" bool bra_fs_dir_make(const char* path)
 
 extern "C" bool bra_fs_file_attributes(const char* path, bra_attr_t* attr)
 {
-    if (attr == nullptr)
+    if (attr == nullptr || path == nullptr)
         return false;
 
     const fs::path p(path);
@@ -28,7 +28,7 @@ extern "C" bool bra_fs_file_attributes(const char* path, bra_attr_t* attr)
 
 bool bra_fs_file_size(const char* path, uint64_t* file_size)
 {
-    if (file_size == nullptr)
+    if (file_size == nullptr || path == nullptr)
         return false;
 
     const fs::path p(path);

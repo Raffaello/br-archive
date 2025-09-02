@@ -151,7 +151,7 @@ namespace bra::fs
 
 /**
  * @brief Expand the given @p wildcard_path and store the resulting paths into @p out_files.
- *        It doesn't cleat @p out_files, but it adds on it.
+ *        It doesn't clear @p out_files, but it adds on it.
  *
  * @param wildcard_path
  * @param out_files

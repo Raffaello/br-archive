@@ -136,6 +136,7 @@ bool validate_args()
     }
 
     // Extend the file set with directories
+    // TODO: move into bra_fs as bra::fs::file_set_add_dir
     std::list<fs::path> listFiles(g_files.begin(), g_files.end());
     g_files.clear();
     while (!listFiles.empty())
@@ -153,7 +154,7 @@ bool validate_args()
             //       recursive will also store empty directories.
             cout << format("DEBUG: removing empty directory") << endl;
         }
-        if (!(bra::fs::file_exists(f)))
+        else if (!(bra::fs::file_exists(f)))
         {
             cerr << format("ERROR: {} is neither a regular file nor a directory", f.string()) << endl;
             continue;

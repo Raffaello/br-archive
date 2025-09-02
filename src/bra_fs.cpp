@@ -180,7 +180,7 @@ std::optional<uint64_t> file_size(const std::filesystem::path& path)
     };
 
     if (fs::is_directory(path, ec))
-        return 0;
+        return static_cast<uint64_t>(0);
     else if (ec)
         return err();
     else if (fs::is_regular_file(path, ec))

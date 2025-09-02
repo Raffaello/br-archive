@@ -494,7 +494,7 @@ bool bra_file_encode_and_write_to_disk(bra_io_file_t* f, const char* fn)
     if (fn_len > UINT8_MAX)
     {
         printf("ERROR: filename too long: %s\n", fn);
-        return false;
+        goto BRA_IO_WRITE_CLOSE_ERROR;
     }
 
     const uint8_t fn_size = (uint8_t) fn_len;

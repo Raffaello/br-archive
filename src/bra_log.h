@@ -4,16 +4,9 @@
 extern "C" {
 #endif
 
-#include <stdarg.h>
+#include "lib_bra_defs.h"
 
-// Enable printf-like format checking where supported
-#if defined(__clang__)
-#define BRA_FUNC_ATTR_FMT_PRINTF(fmt_idx, va_idx) __attribute__((format(printf, fmt_idx, va_idx)))
-#elif defined(__GNUC__)
-#define BRA_FUNC_ATTR_FMT_PRINTF(fmt_idx, va_idx) __attribute__((format(gnu_printf, fmt_idx, va_idx)))
-#else
-#define BRA_FUNC_ATTR_FMT_PRINTF(fmt_idx, va_idx)
-#endif
+#include <stdarg.h>
 
 /**
  * @brief enum values for the log levels.

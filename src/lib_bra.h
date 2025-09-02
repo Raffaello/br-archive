@@ -12,6 +12,11 @@ extern "C" {
 #include <stdbool.h>
 #include <stdio.h>
 
+/**
+ * @brief Function Prototype for the message callback function.
+ */
+typedef int bra_message_callback_f(const char* fmt, ...) BRA_FUNC_ATTR_FMT_PRINTF(1, 2);
+
 
 #pragma pack(push, 1)
 
@@ -80,6 +85,15 @@ typedef struct bra_meta_file_t
  * @return char*
  */
 char* bra_strdup(const char* str);
+
+/**
+ * @brief Set the message callback to call to write messages to the user.
+ *        The default one is @c printf.
+ *        If passing @c NULL restores the default one.
+ *
+ * @param msg_cb
+ */
+void bra_set_message_callback(bra_message_callback_f* msg_cb);
 
 /**
  * @brief Print an error message and close the file.

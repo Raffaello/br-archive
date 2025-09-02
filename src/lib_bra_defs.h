@@ -20,6 +20,15 @@
 #define BRA_FUNC_ATTR_CONSTRUCTOR
 #endif
 
+// Enable printf-like format checking where supported
+#if defined(__clang__)
+#define BRA_FUNC_ATTR_FMT_PRINTF(fmt_idx, va_idx) __attribute__((format(printf, fmt_idx, va_idx)))
+#elif defined(__GNUC__)
+#define BRA_FUNC_ATTR_FMT_PRINTF(fmt_idx, va_idx) __attribute__((format(gnu_printf, fmt_idx, va_idx)))
+#else
+#define BRA_FUNC_ATTR_FMT_PRINTF(fmt_idx, va_idx)
+#endif
+
 
 #define BRA_MAGIC        0x612D5242    //!< 0x61='a' 0x2D='-' 0x52='R' 0x42='B'
 #define BRA_FOOTER_MAGIC 0x782D5242    //!< 0x78='x' 0x2D='-' 0x52='R' 0x42='B'

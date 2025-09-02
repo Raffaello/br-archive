@@ -22,8 +22,9 @@ _Static_assert(BRA_MAX_PATH_LENGTH > UINT8_MAX, "BRA_MAX_PATH_LENGTH must be gre
  *
  * @bug  having a global variable can't be thread safe
  */
-char         g_last_dir[BRA_MAX_PATH_LENGTH];
-unsigned int g_last_dir_size;
+static char                    g_last_dir[BRA_MAX_PATH_LENGTH];
+static unsigned int            g_last_dir_size;
+static bra_message_callback_f* g_msg_cb = printf;
 
 static inline uint64_t bra_min(const uint64_t a, const uint64_t b)
 {
@@ -70,6 +71,14 @@ char* bra_strdup(const char* str)
 
     memcpy(c, str, sizeof(char) * sz);
     return c;
+}
+
+void bra_set_message_callback(bra_message_callback_f* msg_cb)
+{
+    if (msg_cb == NULL)
+        g_msg_cb = printf;
+    else
+        g_msg_cb = msg_cb;
 }
 
 void bra_io_file_error(bra_io_file_t* bf, const char* verb)
@@ -487,7 +496,8 @@ bool bra_io_encode_and_write_to_disk(bra_io_file_t* f, const char* fn)
     //       create a function to register that function pointer here.
     //       by default the library init that function pointer with printf.
     //       (the problem i guess is windows how to initialize it...)
-    printf("Archiving ");
+    // printf("Archiving ");
+    g_msg_cb("Archiving");
 
     // 1. attributes
     bra_attr_t attributes;
@@ -501,10 +511,10 @@ bool bra_io_encode_and_write_to_disk(bra_io_file_t* f, const char* fn)
     switch (attributes)
     {
     case BRA_ATTR_DIR:
-        printf("dir: %s ...", fn);
+        g_msg_cb("dir: %s ...", fn);
         break;
     case BRA_ATTR_FILE:
-        printf("file: %s ...", fn);
+        g_msg_cb("file: %s ...", fn);
         break;
     default:
         goto BRA_IO_WRITE_CLOSE_ERROR;
@@ -570,7 +580,7 @@ bool bra_io_encode_and_write_to_disk(bra_io_file_t* f, const char* fn)
     break;
     }
 
-    printf("OK\n");
+    g_msg_cb("OK\n");
     return true;
 }
 
@@ -596,7 +606,7 @@ bool bra_io_decode_and_write_to_disk(bra_io_file_t* f)
     {
     case BRA_ATTR_FILE:
     {
-        printf("Extracting file: %s ...", mf.name);
+        g_msg_cb("Extracting file: %s ...", mf.name);
 
         bra_io_file_t f2;
         // NOTE: the directory must have been created in the previous file
@@ -621,7 +631,7 @@ bool bra_io_decode_and_write_to_disk(bra_io_file_t* f)
     break;
     case BRA_ATTR_DIR:
     {
-        printf("Creating dir: %s", mf.name);
+        g_msg_cb("Creating dir: %s", mf.name);
         if (!bra_fs_dir_make(mf.name))
             goto BRA_IO_READ_ERR;
 
@@ -633,6 +643,6 @@ bool bra_io_decode_and_write_to_disk(bra_io_file_t* f)
         break;
     }
 
-    printf("OK\n");
+    g_msg_cb("OK\n");
     return true;
 }

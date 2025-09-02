@@ -22,10 +22,10 @@ using namespace std;
 namespace fs = std::filesystem;
 
 
-std::set<fs::path> g_files;
-fs::path           g_out_filename;
-bool               g_sfx        = false;
-bool               g_always_yes = false;
+static std::set<fs::path> g_files;
+static fs::path           g_out_filename;
+static bool               g_sfx        = false;
+static bool               g_always_yes = false;
 
 //////////////////////////////////////////////////////////////////////////
 
@@ -43,6 +43,7 @@ void help()
     cout << format("  bra -o test *.txt") << endl;
     cout << endl;
     cout << format("(input_file): path to an existing file or a wildcard pattern") << endl;
+    cout << format("              Directories expand to <dir/*> (non-recursive); empty directories are ignored.") << endl;
     cout << endl;
     cout << format("Options:") << endl;
     cout << format("--help | -h : display this page.") << endl;
@@ -147,20 +148,16 @@ bool validate_args()
     if (!bra::fs::file_set_add_dir(g_files))
         return false;
 
+#ifndef NDEBUG
     cout << format("files:") << endl;
     for (const auto& f : g_files)
         cout << format("- {}", f.string()) << endl;
+#endif
 
     // TODO: Here could also start encoding the filenames
     //       and use them in compressed format to save on disk
     //       only if it less space (but it might be not).
     //       Need to test eventually later on
-
-    // if (g_files.size() > numeric_limits<uint32_t>::max())
-    // {
-    //     cerr << format("ERROR: Too many files, not supported yet: {}/{}", g_files.size(), numeric_limits<uint32_t>::max()) << endl;
-    //     return false;
-    // }
 
     if (g_out_filename.empty())
     {
@@ -181,8 +178,15 @@ bool validate_args()
 
         if (bra::fs::file_exists(g_out_filename))
         {
-            // TODO: this should just delete it / ask to overwrite ?
-            cerr << format("ERROR: Temporary SFX File {} already exists.", g_out_filename.string()) << endl;
+            const auto res = bra::fs::file_exists_ask_overwrite(g_out_filename, g_always_yes);
+            if (res)
+            {
+                if (!res)
+                    return false;
+
+                cout << format("Overwriting file: {}", g_out_filename.string()) << endl;
+            }
+
             return false;
         }
     }
@@ -206,10 +210,10 @@ bool validate_args()
     else    // the output directory might not exists...
     {
         // create the parent directory if needed.
-        const fs::path p = g_out_filename.parent_path();
-        if (!p.empty())
+        const fs::path pof = g_out_filename.parent_path();
+        if (!pof.empty())
         {
-            if (!bra::fs::dir_make(p))
+            if (!bra::fs::dir_make(pof))
                 return false;
         }
     }

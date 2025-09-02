@@ -119,7 +119,7 @@ bool parse_args(int argc, char* argv[])
         }
         else
         {
-            cout << format("unknown argument: {}", s) << endl;
+            cerr << format("ERROR: unknown argument/file doesn't exist: {}", s) << endl;
             return false;
         }
     }

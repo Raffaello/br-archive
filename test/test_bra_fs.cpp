@@ -3,6 +3,8 @@
 
 #include <bra_fs.hpp>
 
+#include <regex>
+
 using namespace std;
 
 
@@ -152,6 +154,16 @@ int test_bra_fs_wildcard_extract_dir()
     return 0;
 }
 
+int test_bra_fs_wildcard_to_regexp()
+{
+    PRINT_TEST_NAME;
+
+    const std::regex r(bra::fs::wildcard_to_regexp("file+name?.txt"));
+    ASSERT_TRUE(std::regex_match("file+name1.txt", r));
+    ASSERT_TRUE(!std::regex_match("filename1.txt", r));    // '+' must be literal
+    return 0;
+}
+
 int main(int argc, char* argv[])
 {
     return test_main(argc, argv, {
@@ -160,5 +172,6 @@ int main(int argc, char* argv[])
                                      {TEST_FUNC(test_bra_fs_try_sanitize_path)},
                                      {TEST_FUNC(test_bra_fs_sfx_filename_adjust)},
                                      {TEST_FUNC(test_bra_fs_wildcard_extract_dir)},
+                                     {TEST_FUNC(test_bra_fs_wildcard_to_regexp)},
                                  });
 }

@@ -5,14 +5,16 @@ namespace fs = std::filesystem;
 
 extern "C" bool bra_fs_dir_make(const char* path)
 {
-    const fs::path p(path);
+    if (path == nullptr)
+        return false;
 
+    const fs::path p(path);
     return bra::fs::dir_make(p);
 }
 
 extern "C" bool bra_fs_file_attributes(const char* path, bra_attr_t* attr)
 {
-    if (attr == NULL)
+    if (attr == nullptr)
         return false;
 
     const fs::path p(path);
@@ -26,7 +28,7 @@ extern "C" bool bra_fs_file_attributes(const char* path, bra_attr_t* attr)
 
 bool bra_fs_file_size(const char* path, uint64_t* file_size)
 {
-    if (file_size == NULL)
+    if (file_size == nullptr)
         return false;
 
     const fs::path p(path);

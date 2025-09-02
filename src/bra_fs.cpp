@@ -248,6 +248,7 @@ std::string wildcard_to_regexp(const std::string& wildcard)
         case '{':
         case '}':
         case '|':
+        case '+':
         case '\\':
             regex += '\\';    // Escape special regex characters
             [[fallthrough]];

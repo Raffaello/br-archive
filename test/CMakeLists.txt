@@ -11,6 +11,7 @@ add_test(NAME test_bra_fs.dir_make              COMMAND test_bra_fs test_bra_fs_
 
 add_test(NAME test_bra_fs.sfx_filename_adjust   COMMAND test_bra_fs test_bra_fs_sfx_filename_adjust)
 add_test(NAME test_bra_fs.wildcard_extract_dir  COMMAND test_bra_fs test_bra_fs_wildcard_extract_dir)
+add_test(NAME test_bra_fs.wildcard_to_regexp    COMMAND test_bra_fs test_bra_fs_wildcard_to_regexp)
 
 #####################################################################################################
 

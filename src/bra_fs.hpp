@@ -22,13 +22,13 @@ namespace bra::fs
  * @brief Try to sanitize the @p path.
  *        It must be relative to the current directory.
  *        It can't escape the current directory.
- *        If it doesn't exist it will return false;
+ *        Existence is not checked; it only rewrites to a safe, relative path.;
  *
  * @param path
  * @return true if it is successful
  * @return false otherwise
  */
-bool try_sanitize(std::filesystem::path& path);
+[[nodiscard]] bool try_sanitize(std::filesystem::path& path);
 
 /**
  * @brief Check if the given @p path contains a wildcard supported pattern.
@@ -128,7 +128,7 @@ bool try_sanitize(std::filesystem::path& path);
 /**
  * @brief Extract the directory from a wildcard if it contains any and modify accordingly the @p path_wildcard.
  *        If there is no wildcard, @p path_wildcard will result to be empty.
- *        The @p path_wildcard must have been sanitized with @ref try_sanitize,
+ *        The @p path_wildcard must have been sanitized with @ref try_sanitize before,
  *        otherwise results are undefined.
  *
  * @note this function doesn't fail if @p path_wildcard doesn't contain any wildcards,
@@ -170,7 +170,7 @@ bool try_sanitize(std::filesystem::path& path);
  * @return true if successful
  * @return false otherwise
  */
-bool search(const std::filesystem::path& dir, const std::string& pattern, std::list<std::filesystem::path>& out_files);
+[[nodiscard]] bool search(const std::filesystem::path& dir, const std::string& pattern, std::list<std::filesystem::path>& out_files);
 
 /**
  * @brief C++23 generator not supported yet in Ubuntu 24 ... pff!...

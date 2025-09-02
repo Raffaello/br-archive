@@ -126,6 +126,17 @@ namespace bra::fs
 [[nodiscard]] std::optional<uint64_t> file_size(const std::filesystem::path& path);
 
 /**
+ * @brief Extend the @p files set with their directories.
+ *
+ * @details the parent directories from the files present in @p files are added into @p files.
+ *
+ * @param files
+ * @return true on success.
+ * @return false on error. The @p files is in an invalid state.
+ */
+[[nodiscard]] bool file_set_add_dir(std::set<std::filesystem::path>& files);
+
+/**
  * @brief Extract the directory from a wildcard if it contains any and modify accordingly the @p path_wildcard.
  *        If there is no wildcard, @p path_wildcard will result to be empty.
  *        The @p path_wildcard must have been sanitized with @ref try_sanitize before,

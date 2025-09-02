@@ -195,6 +195,61 @@ std::optional<uint64_t> file_size(const std::filesystem::path& path)
     return err();
 }
 
+bool file_set_add_dir(std::set<std::filesystem::path>& files)
+{
+    std::list<fs::path> listFiles(files.begin(), files.end());
+    files.clear();
+    while (!listFiles.empty())
+    {
+        // NOTE: as it is a set i can just insert multiple time the directory
+        //       and when iterate later it, resolve it resolve on it.
+        //       need to keep track of the last directory entry to remove from the file.
+
+        auto f = listFiles.front();
+        listFiles.pop_front();
+
+        if (bra::fs::dir_exists(f))
+        {
+            // TODO: only if recursive is not enabled
+            //       recursive will also store empty directories.
+            cout << format("DEBUG: removing empty directory") << endl;
+        }
+        else if (!(bra::fs::file_exists(f)))
+        {
+            cerr << format("ERROR: {} is neither a regular file nor a directory", f.string()) << endl;
+            continue;
+        }
+
+        fs::path f_ = f;
+        if (!bra::fs::try_sanitize(f_))
+        {
+            cerr << format("ERROR: path not valid: {} - ({})", f.string(), f_.string()) << endl;
+            return false;
+        }
+
+        fs::path p_;
+        p_.clear();
+        for (const auto& p : f_)
+        {
+            p_ /= p;
+            files.insert(p_);
+        }
+        if (p_ != f_)
+        {
+            cerr << format("ERROR: expected {} == {}", p_.string(), f_.string()) << endl;
+            return false;
+        }
+    }
+
+    if (files.size() > numeric_limits<uint32_t>::max())
+    {
+        cerr << format("ERROR: Too many files, not supported yet: {}/{}", files.size(), numeric_limits<uint32_t>::max()) << endl;
+        return false;
+    }
+
+    return true;
+}
+
 std::filesystem::path wildcard_extract_dir(std::filesystem::path& path_wildcard)
 {
     string       dir;

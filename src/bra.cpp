@@ -144,51 +144,11 @@ bool validate_args()
         return false;
     }
 
-    // Extend the file set with directories
-    // TODO: move into bra_fs as bra::fs::file_set_add_dir
-    std::list<fs::path> listFiles(g_files.begin(), g_files.end());
-    g_files.clear();
-    while (!listFiles.empty())
-    {
-        // NOTE: as it is a set i can just insert multiple time the directory
-        //       and when iterate later it, resolve it resolve on it.
-        //       need to keep track of the last directory entry to remove from the file.
+    //
 
-        auto f = listFiles.front();
-        listFiles.pop_front();
 
-        if (bra::fs::dir_exists(f))
-        {
-            // TODO: only if recursive is not enabled
-            //       recursive will also store empty directories.
-            cout << format("DEBUG: removing empty directory") << endl;
-        }
-        else if (!(bra::fs::file_exists(f)))
-        {
-            cerr << format("ERROR: {} is neither a regular file nor a directory", f.string()) << endl;
-            continue;
-        }
-
-        fs::path f_ = f;
-        if (!bra::fs::try_sanitize(f_))
-        {
-            cerr << format("ERROR: path not valid: {} - ({})", f.string(), f_.string()) << endl;
-            return false;
-        }
-
-        fs::path p_;
-        p_.clear();
-        for (const auto& p : f_)
-        {
-            p_ /= p;
-            g_files.insert(p_);
-        }
-        if (p_ != f_)
-        {
-            cerr << format("ERROR: expected {} == {}", p_.string(), f_.string()) << endl;
-            return false;
-        }
-    }
+    if (!bra::fs::file_set_add_dir(g_files))
+        return false;
 
     cout << format("files:") << endl;
     for (const auto& f : g_files)
@@ -199,11 +159,11 @@ bool validate_args()
     //       only if it less space (but it might be not).
     //       Need to test eventually later on
 
-    if (g_files.size() > numeric_limits<uint32_t>::max())
-    {
-        cerr << format("ERROR: Too many files, not supported yet: {}/{}", g_files.size(), numeric_limits<uint32_t>::max()) << endl;
-        return false;
-    }
+    // if (g_files.size() > numeric_limits<uint32_t>::max())
+    // {
+    //     cerr << format("ERROR: Too many files, not supported yet: {}/{}", g_files.size(), numeric_limits<uint32_t>::max()) << endl;
+    //     return false;
+    // }
 
     if (g_out_filename.empty())
     {

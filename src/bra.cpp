@@ -28,38 +28,6 @@ bool               g_sfx = false;
 
 //////////////////////////////////////////////////////////////////////////
 
-/**
- * @brief
- *
- * @todo should be moved into bra_fs ?
- *
- * @param path
- * @return true
- * @return false
- */
-// bool bra_wildcard_expand(const fs::path& path)
-// {
-//     fs::path       p       = path.generic_string();
-//     const fs::path dir     = bra::fs::wildcard_extract_dir(p);
-//     const string   pattern = bra::fs::wildcard_to_regexp(p.string());
-
-// std::list<fs::path> files;
-// if (!bra::fs::search(dir, pattern, files))
-// {
-//     cerr << format("ERROR: not a valid wildcard: {}", p.string()) << endl;
-//     return false;
-// }
-
-// for (const auto& p : files)
-// {
-//     if (!g_files.insert(p).second)
-//         cout << format("WARNING: duplicate file given in input: {}", p.string()) << endl;
-// }
-
-// files.clear();
-// return true;
-// }
-
 /////////////////////////////////////////////////////////////////////////
 
 void help()

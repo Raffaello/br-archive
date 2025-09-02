@@ -5,6 +5,7 @@
 #include <assert.h>
 #include <string.h>
 #include <stdlib.h>
+#include <errno.h>
 #include <limits.h>
 
 #define assert_bra_io_file_t(x) assert((x) != NULL && (x)->f != NULL && (x)->fn != NULL)
@@ -69,10 +70,28 @@ char* bra_strdup(const char* str)
     return c;
 }
 
-void bra_io_read_error(bra_io_file_t* bf)
+void bra_io_file_error(bra_io_file_t* bf, const char* verb)
 {
-    bra_log_error("unable to read %s %s file", bf->fn, BRA_NAME);
+    assert_bra_io_file_t(bf);
+    assert(verb != NULL);
+
+    bra_log_error("unable to %s %s file (errno: %s)", verb, bf->fn, strerror(errno));
     bra_io_close(bf);
+}
+
+inline void bra_io_file_open_error(bra_io_file_t* bf)
+{
+    bra_io_file_error(bf, "open");
+}
+
+inline void bra_io_file_read_error(bra_io_file_t* bf)
+{
+    bra_io_file_error(bf, "read");
+}
+
+inline void bra_io_file_write_error(bra_io_file_t* bf)
+{
+    bra_io_file_error(bf, "write");
 }
 
 bool bra_io_open(bra_io_file_t* bf, const char* fn, const char* mode)
@@ -84,8 +103,7 @@ bool bra_io_open(bra_io_file_t* bf, const char* fn, const char* mode)
     bf->fn = bra_strdup(fn);     // copy filename
     if (bf->f == NULL || bf->fn == NULL)
     {
-        bra_log_error("unable to open file %s", fn);
-        bra_io_close(bf);
+        bra_io_file_open_error(bf);
         return false;
     }
 
@@ -150,7 +168,7 @@ bool bra_io_read_header(bra_io_file_t* bf, bra_io_header_t* out_bh)
 
     if (fread(out_bh, sizeof(bra_io_header_t), 1, bf->f) != 1)
     {
-        bra_io_read_error(bf);
+        bra_io_file_read_error(bf);
         return false;
     }
 
@@ -177,8 +195,7 @@ bool bra_io_write_header(bra_io_file_t* f, const uint32_t num_files)
 
     if (fwrite(&header, sizeof(bra_io_header_t), 1, f->f) != 1)
     {
-        bra_log_error("unable to write %s %s file", f->fn, BRA_NAME);
-        bra_io_close(f);
+        bra_io_file_write_error(f);
         return false;
     }
 
@@ -193,7 +210,7 @@ bool bra_io_read_footer(bra_io_file_t* f, bra_io_footer_t* bf_out)
     memset(bf_out, 0, sizeof(bra_io_footer_t));
     if (fread(bf_out, sizeof(bra_io_footer_t), 1, f->f) != 1)
     {
-        bra_io_read_error(f);
+        bra_io_file_read_error(f);
         return false;
     }
 
@@ -220,8 +237,7 @@ bool bra_io_write_footer(bra_io_file_t* f, const int64_t header_offset)
 
     if (fwrite(&bf, sizeof(bra_io_footer_t), 1, f->f) != 1)
     {
-        bra_log_error("unable to write footer in %s.", f->fn);
-        bra_io_close(f);
+        bra_io_file_write_error(f);
         return false;
     }
 
@@ -244,7 +260,7 @@ bool bra_io_read_meta_file(bra_io_file_t* f, bra_meta_file_t* mf)
     if (fread(&mf->attributes, sizeof(uint8_t), 1, f->f) != 1)
     {
     BRA_IO_READ_ERR:
-        bra_io_read_error(f);
+        bra_io_file_read_error(f);
         return false;
     }
 
@@ -381,8 +397,7 @@ bool bra_io_write_meta_file(bra_io_file_t* f, const bra_meta_file_t* mf)
     if (fwrite(&mf->attributes, sizeof(uint8_t), 1, f->f) != 1)
     {
     BRA_IO_WRITE_ERR:
-        bra_io_close(f);
-        bra_log_error("Writing file: %s", mf->name);
+        bra_io_file_write_error(f);
         return false;
     }
 
@@ -434,17 +449,15 @@ bool bra_io_copy_file_chunks(bra_io_file_t* dst, bra_io_file_t* src, const uint6
         // read source chunk
         if (fread(buf, sizeof(char), s, src->f) != s)
         {
-            bra_log_error("unable to read %s file", src->fn);
+            bra_io_file_read_error(src);
             bra_io_close(dst);
-            bra_io_close(src);
             return false;
         }
 
         // write source chunk
         if (fwrite(buf, sizeof(char), s, dst->f) != s)
         {
-            bra_log_error("writing to file: %s", dst->fn);
-            bra_io_close(dst);
+            bra_io_file_write_error(dst);
             bra_io_close(src);
             return false;
         }
@@ -542,8 +555,8 @@ bool bra_io_encode_and_write_to_disk(bra_io_file_t* f, const char* fn)
         memset(&f2, 0, sizeof(bra_io_file_t));
         if (!bra_io_open(&f2, fn, "rb"))
         {
-            bra_log_error("unable to open file: %s", fn);
-            goto BRA_IO_WRITE_CLOSE_ERROR;
+            bra_io_file_open_error(&f2);
+            return false;
         }
 
         if (!bra_io_copy_file_chunks(f, &f2, ds))
@@ -570,7 +583,7 @@ bool bra_io_decode_and_write_to_disk(bra_io_file_t* f)
     {
     BRA_IO_READ_ERR:
         bra_meta_file_free(&mf);
-        bra_io_read_error(f);
+        bra_io_file_read_error(f);
         return false;
     }
 
@@ -590,8 +603,9 @@ bool bra_io_decode_and_write_to_disk(bra_io_file_t* f)
         //       no need to create the parent directory for each file each time.
         if (!bra_io_open(&f2, mf.name, "wb"))
         {
-            bra_log_error("unable to write file: %s", mf.name);
-            goto BRA_IO_READ_ERR;
+            bra_io_file_open_error(&f2);
+            bra_meta_file_free(&mf);
+            return false;
         }
 
         const uint64_t ds = mf.data_size;

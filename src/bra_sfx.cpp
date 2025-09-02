@@ -17,44 +17,42 @@ namespace fs = std::filesystem;
 
 bool bra_isElf(const char* fn)
 {
-    FILE* f = fopen(fn, "rb");
-    if (f == nullptr)
+    bra_io_file_t f;
+    if (!bra_io_open(&f, fn, "rb"))
     {
-        bra_log_error("unable to open file %s", fn);
+        bra_io_file_open_error(&f);
         return false;
     }
 
     // 0x7F,'E','L','F'
     constexpr int MAGIC_SIZE = 4;
     char          magic[MAGIC_SIZE];
-    if (fread(magic, sizeof(char), MAGIC_SIZE, f) != MAGIC_SIZE)
+    if (fread(magic, sizeof(char), MAGIC_SIZE, f.f) != MAGIC_SIZE)
     {
-        fclose(f);
-        bra_log_error("unable to read file %s", fn);
+        bra_io_file_read_error(&f);
         return false;
     }
 
-    fclose(f);
+    bra_io_close(&f);
     return magic[0] == 0x7F && magic[1] == 'E' && magic[2] == 'L' && magic[3] == 'F';
 }
 
 bool bra_isPE(const char* fn)
 {
-    FILE* f = fopen(fn, "rb");
-    if (f == nullptr)
+    bra_io_file_t f;
+    if (!bra_io_open(&f, fn, "rb"))
     {
-        bra_log_error("unable to open file %s", fn);
+        bra_io_file_open_error(&f);
         return false;
     }
 
     // 'M' 'Z'
     constexpr int MAGIC_SIZE = 2;
     char          magic[MAGIC_SIZE];
-    if (fread(magic, sizeof(char), MAGIC_SIZE, f) != MAGIC_SIZE)
+    if (fread(magic, sizeof(char), MAGIC_SIZE, f.f) != MAGIC_SIZE)
     {
     BRA_IS_EXE_ERROR:
-        fclose(f);
-        bra_log_error("unable to read file %s", fn);
+        bra_io_file_read_error(&f);
         return false;
     }
 
@@ -62,22 +60,22 @@ bool bra_isPE(const char* fn)
         goto BRA_IS_EXE_ERROR;
 
     // Read the PE header offset from the DOS header
-    if (fseek(f, 0x3C, SEEK_SET) < 0)
+    if (!bra_io_seek(&f, 0x3C, SEEK_SET))
         goto BRA_IS_EXE_ERROR;
 
     uint32_t pe_offset;
-    if (fread(&pe_offset, sizeof(uint32_t), 1, f) != 1)
+    if (fread(&pe_offset, sizeof(uint32_t), 1, f.f) != 1)
         goto BRA_IS_EXE_ERROR;
 
-    if (fseek(f, pe_offset, SEEK_SET) < 0)
+    if (!bra_io_seek(&f, pe_offset, SEEK_SET))
         goto BRA_IS_EXE_ERROR;
 
     constexpr int PE_MAGIC_SIZE = 4;
     char          pe_magic[PE_MAGIC_SIZE];
-    if (fread(pe_magic, sizeof(char), PE_MAGIC_SIZE, f) != PE_MAGIC_SIZE)
+    if (fread(pe_magic, sizeof(char), PE_MAGIC_SIZE, f.f) != PE_MAGIC_SIZE)
         goto BRA_IS_EXE_ERROR;
 
-    fclose(f);
+    bra_io_close(&f);
     return pe_magic[0] == 'P' && pe_magic[1] == 'E' && pe_magic[2] == '\0' && pe_magic[3] == '\0';
 }
 
@@ -135,14 +133,13 @@ bool bra_file_open_and_read_footer_header(const char* fn, bra_io_header_t* out_b
 {
     if (!bra_io_open(f, fn, "rb"))
     {
-        bra_log_error("unable to open file %s", fn);
+        bra_io_file_open_error(f);
         return false;
     }
 
     if (!bra_io_seek(f, -1L * static_cast<int64_t>(sizeof(bra_io_footer_t)), SEEK_END))
     {
-        bra_log_error("unable to read file %s", fn);
-        bra_io_close(f);
+        bra_io_file_read_error(f);
         return false;
     }
 
@@ -153,7 +150,7 @@ bool bra_file_open_and_read_footer_header(const char* fn, bra_io_header_t* out_b
     // read header and check
     if (!bra_io_seek(f, bf.header_offset, SEEK_SET))
     {
-        bra_io_read_error(f);
+        bra_io_file_read_error(f);
         return false;
     }
 

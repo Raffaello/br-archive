@@ -85,8 +85,36 @@ char* bra_strdup(const char* str);
  * @brief Print an error message and close the file.
  *
  * @param bf
+ * @param verb a string to complete the error message: "unable to %s".
  */
-void bra_io_read_error(bra_io_file_t* bf);
+void bra_io_file_error(bra_io_file_t* bf, const char* verb);
+
+/**
+ * @brief Print an error message and eventually close the file
+ *
+ * @see bra_io_file_error
+ *
+ * @param bf
+ */
+void bra_io_file_open_error(bra_io_file_t* bf);
+
+/**
+ * @brief Print an error message and close the file.
+ *
+ * @see bra_io_file_error
+ *
+ * @param bf
+ */
+void bra_io_file_read_error(bra_io_file_t* bf);
+
+/**
+ * @brief Print an error message and close the file.
+ *
+ * @see bra_io_file_error
+ *
+ * @param bf
+ */
+void bra_io_file_write_error(bra_io_file_t* bf);
 
 /**
  * @brief open the file @p fn in the @p mode.

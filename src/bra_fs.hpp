@@ -22,7 +22,7 @@ namespace bra::fs
  * @brief Try to sanitize the @p path.
  *        It must be relative to the current directory.
  *        It can't escape the current directory.
- *        Existence is not checked; it only rewrites to a safe, relative path.;
+ *        Existence is not checked; it only rewrites to a safe, relative path.
  *
  * @param path
  * @return true if it is successful

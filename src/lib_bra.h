@@ -5,46 +5,51 @@
 extern "C" {
 #endif
 
+#include <lib_bra_defs.h>
+#include <lib_bra_types.h>
 
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdio.h>
 
-#include <lib_bra_defs.h>
 
 #pragma pack(push, 1)
 
 /**
  * @brief BR-Archive File Header.
  */
-typedef struct bra_header_t
+typedef struct bra_io_header_t
 {
     uint32_t magic;    //!< 'BR-a'
-    // version
+
+    // uint8_t  version;    //!< Archive format version
     // compression type ? (archive, best, fast, ... ??)
     // crc32 / md5 ?
-    uint32_t num_files;    // just 1 for now
+    uint32_t num_files;
 
-    // TODO: put num_directories. 1 must be always present and then
-    //       num_files inside the bra_meta_directory_t
-    //       it means that is an internal directory containing files.
-    //
-    //       this leads to save chars on the filename string,
-    //       for multiple files in the same directory
-    //       also it will mostly save the slash.
-    // TODO: ISSUE: how about nested sub-directories instead?
-    //       so the directory should contain a num_directory.
-    //       basically the header is just follow of a bra_directory_t instead.
-} bra_header_t;
+} bra_io_header_t;
 
 /**
  * @brief BR-Sfx File Footer.
  */
-typedef struct bra_footer_t
+typedef struct bra_io_footer_t
 {
-    uint32_t magic;          //!< 'BR-x'
-    int64_t  data_offset;    //!< where the data chunk start from the beginning of the file
-} bra_footer_t;
+    uint32_t magic;            //!< 'BR-x'
+    int64_t  header_offset;    //!< absolute offset of the header chunk from file start.
+} bra_io_footer_t;
+
+#pragma pack(pop)
+
+/**
+ * @brief Type used to perform I/O from the disk.
+ *        It is just a simple wrapper around @c FILE,
+ *        but it carries on the filename @p fn associated with it.
+ */
+typedef struct bra_io_file_t
+{
+    FILE* f;     //!< File Pointer representing a file on the disk.
+    char* fn;    //!< the filename of the file on disk.
+} bra_io_file_t;
 
 /**
  * @brief This is the metadata of each file stored in a BR-archive.
@@ -52,19 +57,29 @@ typedef struct bra_footer_t
  */
 typedef struct bra_meta_file_t
 {
-    // TODO: add CRC ... file permissions, file attributes, etc... ?
-    uint8_t  name_size;
-    char*    name;
-    uint64_t data_size;
+    // TODO: add CRC ... file permissions, etc... ?
+    bra_attr_t attributes;    //!< file attributes: #BRA_ATTR_FILE (regular) or #BRA_ATTR_DIR (directory)
+    uint8_t    name_size;     //!< length in bytes excluding the trailing NUL; [1..UINT8_MAX]
+    char*      name;          //!< filename (owned; free via @ref bra_meta_file_free)
+    uint64_t   data_size;     //!< file contents size in bytes
 } bra_meta_file_t;
 
-#pragma pack(pop)
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-typedef struct bra_io_file_t
-{
-    FILE* f;
-    char* fn;
-} bra_io_file_t;
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/**
+ * @brief strdup()
+ *
+ * @details Returns @c NULL if @p str is @c NULL or on allocation failure.
+ *          The caller owns the returned buffer and must free() it.
+ *
+ * @todo remove when switching to C23
+ *
+ * @param str
+ * @return char*
+ */
+char* bra_strdup(const char* str);
 
 /**
  * @brief print error message and close file.
@@ -74,28 +89,28 @@ typedef struct bra_io_file_t
 void bra_io_read_error(bra_io_file_t* bf);
 
 /**
- * @brief open the file @p fn in the @p mode
- *        the @p will be overwritten.
+ * @brief open the file @p fn in the @p mode.
+ *        The file @p bf will be overwritten if it exists.
  *        On failure there is no need to call @ref bra_io_close
  *
  * @param bf
  * @param fn
  * @param mode
  * @return true on success
- * @return false on error
+ * @return false on error and close @p bf via @ref bra_io_close.
  */
 bool bra_io_open(bra_io_file_t* bf, const char* fn, const char* mode);
 
 /**
- * @brief close file, free internal memory and set fields to NULL.
+ * @brief Close the file, free the internal memory and set the fields to NULL.
  *
  * @param bf
  */
 void bra_io_close(bra_io_file_t* bf);
 
 /**
- * @brief seek file at position @p offs.
- *  *
+ * @brief Seek file at position @p offs.
+ *
  * @param f
  * @param offs
  * @param origin SEEK_SET, SEEK_CUR, SEEK_END
@@ -105,7 +120,7 @@ void bra_io_close(bra_io_file_t* bf);
 bool bra_io_seek(bra_io_file_t* f, const int64_t offs, const int origin);
 
 /**
- * @brief tell the file position.
+ * @brief Tell the file position.
  *        On error returns -1
  *
  * @param f
@@ -123,7 +138,7 @@ int64_t bra_io_tell(bra_io_file_t* f);
  * @return true on success
  * @return false on error
  */
-bool bra_io_read_header(bra_io_file_t* bf, bra_header_t* out_bh);
+bool bra_io_read_header(bra_io_file_t* bf, bra_io_header_t* out_bh);
 
 /**
  * @brief Write the bra header into @p bf with @p num_files.
@@ -137,7 +152,7 @@ bool bra_io_read_header(bra_io_file_t* bf, bra_header_t* out_bh);
 bool bra_io_write_header(bra_io_file_t* f, const uint32_t num_files);
 
 /**
- * @brief Read thr bra footer into @p bf_out.
+ * @brief Read the bra footer into @p bf_out.
  *        On error closes @p f via @ref bra_io_close.
  *
  * @param f
@@ -145,31 +160,38 @@ bool bra_io_write_header(bra_io_file_t* f, const uint32_t num_files);
  * @return true
  * @return false
  */
-bool bra_io_read_footer(bra_io_file_t* f, bra_footer_t* bf_out);
+bool bra_io_read_footer(bra_io_file_t* f, bra_io_footer_t* bf_out);
 
 /**
  * @brief Write the footer into the file @p f.
  *        On error closes @p f via @ref bra_io_close.
  *
- *
  * @param f
- * @param data_offset
+ * @param header_offset
  * @return true
  * @return false
  */
-bool bra_io_write_footer(bra_io_file_t* f, const int64_t data_offset);
+bool bra_io_write_footer(bra_io_file_t* f, const int64_t header_offset);
 
 /**
  * @brief Read the filename meta data information that is pointing in @p f and store it on @p mf.
- *        On error closes @p f via @ref bra_io_close.
- *        On success @mf must be explicitly free via @ref bra_meta_file_free.
  *
  * @param f
  * @param mf
- * @return true On success
- * @return false On error
+ * @return true on success @p mf must be explicitly free via @ref bra_meta_file_free.
+ * @return false on error closes @p f via @ref bra_io_close.
  */
 bool bra_io_read_meta_file(bra_io_file_t* f, bra_meta_file_t* mf);
+
+/**
+ * @brief Write the filename meta data information given from @p mf in @p f.
+ *
+ * @param f
+ * @param mf
+ * @return true on success
+ * @return false on error closes @p f via @ref bra_io_close.
+ */
+bool bra_io_write_meta_file(bra_io_file_t* f, const bra_meta_file_t* mf);
 
 /**
  * @brief Free any eventual content on @p mf.

@@ -23,6 +23,27 @@ int test_bra_fs_is_wildcards()
     return 0;
 }
 
+int test_bra_fs_dir_make()
+{
+    PRINT_TEST_NAME;
+
+    const fs::path dir1 = "dir1/test";
+
+    fs::remove(dir1);
+    ASSERT_TRUE(!bra_fs_dir_exists(dir1))
+
+    ASSERT_TRUE(bra_fs_dir_make(dir1));
+    ASSERT_TRUE(bra_fs_dir_exists(dir1))
+    ASSERT_TRUE(bra_fs_dir_make(dir1));
+    ASSERT_TRUE(bra_fs_dir_exists(dir1))
+
+    fs::remove(dir1);
+    ASSERT_TRUE(!bra_fs_dir_exists(dir1))
+
+
+    return 0;
+}
+
 int test_bra_fs_try_sanitize_path()
 {
     PRINT_TEST_NAME;
@@ -134,6 +155,7 @@ int main(int argc, char* argv[])
 {
     return test_main(argc, argv, {
                                      {TEST_FUNC(test_bra_fs_is_wildcards)},
+                                     {TEST_FUNC(test_bra_fs_dir_make)},
                                      {TEST_FUNC(test_bra_fs_try_sanitize_path)},
                                      {TEST_FUNC(test_bra_fs_sfx_filename_adjust)},
                                      {TEST_FUNC(test_bra_fs_wildcard_extract_dir)},

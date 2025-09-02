@@ -1,8 +1,11 @@
 #pragma once
 
 #ifndef __cplusplus
-#error "must be included in a cpp file unit"
+#error "bra_fs.hpp must be included from a C++ translation unit. Use bra_fs.h when compiling as C."
 #endif
+
+#include "lib_bra_types.h"
+
 
 #include <filesystem>
 #include <optional>
@@ -21,6 +24,42 @@
  * @return false otherwise
  */
 bool bra_fs_try_sanitize(std::filesystem::path& path);
+
+/**
+ * @brief Check if the given @p path contains a wildcard supported pattern.
+ *
+ * @todo instead of bool return size_t: std::npos no wildcard, otherwise first wildcard char position.
+ *
+ * @param path
+ * @return true
+ * @return false
+ */
+[[nodiscard]] bool bra_fs_isWildcard(const std::filesystem::path& path);
+
+/**
+ * @brief Check if the given @p path exists and is a directory.
+ *
+ * @see bra_fs_file_exists
+ *
+ * @param path
+ * @return true if the path exists and is a directory
+ * @return false otherwise
+ */
+[[nodiscard]] bool bra_fs_dir_exists(const std::filesystem::path& path);
+
+/**
+ * @brief Create the directory at @p path.
+ *        Also creates parent directories as needed.
+ *
+ * @note Idempotent: returns true if the directory already exists.
+ *
+ * @see bra_fs_dir_exists
+ *
+ * @param path
+ * @return true if the directory was created or already existed.
+ * @return false on error
+ */
+[[nodiscard]] bool bra_fs_dir_make(const std::filesystem::path& path);
 
 /**
  * @brief
@@ -42,37 +81,44 @@ bool bra_fs_try_sanitize(std::filesystem::path& path);
 [[nodiscard]] std::filesystem::path bra_fs_filename_sfx_adjust(const std::filesystem::path& path, const bool tmp);
 
 /**
- * @brief Check if a regular file exists.
+ * @brief Check if the given @p path is a regular file and exists.
  *
- * @param p
- * @return true
- * @return false
- */
-[[nodiscard]] bool bra_fs_file_exists(const std::filesystem::path& p);
-
-/**
- * @brief Check if the file exists and ask the user to overwrite.
- *
- * @note The file is considered a 'regular_file' it won't check if it is a directory.
- *
- * @param p
- * @param always_yes if true, assumes yes without asking.
- * @return std::optional<bool> when has no value the file doesn't exist.
- * @return true overwrite
- * @return false don't overwrite
- */
-[[nodiscard]] std::optional<bool> bra_fs_file_exists_ask_overwrite(const std::filesystem::path& p, const bool always_yes);
-
-/**
- * @brief Check if the given @p path contains a wildcard supported pattern.
- *
- * @todo instead of bool return size_t: std::npos no wildcard, otherwise first wildcard char position.
+ * @see bra_fs_dir_exists
  *
  * @param path
  * @return true
  * @return false
  */
-[[nodiscard]] bool bra_fs_isWildcard(const std::filesystem::path& path);
+[[nodiscard]] bool bra_fs_file_exists(const std::filesystem::path& path);
+
+/**
+ * @brief Check if the file in @p path exists and ask the user to overwrite.
+ *
+ * @note The file is considered a 'regular_file' it won't check if it is a directory.
+ *
+ * @param path
+ * @param always_yes if true, assumes yes without asking.
+ * @return std::optional<bool> when has no value the file doesn't exist.
+ * @return true overwrite
+ * @return false don't overwrite
+ */
+[[nodiscard]] std::optional<bool> bra_fs_file_exists_ask_overwrite(const std::filesystem::path& path, const bool always_yes);
+
+/**
+ * @brief Get the file attributes for the given @p path.
+ *
+ * @param path
+ * @return std::optional<bra_attr_t> #BRA_ATTR_FILE for regular files, #BRA_ATTR_DIR for directories, @c nullopt for errors or unknown types.
+ */
+[[nodiscard]] std::optional<bra_attr_t> bra_fs_file_attributes(const std::filesystem::path& path);
+
+/**
+ * @brief Get the size of a file or directory.
+ *
+ * @param path
+ * @return std::optional<uint64_t> File size in bytes for regular files, 0 for directories, @c nullopt on error
+ */
+[[nodiscard]] std::optional<uint64_t> bra_fs_file_size(const std::filesystem::path& path);
 
 /**
  * @brief Extract the directory from a wildcard if it contains any and modify accordingly the @p path_wildcard.

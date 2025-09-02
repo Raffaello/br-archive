@@ -95,6 +95,35 @@ bool validate_args()
     return true;
 }
 
+char unbra_list_meta_file_attributes(const uint8_t attributes)
+{
+    switch (attributes)
+    {
+    case 0:
+        return 'f';
+    case 1:
+        return 'd';
+    default:
+        return '?';
+    }
+}
+
+std::string format_bytes(const size_t bytes)
+{
+    constexpr size_t KB = 1024;
+    constexpr size_t MB = KB * 1024;
+    constexpr size_t GB = MB * 1024;
+
+    if (bytes >= GB)
+        return format("{:2.2f} GB", static_cast<double>(bytes) / GB);
+    else if (bytes >= MB)
+        return format("{:2.2f} MB", static_cast<double>(bytes) / MB);
+    else if (bytes >= KB)
+        return format("{:2.2f} KB", static_cast<double>(bytes) / KB);
+    else
+        return format("{:4} B ", bytes);
+}
+
 bool unbra_list_meta_file(bra_io_file_t& f)
 {
     bra_meta_file_t mf;
@@ -103,7 +132,7 @@ bool unbra_list_meta_file(bra_io_file_t& f)
         return false;
 
     const uint64_t ds = mf.data_size;
-    cout << format("- size: {} bytes | {}", mf.name, mf.data_size) << endl;
+    cout << format("- attr: {} | size: {:4} | {}", unbra_list_meta_file_attributes(mf.attributes), format_bytes(mf.data_size), mf.name) << endl;
 
     bra_meta_file_free(&mf);
 
@@ -133,8 +162,8 @@ int main(int argc, char* argv[])
     }
 
     // header
-    bra_header_t  bh{};
-    bra_io_file_t f{};
+    bra_io_header_t bh{};
+    bra_io_file_t   f{};
     if (!bra_io_open(&f, g_bra_file.string().c_str(), "rb"))
         return 1;
 

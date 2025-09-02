@@ -130,7 +130,7 @@ bool parse_args(int argc, char* argv[])
     return true;
 }
 
-bool bra_file_open_and_read_footer_header(const char* fn, bra_header_t* out_bh, bra_io_file_t* f)
+bool bra_file_open_and_read_footer_header(const char* fn, bra_io_header_t* out_bh, bra_io_file_t* f)
 {
     if (!bra_io_open(f, fn, "rb"))
     {
@@ -138,19 +138,19 @@ bool bra_file_open_and_read_footer_header(const char* fn, bra_header_t* out_bh, 
         return false;
     }
 
-    if (!bra_io_seek(f, -1L * static_cast<off_t>(sizeof(bra_footer_t)), SEEK_END))
+    if (!bra_io_seek(f, -1L * static_cast<int64_t>(sizeof(bra_io_footer_t)), SEEK_END))
     {
         cerr << format("unable to read file {}", fn) << endl;
         bra_io_close(f);
         return false;
     }
 
-    bra_footer_t bf{};
+    bra_io_footer_t bf{};
     if (!bra_io_read_footer(f, &bf))
         return false;
 
     // read header and check
-    if (!bra_io_seek(f, bf.data_offset, SEEK_SET))
+    if (!bra_io_seek(f, bf.header_offset, SEEK_SET))
     {
         bra_io_read_error(f);
         return false;
@@ -178,8 +178,8 @@ int main(int argc, char* argv[])
 
     // TODO: when extracting should check to do not auto-overwrite itself.
 
-    bra_header_t  bh;
-    bra_io_file_t f{};
+    bra_io_header_t bh;
+    bra_io_file_t   f{};
     if (!bra_file_open_and_read_footer_header(argv[0], &bh, &f))
         return 1;
 

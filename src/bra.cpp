@@ -23,10 +23,44 @@ namespace fs = std::filesystem;
 
 
 std::set<fs::path> g_files;
-// size_t             g_num_files;
-fs::path g_out_filename;
+fs::path           g_out_filename;
+bool               g_sfx = false;
 
-bool g_sfx = false;
+//////////////////////////////////////////////////////////////////////////
+
+/**
+ * @brief
+ *
+ * @todo should be moved into bra_fs ?
+ *
+ * @param path
+ * @return true
+ * @return false
+ */
+bool bra_expand_wildcards(const fs::path& path)
+{
+    fs::path       p       = path.generic_string();
+    const fs::path dir     = bra_fs_wildcard_extract_dir(p);
+    const string   pattern = bra_fs_wildcard_to_regexp(p.string());
+
+    std::list<fs::path> files;
+    if (!bra_fs_search(dir, pattern, files))
+    {
+        cerr << format("ERROR: not a valid wildcard: {}", p.string()) << endl;
+        return false;
+    }
+
+    for (const auto& p : files)
+    {
+        if (!g_files.insert(p).second)
+            cout << format("WARNING: duplicate file given in input: {}", p.string()) << endl;
+    }
+
+    files.clear();
+    return true;
+}
+
+/////////////////////////////////////////////////////////////////////////
 
 void help()
 {
@@ -58,7 +92,6 @@ bool parse_args(int argc, char* argv[])
     }
 
     g_files.clear();
-    // g_num_files = 0;
     for (int i = 1; i < argc; ++i)
     {
         string s = argv[i];
@@ -84,7 +117,7 @@ bool parse_args(int argc, char* argv[])
 
             g_out_filename = argv[i];
         }
-        // check if it is file
+        // check if it is file or a dir
         else if (bra_fs_file_exists(s))
         {
             fs::path p = s;
@@ -97,41 +130,24 @@ bool parse_args(int argc, char* argv[])
             }
 
             if (!g_files.insert(p).second)
-                cout << format("WARNING: duplicate file given in input: {}", p.string()) << endl;
-            // else
-            // ++g_num_files;
+                cout << format("WARNING: duplicate file/dir given in input: {}", p.string()) << endl;
+        }
+        else if (bra_fs_dir_exists(s))
+        {
+            // This should match exactly the directory.
+            // so need to be converted as a wildcard adding a `/*' at the end
+            fs::path p = fs::path(s) / "*";
+            if (!bra_fs_try_sanitize(p) || !bra_fs_isWildcard(p) || !bra_expand_wildcards(p))
+            {
+                cerr << format("ERROR: path not valid: {}", p.string()) << endl;
+                return false;
+            }
         }
         // check if it is a wildcard
         else if (bra_fs_isWildcard(s))
         {
-            fs::path p             = s;
-            p                      = p.generic_string();
-            const fs::path dir     = bra_fs_wildcard_extract_dir(p);
-            const string   pattern = bra_fs_wildcard_to_regexp(p.string());
-
-            // size_t num_files = 0;
-            // for ([[maybe_unused]] auto const& fn : bra_fs_co_search(dir, pattern))
-            //     ++num_files;
-
-            // if (num_files > 0)
-            // {
-            //     g_num_files += num_files;
-            //     if (!g_files.insert(p).second)
-            //         cout << format("WARNING: duplicate file given in input: {}", p.string()) << endl;
-            // }
-
-            std::list<fs::path> files;
-            if (!bra_fs_search(dir, pattern, files))
-            {
-                cerr << format("ERROR: not a valid wildcard: {}", s) << endl;
+            if (!bra_expand_wildcards(s))
                 return false;
-            }
-
-            for (const auto& p : files)
-            {
-                if (!g_files.insert(p).second)
-                    cout << format("WARNING: duplicate file given in input: {}", p.string()) << endl;
-            }
         }
         else
         {
@@ -150,6 +166,60 @@ bool validate_args()
         cerr << "ERROR: no input file provided" << endl;
         return false;
     }
+
+    // Extend the file set with directories
+    std::list<fs::path> listFiles(g_files.begin(), g_files.end());
+    g_files.clear();
+    while (!listFiles.empty())
+    {
+        // NOTE: as it is a set i can just insert multiple time the directory
+        //       and when iterate later it, resolve it resolve on it.
+        //       need to keep track of the last directory entry to remove from the file.
+
+        auto f = listFiles.front();
+        listFiles.pop_front();
+
+        if (bra_fs_dir_exists(f))
+        {
+            // TODO: only if recursive is not enabled
+            //       recursive will also store empty directories.
+            cout << format("DEBUG: removing empty directory") << endl;
+        }
+        if (!(bra_fs_file_exists(f)))
+        {
+            cerr << format("ERROR: {} is neither a regular file nor a directory", f.string()) << endl;
+            continue;
+        }
+
+        fs::path f_ = f;
+        if (!bra_fs_try_sanitize(f_))
+        {
+            cerr << format("ERROR: what is this? {} - {}", f.string(), f_.string()) << endl;
+            return false;
+        }
+
+        fs::path p_;
+        p_.clear();
+        for (const auto& p : f_)
+        {
+            p_ /= p;
+            g_files.insert(p_);
+        }
+        if (p_ != f_)
+        {
+            cerr << format("ERROR: expected {} == {}", p_.string(), f_.string()) << endl;
+            return false;
+        }
+    }
+
+    cout << format("files:") << endl;
+    for (const auto& f : g_files)
+        cout << format("- {}", f.string()) << endl;
+
+    // TODO: Here could also start encoding the filenames
+    //       and use them in compressed format to save on disk
+    //       only if it less space (but it might be not).
+    //       Need to test eventually later on
 
     if (g_files.size() > numeric_limits<uint32_t>::max())
     {
@@ -170,7 +240,7 @@ bool validate_args()
         // locate sfx bin
         if (!bra_fs_file_exists(BRA_SFX_FILENAME))
         {
-            cerr << "ERROR: unable to find BRa-SFX module" << endl;
+            cerr << format("ERROR: unable to find {}-SFX module", BRA_NAME) << endl;
             return false;
         }
 
@@ -213,8 +283,30 @@ bool validate_args()
  */
 bool bra_file_encode_and_write_to_disk(bra_io_file_t* f, const string& fn)
 {
-    cout << format("Archiving File: {}...", fn);
-    // 1. file name length
+    cout << format("Archiving ");
+
+    // 1. attributes
+    auto attributes = bra_fs_file_attributes(fn);
+    if (!attributes)
+    {
+        cerr << format("ERROR: {} has unknown attribute", fn) << endl;
+    BRA_IO_WRITE_CLOSE_ERROR:
+        bra_io_close(f);
+        return false;
+    }
+    switch (*attributes)
+    {
+    case BRA_ATTR_DIR:
+        cout << format("dir: {} ...", fn);
+        break;
+    case BRA_ATTR_FILE:
+        cout << format("file: {} ...", fn);
+        break;
+    default:
+        goto BRA_IO_WRITE_CLOSE_ERROR;
+    }
+
+    // 2. file name length
     if (fn.size() > std::numeric_limits<uint8_t>::max())
     {
         cerr << std::format("ERROR: filename too long: {}", fn) << endl;
@@ -222,36 +314,49 @@ bool bra_file_encode_and_write_to_disk(bra_io_file_t* f, const string& fn)
     }
 
     const uint8_t fn_size = static_cast<uint8_t>(fn.size());
-    if (fwrite(&fn_size, sizeof(uint8_t), 1, f->f) != 1)
-    {
-    BRA_IO_ENCODE_WRITE_ERR:
-        cerr << format("ERROR: writing file: {}", fn) << endl;
-        bra_io_close(f);
-        return false;
-    }
+    const auto    ds      = bra_fs_file_size(fn);
+    if (!ds)
+        goto BRA_IO_WRITE_CLOSE_ERROR;
 
-    // 2. file name
-    if (fwrite(fn.c_str(), sizeof(char), fn_size, f->f) != fn_size)
-        goto BRA_IO_ENCODE_WRITE_ERR;
+    bra_meta_file_t mf{};
+    mf.attributes = *attributes;
+    mf.name_size  = fn_size;
+    mf.data_size  = *ds;
+    mf.name       = bra_strdup(fn.c_str());
+    if (mf.name == NULL)
+        goto BRA_IO_WRITE_CLOSE_ERROR;
 
-    // 3. data size
-    std::error_code ec;
-    const uint64_t  ds = fs::file_size(fn, ec);
-    if (ec || fwrite(&ds, sizeof(uint64_t), 1, f->f) != 1)
-        goto BRA_IO_ENCODE_WRITE_ERR;
+    // TODO: has to track internally the last directory written
+    //       and correct name accordingly for files
+    const bool res = bra_io_write_meta_file(f, &mf);
+    bra_meta_file_free(&mf);
+    if (!res)
+        return false;    // f closed already
 
     // 4. data
-    bra_io_file_t f2{};
-    if (!bra_io_open(&f2, fn.c_str(), "rb"))
+    switch (*attributes)
     {
-        bra_io_close(f);
-        return false;
+    case BRA_ATTR_DIR:
+        // NOTE: Directory doesn't have the data part
+        break;
+    case BRA_ATTR_FILE:
+    {
+        bra_io_file_t f2{};
+
+        if (!bra_io_open(&f2, fn.c_str(), "rb"))
+        {
+            cerr << format("ERROR: unable to open file: {}", fn) << endl;
+            goto BRA_IO_WRITE_CLOSE_ERROR;
+        }
+
+        if (!bra_io_copy_file_chunks(f, &f2, *ds))
+            return false;    // f, f2 closed already
+
+        bra_io_close(&f2);
+    }
+    break;
     }
 
-    if (!bra_io_copy_file_chunks(f, &f2, ds))
-        return false;
-
-    bra_io_close(&f2);
     cout << "OK" << endl;
     return true;
 }
@@ -272,41 +377,13 @@ int main(int argc, char* argv[])
         return 1;
 
     cout << format("Archiving into {}", out_fn) << endl;
-    // if (!bra_io_write_header(&f, static_cast<uint32_t>(g_num_files)))
     if (!bra_io_write_header(&f, static_cast<uint32_t>(g_files.size())))
         return 1;
 
     uint32_t written_num_files = 0;
     for (const auto& fn_ : g_files)
     {
-        // if (bra_fs_isWildcard(fn_))
-        // {
-        //     fs::path       p       = fn_.generic_string();
-        //     const fs::path dir     = bra_fs_wildcard_extract_dir(p);
-        //     const string   pattern = bra_fs_wildcard_to_regexp(p.string());
-        //     for (auto const& fn2 : bra_fs_co_search(dir, pattern))
-        //     {
-        //         p = fn2;
-        //         if (!bra_fs_try_sanitize(p))
-        //         {
-        //             cerr << format("ERROR: file not found or not valid: {}", fn2.string());
-        //             return 1;
-        //         }
-
-        // if (p == g_out_filename)
-        //     continue;
-
-        // const string fn = fs::relative(p).generic_string();
-        // if (!bra_file_encode_and_write_to_disk(&f, fn))
-        //     return 1;
-        // else
-        //     ++written_num_files;
-        // }
-        // }
-        // else
-        // {
         const string fn = fs::relative(fn_).generic_string();
-
         if (!bra_file_encode_and_write_to_disk(&f, fn))
             return 1;
         else
@@ -315,13 +392,6 @@ int main(int argc, char* argv[])
     }
 
     bra_io_close(&f);
-
-    // check num files
-    // if (written_num_files != g_num_files)
-    // {
-    //     cerr << format("ERROR: written files are not equal to expected ones: {}/{}", written_num_files, g_num_files) << endl;
-    //     return 2;
-    // }
 
     if (g_sfx)
     {
@@ -333,7 +403,7 @@ int main(int argc, char* argv[])
         if (!fs::copy_file(BRA_SFX_FILENAME, sfx_path, fs::copy_options::overwrite_existing))
         {
         BRA_SFX_IO_ERROR:
-            cerr << "ERROR: unable to create a BRa-SFX file" << endl;
+            cerr << format("ERROR: unable to create a {}-SFX file", BRA_NAME) << endl;
             return 2;
         }
 
@@ -349,8 +419,8 @@ int main(int argc, char* argv[])
         }
 
         // save the start of the payload for later...
-        const int64_t data_offset = bra_io_tell(&f);
-        if (data_offset < 0L)
+        const int64_t header_offset = bra_io_tell(&f);
+        if (header_offset < 0L)
             goto BRA_SFX_IO_F_ERROR;
 
         // append bra file
@@ -365,7 +435,7 @@ int main(int argc, char* argv[])
 
         bra_io_close(&f2);
         // write footer
-        if (!bra_io_write_footer(&f, data_offset))
+        if (!bra_io_write_footer(&f, header_offset))
             goto BRA_SFX_IO_ERROR;
 
         bra_io_close(&f);
@@ -380,6 +450,9 @@ int main(int argc, char* argv[])
 #endif
 
         // remove TMP SFX FILE
+        // TODO: better starting with the SFX file then append the file
+        //       it will save disk space as in this way requires twice the archive size
+        //       to do an SFX
         if (!fs::remove(g_out_filename))
             cout << format("WARN: unable to remove temporary file {}", g_out_filename.string()) << endl;
 

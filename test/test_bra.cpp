@@ -101,6 +101,24 @@ int test_bra_unbra()
     return 0;
 }
 
+int test_bra_wildcard_dir_unbra_list()
+{
+    PRINT_TEST_NAME;
+
+    const std::string bra      = CMD_PREFIX + "bra";
+    const std::string unbra    = CMD_PREFIX + "unbra";
+    const std::string out_file = "./dir.BRa";
+
+    if (fs::exists(out_file))
+        fs::remove(out_file);
+
+    ASSERT_TRUE(system((bra + " -o " + out_file + " " + "dir1/*").c_str()) == 0);
+    ASSERT_TRUE(fs::exists(out_file));
+    ASSERT_TRUE(system((unbra + " -l " + out_file).c_str()) == 0);
+
+    return 0;
+}
+
 int _test_bra_sfx(const std::string& out_file)
 {
     const std::string bra       = CMD_PREFIX + "bra --sfx";
@@ -196,6 +214,7 @@ int main(int argc, char* argv[])
     const std::map<std::string, std::function<int()>> m = {
         {TEST_FUNC(test_bra_no_output_file)},
         {TEST_FUNC(test_bra_unbra)},
+        {TEST_FUNC(test_bra_wildcard_dir_unbra_list)},
         {TEST_FUNC(test_bra_sfx_0)},
         {TEST_FUNC(test_bra_sfx_1)},
         {TEST_FUNC(test_bra_sfx_2)},

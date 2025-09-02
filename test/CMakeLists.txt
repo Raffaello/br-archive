@@ -7,9 +7,10 @@ target_link_libraries(test_bra_fs PRIVATE bra_fs)
 
 add_test(NAME test_bra_fs.is_wildcards          COMMAND test_bra_fs test_bra_fs_is_wildcards)
 add_test(NAME test_bra_fs.try_sanitize_path     COMMAND test_bra_fs test_bra_fs_try_sanitize_path)
+add_test(NAME test_bra_fs.dir_make              COMMAND test_bra_fs test_bra_fs_dir_make)
 
 add_test(NAME test_bra_fs.sfx_filename_adjust   COMMAND test_bra_fs test_bra_fs_sfx_filename_adjust)
-add_test(NAME test_bra_fs_wildcard_extract_dir  COMMAND test_bra_fs test_bra_fs_wildcard_extract_dir)
+add_test(NAME test_bra_fs.wildcard_extract_dir  COMMAND test_bra_fs test_bra_fs_wildcard_extract_dir)
 
 #####################################################################################################
 
@@ -17,6 +18,7 @@ add_executable(test_bra test_bra.cpp)
 add_dependencies(test_bra bra unbra bra_sfx)
 add_test(NAME test_bra.no_output_file               COMMAND test_bra test_bra_no_output_file)
 add_test(NAME test_bra.unbra                        COMMAND test_bra test_bra_unbra)
+add_test(NAME test_bra.wildcard_dir_unbra_list      COMMAND test_bra test_bra_wildcard_dir_unbra_list)
 add_test(NAME test_bra.sfx_0                        COMMAND test_bra test_bra_sfx_0)
 add_test(NAME test_bra.sfx_1                        COMMAND test_bra test_bra_sfx_1)
 add_test(NAME test_bra.sfx_2                        COMMAND test_bra test_bra_sfx_2)
@@ -50,3 +52,9 @@ foreach(fixture_i IN ITEMS test.txt)
                         ${CMAKE_CURRENT_BINARY_DIR}/${fixture_i}
             )
 endforeach()
+
+add_custom_command(TARGET test_bra POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different
+                    ${CMAKE_CURRENT_SOURCE_DIR}/dir1
+                    ${CMAKE_CURRENT_BINARY_DIR}/dir1
+)

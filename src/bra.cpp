@@ -105,7 +105,7 @@ bool parse_args(int argc, char* argv[])
             // This should match exactly the directory.
             // so need to be converted as a wildcard adding a `/*' at the end
             fs::path p = fs::path(s) / "*";
-            if (!bra::fs::try_sanitize(p) || !bra::fs::isWildcard(p) || !bra::fs::wildcard_expand(p, g_files))
+            if (!bra::fs::wildcard_expand(p, g_files))
             {
                 cerr << format("ERROR: path not valid: {}", p.string()) << endl;
                 return false;

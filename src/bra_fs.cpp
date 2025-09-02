@@ -262,10 +262,11 @@ std::string wildcard_to_regexp(const std::string& wildcard)
 
 bool wildcard_expand(const std::filesystem::path& wildcard_path, std::set<std::filesystem::path>& out_files)
 {
-    if (!isWildcard(wildcard_path))
+    fs::path p = wildcard_path.generic_string();
+
+    if (!try_sanitize(p) || !isWildcard(p))
         return false;
 
-    fs::path       p       = wildcard_path.generic_string();
     const fs::path dir     = bra::fs::wildcard_extract_dir(p);
     const string   pattern = bra::fs::wildcard_to_regexp(p.string());
 
@@ -292,7 +293,6 @@ bool search(const std::filesystem::path& dir, const std::string& pattern, std::l
 {
     try
     {
-        bool             res = true;
         const std::regex r(pattern);
 
         for (const auto& entry : fs::directory_iterator(dir))
@@ -327,7 +327,7 @@ bool search(const std::filesystem::path& dir, const std::string& pattern, std::l
             out_files.push_back(ep);
         }
 
-        return res;
+        return true;
     }
     catch (const fs::filesystem_error& e)
     {

@@ -134,6 +134,8 @@ namespace bra::fs
  * @note this function doesn't fail if @p path_wildcard doesn't contain any wildcards,
  *       it will just modify to be an empty string.
  *
+ * @todo it might be private only.
+ *
  * @param path_wildcard this is changed stripping the dir. If it wasn't a wildcard it will be empty
  * @return std::filesystem::path
  */
@@ -155,8 +157,8 @@ namespace bra::fs
  *
  * @param wildcard_path
  * @param out_files
- * @return true
- * @return false
+ * @return true on success and add the results to @p out_files
+ * @return false on error, when @p wildcard_path is not a supported wildcard or can't be sanitized.
  */
 [[nodiscard]] bool wildcard_expand(const std::filesystem::path& wildcard_path, std::set<std::filesystem::path>& out_files);
 

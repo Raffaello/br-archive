@@ -10,11 +10,11 @@ extern "C" {
  * @brief Create a directory given by @p path.
  *        It creates also the parent directory if necessary.
  *
- * @overload bool dir_make(const std::filesystem::path& path)
+ * @overload bool bra::fs::dir_make(const std::filesystem::path& path)
  *
  * @param path
- * @return true On success
- * @return false On error
+ * @return true on success
+ * @return false on error
  */
 bool bra_fs_dir_make(const char* path);
 

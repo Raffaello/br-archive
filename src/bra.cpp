@@ -37,28 +37,28 @@ bool               g_sfx = false;
  * @return true
  * @return false
  */
-bool bra_expand_wildcards(const fs::path& path)
-{
-    fs::path       p       = path.generic_string();
-    const fs::path dir     = bra::fs::wildcard_extract_dir(p);
-    const string   pattern = bra::fs::wildcard_to_regexp(p.string());
+// bool bra_wildcard_expand(const fs::path& path)
+// {
+//     fs::path       p       = path.generic_string();
+//     const fs::path dir     = bra::fs::wildcard_extract_dir(p);
+//     const string   pattern = bra::fs::wildcard_to_regexp(p.string());
 
-    std::list<fs::path> files;
-    if (!bra::fs::search(dir, pattern, files))
-    {
-        cerr << format("ERROR: not a valid wildcard: {}", p.string()) << endl;
-        return false;
-    }
+// std::list<fs::path> files;
+// if (!bra::fs::search(dir, pattern, files))
+// {
+//     cerr << format("ERROR: not a valid wildcard: {}", p.string()) << endl;
+//     return false;
+// }
 
-    for (const auto& p : files)
-    {
-        if (!g_files.insert(p).second)
-            cout << format("WARNING: duplicate file given in input: {}", p.string()) << endl;
-    }
+// for (const auto& p : files)
+// {
+//     if (!g_files.insert(p).second)
+//         cout << format("WARNING: duplicate file given in input: {}", p.string()) << endl;
+// }
 
-    files.clear();
-    return true;
-}
+// files.clear();
+// return true;
+// }
 
 /////////////////////////////////////////////////////////////////////////
 
@@ -137,7 +137,7 @@ bool parse_args(int argc, char* argv[])
             // This should match exactly the directory.
             // so need to be converted as a wildcard adding a `/*' at the end
             fs::path p = fs::path(s) / "*";
-            if (!bra::fs::try_sanitize(p) || !bra::fs::isWildcard(p) || !bra_expand_wildcards(p))
+            if (!bra::fs::try_sanitize(p) || !bra::fs::isWildcard(p) || !bra::fs::wildcard_expand(p, g_files))
             {
                 cerr << format("ERROR: path not valid: {}", p.string()) << endl;
                 return false;
@@ -146,7 +146,7 @@ bool parse_args(int argc, char* argv[])
         // check if it is a wildcard
         else if (bra::fs::isWildcard(s))
         {
-            if (!bra_expand_wildcards(s))
+            if (!bra::fs::wildcard_expand(s, g_files))
                 return false;
         }
         else

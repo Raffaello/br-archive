@@ -259,6 +259,29 @@ std::string wildcard_to_regexp(const std::string& wildcard)
     return regex;
 }
 
+bool wildcard_expand(const std::filesystem::path& wildcard_path, std::set<std::filesystem::path>& out_files)
+{
+    fs::path       p       = wildcard_path.generic_string();
+    const fs::path dir     = bra::fs::wildcard_extract_dir(p);
+    const string   pattern = bra::fs::wildcard_to_regexp(p.string());
+
+    std::list<fs::path> files;
+    if (!bra::fs::search(dir, pattern, files))
+    {
+        cerr << format("ERROR: not a valid wildcard: {}", p.string()) << endl;
+        return false;
+    }
+
+    for (const auto& p : files)
+    {
+        if (!out_files.insert(p).second)
+            cout << format("WARNING: duplicate file given in input: {}", p.string()) << endl;
+    }
+
+    files.clear();
+    return true;
+}
+
 bool search(const std::filesystem::path& dir, const std::string& pattern, std::list<std::filesystem::path>& out_files)
 {
     const std::regex r(pattern);

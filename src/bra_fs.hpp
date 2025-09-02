@@ -10,8 +10,10 @@
 #include <filesystem>
 #include <optional>
 #include <string>
-// #include <generator> // C++23 not supported in Ubuntu24 (due to older GCC version 13)
 #include <list>
+#include <set>
+
+// #include <generator> // C++23 not supported in Ubuntu24 (due to older GCC version 13)
 
 namespace bra::fs
 {
@@ -146,6 +148,17 @@ bool try_sanitize(std::filesystem::path& path);
  * @return std::string
  */
 [[nodiscard]] std::string wildcard_to_regexp(const std::string& wildcard);
+
+/**
+ * @brief Expand the given @p wildcard_path and store the resulting paths into @p out_files.
+ *        It doesn't cleat @p out_files, but it adds on it.
+ *
+ * @param wildcard_path
+ * @param out_files
+ * @return true
+ * @return false
+ */
+[[nodiscard]] bool wildcard_expand(const std::filesystem::path& wildcard_path, std::set<std::filesystem::path>& out_files);
 
 /**
  * @brief Search all the files in the given @p dir matching the regular expression @p pattern.

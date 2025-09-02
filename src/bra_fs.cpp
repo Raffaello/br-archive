@@ -152,17 +152,19 @@ std::optional<bool> bra_fs_file_exists_ask_overwrite(const std::filesystem::path
 std::optional<bra_attr_t> bra_fs_file_attributes(const std::filesystem::path& path)
 {
     std::error_code ec;
+    auto            err = [&path, &ec]() {
+        cerr << format("ERROR: unable to read file attributes of {}: {} ", path.string(), ec.message()) << endl;
+        return nullopt;
+    };
 
     if (fs::is_regular_file(path, ec))
         return BRA_ATTR_FILE;
     else if (ec)
-        goto BRA_FS_FILE_ATTRIBUTES_ERROR;
+        return err();
     else if (fs::is_directory(path, ec))
         return BRA_ATTR_DIR;
 
-BRA_FS_FILE_ATTRIBUTES_ERROR:
-    cerr << format("ERROR: unable to read file attributes of {}: {} ", path.string(), ec.message()) << endl;
-    return nullopt;
+    return err();
 }
 
 std::optional<uint64_t> bra_fs_file_size(const std::filesystem::path& path)

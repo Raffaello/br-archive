@@ -198,7 +198,7 @@ std::optional<uint64_t> file_size(const std::filesystem::path& path)
 std::filesystem::path wildcard_extract_dir(std::filesystem::path& path_wildcard)
 {
     string       dir;
-    string       wildcard = path_wildcard.string();
+    string       wildcard = path_wildcard.generic_string();
     const size_t pos      = wildcard.find_first_of("?*");
     const size_t dir_pos  = wildcard.find_last_of('/', pos);
 
@@ -262,6 +262,9 @@ std::string wildcard_to_regexp(const std::string& wildcard)
 
 bool wildcard_expand(const std::filesystem::path& wildcard_path, std::set<std::filesystem::path>& out_files)
 {
+    if (!isWildcard(wildcard_path))
+        return false;
+
     fs::path       p       = wildcard_path.generic_string();
     const fs::path dir     = bra::fs::wildcard_extract_dir(p);
     const string   pattern = bra::fs::wildcard_to_regexp(p.string());
@@ -273,23 +276,25 @@ bool wildcard_expand(const std::filesystem::path& wildcard_path, std::set<std::f
         return false;
     }
 
-    for (const auto& p : files)
+    while (!files.empty())
     {
-        if (!out_files.insert(p).second)
-            cout << format("WARNING: duplicate file given in input: {}", p.string()) << endl;
+        const auto& f = files.front();
+        if (!out_files.insert(f).second)
+            cout << format("WARNING: duplicate file given in input: {}", f.string()) << endl;
+
+        files.pop_front();
     }
 
-    files.clear();
     return true;
 }
 
 bool search(const std::filesystem::path& dir, const std::string& pattern, std::list<std::filesystem::path>& out_files)
 {
-    const std::regex r(pattern);
-    bool             res = true;
-
     try
     {
+        bool             res = true;
+        const std::regex r(pattern);
+
         for (const auto& entry : fs::directory_iterator(dir))
         {
             // TODO: dir to search only if it is recursive (-r)
@@ -321,6 +326,8 @@ bool search(const std::filesystem::path& dir, const std::string& pattern, std::l
 
             out_files.push_back(ep);
         }
+
+        return res;
     }
     catch (const fs::filesystem_error& e)
     {
@@ -332,8 +339,6 @@ bool search(const std::filesystem::path& dir, const std::string& pattern, std::l
         cerr << "ERROR: Regex error: " << e.what() << endl;
         return false;
     }
-
-    return res;
 }
 
 /*/

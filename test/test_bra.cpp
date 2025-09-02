@@ -121,7 +121,7 @@ int test_bra_wildcard_dir_unbra_list()
 
 int _test_bra_sfx(const std::string& out_file)
 {
-    const std::string bra       = CMD_PREFIX + "bra --sfx";
+    const std::string bra       = CMD_PREFIX + "bra --sfx --yes ";
     const std::string in_file   = "./test.txt";
     const std::string out_file_ = CMD_PREFIX + out_file;
     const std::string exp_file  = "./test.txt.exp";
@@ -131,7 +131,7 @@ int _test_bra_sfx(const std::string& out_file)
     //     out_file_sfx = out_file_ + BRA_SFX_FILE_EXT;
     // else
     //     out_file_sfx = out_file_ + BRA_FILE_EXT + BRA_SFX_FILE_EXT;
-    out_file_sfx = bra_fs_filename_sfx_adjust(out_file_, false).string();
+    out_file_sfx = bra::fs::filename_sfx_adjust(out_file_, false).string();
 
     std::cout << std::format("out_file_sfx: {}", out_file_sfx) << std::endl;
     if (fs::exists(out_file_sfx))

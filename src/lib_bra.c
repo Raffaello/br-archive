@@ -1,5 +1,5 @@
 #include <lib_bra.h>
-#include <bra_fs.h>
+#include <bra_fs_c.h>
 
 #include <assert.h>
 #include <string.h>
@@ -458,6 +458,90 @@ bool bra_io_skip_data(bra_io_file_t* f, const uint64_t data_size)
     assert_bra_io_file_t(f);
 
     return bra_io_seek(f, data_size, SEEK_CUR);
+}
+
+bool bra_file_encode_and_write_to_disk(bra_io_file_t* f, const char* fn)
+{
+    assert_bra_io_file_t(f);
+    assert(fn != NULL);
+
+    // TODO: create logging functions in C
+    printf("Archiving ");
+
+    // 1. attributes
+    bra_attr_t attributes;
+    if (!bra_fs_file_attributes(fn, &attributes))
+    {
+        printf("ERROR: %s has unknown attribute\n", fn);
+    BRA_IO_WRITE_CLOSE_ERROR:
+        bra_io_close(f);
+        return false;
+    }
+    switch (attributes)
+    {
+    case BRA_ATTR_DIR:
+        printf("dir: %s ...", fn);
+        break;
+    case BRA_ATTR_FILE:
+        printf("file: %s ...", fn);
+        break;
+    default:
+        goto BRA_IO_WRITE_CLOSE_ERROR;
+    }
+
+    // 2. file name length
+    const size_t fn_len = strnlen(fn, BRA_MAX_PATH_LENGTH);
+    if (fn_len > UINT8_MAX)
+    {
+        printf("ERROR: filename too long: %s\n", fn);
+        goto BRA_IO_WRITE_CLOSE_ERROR;
+    }
+
+    const uint8_t fn_size = (uint8_t) fn_len;
+    uint64_t      ds;
+    if (!bra_fs_file_size(fn, &ds))
+        goto BRA_IO_WRITE_CLOSE_ERROR;
+
+    bra_meta_file_t mf;
+    mf.attributes = attributes;
+    mf.name_size  = fn_size;
+    mf.data_size  = ds;
+    mf.name       = bra_strdup(fn);
+    if (mf.name == NULL)
+        goto BRA_IO_WRITE_CLOSE_ERROR;
+
+    const bool res = bra_io_write_meta_file(f, &mf);
+    bra_meta_file_free(&mf);
+    if (!res)
+        return false;    // f closed already
+
+    // 4. data
+    switch (attributes)
+    {
+    case BRA_ATTR_DIR:
+        // NOTE: Directory doesn't have the data part
+        break;
+    case BRA_ATTR_FILE:
+    {
+        bra_io_file_t f2;
+
+        memset(&f2, 0, sizeof(bra_io_file_t));
+        if (!bra_io_open(&f2, fn, "rb"))
+        {
+            printf("ERROR: unable to open file: %s\n", fn);
+            goto BRA_IO_WRITE_CLOSE_ERROR;
+        }
+
+        if (!bra_io_copy_file_chunks(f, &f2, ds))
+            return false;    // f, f2 closed already
+
+        bra_io_close(&f2);
+    }
+    break;
+    }
+
+    printf("OK\n");
+    return true;
 }
 
 bool bra_io_decode_and_write_to_disk(bra_io_file_t* f)

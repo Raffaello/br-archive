@@ -22,43 +22,12 @@ using namespace std;
 namespace fs = std::filesystem;
 
 
-std::set<fs::path> g_files;
-fs::path           g_out_filename;
-bool               g_sfx = false;
+static std::set<fs::path> g_files;
+static fs::path           g_out_filename;
+static bool               g_sfx        = false;
+static bool               g_always_yes = false;
 
 //////////////////////////////////////////////////////////////////////////
-
-/**
- * @brief
- *
- * @todo should be moved into bra_fs ?
- *
- * @param path
- * @return true
- * @return false
- */
-bool bra_expand_wildcards(const fs::path& path)
-{
-    fs::path       p       = path.generic_string();
-    const fs::path dir     = bra_fs_wildcard_extract_dir(p);
-    const string   pattern = bra_fs_wildcard_to_regexp(p.string());
-
-    std::list<fs::path> files;
-    if (!bra_fs_search(dir, pattern, files))
-    {
-        cerr << format("ERROR: not a valid wildcard: {}", p.string()) << endl;
-        return false;
-    }
-
-    for (const auto& p : files)
-    {
-        if (!g_files.insert(p).second)
-            cout << format("WARNING: duplicate file given in input: {}", p.string()) << endl;
-    }
-
-    files.clear();
-    return true;
-}
 
 /////////////////////////////////////////////////////////////////////////
 
@@ -74,10 +43,12 @@ void help()
     cout << format("  bra -o test *.txt") << endl;
     cout << endl;
     cout << format("(input_file): path to an existing file or a wildcard pattern") << endl;
+    cout << format("              Directories expand to <dir/*> (non-recursive); empty directories are ignored.") << endl;
     cout << endl;
     cout << format("Options:") << endl;
     cout << format("--help | -h : display this page.") << endl;
     cout << format("--sfx  | -s : generate a self-extracting archive") << endl;
+    cout << format("--yes  | -y : this will force a 'yes' response to all the user questions.") << endl;
     cout << format("--out  | -o : <output_filename> it takes the path of the output file.") << endl;
     cout << format("              If the extension {} is missing it will be automatically added.", BRA_FILE_EXT) << endl;
     cout << endl;
@@ -92,6 +63,9 @@ bool parse_args(int argc, char* argv[])
     }
 
     g_files.clear();
+    g_out_filename.clear();
+    g_sfx        = false;
+    g_always_yes = false;
     for (int i = 1; i < argc; ++i)
     {
         string s = argv[i];
@@ -117,13 +91,17 @@ bool parse_args(int argc, char* argv[])
 
             g_out_filename = argv[i];
         }
+        else if (s == "--yes" || s == "-y")
+        {
+            g_always_yes = true;
+        }
         // check if it is file or a dir
-        else if (bra_fs_file_exists(s))
+        else if (bra::fs::file_exists(s))
         {
             fs::path p = s;
 
             // check file path
-            if (!bra_fs_try_sanitize(p))
+            if (!bra::fs::try_sanitize(p))
             {
                 cerr << format("ERROR: path not valid: {}", p.string()) << endl;
                 return false;
@@ -132,26 +110,26 @@ bool parse_args(int argc, char* argv[])
             if (!g_files.insert(p).second)
                 cout << format("WARNING: duplicate file/dir given in input: {}", p.string()) << endl;
         }
-        else if (bra_fs_dir_exists(s))
+        else if (bra::fs::dir_exists(s))
         {
             // This should match exactly the directory.
             // so need to be converted as a wildcard adding a `/*' at the end
             fs::path p = fs::path(s) / "*";
-            if (!bra_fs_try_sanitize(p) || !bra_fs_isWildcard(p) || !bra_expand_wildcards(p))
+            if (!bra::fs::wildcard_expand(p, g_files))
             {
                 cerr << format("ERROR: path not valid: {}", p.string()) << endl;
                 return false;
             }
         }
         // check if it is a wildcard
-        else if (bra_fs_isWildcard(s))
+        else if (bra::fs::is_wildcard(s))
         {
-            if (!bra_expand_wildcards(s))
+            if (!bra::fs::wildcard_expand(s, g_files))
                 return false;
         }
         else
         {
-            cout << format("unknown argument: {}", s) << endl;
+            cerr << format("ERROR: unknown argument/file doesn't exist: {}", s) << endl;
             return false;
         }
     }
@@ -167,65 +145,19 @@ bool validate_args()
         return false;
     }
 
-    // Extend the file set with directories
-    std::list<fs::path> listFiles(g_files.begin(), g_files.end());
-    g_files.clear();
-    while (!listFiles.empty())
-    {
-        // NOTE: as it is a set i can just insert multiple time the directory
-        //       and when iterate later it, resolve it resolve on it.
-        //       need to keep track of the last directory entry to remove from the file.
+    if (!bra::fs::file_set_add_dir(g_files))
+        return false;
 
-        auto f = listFiles.front();
-        listFiles.pop_front();
-
-        if (bra_fs_dir_exists(f))
-        {
-            // TODO: only if recursive is not enabled
-            //       recursive will also store empty directories.
-            cout << format("DEBUG: removing empty directory") << endl;
-        }
-        if (!(bra_fs_file_exists(f)))
-        {
-            cerr << format("ERROR: {} is neither a regular file nor a directory", f.string()) << endl;
-            continue;
-        }
-
-        fs::path f_ = f;
-        if (!bra_fs_try_sanitize(f_))
-        {
-            cerr << format("ERROR: what is this? {} - {}", f.string(), f_.string()) << endl;
-            return false;
-        }
-
-        fs::path p_;
-        p_.clear();
-        for (const auto& p : f_)
-        {
-            p_ /= p;
-            g_files.insert(p_);
-        }
-        if (p_ != f_)
-        {
-            cerr << format("ERROR: expected {} == {}", p_.string(), f_.string()) << endl;
-            return false;
-        }
-    }
-
+#ifndef NDEBUG
     cout << format("files:") << endl;
     for (const auto& f : g_files)
         cout << format("- {}", f.string()) << endl;
+#endif
 
     // TODO: Here could also start encoding the filenames
     //       and use them in compressed format to save on disk
     //       only if it less space (but it might be not).
     //       Need to test eventually later on
-
-    if (g_files.size() > numeric_limits<uint32_t>::max())
-    {
-        cerr << format("ERROR: Too many files, not supported yet: {}/{}", g_files.size(), numeric_limits<uint32_t>::max()) << endl;
-        return false;
-    }
 
     if (g_out_filename.empty())
     {
@@ -236,23 +168,28 @@ bool validate_args()
     // adjust input file extension
     if (g_sfx)
     {
-        g_out_filename = bra_fs_filename_sfx_adjust(g_out_filename, true);
+        g_out_filename = bra::fs::filename_sfx_adjust(g_out_filename, true);
         // locate sfx bin
-        if (!bra_fs_file_exists(BRA_SFX_FILENAME))
+        if (!bra::fs::file_exists(BRA_SFX_FILENAME))
         {
             cerr << format("ERROR: unable to find {}-SFX module", BRA_NAME) << endl;
             return false;
         }
 
-        if (bra_fs_file_exists(g_out_filename))
+        // check if SFX_TMP exists...
+        const auto overwrite = bra::fs::file_exists_ask_overwrite(g_out_filename, g_always_yes);
+        if (overwrite)
         {
-            cerr << format("ERROR: Temporary SFX File {} already exists.", g_out_filename.string()) << endl;
-            return false;
+            if (!*overwrite)
+                return false;
+
+            cout << format("Overwriting file: {}", g_out_filename.string()) << endl;
         }
     }
+
     else
     {
-        g_out_filename = bra_fs_filename_archive_adjust(g_out_filename);
+        g_out_filename = bra::fs::filename_archive_adjust(g_out_filename);
     }
 
     fs::path p = g_out_filename;
@@ -260,104 +197,24 @@ bool validate_args()
         p = p.replace_extension(BRA_SFX_FILE_EXT);
 
     // TODO: this might not be ok
-    if (auto res = bra_fs_file_exists_ask_overwrite(p, false))
+    if (auto res = bra::fs::file_exists_ask_overwrite(p, g_always_yes))
     {
         if (!*res)
             return false;
 
         cout << format("Overwriting file: {}", p.string()) << endl;
     }
-
-    return true;
-}
-
-/**
- * @brief
- *
- * @todo move into lib_bra
- *
- * @param f
- * @param fn
- * @return true
- * @return false
- */
-bool bra_file_encode_and_write_to_disk(bra_io_file_t* f, const string& fn)
-{
-    cout << format("Archiving ");
-
-    // 1. attributes
-    auto attributes = bra_fs_file_attributes(fn);
-    if (!attributes)
+    else    // the output directory might not exists...
     {
-        cerr << format("ERROR: {} has unknown attribute", fn) << endl;
-    BRA_IO_WRITE_CLOSE_ERROR:
-        bra_io_close(f);
-        return false;
-    }
-    switch (*attributes)
-    {
-    case BRA_ATTR_DIR:
-        cout << format("dir: {} ...", fn);
-        break;
-    case BRA_ATTR_FILE:
-        cout << format("file: {} ...", fn);
-        break;
-    default:
-        goto BRA_IO_WRITE_CLOSE_ERROR;
-    }
-
-    // 2. file name length
-    if (fn.size() > std::numeric_limits<uint8_t>::max())
-    {
-        cerr << std::format("ERROR: filename too long: {}", fn) << endl;
-        return false;
-    }
-
-    const uint8_t fn_size = static_cast<uint8_t>(fn.size());
-    const auto    ds      = bra_fs_file_size(fn);
-    if (!ds)
-        goto BRA_IO_WRITE_CLOSE_ERROR;
-
-    bra_meta_file_t mf{};
-    mf.attributes = *attributes;
-    mf.name_size  = fn_size;
-    mf.data_size  = *ds;
-    mf.name       = bra_strdup(fn.c_str());
-    if (mf.name == NULL)
-        goto BRA_IO_WRITE_CLOSE_ERROR;
-
-    // TODO: has to track internally the last directory written
-    //       and correct name accordingly for files
-    const bool res = bra_io_write_meta_file(f, &mf);
-    bra_meta_file_free(&mf);
-    if (!res)
-        return false;    // f closed already
-
-    // 4. data
-    switch (*attributes)
-    {
-    case BRA_ATTR_DIR:
-        // NOTE: Directory doesn't have the data part
-        break;
-    case BRA_ATTR_FILE:
-    {
-        bra_io_file_t f2{};
-
-        if (!bra_io_open(&f2, fn.c_str(), "rb"))
+        // create the parent directory if needed.
+        const fs::path pof = g_out_filename.parent_path();
+        if (!pof.empty())
         {
-            cerr << format("ERROR: unable to open file: {}", fn) << endl;
-            goto BRA_IO_WRITE_CLOSE_ERROR;
+            if (!bra::fs::dir_make(pof))
+                return false;
         }
-
-        if (!bra_io_copy_file_chunks(f, &f2, *ds))
-            return false;    // f, f2 closed already
-
-        bra_io_close(&f2);
-    }
-    break;
     }
 
-    cout << "OK" << endl;
     return true;
 }
 
@@ -384,7 +241,7 @@ int main(int argc, char* argv[])
     for (const auto& fn_ : g_files)
     {
         const string fn = fs::relative(fn_).generic_string();
-        if (!bra_file_encode_and_write_to_disk(&f, fn))
+        if (!bra_file_encode_and_write_to_disk(&f, fn.c_str()))
             return 1;
         else
             ++written_num_files;

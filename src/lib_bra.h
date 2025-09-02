@@ -224,6 +224,17 @@ bool bra_io_copy_file_chunks(bra_io_file_t* dst, bra_io_file_t* src, const uint6
 bool bra_io_skip_data(bra_io_file_t* f, const uint64_t data_size);
 
 /**
+ * @brief Encode a file  or directory @p fn and append it to the open archive @p f.
+ *        On error closes @p f via @ref bra_io_close.
+ *
+ * @param f Open archive handle.
+ * @param fn NULL-terminated path to file or directory.
+ * @return true on success
+ * @return false on error (archive handle is closed)
+ */
+bool bra_file_encode_and_write_to_disk(bra_io_file_t* f, const char* fn);
+
+/**
  * @brief Decode the current pointed internal file contained in @p f and write it to its relative path on disk.
  *        On error calls @ref bra_io_close with param @p f closing it.
  *

@@ -21,7 +21,7 @@ endif()
 
 configure_file(src/version.h.in src/version.h)
 
-add_library(bra_fs STATIC src/bra_fs.cpp)
+add_library(bra_fs STATIC src/bra_fs.cpp src/bra_log.c)
 add_library(bra_fs_c STATIC src/bra_fs_c.cpp)
 target_link_libraries(bra_fs_c PRIVATE bra_fs)
 

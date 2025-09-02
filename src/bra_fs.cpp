@@ -1,5 +1,6 @@
 #include "bra_fs.hpp"
 #include "lib_bra_defs.h"
+#include "bra_log.h"
 
 #include <iostream>
 #include <format>
@@ -72,7 +73,7 @@ bool dir_make(const std::filesystem::path& path)
     const bool created = fs::create_directories(path, ec);
     if (ec)
     {
-        cerr << format("ERROR: can't mkdir {}: {}", path.string(), ec.message()) << endl;
+        bra_log_error("can't mkdir %s: %s", path.string().c_str(), ec.message().c_str());
         return false;
     }
 
@@ -157,7 +158,7 @@ std::optional<bra_attr_t> file_attributes(const std::filesystem::path& path)
 {
     std::error_code ec;
     auto            err = [&path, &ec]() {
-        cerr << format("ERROR: unable to read file attributes of {}: {} ", path.string(), ec.message()) << endl;
+        bra_log_error("unable to read file attributes of %s: %s ", path.string().c_str(), ec.message().c_str());
         return nullopt;
     };
 
@@ -175,7 +176,7 @@ std::optional<uint64_t> file_size(const std::filesystem::path& path)
 {
     std::error_code ec;
     auto            err = [&path, &ec]() {
-        cerr << format("ERROR: unable to read file size of {}: {} ", path.string(), ec.message()) << endl;
+        bra_log_error("unable to read file size of %s: %s", path.string().c_str(), ec.message().c_str());
         return nullopt;
     };
 
@@ -212,18 +213,18 @@ bool file_set_add_dir(std::set<std::filesystem::path>& files)
         {
             // TODO: only if recursive is not enabled
             //       recursive will also store empty directories.
-            cout << format("DEBUG: ignoring directory (non-recursive mode): {}", f.string()) << endl;
+            bra_log_debug("ignoring directory (non-recursive mode): %s", f.string().c_str());
         }
         else if (!(bra::fs::file_exists(f)))
         {
-            cerr << format("ERROR: {} is neither a regular file nor a directory", f.string()) << endl;
+            bra_log_error("%s is neither a regular file nor a directory", f.string().c_str());
             continue;
         }
 
         fs::path f_ = f;
         if (!bra::fs::try_sanitize(f_))
         {
-            cerr << format("ERROR: path not valid: {} - ({})", f.string(), f_.string()) << endl;
+            bra_log_error("path not valid: %s - (%s)", f.string().c_str(), f_.string().c_str());
             return false;
         }
 
@@ -236,14 +237,14 @@ bool file_set_add_dir(std::set<std::filesystem::path>& files)
         }
         if (p_ != f_)
         {
-            cerr << format("ERROR: expected {} == {}", p_.string(), f_.string()) << endl;
+            bra_log_error("expected %s == %s", p_.string().c_str(), f_.string().c_str());
             return false;
         }
     }
 
     if (files.size() > numeric_limits<uint32_t>::max())
     {
-        cerr << format("ERROR: Too many files, not supported yet: {}/{}", files.size(), numeric_limits<uint32_t>::max()) << endl;
+        bra_log_error("Too many files, not supported yet: %lu/%lu", files.size(), numeric_limits<uint32_t>::max());
         return false;
     }
 
@@ -329,7 +330,7 @@ bool wildcard_expand(const std::filesystem::path& wildcard_path, std::set<std::f
     std::list<fs::path> files;
     if (!bra::fs::search(dir, pattern, files))
     {
-        cerr << format("ERROR: search failed in {} for wildcard {}", dir.string(), p.string()) << endl;
+        bra_log_error("search failed in %s for wildcard %s", dir.string().c_str(), p.string().c_str());
         return false;
     }
 
@@ -337,7 +338,7 @@ bool wildcard_expand(const std::filesystem::path& wildcard_path, std::set<std::f
     {
         const auto& f = files.front();
         if (!out_files.insert(f).second)
-            cout << format("WARNING: duplicate file given in input: {}", f.string()) << endl;
+            bra_log_warn("duplicate file given in input: %s", f.string().c_str());
 
         files.pop_front();
     }
@@ -378,7 +379,7 @@ bool search(const std::filesystem::path& dir, const std::string& pattern, std::l
 
             if (!try_sanitize(ep))
             {
-                cerr << format("ERROR: not a valid file: {}", ep.string()) << endl;
+                bra_log_error("not a valid file: %s", ep.string().c_str());
                 return false;
             }
 
@@ -389,12 +390,12 @@ bool search(const std::filesystem::path& dir, const std::string& pattern, std::l
     }
     catch (const fs::filesystem_error& e)
     {
-        cerr << "ERROR: Filesystem error: " << e.what() << endl;
+        bra_log_error("Filesystem: %s", e.what());
         return false;
     }
     catch (const std::regex_error& e)
     {
-        cerr << "ERROR: Regex error: " << e.what() << endl;
+        bra_log_error("Regex: %s", e.what());
         return false;
     }
 }

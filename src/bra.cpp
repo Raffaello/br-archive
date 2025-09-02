@@ -85,7 +85,7 @@ bool parse_args(int argc, char* argv[])
             ++i;
             if (i >= argc)
             {
-                cout << format("ERROR: {} missing argument <output_filename>", s) << endl;
+                bra_log_error("%s missing argument <output_filename>", s.c_str());
                 return false;
             }
 
@@ -103,12 +103,12 @@ bool parse_args(int argc, char* argv[])
             // check file path
             if (!bra::fs::try_sanitize(p))
             {
-                cerr << format("ERROR: path not valid: {}", p.string()) << endl;
+                bra_log_error("path not valid: %s", p.string().c_str());
                 return false;
             }
 
             if (!g_files.insert(p).second)
-                cout << format("WARNING: duplicate file/dir given in input: {}", p.string()) << endl;
+                bra_log_warn("duplicate file/dir given in input: %s", p.string().c_str());
         }
         else if (bra::fs::dir_exists(s))
         {
@@ -117,7 +117,7 @@ bool parse_args(int argc, char* argv[])
             fs::path p = fs::path(s) / "*";
             if (!bra::fs::wildcard_expand(p, g_files))
             {
-                cerr << format("ERROR: path not valid: {}", p.string()) << endl;
+                bra_log_error("path not valid: %s", p.string().c_str());
                 return false;
             }
         }
@@ -129,7 +129,7 @@ bool parse_args(int argc, char* argv[])
         }
         else
         {
-            cerr << format("ERROR: unknown argument/file doesn't exist: {}", s) << endl;
+            bra_log_error("unknown argument/file doesn't exist: %s", s.c_str());
             return false;
         }
     }
@@ -141,7 +141,7 @@ bool validate_args()
 {
     if (g_files.empty())
     {
-        cerr << "ERROR: no input file provided" << endl;
+        bra_log_error("no input file provided");
         return false;
     }
 
@@ -161,7 +161,7 @@ bool validate_args()
 
     if (g_out_filename.empty())
     {
-        cerr << "ERROR: no output file provided" << endl;
+        bra_log_error("no output file provided");
         return false;
     }
 
@@ -172,7 +172,7 @@ bool validate_args()
         // locate sfx bin
         if (!bra::fs::file_exists(BRA_SFX_FILENAME))
         {
-            cerr << format("ERROR: unable to find {}-SFX module", BRA_NAME) << endl;
+            bra_log_error("unable to find %s-SFX module", BRA_NAME);
             return false;
         }
 
@@ -260,7 +260,7 @@ int main(int argc, char* argv[])
         if (!fs::copy_file(BRA_SFX_FILENAME, sfx_path, fs::copy_options::overwrite_existing))
         {
         BRA_SFX_IO_ERROR:
-            cerr << format("ERROR: unable to create a {}-SFX file", BRA_NAME) << endl;
+            bra_log_error("unable to create a %s-SFX file", BRA_NAME);
             return 2;
         }
 
@@ -311,7 +311,7 @@ int main(int argc, char* argv[])
         //       it will save disk space as in this way requires twice the archive size
         //       to do an SFX
         if (!fs::remove(g_out_filename))
-            cout << format("WARN: unable to remove temporary file {}", g_out_filename.string()) << endl;
+            bra_log_warn("unable to remove temporary file %s", g_out_filename.string().c_str());
 
         cout << "OK" << endl;
     }

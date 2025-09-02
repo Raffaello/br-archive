@@ -19,7 +19,7 @@ bool bra_isElf(const char* fn)
     FILE* f = fopen(fn, "rb");
     if (f == nullptr)
     {
-        cerr << format("ERROR: unable to open file {}", fn) << endl;
+        bra_log_error("unable to open file %s", fn);
         return false;
     }
 
@@ -29,7 +29,7 @@ bool bra_isElf(const char* fn)
     if (fread(magic, sizeof(char), MAGIC_SIZE, f) != MAGIC_SIZE)
     {
         fclose(f);
-        cerr << format("ERROR: unable to read file {}", fn) << endl;
+        bra_log_error("unable to read file %s", fn);
         return false;
     }
 
@@ -42,7 +42,7 @@ bool bra_isPE(const char* fn)
     FILE* f = fopen(fn, "rb");
     if (f == nullptr)
     {
-        cerr << format("ERROR: unable to open file {}", fn) << endl;
+        bra_log_error("unable to open file %", fn);
         return false;
     }
 
@@ -53,7 +53,7 @@ bool bra_isPE(const char* fn)
     {
     BRA_IS_EXE_ERROR:
         fclose(f);
-        cerr << format("ERROR: unable to read file {}", fn) << endl;
+        bra_log_error("unable to read file %s", fn);
         return false;
     }
 
@@ -103,7 +103,7 @@ bool parse_args(int argc, char* argv[])
     }
     else
     {
-        cerr << format("ERROR: unsupported file detected: {}", argv[0]) << endl;
+        bra_log_error("unsupported file detected: %s", argv[0]);
         return false;
     }
 

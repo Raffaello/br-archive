@@ -91,7 +91,7 @@ bool validate_args()
 {
     if (g_bra_file.empty())
     {
-        cerr << "ERROR: no input file provided" << endl;
+        bra_log_error("no input file provided");
         return false;
     }
 
@@ -160,7 +160,7 @@ int main(int argc, char* argv[])
     // forcing to work only on BRA_FILE_EXT
     if (g_bra_file.extension() != BRA_FILE_EXT)
     {
-        cerr << "CRITICAL: unexpected" << endl;
+        bra_log_critical("unexpected %s", g_bra_file.string().c_str());
         return 99;
     }
 

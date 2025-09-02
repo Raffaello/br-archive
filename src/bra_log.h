@@ -29,7 +29,6 @@ typedef enum bra_log_level_e
     BRA_LOG_LEVEL_ERROR,       //!< Log level for error messages, useful for reporting errors that occurred
     BRA_LOG_LEVEL_CRITICAL,    //!< Log level for critical messages, useful for reporting critical errors that may cause the program to terminate
     BRA_LOG_LEVEL_QUIET,       //!< Sentinel used only for comparisons; not a message level and not a valid threshold for bra_log_set_level()
-                               //!< Log level for quiet mode, where no messages are logged
 
 } bra_log_level_e;
 

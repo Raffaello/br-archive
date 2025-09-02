@@ -60,22 +60,18 @@ BRA_FUNC_ATTR_CONSTRUCTOR static void _init_bra_log()
 #elif defined(_WIN32) || defined(_WIN64)
     g_use_ansi_color = _isatty(_fileno(stderr)) != 0;
     // enable ANSI VT sequences when available
-    // HANDLE h = GetStdHandle(STD_ERROR_HANDLE);
-    // if (h != INVALID_HANDLE_VALUE) {
-    //     DWORD mode = 0;
-    //     if (GetConsoleMode(h, &mode)) {
-    //         SetConsoleMode(h, mode | ENABLE_VIRTUAL_TERMINAL_PROCESSING);
-    //     }
-    // }
+    HANDLE h = GetStdHandle(STD_ERROR_HANDLE);
+    if (h != INVALID_HANDLE_VALUE)
+    {
+        DWORD mode = 0;
+        if (GetConsoleMode(h, &mode))
+        {
+            SetConsoleMode(h, mode | ENABLE_VIRTUAL_TERMINAL_PROCESSING);
+        }
+    }
 
     g_log_isInit = true;
 #endif
-
-    // #ifndef NDEBUG
-    //     g_log_level = BRA_LOG_LEVEL_DEBUG;
-    // #else
-    //     g_log_level = BRA_LOG_LEVEL_INFO;
-    // #endif
 }
 
 static inline void _bra_log_set_no_color(void)

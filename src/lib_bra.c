@@ -10,6 +10,8 @@
 
 #define assert_bra_io_file_t(x) assert((x) != NULL && (x)->f != NULL && (x)->fn != NULL)
 
+_Static_assert(BRA_MAX_PATH_LENGTH > UINT8_MAX, "BRA_MAX_PATH_LENGTH must be greater then max bra_meta_file_t.name_size max value");
+
 /**
  * @brief the last encoded or decoded directory.
  *
@@ -512,7 +514,8 @@ bool bra_io_encode_and_write_to_disk(bra_io_file_t* f, const char* fn)
     const size_t fn_len = strnlen(fn, BRA_MAX_PATH_LENGTH);
     // NOTE: fn_len >= BRA_MAX_PATH_LENGTH is redundant but as a safeguard
     //       in case changing BRA_MAX_PATH_LENGTH to be UINT8_MAX
-    if (fn_len > UINT8_MAX || fn_len >= BRA_MAX_PATH_LENGTH)
+    //       there is a static assert for that now.
+    if (fn_len > UINT8_MAX /*|| fn_len >= BRA_MAX_PATH_LENGTH*/)
     {
         bra_log_error("filename too long: %s", fn);
         goto BRA_IO_WRITE_CLOSE_ERROR;

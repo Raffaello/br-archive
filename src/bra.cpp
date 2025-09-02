@@ -1,7 +1,7 @@
 #include <lib_bra.h>
-#include <version.h>
-
+#include <bra_log.h>
 #include <bra_fs.hpp>
+#include <version.h>
 
 #include <format>
 #include <iostream>
@@ -240,7 +240,12 @@ int main(int argc, char* argv[])
     uint32_t written_num_files = 0;
     for (const auto& fn_ : g_files)
     {
-        const string fn = fs::relative(fn_).generic_string();
+        fs::path p = fn_;
+        // no need to sanitize it again, but it won't hurt neither
+        if (!bra::fs::try_sanitize(p))
+            return 1;
+
+        const string fn = p.generic_string();
         if (!bra_io_encode_and_write_to_disk(&f, fn.c_str()))
             return 1;
         else

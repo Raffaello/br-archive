@@ -20,6 +20,10 @@ static bra_log_level_e g_log_level = BRA_LOG_LEVEL_INFO;
 
 static bool g_use_ansi_color;
 
+#if !defined(__GNUC__) && (defined(_WIN32) || defined(_WIN64))
+static bool g_log_isInit = false;
+#endif
+
 /**
  * @brief Define ANSI color codes https://en.wikipedia.org/wiki/ANSI_escape_code#SGR
  */
@@ -48,12 +52,14 @@ static bool g_use_ansi_color;
 ////////////////////////////////////////////////////////////////////////////
 
 // Function to be executed before main() (in GCC)
-BRA_FUNC_ATTR_CONSTRUCTOR void _init_bra_log()
+BRA_FUNC_ATTR_CONSTRUCTOR void
+_init_bra_log()
 {
 #ifdef __GNUC__
     g_use_ansi_color = isatty(STDERR_FILENO) != 0;
 #elif defined(_WIN32) || defined(_WIN64)
     g_use_ansi_color = _isatty(_fileno(stderr)) != 0;
+    g_log_isInit     = true;
 #endif
 
     // #ifndef NDEBUG
@@ -181,7 +187,8 @@ void bra_log_v(const bra_log_level_e level, const char* fmt, va_list args)
         return;
 
 #if !defined(__GNUC__) && (defined(_WIN32) || defined(_WIN64))
-    _init_bra_log();
+    if (!g_log_isInit)
+        _init_bra_log();
 #endif
 
     if (g_use_ansi_color)

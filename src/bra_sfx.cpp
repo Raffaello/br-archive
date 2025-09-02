@@ -1,4 +1,5 @@
 #include <lib_bra.h>
+#include <bra_log.h>
 #include <version.h>
 
 #include <iostream>

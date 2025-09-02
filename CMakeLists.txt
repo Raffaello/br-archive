@@ -21,22 +21,25 @@ endif()
 
 configure_file(src/version.h.in src/version.h)
 
-add_library(bra_fs STATIC src/bra_fs.cpp src/bra_log.c)
+add_library(bra_log STATIC src/bra_log.c)
+
+add_library(bra_fs STATIC src/bra_fs.cpp)
+target_link_libraries(bra_fs PRIVATE bra_log)
+
 add_library(bra_fs_c STATIC src/bra_fs_c.cpp)
 target_link_libraries(bra_fs_c PRIVATE bra_fs)
 
 add_library(lib_bra STATIC src/lib_bra.c)
-target_sources(lib_bra PRIVATE src/bra_log.c)
+# target_sources(lib_bra PRIVATE src/bra_log.c)
 target_include_directories(lib_bra
     PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/src> # for configure_file (version.h)
         ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
-target_link_libraries(lib_bra PUBLIC bra_fs_c)
+target_link_libraries(lib_bra PRIVATE bra_log bra_fs_c)
 set_target_properties(lib_bra PROPERTIES
     PREFIX ""
 )
-
 
 add_executable(bra src/bra.cpp)
 target_link_libraries(bra PRIVATE lib_bra bra_fs)

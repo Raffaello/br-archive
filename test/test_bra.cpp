@@ -121,7 +121,7 @@ int test_bra_wildcard_dir_unbra_list()
 
 int _test_bra_sfx(const std::string& out_file)
 {
-    const std::string bra       = CMD_PREFIX + "bra --sfx";
+    const std::string bra       = CMD_PREFIX + "bra --sfx --yes ";
     const std::string in_file   = "./test.txt";
     const std::string out_file_ = CMD_PREFIX + out_file;
     const std::string exp_file  = "./test.txt.exp";

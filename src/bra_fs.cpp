@@ -378,7 +378,7 @@ bool search(const std::filesystem::path& dir, const std::string& pattern, std::l
 
             if (!try_sanitize(ep))
             {
-                cerr << format("[ERROR] not a valid file: {}", ep.string()) << endl;
+                cerr << format("ERROR: not a valid file: {}", ep.string()) << endl;
                 return false;
             }
 

@@ -176,20 +176,17 @@ bool validate_args()
             return false;
         }
 
-        if (bra::fs::file_exists(g_out_filename))
+        // check if SFX_TMP exists...
+        const auto overwrite = bra::fs::file_exists_ask_overwrite(g_out_filename, g_always_yes);
+        if (overwrite)
         {
-            const auto res = bra::fs::file_exists_ask_overwrite(g_out_filename, g_always_yes);
-            if (res)
-            {
-                if (!res)
-                    return false;
+            if (!*overwrite)
+                return false;
 
-                cout << format("Overwriting file: {}", g_out_filename.string()) << endl;
-            }
-
-            return false;
+            cout << format("Overwriting file: {}", g_out_filename.string()) << endl;
         }
     }
+
     else
     {
         g_out_filename = bra::fs::filename_archive_adjust(g_out_filename);

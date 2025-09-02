@@ -31,7 +31,7 @@ namespace bra::fs
 [[nodiscard]] bool try_sanitize(std::filesystem::path& path);
 
 /**
- * @brief Check if the given @p path contains a wildcard supported pattern.
+ * @brief Check if the given @p path contains a supported wildcard pattern.
  *
  * @todo instead of bool return size_t: std::npos no wildcard, otherwise first wildcard char position.
  *
@@ -76,8 +76,8 @@ namespace bra::fs
 
 /**
  * @brief Return the given filename ending always with the correct extension.
- *        if @p tmp is true the extension is #BRA_FILE_EXT #BRA_SFX_TMP_FILE_EXT (.BRa.tmp)
- *        otherwise                       is #BRA_FILE_EXT #BRA_SFX_FILE_EXT     (.BRa.exe)/(BRa.BRx)
+ *        if @p tmp is true, adjust the extension to be #BRA_FILE_EXT #BRA_SFX_TMP_FILE_EXT (e.g., .BRa.tmp)
+ *        otherwise adjust to                           #BRA_FILE_EXT #BRA_SFX_FILE_EXT     (e.g., .BRa.exe or BRa.BRx)
  *
  * @param path
  * @param tmp
@@ -132,7 +132,7 @@ namespace bra::fs
  *
  * @param files
  * @return true on success.
- * @return false on error. The @p files is in an invalid state.
+ * @return false on error. The @p files set may be left in an invalid state.
  */
 [[nodiscard]] bool file_set_add_dir(std::set<std::filesystem::path>& files);
 
@@ -169,7 +169,7 @@ namespace bra::fs
  * @param wildcard_path
  * @param out_files
  * @return true on success and add the results to @p out_files
- * @return false on error, when @p wildcard_path is not a supported wildcard or can't be sanitized.
+ * @return false on error (unsupported wildcard, sanitization failure, or search failure).
  */
 [[nodiscard]] bool wildcard_expand(const std::filesystem::path& wildcard_path, std::set<std::filesystem::path>& out_files);
 

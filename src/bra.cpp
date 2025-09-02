@@ -241,7 +241,7 @@ int main(int argc, char* argv[])
     for (const auto& fn_ : g_files)
     {
         const string fn = fs::relative(fn_).generic_string();
-        if (!bra_file_encode_and_write_to_disk(&f, fn.c_str()))
+        if (!bra_io_encode_and_write_to_disk(&f, fn.c_str()))
             return 1;
         else
             ++written_num_files;

@@ -460,7 +460,7 @@ bool bra_io_skip_data(bra_io_file_t* f, const uint64_t data_size)
     return bra_io_seek(f, data_size, SEEK_CUR);
 }
 
-bool bra_file_encode_and_write_to_disk(bra_io_file_t* f, const char* fn)
+bool bra_io_encode_and_write_to_disk(bra_io_file_t* f, const char* fn)
 {
     assert_bra_io_file_t(f);
     assert(fn != NULL);

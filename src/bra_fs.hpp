@@ -39,7 +39,7 @@ namespace bra::fs
  * @return true
  * @return false
  */
-[[nodiscard]] bool isWildcard(const std::filesystem::path& path);
+[[nodiscard]] bool is_wildcard(const std::filesystem::path& path);
 
 /**
  * @brief Check if the given @p path exists and is a directory.

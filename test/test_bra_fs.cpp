@@ -14,14 +14,14 @@ int test_bra_fs_is_wildcards()
 {
     PRINT_TEST_NAME;
 
-    ASSERT_TRUE(bra::fs::isWildcard("*"));
-    ASSERT_TRUE(bra::fs::isWildcard(".*"));
-    ASSERT_TRUE(bra::fs::isWildcard("AbcD?"));
-    // ASSERT_TRUE(isWildcard("t[1-9]")); // TODO
+    ASSERT_TRUE(bra::fs::is_wildcard("*"));
+    ASSERT_TRUE(bra::fs::is_wildcard(".*"));
+    ASSERT_TRUE(bra::fs::is_wildcard("AbcD?"));
+    // ASSERT_TRUE(is_wildcard("t[1-9]")); // TODO
 
-    ASSERT_TRUE(!bra::fs::isWildcard(""));
-    ASSERT_TRUE(!bra::fs::isWildcard("1234"));
-    // ASSERT_TRUE(!isWildcard("t]1-9["));
+    ASSERT_TRUE(!bra::fs::is_wildcard(""));
+    ASSERT_TRUE(!bra::fs::is_wildcard("1234"));
+    // ASSERT_TRUE(!is_wildcard("t]1-9["));
 
     return 0;
 }

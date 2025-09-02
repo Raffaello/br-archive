@@ -121,7 +121,7 @@ bool parse_args(int argc, char* argv[])
             }
         }
         // check if it is a wildcard
-        else if (bra::fs::isWildcard(s))
+        else if (bra::fs::is_wildcard(s))
         {
             if (!bra::fs::wildcard_expand(s, g_files))
                 return false;

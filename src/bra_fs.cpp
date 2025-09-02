@@ -42,7 +42,7 @@ bool try_sanitize(std::filesystem::path& path)
     return !path.empty();
 }
 
-bool isWildcard(const std::filesystem::path& path)
+bool is_wildcard(const std::filesystem::path& path)
 {
     if (path.empty())
         return false;
@@ -320,7 +320,7 @@ bool wildcard_expand(const std::filesystem::path& wildcard_path, std::set<std::f
 {
     fs::path p = wildcard_path.generic_string();
 
-    if (!try_sanitize(p) || !isWildcard(p))
+    if (!try_sanitize(p) || !is_wildcard(p))
         return false;
 
     const fs::path dir     = bra::fs::wildcard_extract_dir(p);
@@ -329,7 +329,7 @@ bool wildcard_expand(const std::filesystem::path& wildcard_path, std::set<std::f
     std::list<fs::path> files;
     if (!bra::fs::search(dir, pattern, files))
     {
-        cerr << format("ERROR: not a valid wildcard: {}", p.string()) << endl;
+        cerr << format("ERROR: search failed in {} for wildcard {}", dir.string(), p.string()) << endl;
         return false;
     }
 

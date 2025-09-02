@@ -83,10 +83,11 @@ void bra_set_message_callback(bra_message_callback_f* msg_cb)
 
 void bra_io_file_error(bra_io_file_t* bf, const char* verb)
 {
-    assert_bra_io_file_t(bf);
+    assert(bf != NULL);
     assert(verb != NULL);
 
-    bra_log_error("unable to %s %s file (errno: %s)", verb, bf->fn, strerror(errno));
+    const char* fn = (bf->fn != NULL) ? bf->fn : "N/A";
+    bra_log_error("unable to %s %s file (errno: %s)", verb, fn, strerror(errno));
     bra_io_close(bf);
 }
 
@@ -98,6 +99,11 @@ inline void bra_io_file_open_error(bra_io_file_t* bf)
 inline void bra_io_file_read_error(bra_io_file_t* bf)
 {
     bra_io_file_error(bf, "read");
+}
+
+inline void bra_io_file_seek_error(bra_io_file_t* bf)
+{
+    bra_io_file_error(bf, "seek");
 }
 
 inline void bra_io_file_write_error(bra_io_file_t* bf)
@@ -186,7 +192,7 @@ bool bra_io_read_header(bra_io_file_t* bf, bra_io_header_t* out_bh)
     // check header magic
     if (out_bh->magic != BRA_MAGIC)
     {
-        bra_log_error("Not valid %s file", BRA_NAME);
+        bra_log_error("Not valid %s file: %s", BRA_NAME, bf->fn);
         bra_io_close(bf);
         return false;
     }
@@ -567,10 +573,7 @@ bool bra_io_encode_and_write_to_disk(bra_io_file_t* f, const char* fn)
 
         memset(&f2, 0, sizeof(bra_io_file_t));
         if (!bra_io_open(&f2, fn, "rb"))
-        {
-            bra_io_file_open_error(&f2);
             return false;
-        }
 
         if (!bra_io_copy_file_chunks(f, &f2, ds))
             return false;    // f, f2 closed already
@@ -594,9 +597,9 @@ bool bra_io_decode_and_write_to_disk(bra_io_file_t* f)
 
     if (!bra_validate_meta_filename(&mf))
     {
-    BRA_IO_READ_ERR:
+    BRA_IO_DECODE_ERR:
         bra_meta_file_free(&mf);
-        bra_io_file_read_error(f);
+        bra_io_file_error(f, "decode");
         return false;
     }
 
@@ -616,7 +619,6 @@ bool bra_io_decode_and_write_to_disk(bra_io_file_t* f)
         //       no need to create the parent directory for each file each time.
         if (!bra_io_open(&f2, mf.name, "wb"))
         {
-            bra_io_file_open_error(&f2);
             bra_meta_file_free(&mf);
             return false;
         }
@@ -633,13 +635,13 @@ bool bra_io_decode_and_write_to_disk(bra_io_file_t* f)
     {
         g_msg_cb("Creating dir: %s", mf.name);
         if (!bra_fs_dir_make(mf.name))
-            goto BRA_IO_READ_ERR;
+            goto BRA_IO_DECODE_ERR;
 
         bra_meta_file_free(&mf);
     }
     break;
     default:
-        goto BRA_IO_READ_ERR;
+        goto BRA_IO_DECODE_ERR;
         break;
     }
 

@@ -128,6 +128,15 @@ void bra_io_file_read_error(bra_io_file_t* bf);
  *
  * @param bf
  */
+void bra_io_file_seek_error(bra_io_file_t* bf);
+
+/**
+ * @brief Print an error message and close the file.
+ *
+ * @see bra_io_file_error
+ *
+ * @param bf
+ */
 void bra_io_file_write_error(bra_io_file_t* bf);
 
 /**

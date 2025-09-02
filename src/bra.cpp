@@ -275,30 +275,45 @@ int main(int argc, char* argv[])
 
         if (!bra_io_seek(&f, 0, SEEK_END))
         {
-        BRA_SFX_IO_F_ERROR:
-            bra_io_close(&f);
-            goto BRA_SFX_IO_ERROR;
+            bra_io_file_seek_error(&f);
+            return false;
         }
 
         // save the start of the payload for later...
         const int64_t header_offset = bra_io_tell(&f);
         if (header_offset < 0L)
-            goto BRA_SFX_IO_F_ERROR;
+        {
+            bra_io_file_error(&f, "tell");
+            return false;
+        }
 
         // append bra file
         bra_io_file_t f2{};
         if (!bra_io_open(&f2, out_fn.c_str(), "rb"))
-            goto BRA_SFX_IO_F_ERROR;
+        {
+            bra_io_close(&f);
+            return false;
+        }
 
         error_code ec;
         auto       file_size = fs::file_size(out_fn, ec);
-        if (ec || !bra_io_copy_file_chunks(&f, &f2, file_size))
-            goto BRA_SFX_IO_F_ERROR;
+        if (ec)
+        {
+            bra_io_close(&f);
+            bra_io_close(&f2);
+            return false;
+        }
+
+        if (!bra_io_copy_file_chunks(&f, &f2, file_size))
+            return false;
 
         bra_io_close(&f2);
         // write footer
         if (!bra_io_write_footer(&f, header_offset))
-            goto BRA_SFX_IO_ERROR;
+        {
+            bra_io_file_write_error(&f);
+            return false;
+        }
 
         bra_io_close(&f);
 

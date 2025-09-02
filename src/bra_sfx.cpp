@@ -19,10 +19,7 @@ bool bra_isElf(const char* fn)
 {
     bra_io_file_t f;
     if (!bra_io_open(&f, fn, "rb"))
-    {
-        bra_io_file_open_error(&f);
         return false;
-    }
 
     // 0x7F,'E','L','F'
     constexpr int MAGIC_SIZE = 4;
@@ -41,10 +38,7 @@ bool bra_isPE(const char* fn)
 {
     bra_io_file_t f;
     if (!bra_io_open(&f, fn, "rb"))
-    {
-        bra_io_file_open_error(&f);
         return false;
-    }
 
     // 'M' 'Z'
     constexpr int MAGIC_SIZE = 2;
@@ -57,18 +51,25 @@ bool bra_isPE(const char* fn)
     }
 
     if (magic[0] != 'M' || magic[1] != 'Z')
-        goto BRA_IS_EXE_ERROR;
+    {
+        bra_io_close(&f);
+        return false;
+    }
 
     // Read the PE header offset from the DOS header
     if (!bra_io_seek(&f, 0x3C, SEEK_SET))
-        goto BRA_IS_EXE_ERROR;
+    {
+    BRA_IS_EXE_SEEK_ERROR:
+        bra_io_file_seek_error(&f);
+        return false;
+    }
 
     uint32_t pe_offset;
     if (fread(&pe_offset, sizeof(uint32_t), 1, f.f) != 1)
         goto BRA_IS_EXE_ERROR;
 
     if (!bra_io_seek(&f, pe_offset, SEEK_SET))
-        goto BRA_IS_EXE_ERROR;
+        goto BRA_IS_EXE_SEEK_ERROR;
 
     constexpr int PE_MAGIC_SIZE = 4;
     char          pe_magic[PE_MAGIC_SIZE];
@@ -132,14 +133,12 @@ bool parse_args(int argc, char* argv[])
 bool bra_file_open_and_read_footer_header(const char* fn, bra_io_header_t* out_bh, bra_io_file_t* f)
 {
     if (!bra_io_open(f, fn, "rb"))
-    {
-        bra_io_file_open_error(f);
         return false;
-    }
 
     if (!bra_io_seek(f, -1L * static_cast<int64_t>(sizeof(bra_io_footer_t)), SEEK_END))
     {
-        bra_io_file_read_error(f);
+    BRA_FILE_SEEK_ERROR:
+        bra_io_file_seek_error(f);
         return false;
     }
 
@@ -149,10 +148,7 @@ bool bra_file_open_and_read_footer_header(const char* fn, bra_io_header_t* out_b
 
     // read header and check
     if (!bra_io_seek(f, bf.header_offset, SEEK_SET))
-    {
-        bra_io_file_read_error(f);
-        return false;
-    }
+        goto BRA_FILE_SEEK_ERROR;
 
     if (!bra_io_read_header(f, out_bh))
         return false;

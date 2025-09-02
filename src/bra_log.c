@@ -217,10 +217,12 @@ void bra_log_v(const bra_log_level_e level, const char* fmt, va_list args)
         fprintf(stderr, "ERROR: ");
         break;
     case BRA_LOG_LEVEL_CRITICAL:
-    default:
         fprintf(stderr, "CRITICAL: ");
         break;
     case BRA_LOG_LEVEL_QUIET:
+        break;
+    default:
+        fprintf(stderr, "UNKNOWN: ");
         break;
     }
 
@@ -233,6 +235,7 @@ void bra_log_v(const bra_log_level_e level, const char* fmt, va_list args)
     }
 
     fprintf(stderr, "\n");
+    fflush(stderr);
 }
 
 void bra_log_set_level(const bra_log_level_e level)

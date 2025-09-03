@@ -188,7 +188,7 @@ void bra_log(const bra_log_level_e level, const char* fmt, ...)
 
 void bra_log_v(const bra_log_level_e level, const char* fmt, va_list args)
 {
-    if (g_log_level > level /*|| level == BRA_LOG_LEVEL_QUIET*/)
+    if (g_log_level > level || level == BRA_LOG_LEVEL_QUIET)
         return;
 
 #if !defined(__GNUC__) && (defined(_WIN32) || defined(_WIN64))
@@ -240,9 +240,7 @@ void bra_log_v(const bra_log_level_e level, const char* fmt, va_list args)
 
 void bra_log_set_level(const bra_log_level_e level)
 {
-    // it won't log anything if using level quiet.
-    if (level != BRA_LOG_LEVEL_QUIET)
-        g_log_level = level;
+    g_log_level = level;
 }
 
 bra_log_level_e bra_log_get_level(void)

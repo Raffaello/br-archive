@@ -24,7 +24,7 @@ _Static_assert(BRA_MAX_PATH_LENGTH > UINT8_MAX, "BRA_MAX_PATH_LENGTH must be gre
  */
 static char                    g_last_dir[BRA_MAX_PATH_LENGTH];
 static unsigned int            g_last_dir_size;
-static bra_message_callback_f* g_msg_cb = printf;
+static bra_message_callback_f* g_msg_cb = vprintf;
 
 static inline uint64_t bra_min(const uint64_t a, const uint64_t b)
 {
@@ -76,9 +76,20 @@ char* bra_strdup(const char* str)
 void bra_set_message_callback(bra_message_callback_f* msg_cb)
 {
     if (msg_cb == NULL)
-        g_msg_cb = printf;
+        g_msg_cb = vprintf;
     else
         g_msg_cb = msg_cb;
+}
+
+int bra_printf_msg(const char* fmt, ...)
+{
+    va_list args;
+
+    va_start(args, fmt);
+    const int res = g_msg_cb(fmt, args);
+    va_end(args);
+
+    return res;
 }
 
 void bra_io_file_error(bra_io_file_t* bf, const char* verb)
@@ -497,7 +508,7 @@ bool bra_io_encode_and_write_to_disk(bra_io_file_t* f, const char* fn)
     assert_bra_io_file_t(f);
     assert(fn != NULL);
 
-    g_msg_cb("Archiving ");
+    bra_printf_msg("Archiving ");
 
     // 1. attributes
     bra_attr_t attributes;
@@ -511,10 +522,10 @@ bool bra_io_encode_and_write_to_disk(bra_io_file_t* f, const char* fn)
     switch (attributes)
     {
     case BRA_ATTR_DIR:
-        g_msg_cb("dir: %s ...", fn);
+        bra_printf_msg("dir: %s ...", fn);
         break;
     case BRA_ATTR_FILE:
-        g_msg_cb("file: %s ...", fn);
+        bra_printf_msg("file: %s ...", fn);
         break;
     default:
         goto BRA_IO_WRITE_CLOSE_ERROR;
@@ -577,7 +588,7 @@ bool bra_io_encode_and_write_to_disk(bra_io_file_t* f, const char* fn)
     break;
     }
 
-    g_msg_cb("OK\n");
+    bra_printf_msg("OK\n");
     return true;
 }
 
@@ -636,6 +647,6 @@ bool bra_io_decode_and_write_to_disk(bra_io_file_t* f)
         break;
     }
 
-    g_msg_cb("OK\n");
+    bra_printf_msg("OK\n");
     return true;
 }

@@ -14,8 +14,10 @@ extern "C" {
 
 /**
  * @brief Function Prototype for the message callback function.
+ * @deprecated This is wrong
+ * @todo implement the vprintf function contract
  */
-typedef int bra_message_callback_f(const char* fmt, ...) BRA_FUNC_ATTR_FMT_PRINTF(1, 2);
+typedef int bra_message_callback_f(const char* fmt, va_list args) BRA_FUNC_ATTR_FMT_PRINTF(1, 0);
 
 
 #pragma pack(push, 1)
@@ -88,12 +90,23 @@ char* bra_strdup(const char* str);
 
 /**
  * @brief Set the message callback to call to write messages to the user.
- *        The default one is @c printf.
+ *        The default one is @c vprintf.
  *        If passing @c NULL restores the default one.
  *
  * @param msg_cb
  */
 void bra_set_message_callback(bra_message_callback_f* msg_cb);
+
+/**
+ * @brief This call the message callback.
+ *
+ * @todo should be instead implemented in bra_log.{h,c} ?
+ *       And use the bra_log_info on stdout instead of stderr?
+ *
+ * @param fmt
+ * @param ...
+ */
+int bra_printf_msg(const char* fmt, ...) BRA_FUNC_ATTR_FMT_PRINTF(1, 2);
 
 /**
  * @brief Print an error message and close the file.

@@ -11,6 +11,7 @@ extern "C" {
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdio.h>
+#include <stdarg.h>
 
 /**
  * @brief Function Prototype for the message callback function.

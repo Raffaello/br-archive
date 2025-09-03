@@ -115,7 +115,14 @@ void bra_set_message_callback(bra_message_callback_f* msg_cb);
 int bra_printf_msg(const char* fmt, ...) BRA_FUNC_ATTR_FMT_PRINTF(1, 2);
 
 /**
- * @brief vprintf-style variant that forwards an existing va_list to the callback.
+ * @brief vprintf-style variant that forwards an existing @c va_list to the callback.
+ *
+ * @details The callback may fully traverse @p args. Do not reuse @p args after this call
+ *          unless you made a @c va_copy beforehand.
+ *
+ * @param fmt  @c printf format string
+ * @param args @c va_list to forward (consumed)
+ * @return number of characters written, negative on error
  */
 int bra_vprintf_msg(const char* fmt, va_list args) BRA_FUNC_ATTR_FMT_PRINTF(1, 0);
 

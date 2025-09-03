@@ -125,7 +125,10 @@ bool parse_args(int argc, char* argv[])
         else if (bra::fs::is_wildcard(s))
         {
             if (!bra::fs::wildcard_expand(s, g_files))
+            {
+                bra_log_error("unable to expand wildcard: %s", s.c_str());
                 return false;
+            }
         }
         else
         {
@@ -243,7 +246,10 @@ int main(int argc, char* argv[])
         fs::path p = fn_;
         // no need to sanitize it again, but it won't hurt neither
         if (!bra::fs::try_sanitize(p))
+        {
+            bra_log_error("invalid path: %s", fn_.string().c_str());
             return 1;
+        }
 
         const string fn = p.generic_string();
         if (!bra_io_encode_and_write_to_disk(&f, fn.c_str()))
@@ -296,16 +302,15 @@ int main(int argc, char* argv[])
             return 2;
         }
 
-        error_code ec;
-        auto       file_size = fs::file_size(out_fn, ec);
-        if (ec)
+        auto file_size = bra::fs::file_size(out_fn);
+        if (!file_size)
         {
             bra_io_close(&f);
             bra_io_close(&f2);
             return 2;
         }
 
-        if (!bra_io_copy_file_chunks(&f, &f2, file_size))
+        if (!bra_io_copy_file_chunks(&f, &f2, *file_size))
             return 2;
 
         bra_io_close(&f2);

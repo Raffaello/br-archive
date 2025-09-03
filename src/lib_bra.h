@@ -107,6 +107,11 @@ void bra_set_message_callback(bra_message_callback_f* msg_cb);
 int bra_printf_msg(const char* fmt, ...) BRA_FUNC_ATTR_FMT_PRINTF(1, 2);
 
 /**
+ * @brief vprintf-style variant that forwards an existing va_list to the callback.
+ */
+int bra_vprintf_msg(const char* fmt, va_list args) BRA_FUNC_ATTR_FMT_PRINTF(1, 0);
+
+/**
  * @brief Print an error message and close the file.
  *
  * @param bf

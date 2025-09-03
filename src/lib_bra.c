@@ -86,10 +86,15 @@ int bra_printf_msg(const char* fmt, ...)
     va_list args;
 
     va_start(args, fmt);
-    const int res = g_msg_cb(fmt, args);
+    const int res = bra_vprintf_msg(fmt, args);
     va_end(args);
 
     return res;
+}
+
+int bra_vprintf_msg(const char* fmt, va_list args)
+{
+    return g_msg_cb(fmt, args);
 }
 
 void bra_io_file_error(bra_io_file_t* bf, const char* verb)
@@ -508,8 +513,6 @@ bool bra_io_encode_and_write_to_disk(bra_io_file_t* f, const char* fn)
     assert_bra_io_file_t(f);
     assert(fn != NULL);
 
-    bra_printf_msg("Archiving ");
-
     // 1. attributes
     bra_attr_t attributes;
     if (!bra_fs_file_attributes(fn, &attributes))
@@ -522,10 +525,10 @@ bool bra_io_encode_and_write_to_disk(bra_io_file_t* f, const char* fn)
     switch (attributes)
     {
     case BRA_ATTR_DIR:
-        bra_printf_msg("dir: %s ...", fn);
+        bra_printf_msg("Archiving dir: %s ...", fn);
         break;
     case BRA_ATTR_FILE:
-        bra_printf_msg("file: %s ...", fn);
+        bra_printf_msg("Archiving file: %s ...", fn);
         break;
     default:
         goto BRA_IO_WRITE_CLOSE_ERROR;

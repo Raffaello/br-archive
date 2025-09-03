@@ -14,8 +14,6 @@ extern "C" {
 
 /**
  * @brief Function Prototype for the message callback function.
- * @deprecated This is wrong
- * @todo implement the vprintf function contract
  */
 typedef int bra_message_callback_f(const char* fmt, va_list args) BRA_FUNC_ATTR_FMT_PRINTF(1, 0);
 

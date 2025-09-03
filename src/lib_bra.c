@@ -1,12 +1,16 @@
 #include <lib_bra.h>
 #include <bra_fs_c.h>
+#include <bra_log.h>
 
 #include <assert.h>
 #include <string.h>
 #include <stdlib.h>
+#include <errno.h>
 #include <limits.h>
 
 #define assert_bra_io_file_t(x) assert((x) != NULL && (x)->f != NULL && (x)->fn != NULL)
+
+_Static_assert(BRA_MAX_PATH_LENGTH > UINT8_MAX, "BRA_MAX_PATH_LENGTH must be greater than bra_meta_file_t.name_size max value");
 
 /**
  * @brief the last encoded or decoded directory.
@@ -18,8 +22,9 @@
  *
  * @bug  having a global variable can't be thread safe
  */
-char         g_last_dir[BRA_MAX_PATH_LENGTH];
-unsigned int g_last_dir_size;
+static char                    g_last_dir[BRA_MAX_PATH_LENGTH];
+static unsigned int            g_last_dir_size;
+static bra_message_callback_f* g_msg_cb = printf;
 
 static inline uint64_t bra_min(const uint64_t a, const uint64_t b)
 {
@@ -36,14 +41,14 @@ static inline bool bra_validate_meta_filename(const bra_meta_file_t* mf)
            ((mf->name[0] >= 'A' && mf->name[0] <= 'Z') ||
             (mf->name[0] >= 'a' && mf->name[0] <= 'z'))))))
     {
-        printf("ERROR: absolute output path: %s\n", mf->name);
+        bra_log_error("absolute output path: %s", mf->name);
         return false;
     }
     // Reject common traversal patterns
     if (strstr(mf->name, "/../") != NULL || strstr(mf->name, "\\..\\") != NULL ||
         strncmp(mf->name, "../", 3) == 0 || strncmp(mf->name, "..\\", 3) == 0)
     {
-        printf("ERROR: invalid output path (contains '..'): %s\n", mf->name);
+        bra_log_error("invalid output path (contains '..'): %s", mf->name);
         return false;
     }
 
@@ -68,10 +73,42 @@ char* bra_strdup(const char* str)
     return c;
 }
 
-void bra_io_read_error(bra_io_file_t* bf)
+void bra_set_message_callback(bra_message_callback_f* msg_cb)
 {
-    printf("ERROR: unable to read %s %s file\n", bf->fn, BRA_NAME);
+    if (msg_cb == NULL)
+        g_msg_cb = printf;
+    else
+        g_msg_cb = msg_cb;
+}
+
+void bra_io_file_error(bra_io_file_t* bf, const char* verb)
+{
+    assert(bf != NULL);
+    assert(verb != NULL);
+
+    const char* fn = (bf->fn != NULL) ? bf->fn : "N/A";
+    bra_log_error("unable to %s %s file (errno %d: %s)", verb, fn, errno, strerror(errno));
     bra_io_close(bf);
+}
+
+inline void bra_io_file_open_error(bra_io_file_t* bf)
+{
+    bra_io_file_error(bf, "open");
+}
+
+inline void bra_io_file_read_error(bra_io_file_t* bf)
+{
+    bra_io_file_error(bf, "read");
+}
+
+inline void bra_io_file_seek_error(bra_io_file_t* bf)
+{
+    bra_io_file_error(bf, "seek");
+}
+
+inline void bra_io_file_write_error(bra_io_file_t* bf)
+{
+    bra_io_file_error(bf, "write");
 }
 
 bool bra_io_open(bra_io_file_t* bf, const char* fn, const char* mode)
@@ -83,8 +120,7 @@ bool bra_io_open(bra_io_file_t* bf, const char* fn, const char* mode)
     bf->fn = bra_strdup(fn);     // copy filename
     if (bf->f == NULL || bf->fn == NULL)
     {
-        printf("ERROR: unable to open file %s\n", fn);
-        bra_io_close(bf);
+        bra_io_file_open_error(bf);
         return false;
     }
 
@@ -149,14 +185,14 @@ bool bra_io_read_header(bra_io_file_t* bf, bra_io_header_t* out_bh)
 
     if (fread(out_bh, sizeof(bra_io_header_t), 1, bf->f) != 1)
     {
-        bra_io_read_error(bf);
+        bra_io_file_read_error(bf);
         return false;
     }
 
     // check header magic
     if (out_bh->magic != BRA_MAGIC)
     {
-        printf("ERROR: Not valid %s file\n", BRA_NAME);
+        bra_log_error("Not valid %s file: %s", BRA_NAME, bf->fn);
         bra_io_close(bf);
         return false;
     }
@@ -176,8 +212,7 @@ bool bra_io_write_header(bra_io_file_t* f, const uint32_t num_files)
 
     if (fwrite(&header, sizeof(bra_io_header_t), 1, f->f) != 1)
     {
-        printf("ERROR: unable to write %s %s file\n", f->fn, BRA_NAME);
-        bra_io_close(f);
+        bra_io_file_write_error(f);
         return false;
     }
 
@@ -192,14 +227,14 @@ bool bra_io_read_footer(bra_io_file_t* f, bra_io_footer_t* bf_out)
     memset(bf_out, 0, sizeof(bra_io_footer_t));
     if (fread(bf_out, sizeof(bra_io_footer_t), 1, f->f) != 1)
     {
-        bra_io_read_error(f);
+        bra_io_file_read_error(f);
         return false;
     }
 
     // check footer magic
     if (bf_out->magic != BRA_FOOTER_MAGIC)
     {
-        printf("ERROR: corrupted or not valid %s-SFX file: %s\n", BRA_NAME, f->fn);
+        bra_log_error("corrupted or not valid %s-SFX file: %s", BRA_NAME, f->fn);
         bra_io_close(f);
         return false;
     }
@@ -219,8 +254,7 @@ bool bra_io_write_footer(bra_io_file_t* f, const int64_t header_offset)
 
     if (fwrite(&bf, sizeof(bra_io_footer_t), 1, f->f) != 1)
     {
-        printf("ERROR: unable to write footer in %s.\n", f->fn);
-        bra_io_close(f);
+        bra_io_file_write_error(f);
         return false;
     }
 
@@ -243,7 +277,7 @@ bool bra_io_read_meta_file(bra_io_file_t* f, bra_meta_file_t* mf)
     if (fread(&mf->attributes, sizeof(uint8_t), 1, f->f) != 1)
     {
     BRA_IO_READ_ERR:
-        bra_io_read_error(f);
+        bra_io_file_read_error(f);
         return false;
     }
 
@@ -368,7 +402,8 @@ bool bra_io_write_meta_file(bra_io_file_t* f, const bra_meta_file_t* mf)
         strncpy(buf, mf->name, buf_size);
         buf[buf_size] = '\0';
         strncpy(g_last_dir, buf, buf_size);
-        g_last_dir_size = buf_size;
+        g_last_dir[buf_size] = '\0';
+        g_last_dir_size      = buf_size;
     }
     break;
     default:
@@ -379,8 +414,7 @@ bool bra_io_write_meta_file(bra_io_file_t* f, const bra_meta_file_t* mf)
     if (fwrite(&mf->attributes, sizeof(uint8_t), 1, f->f) != 1)
     {
     BRA_IO_WRITE_ERR:
-        bra_io_close(f);
-        printf("ERROR: Writing file: %s\n", mf->name);
+        bra_io_file_write_error(f);
         return false;
     }
 
@@ -432,17 +466,15 @@ bool bra_io_copy_file_chunks(bra_io_file_t* dst, bra_io_file_t* src, const uint6
         // read source chunk
         if (fread(buf, sizeof(char), s, src->f) != s)
         {
-            printf("ERROR: unable to read %s file\n", src->fn);
+            bra_io_file_read_error(src);
             bra_io_close(dst);
-            bra_io_close(src);
             return false;
         }
 
         // write source chunk
         if (fwrite(buf, sizeof(char), s, dst->f) != s)
         {
-            printf("ERROR: writing to file: %s\n", dst->fn);
-            bra_io_close(dst);
+            bra_io_file_write_error(dst);
             bra_io_close(src);
             return false;
         }
@@ -460,19 +492,18 @@ bool bra_io_skip_data(bra_io_file_t* f, const uint64_t data_size)
     return bra_io_seek(f, data_size, SEEK_CUR);
 }
 
-bool bra_file_encode_and_write_to_disk(bra_io_file_t* f, const char* fn)
+bool bra_io_encode_and_write_to_disk(bra_io_file_t* f, const char* fn)
 {
     assert_bra_io_file_t(f);
     assert(fn != NULL);
 
-    // TODO: create logging functions in C
-    printf("Archiving ");
+    g_msg_cb("Archiving ");
 
     // 1. attributes
     bra_attr_t attributes;
     if (!bra_fs_file_attributes(fn, &attributes))
     {
-        printf("ERROR: %s has unknown attribute\n", fn);
+        bra_log_error("%s has unknown attribute", fn);
     BRA_IO_WRITE_CLOSE_ERROR:
         bra_io_close(f);
         return false;
@@ -480,10 +511,10 @@ bool bra_file_encode_and_write_to_disk(bra_io_file_t* f, const char* fn)
     switch (attributes)
     {
     case BRA_ATTR_DIR:
-        printf("dir: %s ...", fn);
+        g_msg_cb("dir: %s ...", fn);
         break;
     case BRA_ATTR_FILE:
-        printf("file: %s ...", fn);
+        g_msg_cb("file: %s ...", fn);
         break;
     default:
         goto BRA_IO_WRITE_CLOSE_ERROR;
@@ -491,9 +522,18 @@ bool bra_file_encode_and_write_to_disk(bra_io_file_t* f, const char* fn)
 
     // 2. file name length
     const size_t fn_len = strnlen(fn, BRA_MAX_PATH_LENGTH);
-    if (fn_len > UINT8_MAX)
+    // NOTE: fn_len >= BRA_MAX_PATH_LENGTH is redundant but as a safeguard
+    //       in case changing BRA_MAX_PATH_LENGTH to be UINT8_MAX
+    //       there is a static assert for that now.
+    if (fn_len > UINT8_MAX /*|| fn_len >= BRA_MAX_PATH_LENGTH*/)
     {
-        printf("ERROR: filename too long: %s\n", fn);
+        bra_log_error("filename too long: %s", fn);
+        goto BRA_IO_WRITE_CLOSE_ERROR;
+    }
+
+    if (fn_len == 0)
+    {
+        bra_log_error("filename missing: %s", fn);
         goto BRA_IO_WRITE_CLOSE_ERROR;
     }
 
@@ -527,10 +567,7 @@ bool bra_file_encode_and_write_to_disk(bra_io_file_t* f, const char* fn)
 
         memset(&f2, 0, sizeof(bra_io_file_t));
         if (!bra_io_open(&f2, fn, "rb"))
-        {
-            printf("ERROR: unable to open file: %s\n", fn);
             goto BRA_IO_WRITE_CLOSE_ERROR;
-        }
 
         if (!bra_io_copy_file_chunks(f, &f2, ds))
             return false;    // f, f2 closed already
@@ -540,7 +577,7 @@ bool bra_file_encode_and_write_to_disk(bra_io_file_t* f, const char* fn)
     break;
     }
 
-    printf("OK\n");
+    g_msg_cb("OK\n");
     return true;
 }
 
@@ -554,9 +591,9 @@ bool bra_io_decode_and_write_to_disk(bra_io_file_t* f)
 
     if (!bra_validate_meta_filename(&mf))
     {
-    BRA_IO_READ_ERR:
+    BRA_IO_DECODE_ERR:
         bra_meta_file_free(&mf);
-        bra_io_read_error(f);
+        bra_io_file_error(f, "decode");
         return false;
     }
 
@@ -566,7 +603,7 @@ bool bra_io_decode_and_write_to_disk(bra_io_file_t* f)
     {
     case BRA_ATTR_FILE:
     {
-        printf("Extracting file: %s ...", mf.name);
+        g_msg_cb("Extracting file: %s ...", mf.name);
 
         bra_io_file_t f2;
         // NOTE: the directory must have been created in the previous file
@@ -575,10 +612,7 @@ bool bra_io_decode_and_write_to_disk(bra_io_file_t* f)
         //       is created, and then its files are following.
         //       no need to create the parent directory for each file each time.
         if (!bra_io_open(&f2, mf.name, "wb"))
-        {
-            printf("ERROR: unable to write file: %s\n", mf.name);
-            goto BRA_IO_READ_ERR;
-        }
+            goto BRA_IO_DECODE_ERR;
 
         const uint64_t ds = mf.data_size;
         bra_meta_file_free(&mf);
@@ -590,18 +624,18 @@ bool bra_io_decode_and_write_to_disk(bra_io_file_t* f)
     break;
     case BRA_ATTR_DIR:
     {
-        printf("Creating dir: %s", mf.name);
+        g_msg_cb("Creating dir: %s", mf.name);
         if (!bra_fs_dir_make(mf.name))
-            goto BRA_IO_READ_ERR;
+            goto BRA_IO_DECODE_ERR;
 
         bra_meta_file_free(&mf);
     }
     break;
     default:
-        goto BRA_IO_READ_ERR;
+        goto BRA_IO_DECODE_ERR;
         break;
     }
 
-    printf("OK\n");
+    g_msg_cb("OK\n");
     return true;
 }

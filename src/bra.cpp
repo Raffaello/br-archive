@@ -1,7 +1,7 @@
 #include <lib_bra.h>
-#include <version.h>
-
+#include <bra_log.h>
 #include <bra_fs.hpp>
+#include <version.h>
 
 #include <format>
 #include <iostream>
@@ -85,7 +85,7 @@ bool parse_args(int argc, char* argv[])
             ++i;
             if (i >= argc)
             {
-                cout << format("ERROR: {} missing argument <output_filename>", s) << endl;
+                bra_log_error("%s missing argument <output_filename>", s.c_str());
                 return false;
             }
 
@@ -103,12 +103,12 @@ bool parse_args(int argc, char* argv[])
             // check file path
             if (!bra::fs::try_sanitize(p))
             {
-                cerr << format("ERROR: path not valid: {}", p.string()) << endl;
+                bra_log_error("path not valid: %s", p.string().c_str());
                 return false;
             }
 
             if (!g_files.insert(p).second)
-                cout << format("WARNING: duplicate file/dir given in input: {}", p.string()) << endl;
+                bra_log_warn("duplicate file/dir given in input: %s", p.string().c_str());
         }
         else if (bra::fs::dir_exists(s))
         {
@@ -117,7 +117,7 @@ bool parse_args(int argc, char* argv[])
             fs::path p = fs::path(s) / "*";
             if (!bra::fs::wildcard_expand(p, g_files))
             {
-                cerr << format("ERROR: path not valid: {}", p.string()) << endl;
+                bra_log_error("path not valid: %s", p.string().c_str());
                 return false;
             }
         }
@@ -125,11 +125,14 @@ bool parse_args(int argc, char* argv[])
         else if (bra::fs::is_wildcard(s))
         {
             if (!bra::fs::wildcard_expand(s, g_files))
+            {
+                bra_log_error("unable to expand wildcard: %s", s.c_str());
                 return false;
+            }
         }
         else
         {
-            cerr << format("ERROR: unknown argument/file doesn't exist: {}", s) << endl;
+            bra_log_error("unknown argument/file doesn't exist: %s", s.c_str());
             return false;
         }
     }
@@ -141,7 +144,7 @@ bool validate_args()
 {
     if (g_files.empty())
     {
-        cerr << "ERROR: no input file provided" << endl;
+        bra_log_error("no input file provided");
         return false;
     }
 
@@ -149,9 +152,9 @@ bool validate_args()
         return false;
 
 #ifndef NDEBUG
-    cout << format("files:") << endl;
+    bra_log_debug("Detected files:");
     for (const auto& f : g_files)
-        cout << format("- {}", f.string()) << endl;
+        bra_log_debug("- %s", f.string().c_str());
 #endif
 
     // TODO: Here could also start encoding the filenames
@@ -161,7 +164,7 @@ bool validate_args()
 
     if (g_out_filename.empty())
     {
-        cerr << "ERROR: no output file provided" << endl;
+        bra_log_error("no output file provided");
         return false;
     }
 
@@ -172,7 +175,7 @@ bool validate_args()
         // locate sfx bin
         if (!bra::fs::file_exists(BRA_SFX_FILENAME))
         {
-            cerr << format("ERROR: unable to find {}-SFX module", BRA_NAME) << endl;
+            bra_log_error("unable to find %s-SFX module", BRA_NAME);
             return false;
         }
 
@@ -240,8 +243,16 @@ int main(int argc, char* argv[])
     uint32_t written_num_files = 0;
     for (const auto& fn_ : g_files)
     {
-        const string fn = fs::relative(fn_).generic_string();
-        if (!bra_file_encode_and_write_to_disk(&f, fn.c_str()))
+        fs::path p = fn_;
+        // no need to sanitize it again, but it won't hurt neither
+        if (!bra::fs::try_sanitize(p))
+        {
+            bra_log_error("invalid path: %s", fn_.string().c_str());
+            return 1;
+        }
+
+        const string fn = p.generic_string();
+        if (!bra_io_encode_and_write_to_disk(&f, fn.c_str()))
             return 1;
         else
             ++written_num_files;
@@ -250,6 +261,7 @@ int main(int argc, char* argv[])
 
     bra_io_close(&f);
 
+    // TODO: do an SFX should be in the lib_bra
     if (g_sfx)
     {
         fs::path sfx_path = g_out_filename;
@@ -260,7 +272,7 @@ int main(int argc, char* argv[])
         if (!fs::copy_file(BRA_SFX_FILENAME, sfx_path, fs::copy_options::overwrite_existing))
         {
         BRA_SFX_IO_ERROR:
-            cerr << format("ERROR: unable to create a {}-SFX file", BRA_NAME) << endl;
+            bra_log_error("unable to create a %s-SFX file", BRA_NAME);
             return 2;
         }
 
@@ -270,30 +282,44 @@ int main(int argc, char* argv[])
 
         if (!bra_io_seek(&f, 0, SEEK_END))
         {
-        BRA_SFX_IO_F_ERROR:
-            bra_io_close(&f);
-            goto BRA_SFX_IO_ERROR;
+            bra_io_file_seek_error(&f);
+            return 2;
         }
 
         // save the start of the payload for later...
         const int64_t header_offset = bra_io_tell(&f);
         if (header_offset < 0L)
-            goto BRA_SFX_IO_F_ERROR;
+        {
+            bra_io_file_error(&f, "tell");
+            return 2;
+        }
 
         // append bra file
         bra_io_file_t f2{};
         if (!bra_io_open(&f2, out_fn.c_str(), "rb"))
-            goto BRA_SFX_IO_F_ERROR;
+        {
+            bra_io_close(&f);
+            return 2;
+        }
 
-        error_code ec;
-        auto       file_size = fs::file_size(out_fn, ec);
-        if (ec || !bra_io_copy_file_chunks(&f, &f2, file_size))
-            goto BRA_SFX_IO_F_ERROR;
+        auto file_size = bra::fs::file_size(out_fn);
+        if (!file_size)
+        {
+            bra_io_close(&f);
+            bra_io_close(&f2);
+            return 2;
+        }
+
+        if (!bra_io_copy_file_chunks(&f, &f2, *file_size))
+            return 2;
 
         bra_io_close(&f2);
         // write footer
         if (!bra_io_write_footer(&f, header_offset))
-            goto BRA_SFX_IO_ERROR;
+        {
+            bra_io_file_write_error(&f);
+            return 2;
+        }
 
         bra_io_close(&f);
 
@@ -311,7 +337,7 @@ int main(int argc, char* argv[])
         //       it will save disk space as in this way requires twice the archive size
         //       to do an SFX
         if (!fs::remove(g_out_filename))
-            cout << format("WARN: unable to remove temporary file {}", g_out_filename.string()) << endl;
+            bra_log_warn("unable to remove temporary file %s", g_out_filename.string().c_str());
 
         cout << "OK" << endl;
     }

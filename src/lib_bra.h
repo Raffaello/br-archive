@@ -12,6 +12,11 @@ extern "C" {
 #include <stdbool.h>
 #include <stdio.h>
 
+/**
+ * @brief Function Prototype for the message callback function.
+ */
+typedef int bra_message_callback_f(const char* fmt, ...) BRA_FUNC_ATTR_FMT_PRINTF(1, 2);
+
 
 #pragma pack(push, 1)
 
@@ -82,11 +87,57 @@ typedef struct bra_meta_file_t
 char* bra_strdup(const char* str);
 
 /**
- * @brief print error message and close file.
+ * @brief Set the message callback to call to write messages to the user.
+ *        The default one is @c printf.
+ *        If passing @c NULL restores the default one.
+ *
+ * @param msg_cb
+ */
+void bra_set_message_callback(bra_message_callback_f* msg_cb);
+
+/**
+ * @brief Print an error message and close the file.
+ *
+ * @param bf
+ * @param verb a string to complete the error message: "unable to %s".
+ */
+void bra_io_file_error(bra_io_file_t* bf, const char* verb);
+
+/**
+ * @brief Print an error message and eventually close the file
+ *
+ * @see bra_io_file_error
  *
  * @param bf
  */
-void bra_io_read_error(bra_io_file_t* bf);
+void bra_io_file_open_error(bra_io_file_t* bf);
+
+/**
+ * @brief Print an error message and close the file.
+ *
+ * @see bra_io_file_error
+ *
+ * @param bf
+ */
+void bra_io_file_read_error(bra_io_file_t* bf);
+
+/**
+ * @brief Print an error message and close the file.
+ *
+ * @see bra_io_file_error
+ *
+ * @param bf
+ */
+void bra_io_file_seek_error(bra_io_file_t* bf);
+
+/**
+ * @brief Print an error message and close the file.
+ *
+ * @see bra_io_file_error
+ *
+ * @param bf
+ */
+void bra_io_file_write_error(bra_io_file_t* bf);
 
 /**
  * @brief open the file @p fn in the @p mode.
@@ -232,12 +283,11 @@ bool bra_io_skip_data(bra_io_file_t* f, const uint64_t data_size);
  * @return true on success
  * @return false on error (archive handle is closed)
  */
-bool bra_file_encode_and_write_to_disk(bra_io_file_t* f, const char* fn);
+bool bra_io_encode_and_write_to_disk(bra_io_file_t* f, const char* fn);
 
 /**
  * @brief Decode the current pointed internal file contained in @p f and write it to its relative path on disk.
- *        On error calls @ref bra_io_close with param @p f closing it.
- *
+ *        On error closes @p f via @ref bra_io_close.
  *
  * @param f
  * @return true on success

@@ -1,4 +1,5 @@
 #include <lib_bra.h>
+#include <bra_log.h>
 #include <bra_fs.hpp>
 #include <version.h>
 
@@ -78,7 +79,7 @@ bool parse_args(int argc, char* argv[])
                 g_bra_file = p;
             else
             {
-                cout << format("unknown argument: {}", s) << endl;
+                bra_log_error("unknown argument: %s", s.c_str());
                 return false;
             }
         }
@@ -91,7 +92,7 @@ bool validate_args()
 {
     if (g_bra_file.empty())
     {
-        cerr << "ERROR: no input file provided" << endl;
+        bra_log_error("no input file provided");
         return false;
     }
 
@@ -142,7 +143,7 @@ bool unbra_list_meta_file(bra_io_file_t& f)
     // skip data content
     if (!bra_io_skip_data(&f, ds))
     {
-        bra_io_read_error(&f);
+        bra_io_file_read_error(&f);
         return false;
     }
 
@@ -160,7 +161,7 @@ int main(int argc, char* argv[])
     // forcing to work only on BRA_FILE_EXT
     if (g_bra_file.extension() != BRA_FILE_EXT)
     {
-        cerr << "CRITICAL: unexpected" << endl;
+        bra_log_critical("unexpected %s", g_bra_file.string().c_str());
         return 99;
     }
 

@@ -14,7 +14,14 @@ extern "C" {
 #include <stdarg.h>
 
 /**
- * @brief Function Prototype for the message callback function.
+ * @brief Function prototype for the message callback (vprintf-style).
+ *
+ * @details Contract:
+ *  - @p fmt is a printf-format string.
+ *  - @p args is a consumable va_list; implementations must not retain it
+ *    beyond the call unless they make a @c va_copy.
+ *  - Return value follows @c vprintf semantics: number of characters written
+ *    (excluding NULL) on success, negative on error.
  */
 typedef int bra_message_callback_f(const char* fmt, va_list args) BRA_FUNC_ATTR_FMT_PRINTF(1, 0);
 

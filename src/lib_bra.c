@@ -497,7 +497,7 @@ bool bra_io_encode_and_write_to_disk(bra_io_file_t* f, const char* fn)
     assert_bra_io_file_t(f);
     assert(fn != NULL);
 
-    g_msg_cb("Archiving");
+    g_msg_cb("Archiving ");
 
     // 1. attributes
     bra_attr_t attributes;

@@ -10,7 +10,7 @@
 
 #define assert_bra_io_file_t(x) assert((x) != NULL && (x)->f != NULL && (x)->fn != NULL)
 
-_Static_assert(BRA_MAX_PATH_LENGTH > UINT8_MAX, "BRA_MAX_PATH_LENGTH must be greater then max bra_meta_file_t.name_size max value");
+_Static_assert(BRA_MAX_PATH_LENGTH > UINT8_MAX, "BRA_MAX_PATH_LENGTH must be greater than bra_meta_file_t.name_size max value");
 
 /**
  * @brief the last encoded or decoded directory.
@@ -87,7 +87,7 @@ void bra_io_file_error(bra_io_file_t* bf, const char* verb)
     assert(verb != NULL);
 
     const char* fn = (bf->fn != NULL) ? bf->fn : "N/A";
-    bra_log_error("unable to %s %s file (errno: %s)", verb, fn, strerror(errno));
+    bra_log_error("unable to %s %s file (errno %d: %s)", verb, fn, errno, strerror(errno));
     bra_io_close(bf);
 }
 
@@ -567,7 +567,7 @@ bool bra_io_encode_and_write_to_disk(bra_io_file_t* f, const char* fn)
 
         memset(&f2, 0, sizeof(bra_io_file_t));
         if (!bra_io_open(&f2, fn, "rb"))
-            return false;
+            goto BRA_IO_WRITE_CLOSE_ERROR;
 
         if (!bra_io_copy_file_chunks(f, &f2, ds))
             return false;    // f, f2 closed already
@@ -612,10 +612,7 @@ bool bra_io_decode_and_write_to_disk(bra_io_file_t* f)
         //       is created, and then its files are following.
         //       no need to create the parent directory for each file each time.
         if (!bra_io_open(&f2, mf.name, "wb"))
-        {
-            bra_meta_file_free(&mf);
-            return false;
-        }
+            goto BRA_IO_DECODE_ERR;
 
         const uint64_t ds = mf.data_size;
         bra_meta_file_free(&mf);

@@ -255,6 +255,7 @@ int main(int argc, char* argv[])
 
     bra_io_close(&f);
 
+    // TODO: do an SFX should be in the lib_bra
     if (g_sfx)
     {
         fs::path sfx_path = g_out_filename;
@@ -276,7 +277,7 @@ int main(int argc, char* argv[])
         if (!bra_io_seek(&f, 0, SEEK_END))
         {
             bra_io_file_seek_error(&f);
-            return false;
+            return 2;
         }
 
         // save the start of the payload for later...
@@ -284,7 +285,7 @@ int main(int argc, char* argv[])
         if (header_offset < 0L)
         {
             bra_io_file_error(&f, "tell");
-            return false;
+            return 2;
         }
 
         // append bra file
@@ -292,7 +293,7 @@ int main(int argc, char* argv[])
         if (!bra_io_open(&f2, out_fn.c_str(), "rb"))
         {
             bra_io_close(&f);
-            return false;
+            return 2;
         }
 
         error_code ec;
@@ -301,18 +302,18 @@ int main(int argc, char* argv[])
         {
             bra_io_close(&f);
             bra_io_close(&f2);
-            return false;
+            return 2;
         }
 
         if (!bra_io_copy_file_chunks(&f, &f2, file_size))
-            return false;
+            return 2;
 
         bra_io_close(&f2);
         // write footer
         if (!bra_io_write_footer(&f, header_offset))
         {
             bra_io_file_write_error(&f);
-            return false;
+            return 2;
         }
 
         bra_io_close(&f);

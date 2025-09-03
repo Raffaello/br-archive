@@ -76,7 +76,7 @@ BRA_FUNC_ATTR_CONSTRUCTOR static void _init_bra_log()
 
 static inline void _bra_log_set_no_color(void)
 {
-    fprintf(stderr, "\033[0m");
+    fputs("\033[0m", stderr);
 }
 
 static inline void _bra_log_set_color(const int fg)
@@ -202,27 +202,27 @@ void bra_log_v(const bra_log_level_e level, const char* fmt, va_list args)
     switch (level)
     {
     case BRA_LOG_LEVEL_VERBOSE:
-        fprintf(stderr, "VERBOSE: ");
+        fputs("VERBOSE: ", stderr);
         break;
     case BRA_LOG_LEVEL_DEBUG:
-        fprintf(stderr, "DEBUG: ");
+        fputs("DEBUG: ", stderr);
         break;
     case BRA_LOG_LEVEL_INFO:
-        fprintf(stderr, "INFO: ");
+        fputs("INFO: ", stderr);
         break;
     case BRA_LOG_LEVEL_WARN:
-        fprintf(stderr, "WARN: ");
+        fputs("WARN: ", stderr);
         break;
     case BRA_LOG_LEVEL_ERROR:
-        fprintf(stderr, "ERROR: ");
+        fputs("ERROR: ", stderr);
         break;
     case BRA_LOG_LEVEL_CRITICAL:
-        fprintf(stderr, "CRITICAL: ");
+        fputs("CRITICAL: ", stderr);
         break;
     case BRA_LOG_LEVEL_QUIET:
         break;
     default:
-        fprintf(stderr, "UNKNOWN: ");
+        fputs("UNKNOWN: ", stderr);
         break;
     }
 
@@ -231,10 +231,10 @@ void bra_log_v(const bra_log_level_e level, const char* fmt, va_list args)
     if (g_use_ansi_color)
     {
         _bra_log_set_no_color();
-        fprintf(stderr, "\033[K");
+        fputs("\033[K", stderr);
     }
 
-    fprintf(stderr, "\n");
+    fputs("\n", stderr);
     fflush(stderr);
 }
 

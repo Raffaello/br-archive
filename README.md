@@ -4,7 +4,7 @@ BR-Archive (BRa) is an educational project to compress files with the `DEFLATE` 
 
 The Default extension for the archive format is `.BRa`
 
-This version has partial support for wildcard inputs for file selection;
+This version has partial support for wildcard inputs for file selection;  see “Wildcard Expansions” below.
 
 This lays the foundation for encoding, decoding, and self-extracting archives.
 
@@ -33,3 +33,4 @@ Currently supported wildcards: `*` and `?`.
 > - On POSIX shells, the shell may expand patterns; quote them to let BRa expand: `bra '*.br?'`.
 > - Recursive `**` and character classes like `[]` are not supported.
 > - Examples: `*.txt`, `image_??.png`
+> - Directory inputs expand to `dir/*`; empty directories are intentionally not archived

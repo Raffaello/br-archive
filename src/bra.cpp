@@ -111,7 +111,7 @@ bool parse_args(int argc, char* argv[])
                 }
 
                 if (!g_files.insert(p).second)
-                    bra_log_warn("duplicate file/dir given in input: %s", p.string().c_str());
+                    bra_log_warn("duplicate file given in input: %s", p.string().c_str());
             }
             else if (bra::fs::dir_exists(p))
             {

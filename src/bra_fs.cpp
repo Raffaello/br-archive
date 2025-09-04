@@ -127,13 +127,24 @@ std::filesystem::path filename_sfx_adjust(const std::filesystem::path& path, con
     return p;
 }
 
-bool file_exists(const std::filesystem::path& path)
+std::optional<bool> file_exists(const std::filesystem::path& path)
 {
     error_code ec;
-    const bool isRegFile = fs::is_regular_file(path, ec);
+    const auto err = [&path, &ec]() {
+        bra_log_error("can't check file %s: %s", path.string().c_str(), ec.message().c_str());
+        return nullopt;
+    };
 
+    const bool exists = fs::exists(path, ec);
     if (ec)
+        return err();
+
+    if (!exists)
         return false;
+
+    const bool isRegFile = fs::is_regular_file(path, ec);
+    if (ec)
+        return err();
 
     return isRegFile;
 }

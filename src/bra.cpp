@@ -115,6 +115,7 @@ bool parse_args(int argc, char* argv[])
 
                 continue;
             }
+
             const auto isDir = bra::fs::dir_exists(p);
             if (isDir && *isDir)
             {

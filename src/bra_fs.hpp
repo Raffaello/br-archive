@@ -102,8 +102,9 @@ namespace bra::fs
  * @param path
  * @return true
  * @return false
+ * @return nullopt on error.
  */
-[[nodiscard]] bool file_exists(const std::filesystem::path& path);
+[[nodiscard]] std::optional<bool> file_exists(const std::filesystem::path& path);
 
 /**
  * @brief Check if the file in @p path exists and ask the user to overwrite.

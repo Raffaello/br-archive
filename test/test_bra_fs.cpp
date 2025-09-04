@@ -26,6 +26,42 @@ int test_bra_fs_is_wildcards()
     return 0;
 }
 
+int test_bra_fs_file_exists()
+{
+    PRINT_TEST_NAME;
+
+    std::optional<bool> b;
+
+    b = bra::fs::file_exists("test1.txt");
+    ASSERT_TRUE(b && *b);
+    b = bra::fs::file_exists("test99.txt");
+    ASSERT_TRUE(b && !*b);
+    b = bra::fs::file_exists("dir1");
+    ASSERT_TRUE(b && !*b);
+    // b = bra::fs::file_exists("?#~¬");
+    // ASSERT_TRUE(!b);
+
+    return 0;
+}
+
+int test_bra_fs_dir_exists()
+{
+    PRINT_TEST_NAME;
+
+    std::optional<bool> b;
+
+    b = bra::fs::dir_exists("dir1");
+    ASSERT_TRUE(b && *b);
+    b = bra::fs::dir_exists("dir99");
+    ASSERT_TRUE(b && !*b);
+    b = bra::fs::dir_exists("test1.txt");
+    ASSERT_TRUE(b && !*b);
+    // b = bra::fs::dir_exists("?#~¬");
+    // ASSERT_TRUE(!b);
+
+    return 0;
+}
+
 int test_bra_fs_dir_make()
 {
     PRINT_TEST_NAME;
@@ -171,6 +207,8 @@ int main(int argc, char* argv[])
 {
     return test_main(argc, argv, {
                                      {TEST_FUNC(test_bra_fs_is_wildcards)},
+                                     {TEST_FUNC(test_bra_fs_file_exists)},
+                                     {TEST_FUNC(test_bra_fs_dir_exists)},
                                      {TEST_FUNC(test_bra_fs_dir_make)},
                                      {TEST_FUNC(test_bra_fs_try_sanitize_path)},
                                      {TEST_FUNC(test_bra_fs_sfx_filename_adjust)},

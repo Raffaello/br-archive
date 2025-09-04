@@ -633,11 +633,11 @@ bool bra_io_decode_and_write_to_disk(bra_io_file_t* f, const bra_fs_overwrite_po
             bra_io_file_t f2;
 
             bra_printf_msg("Extracting file: %-40.40s", mf.name);
-            // NOTE: the directory must have been created in the previous file
-            //       otherwise here it will fail to crete the fle.
-            //       There is an order in the archive that the last directory used,
-            //       is created, and then its files are following.
-            //       no need to create the parent directory for each file each time.
+            // NOTE: the directory must have been created in the previous entry,
+            //       otherwise this will fail to create the file.
+            //       The archive ensures the last used directory is created first,
+            //       and then its files follow.
+            //       So, no need to create the parent directory for each file each time.
             if (!bra_io_open(&f2, mf.name, "wb"))
                 goto BRA_IO_DECODE_ERR;
 

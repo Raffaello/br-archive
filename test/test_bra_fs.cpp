@@ -32,6 +32,12 @@ int test_bra_fs_wildcard_expand()
 
     std::set<fs::path> files;
 
+#if defined(__linux__)
+    constexpr size_t exp_files = 1;    // bra.sfx, bra.exe is just bra
+#elif defined(_WIN32)
+    constexpr size_t exp_files = 2;    // bra.exe, bra.sfx
+#endif
+
     ASSERT_TRUE(bra::fs::wildcard_expand("*", files));
     ASSERT_TRUE(files.size() != 0);
     files.clear();
@@ -41,10 +47,14 @@ int test_bra_fs_wildcard_expand()
     files.clear();
 
     ASSERT_TRUE(bra::fs::wildcard_expand("bra.*", files));
-    ASSERT_EQ(files.size(), 2U);
+    ASSERT_EQ(files.size(), exp_files);
     files.clear();
 
     ASSERT_TRUE(bra::fs::wildcard_expand("./bra.*", files));
+    ASSERT_EQ(files.size(), exp_files);
+    files.clear();
+
+    ASSERT_TRUE(bra::fs::wildcard_expand("bra*", files));
     ASSERT_EQ(files.size(), 2U);
     files.clear();
 

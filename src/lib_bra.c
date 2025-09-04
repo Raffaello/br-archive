@@ -619,7 +619,7 @@ bool bra_io_decode_and_write_to_disk(bra_io_file_t* f, bra_fs_overwrite_policy_e
     case BRA_ATTR_FILE:
     {
         const uint64_t ds = mf.data_size;
-        if (!bra_fs_file_exists_ask_overwrite(mf.name, overwrite_policy))
+        if (!bra_fs_file_exists_ask_overwrite(mf.name, overwrite_policy, false))
         {
             bra_printf_msg("Skipping file: %-40.40s", mf.name);
             bra_meta_file_free(&mf);

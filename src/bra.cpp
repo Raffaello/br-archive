@@ -192,7 +192,7 @@ bool validate_args()
         }
 
         // check if SFX_TMP exists...
-        const auto overwrite = bra::fs::file_exists_ask_overwrite(g_out_filename, g_overwrite_policy);
+        const auto overwrite = bra::fs::file_exists_ask_overwrite(g_out_filename, g_overwrite_policy, true);
         if (overwrite)
         {
             if (!*overwrite)
@@ -211,7 +211,7 @@ bool validate_args()
         p = p.replace_extension(BRA_SFX_FILE_EXT);
 
     // TODO: this might not be ok
-    if (auto res = bra::fs::file_exists_ask_overwrite(p, g_overwrite_policy))
+    if (auto res = bra::fs::file_exists_ask_overwrite(p, g_overwrite_policy, true))
     {
         if (!*res)
             return false;

@@ -58,13 +58,13 @@ extern "C" bool bra_fs_file_size(const char* path, uint64_t* file_size)
     return true;
 }
 
-extern "C" bool bra_fs_file_exists_ask_overwrite(const char* path, bra_fs_overwrite_policy_e* overwrite_policy)
+extern "C" bool bra_fs_file_exists_ask_overwrite(const char* path, bra_fs_overwrite_policy_e* overwrite_policy, const bool single_overwrite)
 {
     if (path == nullptr || overwrite_policy == nullptr)
         return false;
 
     const fs::path p(path);
-    const auto     res = bra::fs::file_exists_ask_overwrite(p, *overwrite_policy);
+    const auto     res = bra::fs::file_exists_ask_overwrite(p, *overwrite_policy, single_overwrite);
     if (!res)
         return true;    // doesn't exists, equivalent to overwrite
 

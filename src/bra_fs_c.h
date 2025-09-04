@@ -75,10 +75,11 @@ bool bra_fs_file_size(const char* path, uint64_t* file_size);
  *
  * @param path
  * @param overwrite_policy
+ * @param single_overwrite if true All and None extra choice are not enabled.
  * @return true  if the file does not exist or overwrite is approved.
  * @return false if the file exists and overwrite is declined, or on error (e.g., NULL @p path).
  */
-bool bra_fs_file_exists_ask_overwrite(const char* path, bra_fs_overwrite_policy_e* overwrite_policy);
+bool bra_fs_file_exists_ask_overwrite(const char* path, bra_fs_overwrite_policy_e* overwrite_policy, const bool single_overwrite);
 
 #ifdef __cplusplus
 }

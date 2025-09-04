@@ -103,11 +103,12 @@ namespace bra::fs
  *
  * @param path
  * @param overwrite_policy
+ * @param single_overwrite if true All and None extra choice are not enabled.
  * @return std::optional<bool> when has no value the file doesn't exist.
  * @return true overwrite
  * @return false don't overwrite
  */
-[[nodiscard]] std::optional<bool> file_exists_ask_overwrite(const std::filesystem::path& path, bra_fs_overwrite_policy_e& overwrite_policy);
+[[nodiscard]] std::optional<bool> file_exists_ask_overwrite(const std::filesystem::path& path, bra_fs_overwrite_policy_e& overwrite_policy, const bool single_overwrite);
 
 /**
  * @brief Get the file attributes for the given @p path.

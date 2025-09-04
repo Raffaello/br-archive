@@ -165,7 +165,7 @@ bool file_exists(const std::filesystem::path& path)
     return isRegFile;
 }
 
-std::optional<bool> file_exists_ask_overwrite(const std::filesystem::path& path, bra_fs_overwrite_policy_e& overwrite_policy)
+std::optional<bool> file_exists_ask_overwrite(const std::filesystem::path& path, bra_fs_overwrite_policy_e& overwrite_policy, const bool single_overwrite)
 {
     if (!file_exists(path))
         return nullopt;
@@ -173,7 +173,11 @@ std::optional<bool> file_exists_ask_overwrite(const std::filesystem::path& path,
     char c;
 
     // TODO: this should use bra_message, bra_message must be moved into bra_log.h
-    cout << format("File {} already exists. Overwrite? [y]es / [n]o / Yes To [A]ll / N[o] To All", path.string()) << flush;
+    if (single_overwrite)
+        cout << format("File {} already exists. Overwrite? ([y]es/[n]o) ", path.string()) << flush;
+    else
+        cout << format("File {} already exists. Overwrite? ([y]es/[n]o/[A]ll/N[o]ne) ", path.string()) << flush;
+
     switch (overwrite_policy)
     {
     case BRA_OVERWRITE_ALWAYS_YES:
@@ -196,19 +200,28 @@ std::optional<bool> file_exists_ask_overwrite(const std::filesystem::path& path,
         }
         else
             c = static_cast<char>(tolower(static_cast<unsigned char>(c)));
+
+        if (!single_overwrite)
+        {
+            if (c == 'a' && c == 'o')
+                break;
+        }
     }
-    while (c != 'y' && c != 'n' && c != 'a' && c != 'o');
+    while (c != 'y' && c != 'n');
     cout << endl;
 
-    if (c == 'a')
+    if (!single_overwrite)
     {
-        overwrite_policy = BRA_OVERWRITE_ALWAYS_YES;
-        c                = 'y';
-    }
-    else if (c == 'o')
-    {
-        overwrite_policy = BRA_OVERWRITE_ALWAYS_NO;
-        c                = 'n';
+        if (c == 'a')
+        {
+            overwrite_policy = BRA_OVERWRITE_ALWAYS_YES;
+            c                = 'y';
+        }
+        else if (c == 'o')
+        {
+            overwrite_policy = BRA_OVERWRITE_ALWAYS_NO;
+            c                = 'n';
+        }
     }
 
     return c == 'y';

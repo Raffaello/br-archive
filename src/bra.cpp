@@ -46,11 +46,13 @@ void help()
     cout << format("              Directories expand to <dir/*> (non-recursive); empty directories are ignored.") << endl;
     cout << endl;
     cout << format("Options:") << endl;
-    cout << format("--help | -h : display this page.") << endl;
-    cout << format("--sfx  | -s : generate a self-extracting archive") << endl;
-    cout << format("--yes  | -y : force a 'yes' response to all the user questions.") << endl;
-    cout << format("--out  | -o : <output_filename> it takes the path of the output file.") << endl;
-    cout << format("              If the extension {} is missing it will be automatically added.", BRA_FILE_EXT) << endl;
+    cout << format("--help   | -h : display this page.") << endl;
+    cout << format("--sfx    | -s : generate a self-extracting archive") << endl;
+    cout << format("--yes    | -y : force a 'yes' response to all the user questions.") << endl;
+    cout << format("--no     | -n : force 'no' to all prompts (skip overwrites).") << endl;
+    cout << format("--out    | -o : <output_filename> it takes the path of the output file.") << endl;
+    cout << format("                If the extension {} is missing it will be automatically added.", BRA_FILE_EXT) << endl;
+    cout << format("--update | -u : this update an existing archiving with the missing file given in input.") << endl;
     cout << endl;
 }
 
@@ -215,6 +217,11 @@ bool validate_args()
             return false;
 
         cout << format("Overwriting file: {}", p.string()) << endl;
+
+        // check it is not present in the input files
+        g_files.erase(p);
+        if (p != g_out_filename)
+            g_files.erase(g_out_filename);
     }
     else    // the output directory might not exists...
     {

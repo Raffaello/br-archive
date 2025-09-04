@@ -39,7 +39,7 @@ bool bra_fs_dir_make(const char* path);
  *
  * @param path
  * @return true exists
- * @return false not exists or error.
+ * @return  false if it does not exist or on error (I/O errors are not distinguished).
  */
 bool bra_fs_file_exists(const char* path);
 
@@ -78,7 +78,7 @@ bool bra_fs_file_size(const char* path, uint64_t* file_size);
  * @return true  if the file does not exist or overwrite is approved.
  * @return false if the file exists and overwrite is declined, or on error (e.g., NULL @p path).
  */
-bool bra_fs_file_exists_ask_overwrite(const char* path, const bra_fs_overwrite_policy_e overwrite_policy);
+bool bra_fs_file_exists_ask_overwrite(const char* path, bra_fs_overwrite_policy_e* overwrite_policy);
 
 #ifdef __cplusplus
 }

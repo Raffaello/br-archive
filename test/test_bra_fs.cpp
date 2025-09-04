@@ -64,8 +64,8 @@ int test_bra_fs_wildcard_expand()
     files.clear();
 
     ASSERT_TRUE(bra::fs::wildcard_expand("dir?", files));
-    ASSERT_EQ(files.size(), 1U);
-    ASSERT_EQ(files.begin()->string(), "dir1");
+    ASSERT_EQ(files.size(), 0U);    // matches 'dir1' but as it is a dir without recursion is not added.
+    // ASSERT_EQ(files.begin()->string(), "dir1");
     files.clear();
 
     return 0;

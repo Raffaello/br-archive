@@ -107,7 +107,7 @@ namespace bra::fs
  * @return true overwrite
  * @return false don't overwrite
  */
-[[nodiscard]] std::optional<bool> file_exists_ask_overwrite(const std::filesystem::path& path, const bra_fs_overwrite_policy_e overwrite_policy);
+[[nodiscard]] std::optional<bool> file_exists_ask_overwrite(const std::filesystem::path& path, bra_fs_overwrite_policy_e& overwrite_policy);
 
 /**
  * @brief Get the file attributes for the given @p path.

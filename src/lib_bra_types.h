@@ -6,7 +6,7 @@
 typedef uint8_t bra_attr_t;    //!< file attribute type
 
 /**
- * @brief define a file overwrite mode policy.
+ * @brief Define a file overwrite policy.
  */
 typedef enum bra_fs_overwrite_policy_e
 {

@@ -205,7 +205,7 @@ int main(int argc, char* argv[])
         }
         else
         {
-            if (!bra_io_decode_and_write_to_disk(&f, g_overwrite_policy))
+            if (!bra_io_decode_and_write_to_disk(&f, &g_overwrite_policy))
                 return 1;
         }
     }

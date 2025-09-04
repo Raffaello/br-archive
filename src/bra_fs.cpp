@@ -165,24 +165,23 @@ bool file_exists(const std::filesystem::path& path)
     return isRegFile;
 }
 
-std::optional<bool> file_exists_ask_overwrite(const std::filesystem::path& path, const bra_fs_overwrite_policy_e overwrite_policy)
+std::optional<bool> file_exists_ask_overwrite(const std::filesystem::path& path, bra_fs_overwrite_policy_e& overwrite_policy)
 {
     if (!file_exists(path))
         return nullopt;
 
     char c;
 
-    cout << format("File {} already exists. Overwrite? [Y/N] ", path.string()) << flush;
+    // TODO: this should use bra_message, bra_message must be moved into bra_log.h
+    cout << format("File {} already exists. Overwrite? [y]es / [n]o / Yes To [A]ll / N[o] To All", path.string()) << flush;
     switch (overwrite_policy)
     {
     case BRA_OVERWRITE_ALWAYS_YES:
         cout << 'y' << endl;
         return true;
-        break;
     case BRA_OVERWRITE_ALWAYS_NO:
         cout << 'n' << endl;
         return false;
-        break;
     default:
         break;
     }
@@ -198,9 +197,20 @@ std::optional<bool> file_exists_ask_overwrite(const std::filesystem::path& path,
         else
             c = static_cast<char>(tolower(static_cast<unsigned char>(c)));
     }
-    while (c != 'y' && c != 'n');
-
+    while (c != 'y' && c != 'n' && c != 'a' && c != 'o');
     cout << endl;
+
+    if (c == 'a')
+    {
+        overwrite_policy = BRA_OVERWRITE_ALWAYS_YES;
+        c                = 'y';
+    }
+    else if (c == 'o')
+    {
+        overwrite_policy = BRA_OVERWRITE_ALWAYS_NO;
+        c                = 'n';
+    }
+
     return c == 'y';
 }
 
@@ -381,7 +391,7 @@ bool wildcard_expand(const std::filesystem::path& wildcard_path, std::set<std::f
     const string   pattern = bra::fs::wildcard_to_regexp(p.string());
 
     std::list<fs::path> files;
-    if (!bra::fs::search(dir, pattern, files))
+    if (!search(dir, pattern, files))
     {
         bra_log_error("search failed in %s for wildcard %s", dir.string().c_str(), p.string().c_str());
         return false;
@@ -427,15 +437,19 @@ bool search(const std::filesystem::path& dir, const std::string& pattern, std::l
                 // if(recursive)
                 // const std::string p = pattern.size() > ep.string().size() ? pattern.substr(ep.string().size()) : pattern;
                 // res                 &= search(ep, p);
+                continue;
             }
-
-            if (!try_sanitize(ep))
+            else
             {
-                bra_log_error("not a valid file: %s", ep.string().c_str());
-                return false;
-            }
+                // ep is a file
+                if (!try_sanitize(ep))
+                {
+                    bra_log_error("not a valid file: %s", ep.string().c_str());
+                    return false;
+                }
 
-            out_files.push_back(ep);
+                out_files.push_back(ep);
+            }
         }
 
         return true;

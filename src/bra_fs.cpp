@@ -42,6 +42,7 @@ bool try_sanitize(std::filesystem::path& path)
     if (p.empty())
     {
         if (path.is_absolute() || path.has_root_name())
+            // in this case it should have ec.clear()
             return err();
 
         // try adding current directory as it might be a wildcard...

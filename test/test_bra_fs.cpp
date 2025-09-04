@@ -30,16 +30,9 @@ int test_bra_fs_file_exists()
 {
     PRINT_TEST_NAME;
 
-    std::optional<bool> b;
-
-    b = bra::fs::file_exists("test1.txt");
-    ASSERT_TRUE(b && *b);
-    b = bra::fs::file_exists("test99.txt");
-    ASSERT_TRUE(b && !*b);
-    b = bra::fs::file_exists("dir1");
-    ASSERT_TRUE(b && !*b);
-    // b = bra::fs::file_exists("?#~¬");
-    // ASSERT_TRUE(!b);
+    ASSERT_TRUE(bra::fs::file_exists("test1.txt"));
+    ASSERT_TRUE(!bra::fs::file_exists("test99.txt"));
+    ASSERT_TRUE(!bra::fs::file_exists("dir1"));
 
     return 0;
 }
@@ -48,16 +41,9 @@ int test_bra_fs_dir_exists()
 {
     PRINT_TEST_NAME;
 
-    std::optional<bool> b;
-
-    b = bra::fs::dir_exists("dir1");
-    ASSERT_TRUE(b && *b);
-    b = bra::fs::dir_exists("dir99");
-    ASSERT_TRUE(b && !*b);
-    b = bra::fs::dir_exists("test1.txt");
-    ASSERT_TRUE(b && !*b);
-    // b = bra::fs::dir_exists("?#~¬");
-    // ASSERT_TRUE(!b);
+    ASSERT_TRUE(bra::fs::dir_exists("dir1"));
+    ASSERT_TRUE(!bra::fs::dir_exists("dir99"));
+    ASSERT_TRUE(!bra::fs::dir_exists("test1.txt"));
 
     return 0;
 }

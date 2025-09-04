@@ -51,12 +51,12 @@ bool is_wildcard(const std::filesystem::path& path)
     return path.string().find_first_of("?*") != string::npos;
 }
 
-std::optional<bool> dir_exists(const std::filesystem::path& path)
+bool dir_exists(const std::filesystem::path& path)
 {
     error_code ec;
     const auto err = [&path, &ec]() {
         bra_log_error("can't check dir %s: %s", path.string().c_str(), ec.message().c_str());
-        return nullopt;
+        return false;
     };
 
     const bool exists = fs::exists(path, ec);
@@ -68,10 +68,7 @@ std::optional<bool> dir_exists(const std::filesystem::path& path)
 
     const bool isDir = fs::is_directory(path, ec);
     if (ec)
-    {
-        bra_log_error("can't check dir %s: %s", path.string().c_str(), ec.message().c_str());
-        return nullopt;
-    }
+        return err();
 
     return isDir;
 }
@@ -80,9 +77,7 @@ bool dir_make(const std::filesystem::path& path)
 {
     error_code ec;
 
-    // TODO: maybe need to return optional here too?
-    const auto de = dir_exists(path);
-    if (de && *de)
+    if (dir_exists(path))
         return true;
 
     const bool created = fs::create_directories(path, ec);
@@ -127,12 +122,12 @@ std::filesystem::path filename_sfx_adjust(const std::filesystem::path& path, con
     return p;
 }
 
-std::optional<bool> file_exists(const std::filesystem::path& path)
+bool file_exists(const std::filesystem::path& path)
 {
     error_code ec;
     const auto err = [&path, &ec]() {
         bra_log_error("can't check file %s: %s", path.string().c_str(), ec.message().c_str());
-        return nullopt;
+        return false;
     };
 
     const bool exists = fs::exists(path, ec);
@@ -235,14 +230,13 @@ bool file_set_add_dir(std::set<std::filesystem::path>& files)
         auto f = listFiles.front();
         listFiles.pop_front();
 
-        const auto de = dir_exists(f);
-        if (de && *de)
+        if (dir_exists(f))
         {
             // TODO: only if recursive is not enabled
             //       recursive will also store empty directories.
             bra_log_debug("ignoring directory (non-recursive mode): %s", f.string().c_str());
         }
-        else if (!(file_exists(f)))
+        else if (!file_exists(f))
         {
             bra_log_error("%s is neither a regular file nor a directory", f.string().c_str());
             continue;

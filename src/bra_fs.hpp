@@ -57,9 +57,8 @@ namespace bra::fs
  * @param path
  * @return true if the path exists and is a directory.
  * @return false otherwise.
- * @return nullopt on error.
  */
-[[nodiscard]] std::optional<bool> dir_exists(const std::filesystem::path& path);
+[[nodiscard]] bool dir_exists(const std::filesystem::path& path);
 
 /**
  * @brief Create the directory at @p path.
@@ -102,9 +101,8 @@ namespace bra::fs
  * @param path
  * @return true
  * @return false
- * @return nullopt on error.
  */
-[[nodiscard]] std::optional<bool> file_exists(const std::filesystem::path& path);
+[[nodiscard]] bool file_exists(const std::filesystem::path& path);
 
 /**
  * @brief Check if the file in @p path exists and ask the user to overwrite.

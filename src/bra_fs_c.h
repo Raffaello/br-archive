@@ -9,8 +9,16 @@ extern "C" {
 #include <stdbool.h>
 #include <stdint.h>
 
-
-// int bra_fs_dir_exists(const char* path);
+/**
+ * @brief Return if the given @p path is a directory.
+ *
+ * @overload bra::fs::dir_exists(const std::filesystem::path& path)
+ *
+ * @param path
+ * @return true exists
+ * @return false not exists or error.
+ */
+bool bra_fs_dir_exists(const char* path);
 
 /**
  * @brief Create a directory given by @p path.
@@ -23,6 +31,17 @@ extern "C" {
  * @return false on error
  */
 bool bra_fs_dir_make(const char* path);
+
+/**
+ * @brief Return if the given @p path is a file.
+ *
+ * @overload bra::fs::file_exists(const std::filesystem::path& path)
+ *
+ * @param path
+ * @return true exists
+ * @return false not exists or error.
+ */
+bool bra_fs_file_exists(const char* path);
 
 /**
  * @brief Get the file attributes from the given @p path and store them in @p attr.

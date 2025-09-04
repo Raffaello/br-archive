@@ -3,18 +3,14 @@
 
 namespace fs = std::filesystem;
 
-// extern "C" int bra_fs_dir_exists(const char* path)
-// {
-//     if (path == nullptr)
-//         return -1;
+extern "C" bool bra_fs_dir_exists(const char* path)
+{
+    if (path == nullptr)
+        return false;
 
-// const fs::path p(path);
-// auto           res = bra::fs::dir_exists(path);
-// if (!res)
-//     return -1;
-
-// return *res ? 1 : 0;
-// }
+    const fs::path p(path);
+    return bra::fs::dir_exists(p);
+}
 
 extern "C" bool bra_fs_dir_make(const char* path)
 {
@@ -23,6 +19,15 @@ extern "C" bool bra_fs_dir_make(const char* path)
 
     const fs::path p(path);
     return bra::fs::dir_make(p);
+}
+
+extern "C" bool bra_fs_file_exists(const char* path)
+{
+    if (path == nullptr)
+        return false;
+
+    const fs::path p(path);
+    return bra::fs::file_exists(p);
 }
 
 extern "C" bool bra_fs_file_attributes(const char* path, bra_attr_t* attr)

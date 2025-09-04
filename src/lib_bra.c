@@ -617,6 +617,7 @@ bool bra_io_decode_and_write_to_disk(bra_io_file_t* f)
     {
     case BRA_ATTR_FILE:
     {
+
         bra_printf_msg("Extracting file: %s ...", mf.name);
 
         bra_io_file_t f2;

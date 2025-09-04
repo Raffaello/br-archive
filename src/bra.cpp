@@ -123,6 +123,7 @@ bool parse_args(int argc, char* argv[])
             {
                 // This should match exactly the directory.
                 // so need to be converted as a wildcard adding a `/*' at the end
+                p /= "*";
                 if (!bra::fs::wildcard_expand(p, g_files))
                 {
                     bra_log_error("path not valid: %s", p.string().c_str());

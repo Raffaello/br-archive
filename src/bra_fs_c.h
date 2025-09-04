@@ -71,7 +71,7 @@ bool bra_fs_file_size(const char* path, uint64_t* file_size);
 /**
  * @brief If a file @p path exists ask to overwrite it.
  *
- * @overload std::optional<bool> file_exists_ask_overwrite(const std::filesystem::path& path, const bool always_yes)
+ * @overload std::optional<bool> file_exists_ask_overwrite(const std::filesystem::path& path, const bra_fs_overwrite_policy_e overwrite_policy)
  *
  * @param path
  * @param overwrite_policy

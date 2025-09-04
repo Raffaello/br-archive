@@ -121,11 +121,13 @@ int test_bra_wildcard_dir_unbra_list()
 {
     PRINT_TEST_NAME;
 
-    return _test_bra_unbra_list("dir1/*") &&
-           _test_bra_unbra_list("dir1") &&
-           _test_bra_unbra_list("./dir1/*") &&
-           _test_bra_unbra_list("./dir1") &&
-           _test_bra_unbra_list("./dir?");
+    ASSERT_EQ(_test_bra_unbra_list("dir1/*"), WEXITSTATUS(0));
+    ASSERT_EQ(_test_bra_unbra_list("dir1"), WEXITSTATUS(0));
+    ASSERT_EQ(_test_bra_unbra_list("./dir1/*"), WEXITSTATUS(0));
+    ASSERT_EQ(_test_bra_unbra_list("./dir1"), WEXITSTATUS(0));
+    ASSERT_EQ(_test_bra_unbra_list("./dir?"), WEXITSTATUS(1));    // dir1 won't be added as it is not recursive so no input file added
+
+    return 0;
 }
 
 int _test_bra_sfx(const std::string& out_file)

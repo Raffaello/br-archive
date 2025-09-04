@@ -203,7 +203,7 @@ std::optional<bool> file_exists_ask_overwrite(const std::filesystem::path& path,
 
         if (!single_overwrite)
         {
-            if (c == 'a' && c == 'o')
+            if (c == 'a' || c == 'o')
                 break;
         }
     }

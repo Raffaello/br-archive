@@ -92,7 +92,7 @@ bool parse_args(int argc, char* argv[])
                 g_bra_file = p;
             else
             {
-                bra_log_error("unknown argument: %s", s.c_str());
+                bra_log_error("unknown argument/file not found: %s", s.c_str());
                 return false;
             }
         }

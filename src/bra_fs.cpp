@@ -24,8 +24,19 @@ using namespace std;
 bool try_sanitize(std::filesystem::path& path)
 {
     error_code ec;
+    auto       err = [&path, &ec]() {
+        bra_log_error("unable to sanitize path %s: %s", path.string().c_str(), ec.message().c_str());
+        return false;
+    };
 
-    fs::path p = fs::relative(path, fs::current_path(), ec);
+    fs::path p_ = fs::relative(path, fs::current_path(), ec);
+    if (ec)
+        return err();
+
+    if (p_.empty() && (path.is_absolute() || path.has_root_name()))
+        return err();
+
+    fs::path p = p_;
     if (p.empty())    // try adding current directory
         path = "./" / path;
 
@@ -33,8 +44,6 @@ bool try_sanitize(std::filesystem::path& path)
     if (ec)
         return false;
 
-    if (path.is_absolute() || path.has_root_name())
-        return false;
 
     for (const auto& p : path)
     {

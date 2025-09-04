@@ -320,10 +320,15 @@ bool bra_io_encode_and_write_to_disk(bra_io_file_t* f, const char* fn);
  * @brief Decode the current pointed internal file contained in @p f and write it to its relative path on disk.
  *        On error closes @p f via @ref bra_io_close.
  *
+ * @pre  @p overwrite_policy != NULL.
+ *
+ * @note @p overwrite_policy is in/out: the callee may update it if the user selects
+ *       a global choice (e.g., “[A]ll” / “N[o]ne”).
+ *
  * @todo better split into decode and write to disk ?
  *
  * @param f
- * @param overwrite_policy
+ * @param overwrite_policy[in/out]
  * @return true on success
  * @return false on error
  */

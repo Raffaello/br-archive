@@ -172,23 +172,21 @@ std::optional<bool> file_exists_ask_overwrite(const std::filesystem::path& path,
 
     char c;
 
+    switch (overwrite_policy)
+    {
+    case BRA_OVERWRITE_ALWAYS_YES:
+        return true;
+    case BRA_OVERWRITE_ALWAYS_NO:
+        return false;
+    default:
+        break;
+    }
+
     // TODO: this should use bra_message, bra_message must be moved into bra_log.h
     if (single_overwrite)
         cout << format("File {} already exists. Overwrite? ([y]es/[n]o) ", path.string()) << flush;
     else
         cout << format("File {} already exists. Overwrite? ([y]es/[n]o/[A]ll/N[o]ne) ", path.string()) << flush;
-
-    switch (overwrite_policy)
-    {
-    case BRA_OVERWRITE_ALWAYS_YES:
-        cout << 'y' << endl;
-        return true;
-    case BRA_OVERWRITE_ALWAYS_NO:
-        cout << 'n' << endl;
-        return false;
-    default:
-        break;
-    }
 
     do
     {

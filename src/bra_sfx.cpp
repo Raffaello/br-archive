@@ -93,7 +93,7 @@ void help()
     cout << format("--list   | -l : view archive content.") << endl;
     cout << format("--yes    | -y : force a 'yes' response to all the user questions.") << endl;
     cout << format("--no     | -n : force 'no' to all prompts (skip overwrites).") << endl;
-    cout << format("--update | -u : this update an existing archiving with the missing file given in input.") << endl;
+    cout << format("--update | -u : update an existing archive with missing files from input.") << endl;
     cout << endl;
 }
 

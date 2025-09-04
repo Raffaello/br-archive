@@ -50,7 +50,7 @@ void help()
     cout << format("--sfx    | -s : generate a self-extracting archive") << endl;
     cout << format("--yes    | -y : force a 'yes' response to all the user questions.") << endl;
     cout << format("--no     | -n : force 'no' to all prompts (skip overwrites).") << endl;
-    cout << format("--update | -u : this update an existing archiving with the missing file given in input.") << endl;
+    cout << format("--update | -u : update an existing archive with missing files from input.") << endl;
     cout << format("--out    | -o : <output_filename> it takes the path of the output file.") << endl;
     cout << format("                If the extension {} is missing it will be automatically added.", BRA_FILE_EXT) << endl;
     cout << endl;

@@ -29,21 +29,30 @@ bool try_sanitize(std::filesystem::path& path)
         return false;
     };
 
-    fs::path p_ = fs::relative(path, fs::current_path(), ec);
+    const bool rel = fs::absolute(path, ec).string().starts_with(fs::current_path().string());
     if (ec)
         return err();
-
-    if (p_.empty() && (path.is_absolute() || path.has_root_name()))
-        return err();
-
-    fs::path p = p_;
-    if (p.empty())    // try adding current directory
-        path = "./" / path;
-
-    path = fs::relative(path, fs::current_path(), ec);
-    if (ec)
+    if (!rel)
         return false;
 
+    fs::path p = fs::relative(path, fs::current_path(), ec);
+    if (ec)
+        return err();
+
+    if (p.empty())
+    {
+        if (path.is_absolute() || path.has_root_name())
+            return err();
+
+        // try adding current directory
+        path = "./" / path;
+        path = fs::relative(path, fs::current_path(), ec);
+    }
+    else
+        path = p;
+
+    if (ec)
+        return false;
 
     for (const auto& p : path)
     {
@@ -52,7 +61,6 @@ bool try_sanitize(std::filesystem::path& path)
     }
 
     path = path.lexically_normal().generic_string();
-
     return !path.empty();
 }
 

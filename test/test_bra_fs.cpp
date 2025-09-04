@@ -107,6 +107,10 @@ int test_bra_fs_try_sanitize_path()
     ASSERT_TRUE(!bra::fs::try_sanitize(p));
     p = "..\\not_sane";
     ASSERT_TRUE(!bra::fs::try_sanitize(p));
+    p = fs::current_path().parent_path();
+    ASSERT_TRUE(!bra::fs::try_sanitize(p));
+    p = fs::current_path() / "..";
+    ASSERT_TRUE(!bra::fs::try_sanitize(p));
 
     p = fs::current_path();
     ASSERT_TRUE(bra::fs::try_sanitize(p));

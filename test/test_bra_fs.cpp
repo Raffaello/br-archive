@@ -26,6 +26,31 @@ int test_bra_fs_is_wildcards()
     return 0;
 }
 
+int test_bra_fs_wildcard_expand()
+{
+    PRINT_TEST_NAME;
+
+    std::set<fs::path> files;
+
+    ASSERT_TRUE(bra::fs::wildcard_expand("*", files));
+    ASSERT_TRUE(files.size() != 0);
+    files.clear();
+
+    ASSERT_TRUE(bra::fs::wildcard_expand("./*", files));
+    ASSERT_TRUE(files.size() != 0);
+    files.clear();
+
+    ASSERT_TRUE(bra::fs::wildcard_expand("bra.*", files));
+    ASSERT_EQ(files.size(), 2U);
+    files.clear();
+
+    ASSERT_TRUE(bra::fs::wildcard_expand("./bra.*", files));
+    ASSERT_EQ(files.size(), 2U);
+    files.clear();
+
+    return 0;
+}
+
 int test_bra_fs_file_exists()
 {
     PRINT_TEST_NAME;
@@ -98,6 +123,23 @@ int test_bra_fs_try_sanitize_path()
     p = "./wildcards/*";
     ASSERT_TRUE(bra::fs::try_sanitize(p));
     ASSERT_EQ(p.string(), "wildcards/*");
+
+    p = "./*";
+    ASSERT_TRUE(bra::fs::try_sanitize(p));
+    ASSERT_EQ(p.string(), "*");
+
+    p = "*";
+    ASSERT_TRUE(bra::fs::try_sanitize(p));
+    ASSERT_EQ(p.string(), "*");
+
+    p = "./bra.*";
+    ASSERT_TRUE(bra::fs::try_sanitize(p));
+    ASSERT_EQ(p.string(), "bra.*");
+
+    p = "bra.*";
+    ASSERT_TRUE(bra::fs::try_sanitize(p));
+    ASSERT_EQ(p.string(), "bra.*");
+
 
     return 0;
 }
@@ -193,6 +235,7 @@ int main(int argc, char* argv[])
 {
     return test_main(argc, argv, {
                                      {TEST_FUNC(test_bra_fs_is_wildcards)},
+                                     {TEST_FUNC(test_bra_fs_wildcard_expand)},
                                      {TEST_FUNC(test_bra_fs_file_exists)},
                                      {TEST_FUNC(test_bra_fs_dir_exists)},
                                      {TEST_FUNC(test_bra_fs_dir_make)},

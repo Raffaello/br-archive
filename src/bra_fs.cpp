@@ -25,6 +25,10 @@ bool try_sanitize(std::filesystem::path& path)
 {
     error_code ec;
 
+    fs::path p = fs::relative(path, fs::current_path(), ec);
+    if (p.empty())    // try adding current directory
+        path = "./" / path;
+
     path = fs::relative(path, fs::current_path(), ec);
     if (ec)
         return false;
@@ -342,7 +346,10 @@ bool wildcard_expand(const std::filesystem::path& wildcard_path, std::set<std::f
 {
     fs::path p = wildcard_path.generic_string();
 
-    if (!try_sanitize(p) || !is_wildcard(p))
+    if (!is_wildcard(p))
+        return false;
+
+    if (!try_sanitize(p))
         return false;
 
     const fs::path dir     = bra::fs::wildcard_extract_dir(p);

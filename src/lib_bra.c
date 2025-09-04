@@ -627,25 +627,25 @@ bool bra_io_decode_and_write_to_disk(bra_io_file_t* f, const bool always_yes)
                 bra_io_file_read_error(f);
                 return false;
             }
-            else
-            {
-                bra_io_file_t f2;
+        }
+        else
+        {
+            bra_io_file_t f2;
 
-                bra_printf_msg("Extracting file: %-40.40s", mf.name);
-                // NOTE: the directory must have been created in the previous file
-                //       otherwise here it will fail to crete the fle.
-                //       There is an order in the archive that the last directory used,
-                //       is created, and then its files are following.
-                //       no need to create the parent directory for each file each time.
-                if (!bra_io_open(&f2, mf.name, "wb"))
-                    goto BRA_IO_DECODE_ERR;
+            bra_printf_msg("Extracting file: %-40.40s", mf.name);
+            // NOTE: the directory must have been created in the previous file
+            //       otherwise here it will fail to crete the fle.
+            //       There is an order in the archive that the last directory used,
+            //       is created, and then its files are following.
+            //       no need to create the parent directory for each file each time.
+            if (!bra_io_open(&f2, mf.name, "wb"))
+                goto BRA_IO_DECODE_ERR;
 
-                bra_meta_file_free(&mf);
-                if (!bra_io_copy_file_chunks(&f2, f, ds))
-                    return false;
+            bra_meta_file_free(&mf);
+            if (!bra_io_copy_file_chunks(&f2, f, ds))
+                return false;
 
-                bra_io_close(&f2);
-            }
+            bra_io_close(&f2);
         }
     }
     break;

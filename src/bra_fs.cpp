@@ -44,15 +44,14 @@ bool try_sanitize(std::filesystem::path& path)
         if (path.is_absolute() || path.has_root_name())
             return err();
 
-        // try adding current directory
+        // try adding current directory as it might be a wildcard...
         path = "./" / path;
         path = fs::relative(path, fs::current_path(), ec);
+        if (ec)
+            return false;
     }
     else
         path = p;
-
-    if (ec)
-        return false;
 
     for (const auto& p : path)
     {

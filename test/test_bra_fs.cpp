@@ -30,7 +30,7 @@ int test_bra_fs_file_exists()
 {
     PRINT_TEST_NAME;
 
-    ASSERT_TRUE(bra::fs::file_exists("test1.txt"));
+    ASSERT_TRUE(bra::fs::file_exists("test.txt"));
     ASSERT_TRUE(!bra::fs::file_exists("test99.txt"));
     ASSERT_TRUE(!bra::fs::file_exists("dir1"));
 
@@ -43,7 +43,7 @@ int test_bra_fs_dir_exists()
 
     ASSERT_TRUE(bra::fs::dir_exists("dir1"));
     ASSERT_TRUE(!bra::fs::dir_exists("dir99"));
-    ASSERT_TRUE(!bra::fs::dir_exists("test1.txt"));
+    ASSERT_TRUE(!bra::fs::dir_exists("test.txt"));
 
     return 0;
 }

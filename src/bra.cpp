@@ -22,10 +22,10 @@ using namespace std;
 namespace fs = std::filesystem;
 
 
-static std::set<fs::path> g_files;
-static fs::path           g_out_filename;
-static bool               g_sfx        = false;
-static bool               g_always_yes = false;
+static std::set<fs::path>        g_files;
+static fs::path                  g_out_filename;
+static bool                      g_sfx              = false;
+static bra_fs_overwrite_policy_e g_overwrite_policy = BRA_OVERWRITE_ASK;
 
 //////////////////////////////////////////////////////////////////////////
 
@@ -64,8 +64,8 @@ bool parse_args(int argc, char* argv[])
 
     g_files.clear();
     g_out_filename.clear();
-    g_sfx        = false;
-    g_always_yes = false;
+    g_sfx              = false;
+    g_overwrite_policy = BRA_OVERWRITE_ASK;
     for (int i = 1; i < argc; ++i)
     {
         // first part is about arguments sections
@@ -94,7 +94,13 @@ bool parse_args(int argc, char* argv[])
         }
         else if (s == "--yes" || s == "-y")
         {
-            g_always_yes = true;
+            if (g_overwrite_policy != BRA_OVERWRITE_ASK)
+            {
+                bra_log_error("can't set %s option, another mutual exclusive option already used.", s.c_str());
+                return false;
+            }
+
+            g_overwrite_policy = BRA_OVERWRITE_ALWAYS_YES;
         }
         else
         {
@@ -183,7 +189,7 @@ bool validate_args()
         }
 
         // check if SFX_TMP exists...
-        const auto overwrite = bra::fs::file_exists_ask_overwrite(g_out_filename, g_always_yes);
+        const auto overwrite = bra::fs::file_exists_ask_overwrite(g_out_filename, g_overwrite_policy);
         if (overwrite)
         {
             if (!*overwrite)
@@ -202,7 +208,7 @@ bool validate_args()
         p = p.replace_extension(BRA_SFX_FILE_EXT);
 
     // TODO: this might not be ok
-    if (auto res = bra::fs::file_exists_ask_overwrite(p, g_always_yes))
+    if (auto res = bra::fs::file_exists_ask_overwrite(p, g_overwrite_policy))
     {
         if (!*res)
             return false;

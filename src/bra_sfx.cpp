@@ -15,7 +15,8 @@ namespace fs = std::filesystem;
 
 // fs::path g_bra_file;
 static bool g_listContent = false;
-static bool g_always_yes  = false;
+// static bool g_always_yes  = false;
+static bra_fs_overwrite_policy_e g_overwrite_policy = BRA_OVERWRITE_ASK;
 
 bool bra_isElf(const char* fn)
 {
@@ -111,8 +112,8 @@ bool parse_args(int argc, char* argv[])
         return false;
     }
 
-    g_listContent = false;
-    g_always_yes  = false;
+    g_listContent      = false;
+    g_overwrite_policy = BRA_OVERWRITE_ASK;
     for (int i = 1; i < argc; i++)
     {
         string s = argv[i];
@@ -128,7 +129,13 @@ bool parse_args(int argc, char* argv[])
         }
         else if (s == "--yes" || s == "-y")
         {
-            g_always_yes = true;
+            if (g_overwrite_policy != BRA_OVERWRITE_ASK)
+            {
+                bra_log_error("can't set %s option, another mutual exclusive option already used.", s.c_str());
+                return false;
+            }
+
+            g_overwrite_policy = BRA_OVERWRITE_ALWAYS_YES;
         }
         else
         {
@@ -198,7 +205,7 @@ int main(int argc, char* argv[])
         }
         else
         {
-            if (!bra_io_decode_and_write_to_disk(&f, g_always_yes))
+            if (!bra_io_decode_and_write_to_disk(&f, g_overwrite_policy))
                 return 1;
         }
     }

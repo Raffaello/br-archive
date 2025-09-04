@@ -164,7 +164,7 @@ bool file_exists(const std::filesystem::path& path)
     return isRegFile;
 }
 
-std::optional<bool> file_exists_ask_overwrite(const std::filesystem::path& path, const bool always_yes)
+std::optional<bool> file_exists_ask_overwrite(const std::filesystem::path& path, const bra_fs_overwrite_policy_e overwrite_policy)
 {
     if (!file_exists(path))
         return nullopt;
@@ -172,10 +172,18 @@ std::optional<bool> file_exists_ask_overwrite(const std::filesystem::path& path,
     char c;
 
     cout << format("File {} already exists. Overwrite? [Y/N] ", path.string()) << flush;
-    if (always_yes)
+    switch (overwrite_policy)
     {
+    case BRA_OVERWRITE_ALWAYS_YES:
         cout << 'y' << endl;
         return true;
+        break;
+    case BRA_OVERWRITE_ALWAYS_NO:
+        cout << 'n' << endl;
+        return false;
+        break;
+    default:
+        break;
     }
 
     do

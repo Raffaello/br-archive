@@ -89,9 +89,11 @@ void help()
     cout << endl;
     cout << endl;
     cout << format("Options:") << endl;
-    cout << format("--help | -h : display this page.") << endl;
-    cout << format("--list | -l : view archive content.") << endl;
-    cout << format("--yes  | -y : force a 'yes' response to all the user questions.") << endl;
+    cout << format("--help   | -h : display this page.") << endl;
+    cout << format("--list   | -l : view archive content.") << endl;
+    cout << format("--yes    | -y : force a 'yes' response to all the user questions.") << endl;
+    cout << format("--no     | -n : force 'no' to all prompts (skip overwrites).") << endl;
+    cout << format("--update | -u : this update an existing archiving with the missing file given in input.") << endl;
     cout << endl;
 }
 
@@ -136,6 +138,16 @@ bool parse_args(int argc, char* argv[])
             }
 
             g_overwrite_policy = BRA_OVERWRITE_ALWAYS_YES;
+        }
+        else if (s == "--no" || s == "-n")
+        {
+            if (g_overwrite_policy != BRA_OVERWRITE_ASK)
+            {
+                bra_log_error("can't set %s option, another mutual exclusive option already used.", s.c_str());
+                return false;
+            }
+
+            g_overwrite_policy = BRA_OVERWRITE_ALWAYS_NO;
         }
         else
         {

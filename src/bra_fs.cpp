@@ -410,10 +410,8 @@ bool search(const std::filesystem::path& dir, const std::string& pattern, std::l
         for (const auto& entry : fs::directory_iterator(dir))
         {
             // TODO: dir to search only if it is recursive (-r)
-
-            // const bool is_dir = entry.is_directory();
-            const bool is_dir = false;    // TODO: must be done later, requires to struct into dirs the archive too first.
-            if (!(entry.is_regular_file() || is_dir))
+            const bool is_dir = entry.is_directory();
+            if (!(entry.is_regular_file() || entry.is_directory()))
                 continue;
 
             fs::path          ep       = entry.path();
@@ -421,14 +419,15 @@ bool search(const std::filesystem::path& dir, const std::string& pattern, std::l
             if (!std::regex_match(filename, r))
                 continue;
 
-            // if (is_dir)
-            // {
-            //     std::cout << "Matched dir: " << filename << endl;
-            //     const std::string p  = pattern.substr(ep.string().size());
-            //     res                 &= search(ep, p);
-            // }
-            // else
-            // std::cout << "[DEBUG] Expected file: " << filename << endl;
+            if (is_dir)
+            {
+                // bra_log_debug("Matched dir: %s", filename.c_str());
+
+                // TODO: if recursive...
+                // if(recursive)
+                // const std::string p = pattern.size() > ep.string().size() ? pattern.substr(ep.string().size()) : pattern;
+                // res                 &= search(ep, p);
+            }
 
             if (!try_sanitize(ep))
             {

@@ -101,10 +101,8 @@ int test_bra_unbra()
     return 0;
 }
 
-int test_bra_wildcard_dir_unbra_list()
+int _test_bra_unbra_list(const fs::path& input)
 {
-    PRINT_TEST_NAME;
-
     const std::string bra      = CMD_PREFIX + "bra";
     const std::string unbra    = CMD_PREFIX + "unbra";
     const std::string out_file = "./dir.BRa";
@@ -112,11 +110,22 @@ int test_bra_wildcard_dir_unbra_list()
     if (fs::exists(out_file))
         fs::remove(out_file);
 
-    ASSERT_TRUE(system((bra + " -o " + out_file + " " + "dir1/*").c_str()) == 0);
+    ASSERT_TRUE(system((bra + " -o " + out_file + " " + input.string()).c_str()) == 0);
     ASSERT_TRUE(fs::exists(out_file));
     ASSERT_TRUE(system((unbra + " -l " + out_file).c_str()) == 0);
 
     return 0;
+}
+
+int test_bra_wildcard_dir_unbra_list()
+{
+    PRINT_TEST_NAME;
+
+    return _test_bra_unbra_list("dir1/*") &&
+           _test_bra_unbra_list("dir1") &&
+           _test_bra_unbra_list("./dir1/*") &&
+           _test_bra_unbra_list("./dir1") &&
+           _test_bra_unbra_list("./dir?");
 }
 
 int _test_bra_sfx(const std::string& out_file)
@@ -127,10 +136,6 @@ int _test_bra_sfx(const std::string& out_file)
     const std::string exp_file  = "./test.txt.exp";
     std::string       out_file_sfx;
 
-    // if (out_file_.ends_with(BRA_FILE_EXT))
-    //     out_file_sfx = out_file_ + BRA_SFX_FILE_EXT;
-    // else
-    //     out_file_sfx = out_file_ + BRA_FILE_EXT + BRA_SFX_FILE_EXT;
     out_file_sfx = bra::fs::filename_sfx_adjust(out_file_, false).string();
 
     std::cout << std::format("out_file_sfx: {}", out_file_sfx) << std::endl;

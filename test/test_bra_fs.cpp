@@ -58,6 +58,16 @@ int test_bra_fs_wildcard_expand()
     ASSERT_EQ(files.size(), 2U);
     files.clear();
 
+    ASSERT_TRUE(bra::fs::wildcard_expand("?ra.?fx", files));
+    ASSERT_EQ(files.size(), 1U);
+    ASSERT_EQ(files.begin()->string(), "bra.sfx");
+    files.clear();
+
+    ASSERT_TRUE(bra::fs::wildcard_expand("dir?", files));
+    ASSERT_EQ(files.size(), 1U);
+    ASSERT_EQ(files.begin()->string(), "dir1");
+    files.clear();
+
     return 0;
 }
 
@@ -156,6 +166,10 @@ int test_bra_fs_try_sanitize_path()
     ASSERT_TRUE(bra::fs::try_sanitize(p));
     ASSERT_EQ(p.string(), "bra.*");
 
+
+    p = "dir?";
+    ASSERT_TRUE(bra::fs::try_sanitize(p));
+    ASSERT_EQ(p.string(), "dir?");
 
     return 0;
 }

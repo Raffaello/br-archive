@@ -51,14 +51,27 @@ bool is_wildcard(const std::filesystem::path& path)
     return path.string().find_first_of("?*") != string::npos;
 }
 
-bool dir_exists(const std::filesystem::path& path)
+std::optional<bool> dir_exists(const std::filesystem::path& path)
 {
     error_code ec;
-    const bool isDir = fs::is_directory(path, ec);
+    const auto err = [&path, &ec]() {
+        bra_log_error("can't check dir %s: %s", path.string().c_str(), ec.message().c_str());
+        return nullopt;
+    };
 
-    // TODO: can't know if it was an error, maybe use an optional instead?
+    const bool exists = fs::exists(path, ec);
     if (ec)
+        return err();
+
+    if (!exists)
         return false;
+
+    const bool isDir = fs::is_directory(path, ec);
+    if (ec)
+    {
+        bra_log_error("can't check dir %s: %s", path.string().c_str(), ec.message().c_str());
+        return nullopt;
+    }
 
     return isDir;
 }
@@ -67,7 +80,9 @@ bool dir_make(const std::filesystem::path& path)
 {
     error_code ec;
 
-    if (dir_exists(path))
+    // TODO: maybe need to return optional here too?
+    const auto de = dir_exists(path);
+    if (de && *de)
         return true;
 
     const bool created = fs::create_directories(path, ec);
@@ -209,13 +224,14 @@ bool file_set_add_dir(std::set<std::filesystem::path>& files)
         auto f = listFiles.front();
         listFiles.pop_front();
 
-        if (bra::fs::dir_exists(f))
+        const auto de = dir_exists(f);
+        if (de && *de)
         {
             // TODO: only if recursive is not enabled
             //       recursive will also store empty directories.
             bra_log_debug("ignoring directory (non-recursive mode): %s", f.string().c_str());
         }
-        else if (!(bra::fs::file_exists(f)))
+        else if (!(file_exists(f)))
         {
             bra_log_error("%s is neither a regular file nor a directory", f.string().c_str());
             continue;

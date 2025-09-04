@@ -638,6 +638,7 @@ bool bra_io_decode_and_write_to_disk(bra_io_file_t* f)
     break;
     case BRA_ATTR_DIR:
     {
+
         bra_printf_msg("Creating dir: %s ...", mf.name);
         if (!bra_fs_dir_make(mf.name))
             goto BRA_IO_DECODE_ERR;

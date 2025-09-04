@@ -42,15 +42,24 @@ namespace bra::fs
 [[nodiscard]] bool is_wildcard(const std::filesystem::path& path);
 
 /**
+ * @brief
+ *
+ *
+ * @param path
+
+ */
+
+/**
  * @brief Check if the given @p path exists and is a directory.
  *
  * @see file_exists
  *
  * @param path
- * @return true if the path exists and is a directory
- * @return false otherwise
+ * @return true if the path exists and is a directory.
+ * @return false otherwise.
+ * @return nullopt on error.
  */
-[[nodiscard]] bool dir_exists(const std::filesystem::path& path);
+[[nodiscard]] std::optional<bool> dir_exists(const std::filesystem::path& path);
 
 /**
  * @brief Create the directory at @p path.

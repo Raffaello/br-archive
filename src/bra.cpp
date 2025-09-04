@@ -68,6 +68,7 @@ bool parse_args(int argc, char* argv[])
     g_always_yes = false;
     for (int i = 1; i < argc; ++i)
     {
+        // first part is about arguments sections
         string s = argv[i];
 
         if (s == "--help" || s == "-h")
@@ -95,45 +96,50 @@ bool parse_args(int argc, char* argv[])
         {
             g_always_yes = true;
         }
-        // check if it is file or a dir
-        else if (bra::fs::file_exists(s))
-        {
-            fs::path p = s;
-
-            // check file path
-            if (!bra::fs::try_sanitize(p))
-            {
-                bra_log_error("path not valid: %s", p.string().c_str());
-                return false;
-            }
-
-            if (!g_files.insert(p).second)
-                bra_log_warn("duplicate file/dir given in input: %s", p.string().c_str());
-        }
-        else if (bra::fs::dir_exists(s))
-        {
-            // This should match exactly the directory.
-            // so need to be converted as a wildcard adding a `/*' at the end
-            fs::path p = fs::path(s) / "*";
-            if (!bra::fs::wildcard_expand(p, g_files))
-            {
-                bra_log_error("path not valid: %s", p.string().c_str());
-                return false;
-            }
-        }
-        // check if it is a wildcard
-        else if (bra::fs::is_wildcard(s))
-        {
-            if (!bra::fs::wildcard_expand(s, g_files))
-            {
-                bra_log_error("unable to expand wildcard: %s", s.c_str());
-                return false;
-            }
-        }
         else
         {
-            bra_log_error("unknown argument/file doesn't exist: %s", s.c_str());
-            return false;
+            // FS sub-section
+            fs::path p = s;
+            // check if it is file or a dir
+            if (bra::fs::file_exists(p))
+            {
+                // check file path
+                if (!bra::fs::try_sanitize(p))
+                {
+                    bra_log_error("path not valid: %s", p.string().c_str());
+                    return false;
+                }
+
+                if (!g_files.insert(p).second)
+                    bra_log_warn("duplicate file/dir given in input: %s", p.string().c_str());
+
+                continue;
+            }
+            const auto isDir = bra::fs::dir_exists(p);
+            if (isDir && *isDir)
+            {
+                // This should match exactly the directory.
+                // so need to be converted as a wildcard adding a `/*' at the end
+                if (!bra::fs::wildcard_expand(p, g_files))
+                {
+                    bra_log_error("path not valid: %s", p.string().c_str());
+                    return false;
+                }
+            }
+            // check if it is a wildcard
+            else if (bra::fs::is_wildcard(p))
+            {
+                if (!bra::fs::wildcard_expand(p, g_files))
+                {
+                    bra_log_error("unable to expand wildcard: %s", s.c_str());
+                    return false;
+                }
+            }
+            else
+            {
+                bra_log_error("unknown argument/file doesn't exist: %s", s.c_str());
+                return false;
+            }
         }
     }
 
@@ -189,7 +195,6 @@ bool validate_args()
             cout << format("Overwriting file: {}", g_out_filename.string()) << endl;
         }
     }
-
     else
     {
         g_out_filename = bra::fs::filename_archive_adjust(g_out_filename);

@@ -30,18 +30,22 @@ int test_bra_fs_dir_make()
 {
     PRINT_TEST_NAME;
 
-    const fs::path dir1 = "dir1/test";
+    std::optional<bool> b;
+    const fs::path      dir1 = "dir1/test";
 
     fs::remove(dir1);
-    ASSERT_TRUE(!bra::fs::dir_exists(dir1));
-
+    b = bra::fs::dir_exists(dir1);
+    ASSERT_TRUE(b && !*b);
     ASSERT_TRUE(bra::fs::dir_make(dir1));
-    ASSERT_TRUE(bra::fs::dir_exists(dir1));
+    b = bra::fs::dir_exists(dir1);
+    ASSERT_TRUE(b && *b);
     ASSERT_TRUE(bra::fs::dir_make(dir1));
-    ASSERT_TRUE(bra::fs::dir_exists(dir1));
+    b = bra::fs::dir_exists(dir1);
+    ASSERT_TRUE(b && *b);
 
     fs::remove(dir1);
-    ASSERT_TRUE(!bra::fs::dir_exists(dir1));
+    b = bra::fs::dir_exists(dir1);
+    ASSERT_TRUE(b && !*b);
 
     return 0;
 }

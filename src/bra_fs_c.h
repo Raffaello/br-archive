@@ -9,6 +9,9 @@ extern "C" {
 #include <stdbool.h>
 #include <stdint.h>
 
+
+// int bra_fs_dir_exists(const char* path);
+
 /**
  * @brief Create a directory given by @p path.
  *        It creates also the parent directory if necessary.

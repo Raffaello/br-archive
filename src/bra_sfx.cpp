@@ -119,7 +119,7 @@ bool parse_args(int argc, char* argv[])
         if ((s == "--help") || (s == "-h"))
         {
             help();
-            exit(0);
+            exit(0);    // this is required to terminate the program with a return 0, if returning false, will return != 0
         }
         else if (s == "--list" || s == "-l")
         {

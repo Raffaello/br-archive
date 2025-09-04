@@ -41,6 +41,8 @@ add_test(NAME test_bra.not_more_than_1_same_file    COMMAND test_bra test_bra_no
 
 target_include_directories(test_bra PRIVATE ${CMAKE_SOURCE_DIR}/src)
 target_link_libraries(test_bra PRIVATE bra_fs)
+
+
 foreach(tgt IN ITEMS bra unbra bra_sfx)
     add_custom_command(TARGET test_bra POST_BUILD 
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
@@ -61,4 +63,10 @@ add_custom_command(TARGET test_bra POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different
                     ${CMAKE_CURRENT_SOURCE_DIR}/dir1
                     ${CMAKE_CURRENT_BINARY_DIR}/dir1
+)
+
+add_custom_command(TARGET test_bra_fs POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different
+        ${CMAKE_CURRENT_SOURCE_DIR}/dir1
+        ${CMAKE_CURRENT_BINARY_DIR}/dir1
 )

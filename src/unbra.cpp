@@ -132,7 +132,7 @@ std::string format_bytes(const size_t bytes)
     constexpr size_t GB = MB * 1024;
 
     if (bytes >= GB)
-        return format("{:2.1f} GB", static_cast<double>(bytes) / GB);
+        return format("{:.1f} GB", static_cast<double>(bytes) / GB);
     else if (bytes >= MB)
         return format("{:2.1f} MB", static_cast<double>(bytes) / MB);
     else if (bytes >= KB)

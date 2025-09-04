@@ -525,10 +525,10 @@ bool bra_io_encode_and_write_to_disk(bra_io_file_t* f, const char* fn)
     switch (attributes)
     {
     case BRA_ATTR_DIR:
-        bra_printf_msg("Archiving dir: %s ...", fn);
+        bra_printf_msg("Archiving dir: %-40.40s", fn);
         break;
     case BRA_ATTR_FILE:
-        bra_printf_msg("Archiving file: %s ...", fn);
+        bra_printf_msg("Archiving file: %-40.40s", fn);
         break;
     default:
         goto BRA_IO_WRITE_CLOSE_ERROR;
@@ -617,31 +617,35 @@ bool bra_io_decode_and_write_to_disk(bra_io_file_t* f, const bool always_yes)
     {
     case BRA_ATTR_FILE:
     {
+        const uint64_t ds = mf.data_size;
         if (!bra_fs_file_exists_ask_overwrite(mf.name, always_yes))
         {
-            bra_printf_msg("Skipping file: %s", mf.name);
+            bra_printf_msg("Skipping file: %-40.40s", mf.name);
             bra_meta_file_free(&mf);
-        }
-        else
-        {
-
-            bra_printf_msg("Extracting file: %s", mf.name);
-
-            bra_io_file_t f2;
-            // NOTE: the directory must have been created in the previous file
-            //       otherwise here it will fail to crete the fle.
-            //       There is an order in the archive that the last directory used,
-            //       is created, and then its files are following.
-            //       no need to create the parent directory for each file each time.
-            if (!bra_io_open(&f2, mf.name, "wb"))
-                goto BRA_IO_DECODE_ERR;
-
-            const uint64_t ds = mf.data_size;
-            bra_meta_file_free(&mf);
-            if (!bra_io_copy_file_chunks(&f2, f, ds))
+            if (!bra_io_skip_data(f, ds))
+            {
+                bra_io_file_read_error(f);
                 return false;
+            }
+            else
+            {
+                bra_io_file_t f2;
 
-            bra_io_close(&f2);
+                bra_printf_msg("Extracting file: %-40.40s", mf.name);
+                // NOTE: the directory must have been created in the previous file
+                //       otherwise here it will fail to crete the fle.
+                //       There is an order in the archive that the last directory used,
+                //       is created, and then its files are following.
+                //       no need to create the parent directory for each file each time.
+                if (!bra_io_open(&f2, mf.name, "wb"))
+                    goto BRA_IO_DECODE_ERR;
+
+                bra_meta_file_free(&mf);
+                if (!bra_io_copy_file_chunks(&f2, f, ds))
+                    return false;
+
+                bra_io_close(&f2);
+            }
         }
     }
     break;
@@ -665,6 +669,7 @@ bool bra_io_decode_and_write_to_disk(bra_io_file_t* f, const bool always_yes)
         break;
     }
 
+    // TODO: consider to write [ SKIP ] when skipped...
     bra_printf_msg(" [  OK  ]\n");
     return true;
 }

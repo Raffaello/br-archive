@@ -48,7 +48,7 @@ void help()
     cout << format("Options:") << endl;
     cout << format("--help | -h : display this page.") << endl;
     cout << format("--sfx  | -s : generate a self-extracting archive") << endl;
-    cout << format("--yes  | -y : this will force a 'yes' response to all the user questions.") << endl;
+    cout << format("--yes  | -y : force a 'yes' response to all the user questions.") << endl;
     cout << format("--out  | -o : <output_filename> it takes the path of the output file.") << endl;
     cout << format("              If the extension {} is missing it will be automatically added.", BRA_FILE_EXT) << endl;
     cout << endl;

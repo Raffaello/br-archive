@@ -14,6 +14,8 @@ using namespace std;
 namespace fs = std::filesystem;
 
 // fs::path g_bra_file;
+static bool g_listContent = false;
+static bool g_always_yes  = false;
 
 bool bra_isElf(const char* fn)
 {
@@ -87,6 +89,8 @@ void help()
     cout << endl;
     cout << format("Options:") << endl;
     cout << format("--help | -h : display this page.") << endl;
+    cout << format("--list | -l : view archive content.") << endl;
+    cout << format("--yes  | -y : force a 'yes' response to all the user questions.") << endl;
     cout << endl;
 }
 
@@ -107,6 +111,8 @@ bool parse_args(int argc, char* argv[])
         return false;
     }
 
+    g_listContent = false;
+    g_always_yes  = false;
     for (int i = 1; i < argc; i++)
     {
         string s = argv[i];
@@ -115,11 +121,15 @@ bool parse_args(int argc, char* argv[])
             help();
             exit(0);
         }
-        // else if ((s == "--list") | (s == "-l"))
-        // {
-        //     // TODO: this is mostly the same as unbra ..
-        //     //       so unbra could be just a class to be reused among the 2 programs.
-        // }
+        else if (s == "--list" || s == "-l")
+        {
+            // list content
+            g_listContent = true;
+        }
+        else if (s == "--yes" || s == "-y")
+        {
+            g_always_yes = true;
+        }
         else
         {
             bra_log_error("unknown argument: %s", s.c_str());
@@ -180,8 +190,17 @@ int main(int argc, char* argv[])
     // extract payload, encoded data
     for (uint32_t i = 0; i < bh.num_files; ++i)
     {
-        if (!bra_io_decode_and_write_to_disk(&f))
-            return 1;
+        if (g_listContent)
+        {
+            bra_log_critical("Not implemented yet.");
+            // if (!unbra_list_meta_file(f))
+            return 2;
+        }
+        else
+        {
+            if (!bra_io_decode_and_write_to_disk(&f, g_always_yes))
+                return 1;
+        }
     }
 
     bra_io_close(&f);

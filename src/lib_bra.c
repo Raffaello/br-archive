@@ -591,11 +591,11 @@ bool bra_io_encode_and_write_to_disk(bra_io_file_t* f, const char* fn)
     break;
     }
 
-    bra_printf_msg("OK\n");
+    bra_printf_msg(" [  OK  ]\n");
     return true;
 }
 
-bool bra_io_decode_and_write_to_disk(bra_io_file_t* f)
+bool bra_io_decode_and_write_to_disk(bra_io_file_t* f, const bool always_yes)
 {
     assert_bra_io_file_t(f);
 
@@ -617,32 +617,45 @@ bool bra_io_decode_and_write_to_disk(bra_io_file_t* f)
     {
     case BRA_ATTR_FILE:
     {
+        if (!bra_fs_file_exists_ask_overwrite(mf.name, always_yes))
+        {
+            bra_printf_msg("Skipping file: %s", mf.name);
+            bra_meta_file_free(&mf);
+        }
+        else
+        {
 
-        bra_printf_msg("Extracting file: %s ...", mf.name);
+            bra_printf_msg("Extracting file: %s", mf.name);
 
-        bra_io_file_t f2;
-        // NOTE: the directory must have been created in the previous file
-        //       otherwise here it will fail to crete the fle.
-        //       There is an order in the archive that the last directory used,
-        //       is created, and then its files are following.
-        //       no need to create the parent directory for each file each time.
-        if (!bra_io_open(&f2, mf.name, "wb"))
-            goto BRA_IO_DECODE_ERR;
+            bra_io_file_t f2;
+            // NOTE: the directory must have been created in the previous file
+            //       otherwise here it will fail to crete the fle.
+            //       There is an order in the archive that the last directory used,
+            //       is created, and then its files are following.
+            //       no need to create the parent directory for each file each time.
+            if (!bra_io_open(&f2, mf.name, "wb"))
+                goto BRA_IO_DECODE_ERR;
 
-        const uint64_t ds = mf.data_size;
-        bra_meta_file_free(&mf);
-        if (!bra_io_copy_file_chunks(&f2, f, ds))
-            return false;
+            const uint64_t ds = mf.data_size;
+            bra_meta_file_free(&mf);
+            if (!bra_io_copy_file_chunks(&f2, f, ds))
+                return false;
 
-        bra_io_close(&f2);
+            bra_io_close(&f2);
+        }
     }
     break;
     case BRA_ATTR_DIR:
     {
+        if (bra_fs_dir_exists(mf.name))
+            bra_printf_msg("Dir exists: %s", mf.name);
+        else
+        {
+            bra_printf_msg("Creating dir: %s", mf.name);
 
-        bra_printf_msg("Creating dir: %s ...", mf.name);
-        if (!bra_fs_dir_make(mf.name))
-            goto BRA_IO_DECODE_ERR;
+            if (!bra_fs_dir_make(mf.name))
+                goto BRA_IO_DECODE_ERR;
+        }
 
         bra_meta_file_free(&mf);
     }
@@ -652,6 +665,6 @@ bool bra_io_decode_and_write_to_disk(bra_io_file_t* f)
         break;
     }
 
-    bra_printf_msg("OK\n");
+    bra_printf_msg(" [  OK  ]\n");
     return true;
 }

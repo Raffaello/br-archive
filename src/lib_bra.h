@@ -320,11 +320,14 @@ bool bra_io_encode_and_write_to_disk(bra_io_file_t* f, const char* fn);
  * @brief Decode the current pointed internal file contained in @p f and write it to its relative path on disk.
  *        On error closes @p f via @ref bra_io_close.
  *
+ * @todo better split into decode and write to disk ?
+ *
  * @param f
+ * @param always_yes
  * @return true on success
  * @return false on error
  */
-bool bra_io_decode_and_write_to_disk(bra_io_file_t* f);
+bool bra_io_decode_and_write_to_disk(bra_io_file_t* f, const bool always_yes);
 
 #ifdef __cplusplus
 }

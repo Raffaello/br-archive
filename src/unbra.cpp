@@ -20,9 +20,14 @@ using namespace std;
 
 namespace fs = std::filesystem;
 
+// TODO: create an abstract class for the program containing basic help parse and validate plus run
+// TODO: create the children unbra, bra, bra_sfx
+// TODO: unbra must be able to read sfx too
 
-fs::path g_bra_file;
-bool     g_listContent = false;
+
+fs::path    g_bra_file;
+static bool g_listContent = false;
+static bool g_always_yes  = false;
 
 // TODO: add output path as parameter
 
@@ -43,6 +48,8 @@ void help()
     cout << format("Options:") << endl;
     cout << format("--help | -h : display this page.") << endl;
     cout << format("--list | -l : view archive content.") << endl;
+    cout << format("--yes  | -y : force a 'yes' response to all the user questions.") << endl;
+
     cout << endl;
 }
 
@@ -57,6 +64,7 @@ bool parse_args(int argc, char* argv[])
     }
 
     g_listContent = false;
+    g_always_yes  = false;
     for (int i = 1; i < argc; i++)
     {
         string s = argv[i];
@@ -71,9 +79,14 @@ bool parse_args(int argc, char* argv[])
             // list content
             g_listContent = true;
         }
+        else if (s == "--yes" || s == "-y")
+        {
+            g_always_yes = true;
+        }
         // check if it is a file
         else
         {
+            // FS sub-section.
             fs::path p = bra::fs::filename_archive_adjust(s);
             if (bra::fs::file_exists(p))
                 g_bra_file = p;
@@ -119,13 +132,13 @@ std::string format_bytes(const size_t bytes)
     constexpr size_t GB = MB * 1024;
 
     if (bytes >= GB)
-        return format("{:2.2f} GB", static_cast<double>(bytes) / GB);
+        return format("{:2.1f} GB", static_cast<double>(bytes) / GB);
     else if (bytes >= MB)
-        return format("{:2.2f} MB", static_cast<double>(bytes) / MB);
+        return format("{:2.1f} MB", static_cast<double>(bytes) / MB);
     else if (bytes >= KB)
-        return format("{:2.2f} KB", static_cast<double>(bytes) / KB);
+        return format("{:2.1f} KB", static_cast<double>(bytes) / KB);
     else
-        return format("{:4} B ", bytes);
+        return format("{:4}  B", bytes);
 }
 
 bool unbra_list_meta_file(bra_io_file_t& f)
@@ -136,7 +149,7 @@ bool unbra_list_meta_file(bra_io_file_t& f)
         return false;
 
     const uint64_t ds = mf.data_size;
-    cout << format("- attr: {} | size: {:4} | {}", unbra_list_meta_file_attributes(mf.attributes), format_bytes(mf.data_size), mf.name) << endl;
+    cout << format("- attr: {:1} | size: {:>8} | {:<50}", unbra_list_meta_file_attributes(mf.attributes), format_bytes(mf.data_size), mf.name) << endl;
 
     bra_meta_file_free(&mf);
 
@@ -184,7 +197,7 @@ int main(int argc, char* argv[])
         }
         else
         {
-            if (!bra_io_decode_and_write_to_disk(&f))
+            if (!bra_io_decode_and_write_to_disk(&f, g_always_yes))
                 return 1;
         }
     }

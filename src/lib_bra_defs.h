@@ -46,7 +46,7 @@
 
 #define BRA_PRINTF_FMT_FILENAME "%-40.40s"    //!< printf-like format to print a filename.
 
-#if defined(__APPLE__) || defined(__linux__) || defined(__linux)
+#if defined(__APPLE__) || defined(__linux__) || defined(__unix__)
 #define BRA_SFX_FILE_EXT ".brx"
 #elif defined(_WIN32) || defined(_WIN64)
 #define BRA_SFX_FILE_EXT ".exe"

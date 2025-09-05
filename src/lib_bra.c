@@ -210,7 +210,7 @@ bool bra_io_seek(bra_io_file_t* f, const int64_t offs, const int origin)
 
 #if defined(_WIN32) || defined(_WIN64)
     return _fseeki64(f->f, offs, origin) == 0;
-#elif defined(__APPLE__) || defined(__linux__) || defined(__linux)
+#elif defined(__APPLE__) || defined(__linux__) || defined(__unix__)
     return fseeko(f->f, offs, origin) == 0;
 #else
 #error "not supported"
@@ -225,7 +225,7 @@ int64_t bra_io_tell(bra_io_file_t* f)
 
 #if defined(_WIN32) || defined(_WIN64)
     return _ftelli64(f->f);
-#elif defined(__APPLE__) || defined(__linux__) || defined(__linux)
+#elif defined(__APPLE__) || defined(__linux__) || defined(__unix__)
     return ftello(f->f);
 #else
 #error "not supported"

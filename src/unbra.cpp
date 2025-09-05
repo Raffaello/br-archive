@@ -33,26 +33,25 @@ static bra_fs_overwrite_policy_e g_overwrite_policy = BRA_OVERWRITE_ASK;
 
 void help()
 {
-    cout << format("BR-Archive Utility Version: {}", VERSION) << endl;
-    cout << endl;
-    cout << format("Usage:") << endl;
-    cout << endl;
-    cout << format("  unbra (input_file).BRa") << endl;
-    cout << format("The [output_file(s)] will be as they are stored in the archive") << endl;
-    cout << format("Example:") << endl;
-    cout << format("  unbra test.BRa") << endl;
-    cout << endl;
-    cout << format("(input_file) : (single file only for now) the output") << endl;
-    // cout << format("(output_file): output file name without extension") << endl;
-    cout << endl;
-    cout << format("Options:") << endl;
-    cout << format("--help   | -h : display this page.") << endl;
-    cout << format("--list   | -l : view archive content.") << endl;
-    cout << format("--yes    | -y : force a 'yes' response to all the user questions.") << endl;
-    cout << format("--no     | -n : force 'no' to all prompts (skip overwrites).") << endl;
-    cout << format("--update | -u : update an existing archive with missing files from input.") << endl;
+    bra_log_printf("BR-Archive Utility Version: %s\n", VERSION);
+    bra_log_printf("\n");
+    bra_log_printf("Usage:\n");
+    bra_log_printf("\n");
+    bra_log_printf("  unbra (input_file).BRa\n");
+    bra_log_printf("The [output_file(s)] will be as they are stored in the archive\n");
+    bra_log_printf("Example:\n");
+    bra_log_printf("  unbra test.BRa\n");
+    bra_log_printf("\n");
+    bra_log_printf("(input_file) : %s archive to extract.\n", BRA_NAME);
+    bra_log_printf("\n");
+    bra_log_printf("Options:\n");
+    bra_log_printf("--help   | -h : display this page.\n");
+    bra_log_printf("--list   | -l : view archive content.\n");
+    bra_log_printf("--yes    | -y : force a 'yes' response to all the user questions.\n");
+    bra_log_printf("--no     | -n : force 'no' to all prompts (skip overwrites).\n");
+    bra_log_printf("--update | -u : update an existing archive with missing files from input.\n");
 
-    cout << endl;
+    bra_log_printf("\n");
 }
 
 bool parse_args(int argc, char* argv[])
@@ -169,7 +168,7 @@ bool unbra_list_meta_file(bra_io_file_t& f)
         return false;
 
     const uint64_t ds = mf.data_size;
-    cout << format("- attr: {:1} | size: {:>8} | {:<50}", unbra_list_meta_file_attributes(mf.attributes), format_bytes(mf.data_size), mf.name) << endl;
+    bra_log_printf("|   %c  | %s | " BRA_PRINTF_FMT_FILENAME "|\n", unbra_list_meta_file_attributes(mf.attributes), format_bytes(mf.data_size).c_str(), mf.name);
 
     bra_meta_file_free(&mf);
 
@@ -207,15 +206,20 @@ int main(int argc, char* argv[])
     if (!bra_io_read_header(&f, &bh))
         return 1;
 
-    cout << format("{} containing num files: {}", BRA_NAME, bh.num_files) << endl;
-    for (uint32_t i = 0; i < bh.num_files; i++)
+    bra_log_printf("%s contains num files: %u\n", BRA_NAME, bh.num_files);
+    if (g_listContent)
     {
-        if (g_listContent)
+        bra_log_printf("| ATTR |   SIZE    | FILENAME                                |\n");
+        bra_log_printf("|------|-----------|-----------------------------------------|\n");
+        for (uint32_t i = 0; i < bh.num_files; i++)
         {
             if (!unbra_list_meta_file(f))
                 return 2;
         }
-        else
+    }
+    else
+    {
+        for (uint32_t i = 0; i < bh.num_files; i++)
         {
             if (!bra_io_decode_and_write_to_disk(&f, &g_overwrite_policy))
                 return 1;

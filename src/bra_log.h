@@ -9,6 +9,18 @@ extern "C" {
 #include <stdarg.h>
 
 /**
+ * @brief Function prototype for the message callback (vprintf-style).
+ *
+ * @details Contract:
+ *  - @p fmt is a printf-format string.
+ *  - @p args is a consumable va_list; implementations must not retain it
+ *    beyond the call unless they make a @c va_copy.
+ *  - Return value follows @c vprintf semantics: number of characters written
+ *    (excluding NULL) on success, negative on error.
+ */
+typedef int bra_message_callback_f(const char* fmt, va_list args) BRA_FUNC_ATTR_FMT_PRINTF(1, 0);
+
+/**
  * @brief enum values for the log levels.
  *
  * @details The log levels are used to categorize the importance of log messages.
@@ -24,6 +36,41 @@ typedef enum bra_log_level_e
     BRA_LOG_LEVEL_QUIET,       //!< Log level for no messages.
 
 } bra_log_level_e;
+
+/**
+ * @brief Set the message callback to call to write messages to the user.
+ *        The default one is @c vprintf.
+ *        If passing @c NULL restores the default one.
+ *
+ * @param msg_cb
+ */
+void bra_log_set_message_callback(bra_message_callback_f* msg_cb);
+
+/**
+ * @brief vprintf-style variant that forwards an existing @c va_list to the callback.
+ *
+ * @details The callback may fully traverse @p args. Do not reuse @p args after this call
+ *          unless you made a @c va_copy beforehand.
+ *
+ * @param fmt  @c printf format string
+ * @param args @c va_list to forward (consumed)
+ * @return number of characters written, negative on error
+ */
+int bra_log_vprintf(const char* fmt, va_list args) BRA_FUNC_ATTR_FMT_PRINTF(1, 0);
+
+/**
+ * @brief Calls the configured message callback.
+ *        Default: printf
+ *
+ * @param fmt
+ * @param ...
+ */
+int bra_log_printf(const char* fmt, ...) BRA_FUNC_ATTR_FMT_PRINTF(1, 2);
+
+/**
+ * @brief Flush stdout and stderr.
+ */
+void bra_log_flush();
 
 /**
  * @brief Write a level #BRA_LOG_LEVEL_VERBOSE log of @p fmt.

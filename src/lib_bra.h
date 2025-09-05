@@ -13,18 +13,6 @@ extern "C" {
 #include <stdio.h>
 #include <stdarg.h>
 
-/**
- * @brief Function prototype for the message callback (vprintf-style).
- *
- * @details Contract:
- *  - @p fmt is a printf-format string.
- *  - @p args is a consumable va_list; implementations must not retain it
- *    beyond the call unless they make a @c va_copy.
- *  - Return value follows @c vprintf semantics: number of characters written
- *    (excluding NULL) on success, negative on error.
- */
-typedef int bra_message_callback_f(const char* fmt, va_list args) BRA_FUNC_ATTR_FMT_PRINTF(1, 0);
-
 
 #pragma pack(push, 1)
 
@@ -93,38 +81,6 @@ typedef struct bra_meta_file_t
  * @return char*
  */
 char* bra_strdup(const char* str);
-
-/**
- * @brief Set the message callback to call to write messages to the user.
- *        The default one is @c vprintf.
- *        If passing @c NULL restores the default one.
- *
- * @param msg_cb
- */
-void bra_set_message_callback(bra_message_callback_f* msg_cb);
-
-/**
- * @brief This call the message callback.
- *
- * @todo should be instead implemented in bra_log.{h,c} ?
- *       And use the bra_log_info on stdout instead of stderr?
- *
- * @param fmt
- * @param ...
- */
-int bra_printf_msg(const char* fmt, ...) BRA_FUNC_ATTR_FMT_PRINTF(1, 2);
-
-/**
- * @brief vprintf-style variant that forwards an existing @c va_list to the callback.
- *
- * @details The callback may fully traverse @p args. Do not reuse @p args after this call
- *          unless you made a @c va_copy beforehand.
- *
- * @param fmt  @c printf format string
- * @param args @c va_list to forward (consumed)
- * @return number of characters written, negative on error
- */
-int bra_vprintf_msg(const char* fmt, va_list args) BRA_FUNC_ATTR_FMT_PRINTF(1, 0);
 
 /**
  * @brief Print an error message and close the file.

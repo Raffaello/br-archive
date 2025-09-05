@@ -12,7 +12,6 @@
 
 _Static_assert(BRA_MAX_PATH_LENGTH > UINT8_MAX, "BRA_MAX_PATH_LENGTH must be greater than bra_meta_file_t.name_size max value");
 
-static const char g_end_messages[][5] = {" OK ", "SKIP"};
 
 /**
  * @brief the last encoded or decoded directory.
@@ -24,9 +23,9 @@ static const char g_end_messages[][5] = {" OK ", "SKIP"};
  *
  * @bug  having a global variable can't be thread safe
  */
-static char                    g_last_dir[BRA_MAX_PATH_LENGTH];
-static unsigned int            g_last_dir_size;
-static bra_message_callback_f* g_msg_cb = vprintf;
+static char         g_last_dir[BRA_MAX_PATH_LENGTH];
+static unsigned int g_last_dir_size;
+static const char   g_end_messages[][5] = {" OK ", "SKIP"};
 
 static inline uint64_t bra_min(const uint64_t a, const uint64_t b)
 {
@@ -59,7 +58,6 @@ static inline bool bra_validate_meta_filename(const bra_meta_file_t* mf)
 
 /////////////////////////////////////////////////////////////////////////////
 
-
 char* bra_strdup(const char* str)
 {
     if (str == NULL)
@@ -73,30 +71,6 @@ char* bra_strdup(const char* str)
 
     memcpy(c, str, sizeof(char) * sz);
     return c;
-}
-
-void bra_set_message_callback(bra_message_callback_f* msg_cb)
-{
-    if (msg_cb == NULL)
-        g_msg_cb = vprintf;
-    else
-        g_msg_cb = msg_cb;
-}
-
-int bra_printf_msg(const char* fmt, ...)
-{
-    va_list args;
-
-    va_start(args, fmt);
-    const int res = bra_vprintf_msg(fmt, args);
-    va_end(args);
-
-    return res;
-}
-
-int bra_vprintf_msg(const char* fmt, va_list args)
-{
-    return g_msg_cb(fmt, args);
 }
 
 void bra_io_file_error(bra_io_file_t* bf, const char* verb)
@@ -527,10 +501,10 @@ bool bra_io_encode_and_write_to_disk(bra_io_file_t* f, const char* fn)
     switch (attributes)
     {
     case BRA_ATTR_DIR:
-        bra_printf_msg("Archiving dir :  " BRA_PRINTF_FMT_FILENAME, fn);
+        bra_log_printf("Archiving dir :  " BRA_PRINTF_FMT_FILENAME, fn);
         break;
     case BRA_ATTR_FILE:
-        bra_printf_msg("Archiving file:  " BRA_PRINTF_FMT_FILENAME, fn);
+        bra_log_printf("Archiving file:  " BRA_PRINTF_FMT_FILENAME, fn);
         break;
     default:
         goto BRA_IO_WRITE_CLOSE_ERROR;
@@ -593,7 +567,7 @@ bool bra_io_encode_and_write_to_disk(bra_io_file_t* f, const char* fn)
     break;
     }
 
-    bra_printf_msg(" [  %-4.4s  ]\n", g_end_messages[0]);
+    bra_log_printf(" [  %-4.4s  ]\n", g_end_messages[0]);
     return true;
 }
 
@@ -625,7 +599,7 @@ bool bra_io_decode_and_write_to_disk(bra_io_file_t* f, bra_fs_overwrite_policy_e
         if (!bra_fs_file_exists_ask_overwrite(mf.name, overwrite_policy, false))
         {
             end_msg = g_end_messages[1];
-            bra_printf_msg("Skipping file:   " BRA_PRINTF_FMT_FILENAME, mf.name);
+            bra_log_printf("Skipping file:   " BRA_PRINTF_FMT_FILENAME, mf.name);
             bra_meta_file_free(&mf);
             if (!bra_io_skip_data(f, ds))
             {
@@ -638,7 +612,7 @@ bool bra_io_decode_and_write_to_disk(bra_io_file_t* f, bra_fs_overwrite_policy_e
             bra_io_file_t f2;
 
             end_msg = g_end_messages[0];
-            bra_printf_msg("Extracting file: " BRA_PRINTF_FMT_FILENAME, mf.name);
+            bra_log_printf("Extracting file: " BRA_PRINTF_FMT_FILENAME, mf.name);
             // NOTE: the directory must have been created in the previous entry,
             //       otherwise this will fail to create the file.
             //       The archive ensures the last used directory is created first,
@@ -660,12 +634,12 @@ bool bra_io_decode_and_write_to_disk(bra_io_file_t* f, bra_fs_overwrite_policy_e
         if (bra_fs_dir_exists(mf.name))
         {
             end_msg = g_end_messages[1];
-            bra_printf_msg("Dir exists:   " BRA_PRINTF_FMT_FILENAME, mf.name);
+            bra_log_printf("Dir exists:   " BRA_PRINTF_FMT_FILENAME, mf.name);
         }
         else
         {
             end_msg = g_end_messages[0];
-            bra_printf_msg("Creating dir: " BRA_PRINTF_FMT_FILENAME, mf.name);
+            bra_log_printf("Creating dir: " BRA_PRINTF_FMT_FILENAME, mf.name);
 
             if (!bra_fs_dir_make(mf.name))
                 goto BRA_IO_DECODE_ERR;
@@ -679,6 +653,6 @@ bool bra_io_decode_and_write_to_disk(bra_io_file_t* f, bra_fs_overwrite_policy_e
         break;
     }
 
-    bra_printf_msg(" [  %-4.4s  ]\n", end_msg);
+    bra_log_printf(" [  %-4.4s  ]\n", end_msg);
     return true;
 }

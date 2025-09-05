@@ -95,8 +95,10 @@ void bra_format_bytes(const size_t bytes, char buf[BRA_PRINTF_FMT_BYTES_BUF_SIZE
     static const size_t PB = TB * 1024;
     static const size_t EB = PB * 1024;    // fits in uint64_t up to ~16 EB (platform dependent)
 
+#if defined(__GNUC__)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wformat-truncation"
+#endif
     if (bytes >= EB)
         snprintf(buf, BRA_PRINTF_FMT_BYTES_BUF_SIZE, "%6.1f EB", (double) bytes / EB);
     else if (bytes >= PB)
@@ -111,7 +113,9 @@ void bra_format_bytes(const size_t bytes, char buf[BRA_PRINTF_FMT_BYTES_BUF_SIZE
         snprintf(buf, BRA_PRINTF_FMT_BYTES_BUF_SIZE, "%6.1f KB", (double) bytes / KB);
     else
         snprintf(buf, BRA_PRINTF_FMT_BYTES_BUF_SIZE, "%6zu  B", bytes);
+#if defined(__GNUC__)
 #pragma GCC diagnostic pop
+#endif
 }
 
 bool bra_print_meta_file(bra_io_file_t* f)

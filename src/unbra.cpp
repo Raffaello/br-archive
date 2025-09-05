@@ -3,6 +3,8 @@
 #include <bra_fs.hpp>
 #include <version.h>
 
+#include <BraProgram.hpp>
+
 #include <format>
 #include <iostream>
 #include <filesystem>
@@ -31,6 +33,32 @@ static bra_fs_overwrite_policy_e g_overwrite_policy = BRA_OVERWRITE_ASK;
 
 // TODO: add output path as parameter
 
+//////////////////////////////////////////////////////////////////////////
+
+class Unbra : public BraProgram
+{
+protected:
+    virtual void help_usage()
+    {
+        bra_log_printf("  unbra (input_file)%s\n", BRA_FILE_EXT);
+    };
+
+    virtual void help_example()
+    {
+        bra_log_printf("  unbra test.BRa\n");
+        bra_log_printf("\n");
+        bra_log_printf("(input_file) : %s archive to extract.\n", BRA_NAME);
+    };
+
+    virtual void help_options()
+    {
+        bra_log_printf("--list   | -l : view archive content.\n");
+    };
+};
+
+//////////////////////////////////////////////////////////////////////////
+
+
 void help()
 {
     bra_log_printf("BR-Archive Utility Version: %s\n", VERSION);
@@ -49,9 +77,12 @@ void help()
     bra_log_printf("--list   | -l : view archive content.\n");
     bra_log_printf("--yes    | -y : force a 'yes' response to all the user questions.\n");
     bra_log_printf("--no     | -n : force 'no' to all prompts (skip overwrites).\n");
-    bra_log_printf("--update | -u : update an existing archive with missing files from input.\n");
+    // bra_log_printf("--update | -u : update an existing archive with missing files from input.\n");
 
     bra_log_printf("\n");
+
+    // Unbra unbra;
+    // unbra.help();
 }
 
 bool parse_args(int argc, char* argv[])

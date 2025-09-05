@@ -91,7 +91,8 @@ char* bra_strdup(const char* str);
 char bra_format_meta_attributes(const bra_attr_t attributes);
 
 /**
- * @brief convert @p bytes into a human readble string stored in @p buf
+ * @brief Convert @p bytes into a human readable string stored in @p buf.
+ *        @p buf must provide at least #BRA_PRINTF_FMT_BYTES_BUF_SIZE bytes.
  *
  * @param bytes
  * @param buf
@@ -99,7 +100,7 @@ char bra_format_meta_attributes(const bra_attr_t attributes);
 void bra_format_bytes(const size_t bytes, char buf[BRA_PRINTF_FMT_BYTES_BUF_SIZE]);
 
 /**
- * @brief Print a meta file @p f using @ref bra_printf display attributes, size and filename.
+ * @brief Print a meta file @p f using @ref bra_log_printf to display attributes, size and filename.
  *
  * @param f
  * @return true

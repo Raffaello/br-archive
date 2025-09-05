@@ -93,6 +93,12 @@ std::optional<bool> BraProgram::parseArgs(const int argc, const char* const argv
 
             // if returned nullopt, there was nothing to parse for 's'
         }
+        // unknown option
+        else if (!s.empty() && s[0] == '-')
+        {
+            bra_log_error("unknown option: %s", s.c_str());
+            return false;
+        }
         else
         {
             // FS sub-section
@@ -127,7 +133,7 @@ std::optional<bool> BraProgram::parseArgs(const int argc, const char* const argv
             }
             else
             {
-                bra_log_error("unknown argument/file doesn't exist: %s", s.c_str());
+                bra_log_error("file doesn't exist: %s", s.c_str());
                 return false;
             }
         }
@@ -138,6 +144,7 @@ std::optional<bool> BraProgram::parseArgs(const int argc, const char* const argv
 
 int BraProgram::run(const int argc, const char* const argv[])
 {
+    m_argv0 = argv[0];
     if (auto pa = parseArgs(argc, argv))
     {
         if (!*pa)

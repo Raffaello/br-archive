@@ -175,17 +175,17 @@ protected:
     bool validateArgs() override
     {
         // Supporting only EXE and ELF file type for now
-        if (bra_isElf(m_argv0))
+        if (bra_isElf(m_argv0.c_str()))
         {
             bra_log_info("ELF file detected");
         }
-        else if (bra_isPE(m_argv0))
+        else if (bra_isPE(m_argv0.c_str()))
         {
             bra_log_info("PE file detected");
         }
         else
         {
-            bra_log_error("unsupported file detected: %s", m_argv0);
+            bra_log_error("unsupported file detected: %s", m_argv0.c_str());
             return false;
         }
 
@@ -198,7 +198,7 @@ protected:
 
         // this is the only difference from unbra (read the  footer)
         // and do not force extension checking to unbra
-        if (!bra_file_open_and_read_footer_header(m_argv0, &bh, &m_f))
+        if (!bra_file_open_and_read_footer_header(m_argv0.c_str(), &bh, &m_f))
             return 1;
 
         // extract payload, encoded data
@@ -228,10 +228,10 @@ protected:
     }
 
 public:
-    const char* m_argv0;
+    // const char* m_argv0;
 
-    explicit BraSfx([[maybe_unused]] const int argc, const char* const argv[]) : m_argv0(argv[0]) {}
-
+    // explicit BraSfx([[maybe_unused]] const int argc, const char* const argv[]) : m_argv0(argv[0]) {}
+    BraSfx()          = default;
     virtual ~BraSfx() = default;
 };
 
@@ -241,8 +241,6 @@ public:
 int main(int argc, char* argv[])
 {
     // TODO: add output directory where to decode
-    // TODO: ask to overwrite files, etc..
-    // TODO: all these functionalities are common among the utilities
 
     // The idea of the SFX is to have a footer at the end of the file
     // The footer contain the location where the embedded data is
@@ -251,6 +249,7 @@ int main(int argc, char* argv[])
 
     // TODO: when extracting should check to do not auto-overwrite itself.
 
-    BraSfx bra_sfx(argc, argv);
+    // BraSfx bra_sfx(argc, argv);
+    BraSfx bra_sfx;
     return bra_sfx.run(argc, argv);
 }

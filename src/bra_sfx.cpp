@@ -218,10 +218,10 @@ protected:
                     return 1;
             }
         }
+
         bra_io_close(&f);
         return 0;
     }
-
 
 public:
     const char* m_argv0;

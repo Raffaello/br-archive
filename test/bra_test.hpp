@@ -10,17 +10,6 @@
 
 #if defined(__unix__) || defined(__APPLE__)
 #include <sys/wait.h>
-
-constexpr int EXITSTATUS(int ret)
-{
-    ASSERT_TRUE(WIFEXITED(ret));
-    return WEXITSTATUS(ret);
-}
-#else
-constexpr int EXITSTATUS(int ret)
-{
-    return ret;
-}
 #endif
 
 #define PRINT_TEST_NAME std::cout << std::format("[TEST] Running Test: {}", std::source_location::current().function_name()) << std::endl
@@ -71,6 +60,21 @@ constexpr int EXITSTATUS(int ret)
             return 1;                                                          \
         }                                                                      \
     }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#if defined(__unix__) || defined(__APPLE__)
+constexpr int EXITSTATUS(int ret)
+{
+    ASSERT_TRUE(WIFEXITED(ret));
+    return WEXITSTATUS(ret);
+}
+#else
+constexpr int EXITSTATUS(int ret)
+{
+    return ret;
+}
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 

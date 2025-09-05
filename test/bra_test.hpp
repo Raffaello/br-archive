@@ -6,6 +6,7 @@
 #include <string>
 #include <map>
 #include <functional>
+#include <cstdlib>    //for system
 
 #if defined(__unix__) || defined(__APPLE__)
 #include <sys/wait.h>

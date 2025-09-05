@@ -127,6 +127,27 @@ namespace bra::fs
 [[nodiscard]] std::optional<uint64_t> file_size(const std::filesystem::path& path);
 
 /**
+ * @brief Remove the file at the @p path.
+ *
+ * @param path
+ * @return true on success
+ * @return false on error
+ */
+[[nodiscard]] bool file_remove(const std::filesystem::path& path);
+
+/**
+ * @brief set the @ permissions with options @p permission_options to the file @p path.
+ *
+ * @param path
+ * @param permissions
+ * @param perm_options
+ * @return true
+ * @return false
+ */
+[[nodiscard]] bool file_permissions(const std::filesystem::path& path, const std::filesystem::perms permissions, const std::filesystem::perm_options perm_options);
+
+
+/**
  * @brief Extend the @p files set with their directories.
  *
  * @details the parent directories from the files present in @p files are added into @p files.

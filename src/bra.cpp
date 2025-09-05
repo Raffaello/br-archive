@@ -297,21 +297,25 @@ protected:
 
             bra_io_close(&m_f);
 
-// add executable permission on UNIX
-#if defined(__unix__) || defined(__APPLE__)
-            fs::permissions(sfx_path,
-                            fs::perms::owner_exec | fs::perms::owner_read | fs::perms::owner_write |
-                                fs::perms::group_exec | fs::perms::group_read |
-                                fs::perms::others_exec | fs::perms::others_read,
-                            fs::perm_options::add);
-#endif
+            // add executable permission on UNIX
+            // #if defined(__unix__) || defined(__APPLE__)
+            if (!bra::fs::file_permissions(sfx_path,
+                                           fs::perms::owner_exec | fs::perms::owner_read | fs::perms::owner_write |
+                                               fs::perms::group_exec | fs::perms::group_read |
+                                               fs::perms::others_exec | fs::perms::others_read,
+                                           fs::perm_options::add))
+            {
+                bra_log_warn("unable to set executable bit on %s", sfx_path.string().c_str());
+            }
+            // #endif
 
             // remove TMP SFX FILE
             // TODO: better starting with the SFX file then append the file
             //       it will save disk space as in this way requires twice the archive size
             //       to do an SFX
-            if (!fs::remove(m_out_filename))
-                bra_log_warn("unable to remove temporary file %s", m_out_filename.string().c_str());
+
+            if (!bra::fs::file_remove(m_out_filename))
+                bra_log_warn("unable to delete SFX_TMP_FILE");
 
             bra_log_printf("OK\n");
         }

@@ -267,6 +267,42 @@ std::optional<uint64_t> file_size(const std::filesystem::path& path)
     return err();
 }
 
+bool file_remove(const std::filesystem::path& path)
+{
+    if (!file_exists(path))
+        return true;
+
+    error_code ec;
+
+    fs::remove(path, ec);
+    if (ec)
+    {
+        bra_log_error("unable to remove file %s: %s", path.string().c_str(), ec.message().c_str());
+        return false;
+    }
+
+    return true;
+}
+
+bool file_permissions(const std::filesystem::path& path, const std::filesystem::perms permissions, const std::filesystem::perm_options perm_options)
+{
+    if (!file_exists(path))
+        return false;
+
+    // #if defined(__unix__) || defined(__APPLE__)
+    error_code ec;
+
+    fs::permissions(path, permissions, perm_options, ec);
+    if (ec)
+    {
+        bra_log_error("unable to set permissions on %s: %s", path.string().c_str(), ec.message().c_str());
+        return false;
+    }
+    // #endif
+
+    return true;
+}
+
 bool file_set_add_dir(std::set<std::filesystem::path>& files)
 {
     std::list<fs::path> listFiles(files.begin(), files.end());

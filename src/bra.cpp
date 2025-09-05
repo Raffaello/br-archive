@@ -22,6 +22,11 @@ namespace fs = std::filesystem;
 class Bra : public BraProgram
 {
 private:
+    Bra(const Bra&)            = delete;
+    Bra& operator=(const Bra&) = delete;
+    Bra(Bra&&)                 = delete;
+    Bra& operator=(Bra&&)      = delete;
+
     std::set<fs::path> m_files;
     fs::path           m_out_filename;
     bool               m_sfx = false;
@@ -306,6 +311,8 @@ protected:
     }
 
 public:
+    Bra() = default;
+
     virtual ~Bra()
     {
         bra_io_close(&m_f2);

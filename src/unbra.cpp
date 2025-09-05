@@ -43,6 +43,11 @@ namespace fs = std::filesystem;
 class Unbra : public BraProgram
 {
 private:
+    Unbra(const Unbra&)            = delete;
+    Unbra& operator=(const Unbra&) = delete;
+    Unbra(Unbra&&)                 = delete;
+    Unbra& operator=(Unbra&&)      = delete;
+
     fs::path m_bra_file;
     bool     m_listContent = false;
 
@@ -126,11 +131,10 @@ protected:
 
         // header
         bra_io_header_t bh{};
-        bra_io_file_t   f{};
-        if (!bra_io_open(&f, m_bra_file.string().c_str(), "rb"))
+        if (!bra_io_open(&m_f, m_bra_file.string().c_str(), "rb"))
             return 1;
 
-        if (!bra_io_read_header(&f, &bh))
+        if (!bra_io_read_header(&m_f, &bh))
             return 1;
 
         bra_log_printf("%s contains num files: %u\n", BRA_NAME, bh.num_files);
@@ -140,7 +144,7 @@ protected:
             bra_log_printf("|------|-----------|-----------------------------------------|\n");
             for (uint32_t i = 0; i < bh.num_files; i++)
             {
-                if (!bra_print_meta_file(&f))
+                if (!bra_print_meta_file(&m_f))
                     return 2;
             }
         }
@@ -148,14 +152,18 @@ protected:
         {
             for (uint32_t i = 0; i < bh.num_files; i++)
             {
-                if (!bra_io_decode_and_write_to_disk(&f, &m_overwrite_policy))
+                if (!bra_io_decode_and_write_to_disk(&m_f, &m_overwrite_policy))
                     return 1;
             }
         }
 
-        bra_io_close(&f);
+        bra_io_close(&m_f);
         return 0;
     }
+
+public:
+    Unbra()          = default;
+    virtual ~Unbra() = default;
 };
 
 //////////////////////////////////////////////////////////////////////////

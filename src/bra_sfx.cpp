@@ -107,6 +107,11 @@ bool bra_file_open_and_read_footer_header(const char* fn, bra_io_header_t* out_b
 class BraSfx : public BraProgram
 {
 private:
+    BraSfx(const BraSfx&)            = delete;
+    BraSfx& operator=(const BraSfx&) = delete;
+    BraSfx(BraSfx&&)                 = delete;
+    BraSfx& operator=(BraSfx&&)      = delete;
+
     bool m_listContent = false;
 
 protected:
@@ -190,11 +195,10 @@ protected:
     int run_prog()
     {
         bra_io_header_t bh;
-        bra_io_file_t   f{};
 
         // this is the only difference from unbra (read the  footer)
         // and do not force extension checking to unbra
-        if (!bra_file_open_and_read_footer_header(m_argv0, &bh, &f))
+        if (!bra_file_open_and_read_footer_header(m_argv0, &bh, &m_f))
             return 1;
 
         // extract payload, encoded data
@@ -206,7 +210,7 @@ protected:
             bra_log_printf("|------|-----------|-----------------------------------------|\n");
             for (uint32_t i = 0; i < bh.num_files; i++)
             {
-                if (!bra_print_meta_file(&f))
+                if (!bra_print_meta_file(&m_f))
                     return 2;
             }
         }
@@ -214,12 +218,12 @@ protected:
         {
             for (uint32_t i = 0; i < bh.num_files; i++)
             {
-                if (!bra_io_decode_and_write_to_disk(&f, &m_overwrite_policy))
+                if (!bra_io_decode_and_write_to_disk(&m_f, &m_overwrite_policy))
                     return 1;
             }
         }
 
-        bra_io_close(&f);
+        bra_io_close(&m_f);
         return 0;
     }
 
@@ -227,6 +231,8 @@ public:
     const char* m_argv0;
 
     explicit BraSfx([[maybe_unused]] const int argc, const char* const argv[]) : m_argv0(argv[0]) {}
+
+    virtual ~BraSfx() = default;
 };
 
 ////////////////////////////////////////////////////////////////////////

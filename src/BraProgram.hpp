@@ -19,6 +19,11 @@
 class BraProgram
 {
 private:
+    BraProgram(const BraProgram&)            = delete;
+    BraProgram& operator=(const BraProgram&) = delete;
+    BraProgram(BraProgram&&)                 = delete;
+    BraProgram& operator=(BraProgram&&)      = delete;
+
 protected:
     bra_io_file_t             m_f{};
     bra_fs_overwrite_policy_e m_overwrite_policy = BRA_OVERWRITE_ASK;
@@ -48,6 +53,7 @@ protected:
     virtual int run_prog() = 0;
 
 public:
+    BraProgram() = default;
     virtual ~BraProgram();
 
     int run(const int argc, const char* const argv[]);

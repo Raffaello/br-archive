@@ -3,7 +3,6 @@
 #include "bra_log.h"
 
 #include <iostream>
-#include <format>
 #include <string>
 #include <cctype>
 #include <regex>
@@ -184,10 +183,11 @@ std::optional<bool> file_exists_ask_overwrite(const std::filesystem::path& path,
 
     // TODO: this should use bra_message, bra_message must be moved into bra_log.h
     if (single_overwrite)
-        bra_printf("File %s already exists. Overwrite? ([y]es/[n]o) ", path.string().c_str());
+        bra_log_printf("File %s already exists. Overwrite? ([y]es/[n]o) ", path.string().c_str());
     else
-        bra_printf("File %s already exists. Overwrite? ([y]es/[n]o/[A]ll/N[o]ne) ", path.string().c_str());
+        bra_log_printf("File %s already exists. Overwrite? ([y]es/[n]o/[A]ll/N[o]ne) ", path.string().c_str());
 
+    bra_log_flush();
     do
     {
         cin >> c;
@@ -206,7 +206,7 @@ std::optional<bool> file_exists_ask_overwrite(const std::filesystem::path& path,
         }
     }
     while (c != 'y' && c != 'n');
-    bra_printf("\n");
+    bra_log_printf("\n");
 
     if (!single_overwrite)
     {

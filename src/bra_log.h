@@ -44,7 +44,7 @@ typedef enum bra_log_level_e
  *
  * @param msg_cb
  */
-void bra_set_message_callback(bra_message_callback_f* msg_cb);
+void bra_log_set_message_callback(bra_message_callback_f* msg_cb);
 
 /**
  * @brief vprintf-style variant that forwards an existing @c va_list to the callback.
@@ -56,15 +56,21 @@ void bra_set_message_callback(bra_message_callback_f* msg_cb);
  * @param args @c va_list to forward (consumed)
  * @return number of characters written, negative on error
  */
-int bra_vprintf(const char* fmt, va_list args) BRA_FUNC_ATTR_FMT_PRINTF(1, 0);
+int bra_log_vprintf(const char* fmt, va_list args) BRA_FUNC_ATTR_FMT_PRINTF(1, 0);
 
 /**
- * @brief This call the message callback.
+ * @brief Calls the configured message callback.
+ *        Default: printf
  *
  * @param fmt
  * @param ...
  */
-int bra_printf(const char* fmt, ...) BRA_FUNC_ATTR_FMT_PRINTF(1, 2);
+int bra_log_printf(const char* fmt, ...) BRA_FUNC_ATTR_FMT_PRINTF(1, 2);
+
+/**
+ * @brief Flush stdout and stderr.
+ */
+void bra_log_flush();
 
 /**
  * @brief Write a level #BRA_LOG_LEVEL_VERBOSE log of @p fmt.

@@ -128,7 +128,7 @@ static inline void _bra_log_set_ansi_color(const bra_log_level_e level)
 ////////////////////////////////////////////////////////////////////////////
 
 
-void bra_set_message_callback(bra_message_callback_f* msg_cb)
+void bra_log_set_message_callback(bra_message_callback_f* msg_cb)
 {
     if (msg_cb == NULL)
         g_msg_cb = vprintf;
@@ -136,20 +136,26 @@ void bra_set_message_callback(bra_message_callback_f* msg_cb)
         g_msg_cb = msg_cb;
 }
 
-int bra_vprintf(const char* fmt, va_list args)
+int bra_log_vprintf(const char* fmt, va_list args)
 {
     return g_msg_cb(fmt, args);
 }
 
-int bra_printf(const char* fmt, ...)
+int bra_log_printf(const char* fmt, ...)
 {
     va_list args;
 
     va_start(args, fmt);
-    const int res = bra_vprintf(fmt, args);
+    const int res = bra_log_vprintf(fmt, args);
     va_end(args);
 
     return res;
+}
+
+void bra_log_flush()
+{
+    fflush(stdout);
+    fflush(stderr);
 }
 
 void bra_log_verbose(const char* fmt, ...)

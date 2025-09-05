@@ -501,10 +501,10 @@ bool bra_io_encode_and_write_to_disk(bra_io_file_t* f, const char* fn)
     switch (attributes)
     {
     case BRA_ATTR_DIR:
-        bra_printf("Archiving dir :  " BRA_PRINTF_FMT_FILENAME, fn);
+        bra_log_printf("Archiving dir :  " BRA_PRINTF_FMT_FILENAME, fn);
         break;
     case BRA_ATTR_FILE:
-        bra_printf("Archiving file:  " BRA_PRINTF_FMT_FILENAME, fn);
+        bra_log_printf("Archiving file:  " BRA_PRINTF_FMT_FILENAME, fn);
         break;
     default:
         goto BRA_IO_WRITE_CLOSE_ERROR;
@@ -567,7 +567,7 @@ bool bra_io_encode_and_write_to_disk(bra_io_file_t* f, const char* fn)
     break;
     }
 
-    bra_printf(" [  %-4.4s  ]\n", g_end_messages[0]);
+    bra_log_printf(" [  %-4.4s  ]\n", g_end_messages[0]);
     return true;
 }
 
@@ -599,7 +599,7 @@ bool bra_io_decode_and_write_to_disk(bra_io_file_t* f, bra_fs_overwrite_policy_e
         if (!bra_fs_file_exists_ask_overwrite(mf.name, overwrite_policy, false))
         {
             end_msg = g_end_messages[1];
-            bra_printf("Skipping file:   " BRA_PRINTF_FMT_FILENAME, mf.name);
+            bra_log_printf("Skipping file:   " BRA_PRINTF_FMT_FILENAME, mf.name);
             bra_meta_file_free(&mf);
             if (!bra_io_skip_data(f, ds))
             {
@@ -612,7 +612,7 @@ bool bra_io_decode_and_write_to_disk(bra_io_file_t* f, bra_fs_overwrite_policy_e
             bra_io_file_t f2;
 
             end_msg = g_end_messages[0];
-            bra_printf("Extracting file: " BRA_PRINTF_FMT_FILENAME, mf.name);
+            bra_log_printf("Extracting file: " BRA_PRINTF_FMT_FILENAME, mf.name);
             // NOTE: the directory must have been created in the previous entry,
             //       otherwise this will fail to create the file.
             //       The archive ensures the last used directory is created first,
@@ -634,12 +634,12 @@ bool bra_io_decode_and_write_to_disk(bra_io_file_t* f, bra_fs_overwrite_policy_e
         if (bra_fs_dir_exists(mf.name))
         {
             end_msg = g_end_messages[1];
-            bra_printf("Dir exists:   " BRA_PRINTF_FMT_FILENAME, mf.name);
+            bra_log_printf("Dir exists:   " BRA_PRINTF_FMT_FILENAME, mf.name);
         }
         else
         {
             end_msg = g_end_messages[0];
-            bra_printf("Creating dir: " BRA_PRINTF_FMT_FILENAME, mf.name);
+            bra_log_printf("Creating dir: " BRA_PRINTF_FMT_FILENAME, mf.name);
 
             if (!bra_fs_dir_make(mf.name))
                 goto BRA_IO_DECODE_ERR;
@@ -653,6 +653,6 @@ bool bra_io_decode_and_write_to_disk(bra_io_file_t* f, bra_fs_overwrite_policy_e
         break;
     }
 
-    bra_printf(" [  %-4.4s  ]\n", end_msg);
+    bra_log_printf(" [  %-4.4s  ]\n", end_msg);
     return true;
 }

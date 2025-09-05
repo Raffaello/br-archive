@@ -33,27 +33,27 @@ static bra_fs_overwrite_policy_e g_overwrite_policy = BRA_OVERWRITE_ASK;
 
 void help()
 {
-    bra_printf("BR-Archive Utility Version: %s\n", VERSION);
-    bra_printf("\n");
-    bra_printf("Usage:\n");
-    bra_printf("  bra [-s] -o <output_file> <input_file1> [<input_file2> ...]\n");
-    bra_printf("The [output_file] will be with a %s extension\n", BRA_FILE_EXT);
-    bra_printf("Example:\n");
-    bra_printf("  bra -o test test.txt\n");
-    bra_printf("  bra -o test *.txt\n");
-    bra_printf("\n");
-    bra_printf("(input_file): path to an existing file or a wildcard pattern\n");
-    bra_printf("              Directories expand to <dir/*> (non-recursive); empty directories are ignored.\n");
-    bra_printf("\n");
-    bra_printf("Options:\n");
-    bra_printf("--help   | -h : display this page.\n");
-    bra_printf("--sfx    | -s : generate a self-extracting archive\n");
-    bra_printf("--yes    | -y : force a 'yes' response to all the user questions.\n");
-    bra_printf("--no     | -n : force 'no' to all prompts (skip overwrites).\n");
-    bra_printf("--update | -u : update an existing archive with missing files from input.\n");
-    bra_printf("--out    | -o : <output_filename> it takes the path of the output file.\n");
-    bra_printf("                If the extension %s is missing it will be automatically added.\n", BRA_FILE_EXT);
-    bra_printf("\n");
+    bra_log_printf("BR-Archive Utility Version: %s\n", VERSION);
+    bra_log_printf("\n");
+    bra_log_printf("Usage:\n");
+    bra_log_printf("  bra [-s] -o <output_file> <input_file1> [<input_file2> ...]\n");
+    bra_log_printf("The [output_file] will be with a %s extension\n", BRA_FILE_EXT);
+    bra_log_printf("Example:\n");
+    bra_log_printf("  bra -o test test.txt\n");
+    bra_log_printf("  bra -o test *.txt\n");
+    bra_log_printf("\n");
+    bra_log_printf("(input_file): path to an existing file or a wildcard pattern\n");
+    bra_log_printf("              Directories expand to <dir/*> (non-recursive); empty directories are ignored.\n");
+    bra_log_printf("\n");
+    bra_log_printf("Options:\n");
+    bra_log_printf("--help   | -h : display this page.\n");
+    bra_log_printf("--sfx    | -s : generate a self-extracting archive\n");
+    bra_log_printf("--yes    | -y : force a 'yes' response to all the user questions.\n");
+    bra_log_printf("--no     | -n : force 'no' to all prompts (skip overwrites).\n");
+    bra_log_printf("--update | -u : update an existing archive with missing files from input.\n");
+    bra_log_printf("--out    | -o : <output_filename> it takes the path of the output file.\n");
+    bra_log_printf("                If the extension %s is missing it will be automatically added.\n", BRA_FILE_EXT);
+    bra_log_printf("\n");
 }
 
 bool parse_args(int argc, char* argv[])
@@ -208,7 +208,7 @@ bool validate_args()
             if (!*overwrite)
                 return false;
 
-            bra_printf("Overwriting file: %s\n", g_out_filename.string().c_str());
+            bra_log_printf("Overwriting file: %s\n", g_out_filename.string().c_str());
         }
     }
     else
@@ -226,7 +226,7 @@ bool validate_args()
         if (!*res)
             return false;
 
-        bra_printf("Overwriting file: %s", p.string().c_str());
+        bra_log_printf("Overwriting file: %s", p.string().c_str());
 
         // check it is not present in the input files
         g_files.erase(p);
@@ -262,7 +262,7 @@ int main(int argc, char* argv[])
     if (!bra_io_open(&f, out_fn.c_str(), "wb"))
         return 1;
 
-    bra_printf("Archiving into %s\n", out_fn.c_str());
+    bra_log_printf("Archiving into %s\n", out_fn.c_str());
     if (!bra_io_write_header(&f, static_cast<uint32_t>(g_files.size())))
         return 1;
 
@@ -293,7 +293,7 @@ int main(int argc, char* argv[])
         fs::path sfx_path = g_out_filename;
         sfx_path.replace_extension(BRA_SFX_FILE_EXT);
 
-        bra_printf("creating Self-extracting archive %s...", sfx_path.string().c_str());
+        bra_log_printf("creating Self-extracting archive %s...", sfx_path.string().c_str());
 
         if (!fs::copy_file(BRA_SFX_FILENAME, sfx_path, fs::copy_options::overwrite_existing))
         {
@@ -365,7 +365,7 @@ int main(int argc, char* argv[])
         if (!fs::remove(g_out_filename))
             bra_log_warn("unable to remove temporary file %s", g_out_filename.string().c_str());
 
-        bra_printf("OK\n");
+        bra_log_printf("OK\n");
     }
 
     return 0;

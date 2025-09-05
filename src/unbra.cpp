@@ -22,19 +22,19 @@ using namespace std;
 
 namespace fs = std::filesystem;
 
-// TODO: create an abstract class for the program containing basic help parse and validate plus run
-// TODO: create the children unbra, bra, bra_sfx
 // TODO: unbra must be able to read sfx too
-
-
-static fs::path                  g_bra_file;
-static bool                      g_listContent      = false;
-static bra_fs_overwrite_policy_e g_overwrite_policy = BRA_OVERWRITE_ASK;
-
 // TODO: add output path as parameter
 
 //////////////////////////////////////////////////////////////////////////
 
+/**
+ * @brief
+ *
+ * @todo move to lib_bra?
+ *
+ * @param attributes
+ * @return char
+ */
 char unbra_list_meta_file_attributes(const uint8_t attributes)
 {
     switch (attributes)
@@ -48,6 +48,14 @@ char unbra_list_meta_file_attributes(const uint8_t attributes)
     }
 }
 
+/**
+ * @brief
+ *
+ * @todo move to lib_bra?
+ *
+ * @param bytes
+ * @return std::string
+ */
 std::string format_bytes(const size_t bytes)
 {
     constexpr size_t KB = 1024;
@@ -64,6 +72,15 @@ std::string format_bytes(const size_t bytes)
         return format("{:>6}  B", bytes);
 }
 
+/**
+ * @brief
+ *
+ * @todo move into lib_bra
+ *
+ * @param f
+ * @return true
+ * @return false
+ */
 bool unbra_list_meta_file(bra_io_file_t& f)
 {
     bra_meta_file_t mf;
@@ -88,6 +105,10 @@ bool unbra_list_meta_file(bra_io_file_t& f)
 
 class Unbra : public BraProgram
 {
+private:
+    fs::path g_bra_file;
+    bool     g_listContent = false;
+
 protected:
     virtual void help_usage()
     {
@@ -188,7 +209,7 @@ protected:
         {
             for (uint32_t i = 0; i < bh.num_files; i++)
             {
-                if (!bra_io_decode_and_write_to_disk(&f, &g_overwrite_policy))
+                if (!bra_io_decode_and_write_to_disk(&f, &m_overwrite_policy))
                     return 1;
             }
         }

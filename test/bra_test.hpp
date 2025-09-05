@@ -6,7 +6,11 @@
 #include <string>
 #include <map>
 #include <functional>
+#include <cstdlib>    //for system
 
+#if defined(__unix__) || defined(__APPLE__)
+#include <sys/wait.h>
+#endif
 
 #define PRINT_TEST_NAME std::cout << std::format("[TEST] Running Test: {}", std::source_location::current().function_name()) << std::endl
 
@@ -58,6 +62,29 @@
     }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#if defined(__unix__) || defined(__APPLE__)
+constexpr int EXITSTATUS(int ret)
+{
+    ASSERT_TRUE(WIFEXITED(ret));
+    return WEXITSTATUS(ret);
+}
+#else
+constexpr int EXITSTATUS(int ret)
+{
+    return ret;
+}
+#endif
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+int call_system(const std::string& sys_args)
+{
+    std::cout << std::format("[TEST] CALLING: {}", sys_args) << std::endl;
+    const int rc  = system(sys_args.c_str());
+    const int ret = EXITSTATUS(rc);
+    return ret;
+}
 
 int test_main(int argc, char* argv[], const std::map<std::string, std::function<int()>>& test_suite)
 {

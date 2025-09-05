@@ -8,12 +8,6 @@
 #include <cstdio>
 
 
-#if defined(__unix__) || defined(__APPLE__)
-#include <sys/wait.h>
-#else
-#define WEXITSTATUS(ret) ret
-#endif
-
 #include <lib_bra.h>
 
 namespace fs = std::filesystem;
@@ -60,13 +54,23 @@ bool AreFilesContentEquals(const std::filesystem::path& file1, const std::filesy
 
 ///////////////////////////////////////////////////////////////////////////////
 
+TEST(test_bra_help_ret_code)
+{
+    const std::string bra = CMD_PREFIX + "bra";
+
+    ASSERT_EQ(call_system(bra), 1);
+    ASSERT_EQ(call_system(bra + " --help"), 0);
+    ASSERT_EQ(call_system(bra + " -h"), 0);
+
+    return 0;
+}
+
 TEST(test_bra_no_output_file)
 {
     const std::string bra     = CMD_PREFIX + "bra";
     const std::string in_file = "./test.txt";
 
-    const int ret = system((bra + " " + in_file).c_str());
-    ASSERT_TRUE(WEXITSTATUS(ret) == 1);
+    ASSERT_EQ(call_system(bra + " " + in_file), 1);
 
     return 0;
 }
@@ -85,12 +89,12 @@ TEST(test_bra_unbra)
     if (fs::exists(exp_file))
         fs::remove(exp_file);
 
-    ASSERT_TRUE(system((bra + " -o " + out_file + " " + in_file).c_str()) == 0);
+    ASSERT_EQ(call_system(bra + " -o " + out_file + " " + in_file), 0);
     ASSERT_TRUE(fs::exists(out_file));
 
     fs::rename(in_file, exp_file);
     ASSERT_TRUE(!fs::exists(in_file));
-    ASSERT_TRUE(system((unbra + " " + out_file).c_str()) == 0);
+    ASSERT_EQ(call_system(unbra + " " + out_file), 0);
     ASSERT_TRUE(fs::exists(in_file));
     ASSERT_TRUE(AreFilesContentEquals(in_file, exp_file));
 
@@ -106,21 +110,26 @@ int _test_bra_unbra_list(const fs::path& input)
     if (fs::exists(out_file))
         fs::remove(out_file);
 
-    ASSERT_EQ(system((bra + " -o " + out_file + " " + input.string()).c_str()), WEXITSTATUS(0));
+    ASSERT_EQ(call_system(bra + " -o " + out_file + " " + input.string()), 0);
     ASSERT_TRUE(fs::exists(out_file));
-    ASSERT_EQ(system((unbra + " -l " + out_file).c_str()), WEXITSTATUS(0));
+    ASSERT_EQ(call_system(unbra + " -l " + out_file), 0);
 
     return 0;
 }
 
 TEST(test_bra_wildcard_dir_unbra_list)
 {
-    ASSERT_EQ(_test_bra_unbra_list("dir1/*"), WEXITSTATUS(0));
-    ASSERT_EQ(_test_bra_unbra_list("dir1"), WEXITSTATUS(0));
-    ASSERT_EQ(_test_bra_unbra_list("./dir1/*"), WEXITSTATUS(0));
-    ASSERT_EQ(_test_bra_unbra_list("./dir1"), WEXITSTATUS(0));
-    ASSERT_EQ(_test_bra_unbra_list("./dir?"), WEXITSTATUS(1));    // dir1 won't be added as it is not recursive so no input file added
+    ASSERT_EQ(_test_bra_unbra_list("dir1/*"), 0);
+    ASSERT_EQ(_test_bra_unbra_list("dir1"), 0);
+    ASSERT_EQ(_test_bra_unbra_list("./dir1/*"), 0);
+    ASSERT_EQ(_test_bra_unbra_list("./dir1"), 0);
 
+#if defined(__APPLE__) || defined(__linux__) || defined(__unix__)
+    ASSERT_EQ(_test_bra_unbra_list("./dir\\?"), 1);    // disabling wildcard expansion
+    ASSERT_EQ(_test_bra_unbra_list("./dir?"), 0);
+#else
+    ASSERT_EQ(_test_bra_unbra_list("./dir?"), 1);    // dir1 won't be added as it is not recursive so no input file added
+#endif
     return 0;
 }
 
@@ -141,14 +150,12 @@ int _test_bra_sfx(const std::string& out_file)
     if (fs::exists(exp_file))
         fs::remove(exp_file);
 
-    std::string sys_args = (bra + " -o " + out_file_ + " " + in_file);
-    std::cout << std::format("[TEST] CALLING: {}", sys_args) << std::endl;
-    ASSERT_TRUE(system(sys_args.c_str()) == 0);
+    ASSERT_EQ(call_system(bra + " -o " + out_file_ + " " + in_file), 0);
     ASSERT_TRUE(fs::exists(out_file_sfx));
 
     fs::rename(in_file, exp_file);
     ASSERT_TRUE(!fs::exists(in_file));
-    ASSERT_TRUE(system((out_file_sfx).c_str()) == 0);
+    ASSERT_EQ(call_system(out_file_sfx), 0);
     ASSERT_TRUE(fs::exists(in_file));
     ASSERT_TRUE(AreFilesContentEquals(in_file, exp_file));
 
@@ -184,7 +191,7 @@ TEST(test_bra_not_more_than_1_same_file)
     if (fs::exists(exp_file))
         fs::remove(exp_file);
 
-    ASSERT_EQ(system((bra + " -o " + out_file + " " + in_file).c_str()), 0);
+    ASSERT_EQ(call_system(bra + " -o " + out_file + " " + in_file), 0);
     ASSERT_TRUE(fs::exists(out_file));
 
     FILE* output = popen((unbra + " -l " + out_file).c_str(), "r");
@@ -208,6 +215,7 @@ TEST(test_bra_not_more_than_1_same_file)
 int main(int argc, char* argv[])
 {
     const std::map<std::string, std::function<int()>> m = {
+        {TEST_FUNC(test_bra_help_ret_code)},
         {TEST_FUNC(test_bra_no_output_file)},
         {TEST_FUNC(test_bra_unbra)},
         {TEST_FUNC(test_bra_wildcard_dir_unbra_list)},

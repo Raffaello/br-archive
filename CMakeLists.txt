@@ -40,14 +40,17 @@ set_target_properties(lib_bra PROPERTIES
     PREFIX ""
 )
 
+add_library(bra_prog STATIC src/BraProgram.cpp)
+target_link_libraries(bra_prog PUBLIC lib_bra bra_fs)
+
 add_executable(bra src/bra.cpp)
-target_link_libraries(bra PRIVATE lib_bra bra_fs)
+target_link_libraries(bra PRIVATE bra_prog)
 
 add_executable(unbra src/unbra.cpp)
-target_link_libraries(unbra PRIVATE lib_bra bra_fs)
+target_link_libraries(unbra PRIVATE bra_prog)
 
 add_executable(bra_sfx src/bra_sfx.cpp)
-target_link_libraries(bra_sfx PRIVATE lib_bra)
+target_link_libraries(bra_sfx PRIVATE bra_prog)
 set_target_properties(bra_sfx PROPERTIES
     OUTPUT_NAME "bra"
     SUFFIX ".sfx"

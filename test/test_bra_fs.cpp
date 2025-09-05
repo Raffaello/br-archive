@@ -10,10 +10,8 @@ using namespace std;
 
 namespace fs = std::filesystem;
 
-int test_bra_fs_is_wildcards()
+TEST(test_bra_fs_is_wildcards)
 {
-    PRINT_TEST_NAME;
-
     ASSERT_TRUE(bra::fs::is_wildcard("*"));
     ASSERT_TRUE(bra::fs::is_wildcard(".*"));
     ASSERT_TRUE(bra::fs::is_wildcard("AbcD?"));
@@ -26,10 +24,8 @@ int test_bra_fs_is_wildcards()
     return 0;
 }
 
-int test_bra_fs_wildcard_expand()
+TEST(test_bra_fs_wildcard_expand)
 {
-    PRINT_TEST_NAME;
-
     std::set<fs::path> files;
 
 #if defined(_WIN32)
@@ -71,10 +67,8 @@ int test_bra_fs_wildcard_expand()
     return 0;
 }
 
-int test_bra_fs_file_exists()
+TEST(test_bra_fs_file_exists)
 {
-    PRINT_TEST_NAME;
-
     ASSERT_TRUE(bra::fs::file_exists("test.txt"));
     ASSERT_TRUE(!bra::fs::file_exists("test99.txt"));
     ASSERT_TRUE(!bra::fs::file_exists("dir1"));
@@ -82,10 +76,8 @@ int test_bra_fs_file_exists()
     return 0;
 }
 
-int test_bra_fs_dir_exists()
+TEST(test_bra_fs_dir_exists)
 {
-    PRINT_TEST_NAME;
-
     ASSERT_TRUE(bra::fs::dir_exists("dir1"));
     ASSERT_TRUE(!bra::fs::dir_exists("dir99"));
     ASSERT_TRUE(!bra::fs::dir_exists("test.txt"));
@@ -93,10 +85,8 @@ int test_bra_fs_dir_exists()
     return 0;
 }
 
-int test_bra_fs_dir_make()
+TEST(test_bra_fs_dir_make)
 {
-    PRINT_TEST_NAME;
-
     const fs::path dir1 = "dir1/test";
 
     fs::remove(dir1);
@@ -112,10 +102,8 @@ int test_bra_fs_dir_make()
     return 0;
 }
 
-int test_bra_fs_try_sanitize_path()
+TEST(test_bra_fs_try_sanitize_path)
 {
-    PRINT_TEST_NAME;
-
     fs::path p;
 
 #if defined(_WIN32)
@@ -169,10 +157,8 @@ int test_bra_fs_try_sanitize_path()
     return 0;
 }
 
-int test_bra_fs_sfx_filename_adjust()
+TEST(test_bra_fs_sfx_filename_adjust)
 {
-    PRINT_TEST_NAME;
-
     auto exp = [](const string& s, const bool tmp) {
         return format("{}{}{}", s, BRA_FILE_EXT, tmp ? BRA_SFX_TMP_FILE_EXT : BRA_SFX_FILE_EXT);
     };
@@ -190,10 +176,8 @@ int test_bra_fs_sfx_filename_adjust()
     return 0;
 }
 
-int test_bra_fs_wildcard_extract_dir()
+TEST(test_bra_fs_wildcard_extract_dir)
 {
-    PRINT_TEST_NAME;
-
     fs::path wildcard;
 
     wildcard = "*";
@@ -246,10 +230,8 @@ int test_bra_fs_wildcard_extract_dir()
     return 0;
 }
 
-int test_bra_fs_wildcard_to_regexp()
+TEST(test_bra_fs_wildcard_to_regexp)
 {
-    PRINT_TEST_NAME;
-
     const std::regex r(bra::fs::wildcard_to_regexp("file+name?.txt"));
     ASSERT_TRUE(std::regex_match("file+name1.txt", r));
     ASSERT_TRUE(!std::regex_match("filename1.txt", r));    // '+' must be literal

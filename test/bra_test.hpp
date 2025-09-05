@@ -10,7 +10,22 @@
 
 #define PRINT_TEST_NAME std::cout << std::format("[TEST] Running Test: {}", std::source_location::current().function_name()) << std::endl
 
+// #define TEST_FUNC(x) "test_" #x, test_##x
 #define TEST_FUNC(x) #x, x
+
+#define TEST_INTERNAL_(x) _##x##_test()
+
+#define TEST(x)                   \
+    int TEST_INTERNAL_(x);        \
+    int x()                       \
+    {                             \
+        PRINT_TEST_NAME;          \
+                                  \
+        /* user code */           \
+        return TEST_INTERNAL_(x); \
+    }                             \
+    int TEST_INTERNAL_(x)
+
 
 #define ASSERT_TRUE(x)                                                            \
     if (!(x))                                                                     \

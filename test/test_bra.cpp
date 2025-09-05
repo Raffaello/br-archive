@@ -60,9 +60,10 @@ bool AreFilesContentEquals(const std::filesystem::path& file1, const std::filesy
 
 ///////////////////////////////////////////////////////////////////////////////
 
-int test_bra_no_output_file()
+TEST(test_bra_no_output_file)
+// int test_bra_no_output_file()
 {
-    PRINT_TEST_NAME;
+    // PRINT_TEST_NAME;
 
     const std::string bra     = CMD_PREFIX + "bra";
     const std::string in_file = "./test.txt";
@@ -73,10 +74,8 @@ int test_bra_no_output_file()
     return 0;
 }
 
-int test_bra_unbra()
+TEST(test_bra_unbra)
 {
-    PRINT_TEST_NAME;
-
     const std::string bra      = CMD_PREFIX + "bra";
     const std::string unbra    = CMD_PREFIX + "unbra";
     const std::string in_file  = "./test.txt";
@@ -117,10 +116,8 @@ int _test_bra_unbra_list(const fs::path& input)
     return 0;
 }
 
-int test_bra_wildcard_dir_unbra_list()
+TEST(test_bra_wildcard_dir_unbra_list)
 {
-    PRINT_TEST_NAME;
-
     ASSERT_EQ(_test_bra_unbra_list("dir1/*"), WEXITSTATUS(0));
     ASSERT_EQ(_test_bra_unbra_list("dir1"), WEXITSTATUS(0));
     ASSERT_EQ(_test_bra_unbra_list("./dir1/*"), WEXITSTATUS(0));
@@ -161,28 +158,23 @@ int _test_bra_sfx(const std::string& out_file)
     return 0;
 }
 
-int test_bra_sfx_0()
+TEST(test_bra_sfx_0)
 {
-    PRINT_TEST_NAME;
     return _test_bra_sfx("test.txt.BRa");
 }
 
-int test_bra_sfx_1()
+TEST(test_bra_sfx_1)
 {
-    PRINT_TEST_NAME;
     return _test_bra_sfx("test.txt");
 }
 
-int test_bra_sfx_2()
+TEST(test_bra_sfx_2)
 {
-    PRINT_TEST_NAME;
     return _test_bra_sfx("test");
 }
 
-int test_bra_not_more_than_1_same_file()
+TEST(test_bra_not_more_than_1_same_file)
 {
-    PRINT_TEST_NAME;
-
     const std::string bra      = CMD_PREFIX + "bra";
     const std::string unbra    = CMD_PREFIX + "unbra";
     const std::string in_file  = "./test.txt ./test.txt test.txt test.txt";
@@ -216,7 +208,7 @@ int test_bra_not_more_than_1_same_file()
     return 0;
 }
 
-int main(int argc, char* argv[])
+int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 {
     const std::map<std::string, std::function<int()>> m = {
         {TEST_FUNC(test_bra_no_output_file)},

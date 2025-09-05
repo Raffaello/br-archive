@@ -527,10 +527,10 @@ bool bra_io_encode_and_write_to_disk(bra_io_file_t* f, const char* fn)
     switch (attributes)
     {
     case BRA_ATTR_DIR:
-        bra_printf_msg("Archiving dir : " BRA_PRINTF_FMT_FILENAME, fn);
+        bra_printf_msg("Archiving dir :  " BRA_PRINTF_FMT_FILENAME, fn);
         break;
     case BRA_ATTR_FILE:
-        bra_printf_msg("Archiving file: " BRA_PRINTF_FMT_FILENAME, fn);
+        bra_printf_msg("Archiving file:  " BRA_PRINTF_FMT_FILENAME, fn);
         break;
     default:
         goto BRA_IO_WRITE_CLOSE_ERROR;

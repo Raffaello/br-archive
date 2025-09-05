@@ -289,7 +289,6 @@ bool file_permissions(const std::filesystem::path& path, const std::filesystem::
     if (!file_exists(path))
         return false;
 
-    // #if defined(__unix__) || defined(__APPLE__)
     error_code ec;
 
     fs::permissions(path, permissions, perm_options, ec);
@@ -298,7 +297,6 @@ bool file_permissions(const std::filesystem::path& path, const std::filesystem::
         bra_log_error("unable to set permissions on %s: %s", path.string().c_str(), ec.message().c_str());
         return false;
     }
-    // #endif
 
     return true;
 }

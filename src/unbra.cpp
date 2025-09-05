@@ -44,7 +44,7 @@ protected:
     {
         bra_log_printf("  unbra test.BRa\n");
         bra_log_printf("\n");
-        bra_log_printf("(input_file) : %s archive to extract.\n", BRA_NAME);
+        bra_log_printf("<input_file%s> : %s archive to extract.\n", BRA_FILE_EXT, BRA_NAME);
     };
 
     virtual void help_options() const override

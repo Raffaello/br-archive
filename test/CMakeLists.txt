@@ -21,6 +21,8 @@ add_test(NAME test_bra_fs.wildcard_to_regexp    COMMAND test_bra_fs test_bra_fs_
 
 add_executable(test_bra test_bra.cpp)
 add_dependencies(test_bra bra unbra bra_sfx)
+
+add_test(NAME test_bra.help_ret_code                COMMAND test_bra test_bra_help_ret_code)
 add_test(NAME test_bra.no_output_file               COMMAND test_bra test_bra_no_output_file)
 add_test(NAME test_bra.unbra                        COMMAND test_bra test_bra_unbra)
 add_test(NAME test_bra.wildcard_dir_unbra_list      COMMAND test_bra test_bra_wildcard_dir_unbra_list)

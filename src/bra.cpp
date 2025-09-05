@@ -38,7 +38,7 @@ protected:
     void help_usage() override
     {
         bra_log_printf("  bra [-s] -o <output_file> <input_file1> [<input_file2> ...]\n");
-        bra_log_printf("The [output_file] will be with a %s extension\n", BRA_FILE_EXT);
+        bra_log_printf("The [output_file] will have %s (or %s with --sfx)\n", BRA_FILE_EXT, BRA_SFX_FILE_EXT);
     };
 
     void help_example() override
@@ -58,7 +58,7 @@ protected:
         bra_log_printf("                If the extension %s is missing it will be automatically added.\n", BRA_FILE_EXT);
     };
 
-    std::optional<bool> parseArgs_option(const int argc, const char* argv[], int& i, const std::string& s) override
+    std::optional<bool> parseArgs_option(const int argc, const char* const argv[], int& i, const std::string_view& s) override
     {
         if (s == "--out" || s == "-o")
         {
@@ -66,7 +66,7 @@ protected:
             ++i;
             if (i >= argc)
             {
-                bra_log_error("%s missing argument <output_filename>", s.c_str());
+                bra_log_error("%.*s missing argument <output_filename>", static_cast<int>(s.size()), s.data());
                 return false;
             }
 
@@ -320,5 +320,5 @@ int main(int argc, char* argv[])
 {
     Bra bra_prog;
 
-    return bra_prog.run(argc, const_cast<const char**>(argv));
+    return bra_prog.run(argc, argv);
 }

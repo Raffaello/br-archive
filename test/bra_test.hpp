@@ -9,8 +9,11 @@
 
 #if defined(__unix__) || defined(__APPLE__)
 #include <sys/wait.h>
+#define EXITSTATUS(ret)          \
+    ASSERT_TRUE(WIFEXITED(ret)); \
+    WEXITSTATUS(ret)
 #else
-#define WEXITSTATUS(ret) ret
+#define EXITSTATUS(ret) ret
 #endif
 
 
@@ -69,7 +72,7 @@ int call_system(const std::string& sys_args)
 {
     std::cout << std::format("[TEST] CALLING: {}", sys_args) << std::endl;
     const int rc  = system(sys_args.c_str());
-    const int ret = WEXITSTATUS(rc);
+    const int ret = EXITSTATUS(rc);
     return ret;
 }
 

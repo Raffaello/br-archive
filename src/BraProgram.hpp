@@ -6,6 +6,7 @@
 #include <bra_fs.hpp>
 
 #include <string>
+#include <string_view>
 #include <filesystem>
 #include <optional>
 
@@ -27,12 +28,12 @@ protected:
     virtual void help_example() = 0;
     virtual void help_options() = 0;
 
-    bool parseArgs(const int argc, const char* argv[]);
+    std::optional<bool> parseArgs(const int argc, const char* const argv[]);
 
-    virtual std::optional<bool> parseArgs_option(const int argc, const char* argv[], int& i, const std::string& s) = 0;
-    virtual bool                parseArgs_file(const std::filesystem::path& p)                                     = 0;
-    virtual bool                parseArgs_dir(const std::filesystem::path& p)                                      = 0;
-    virtual bool                parseArgs_wildcard(const std::filesystem::path& p)                                 = 0;
+    virtual std::optional<bool> parseArgs_option(const int argc, const char* const argv[], int& i, const std::string_view& s) = 0;
+    virtual bool                parseArgs_file(const std::filesystem::path& p)                                                = 0;
+    virtual bool                parseArgs_dir(const std::filesystem::path& p)                                                 = 0;
+    virtual bool                parseArgs_wildcard(const std::filesystem::path& p)                                            = 0;
 
 
     virtual bool validateArgs() = 0;
@@ -42,5 +43,5 @@ protected:
 public:
     virtual ~BraProgram();
 
-    int run(const int argc, const char* argv[]);
+    int run(const int argc, const char* const argv[]);
 };

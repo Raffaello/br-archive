@@ -55,7 +55,7 @@ void BraProgram::help()
     bra_log_flush();
 }
 
-bool BraProgram::parseArgs(const int argc, const char* argv[])
+std::optional<bool> BraProgram::parseArgs(const int argc, const char* const argv[])
 {
     if (argc < 2)
     {
@@ -72,7 +72,7 @@ bool BraProgram::parseArgs(const int argc, const char* argv[])
         if (s == "--help" || s == "-h")
         {
             help();
-            exit(0);
+            return nullopt;
         }
         else if (s == "--yes" || s == "-y")
         {
@@ -134,10 +134,16 @@ bool BraProgram::parseArgs(const int argc, const char* argv[])
     return true;
 }
 
-int BraProgram::run(const int argc, const char* argv[])
+int BraProgram::run(const int argc, const char* const argv[])
 {
-    if (!parseArgs(argc, argv))
-        return 1;
+    if (auto pa = parseArgs(argc, argv))
+    {
+        if (!*pa)
+            return 1;
+    }
+    else
+        return 0;
+
 
     if (!validateArgs())
         return 1;

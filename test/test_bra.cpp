@@ -54,6 +54,17 @@ bool AreFilesContentEquals(const std::filesystem::path& file1, const std::filesy
 
 ///////////////////////////////////////////////////////////////////////////////
 
+TEST(test_bra_help_ret_code)
+{
+    const std::string bra = CMD_PREFIX + "bra";
+
+    ASSERT_EQ(call_system(bra), 1);
+    ASSERT_EQ(call_system(bra + " --help"), 0);
+    ASSERT_EQ(call_system(bra + " -h"), 0);
+
+    return 0;
+}
+
 TEST(test_bra_no_output_file)
 {
     const std::string bra     = CMD_PREFIX + "bra";
@@ -108,11 +119,11 @@ int _test_bra_unbra_list(const fs::path& input)
 
 TEST(test_bra_wildcard_dir_unbra_list)
 {
-    ASSERT_EQ(_test_bra_unbra_list("dir1/*"), WEXITSTATUS(0));
-    ASSERT_EQ(_test_bra_unbra_list("dir1"), WEXITSTATUS(0));
-    ASSERT_EQ(_test_bra_unbra_list("./dir1/*"), WEXITSTATUS(0));
-    ASSERT_EQ(_test_bra_unbra_list("./dir1"), WEXITSTATUS(0));
-    ASSERT_EQ(_test_bra_unbra_list("./dir?"), WEXITSTATUS(1));    // dir1 won't be added as it is not recursive so no input file added
+    ASSERT_EQ(_test_bra_unbra_list("dir1/*"), 0);
+    ASSERT_EQ(_test_bra_unbra_list("dir1"), 0);
+    ASSERT_EQ(_test_bra_unbra_list("./dir1/*"), 0);
+    ASSERT_EQ(_test_bra_unbra_list("./dir1"), 0);
+    ASSERT_EQ(_test_bra_unbra_list("./dir?"), 1);    // dir1 won't be added as it is not recursive so no input file added
 
     return 0;
 }
@@ -199,6 +210,7 @@ TEST(test_bra_not_more_than_1_same_file)
 int main(int argc, char* argv[])
 {
     const std::map<std::string, std::function<int()>> m = {
+        {TEST_FUNC(test_bra_help_ret_code)},
         {TEST_FUNC(test_bra_no_output_file)},
         {TEST_FUNC(test_bra_unbra)},
         {TEST_FUNC(test_bra_wildcard_dir_unbra_list)},

@@ -143,7 +143,7 @@ int _test_bra_sfx(const std::string& out_file)
 
     std::string sys_args = (bra + " -o " + out_file_ + " " + in_file);
     std::cout << std::format("[TEST] CALLING: {}", sys_args) << std::endl;
-    ASSERT_TRUE(system(sys_args.c_str()) == 0);
+    ASSERT_EQ(system(sys_args.c_str()), WEXITSTATUS(0));
     ASSERT_TRUE(fs::exists(out_file_sfx));
 
     fs::rename(in_file, exp_file);
@@ -184,7 +184,9 @@ TEST(test_bra_not_more_than_1_same_file)
     if (fs::exists(exp_file))
         fs::remove(exp_file);
 
-    ASSERT_EQ(system((bra + " -o " + out_file + " " + in_file).c_str()), 0);
+    std::string sys_args = bra + " -o " + out_file + " " + in_file;
+    std::cout << std::format("[TEST] CALLING: {}", sys_args) << std::endl;
+    ASSERT_EQ(system(sys_args.c_str()), 0);
     ASSERT_TRUE(fs::exists(out_file));
 
     FILE* output = popen((unbra + " -l " + out_file).c_str(), "r");

@@ -70,6 +70,8 @@ protected:
 
             m_out_filename = argv[i];
         }
+        else if (s == "--sfx" || s == "-s")
+            m_sfx = true;
         else
             return nullopt;
 
@@ -81,7 +83,7 @@ protected:
         if (!m_files.insert(p).second)
         {
             bra_log_warn("duplicate file given in input: %s\n", p.string().c_str());
-            return false;
+            return true;
         }
 
         return true;
@@ -316,7 +318,6 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////
-
 
 int main(int argc, char* argv[])
 {

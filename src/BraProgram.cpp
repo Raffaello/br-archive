@@ -86,11 +86,12 @@ std::optional<bool> BraProgram::parseArgs(const int argc, const char* const argv
         }
         else if (auto o = parseArgs_option(argc, argv, i, s); o)
         {
-            // doing nothing here
-            // it is simpler to read in this way,
-            // else if parseArgs_option failed going to FS sub-section.
+            // if returned false means error.
             if (!*o)
                 return false;
+            // otherwise ok and do nothing
+
+            // if returned nullopt, there was nothing to parse for 's'
         }
         else
         {
@@ -143,7 +144,6 @@ int BraProgram::run(const int argc, const char* const argv[])
     }
     else
         return 0;
-
 
     if (!validateArgs())
         return 1;

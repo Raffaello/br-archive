@@ -93,7 +93,7 @@ bool parse_args(int argc, char* argv[])
         }
         else if (s == "--no" || s == "-n")
         {
-            // TOD: DRY out all of these block,
+            // TODO: DRY out all of these block,
             //      create a method set_overwrite_policy or something
             if (g_overwrite_policy != BRA_OVERWRITE_ASK)
             {

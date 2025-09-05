@@ -602,9 +602,7 @@ bool bra_io_decode_and_write_to_disk(bra_io_file_t* f, bra_fs_overwrite_policy_e
     assert_bra_io_file_t(f);
     assert(overwrite_policy != NULL);
 
-
-    const char* end_msg;    // 'OK  ' | 'SKIP'
-
+    const char*     end_msg;    // 'OK  ' | 'SKIP'
     bra_meta_file_t mf;
     if (!bra_io_read_meta_file(f, &mf))
         return false;
@@ -681,7 +679,6 @@ bool bra_io_decode_and_write_to_disk(bra_io_file_t* f, bra_fs_overwrite_policy_e
         break;
     }
 
-    // // TODO: consider to write [ SKIP ] when skipped...
     bra_printf_msg(" [  %-4.4s  ]\n", end_msg);
     return true;
 }

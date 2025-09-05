@@ -13,9 +13,7 @@ using namespace std;
 
 namespace fs = std::filesystem;
 
-// fs::path g_bra_file;
-static bool g_listContent = false;
-// static bool g_always_yes  = false;
+static bool                      g_listContent      = false;
 static bra_fs_overwrite_policy_e g_overwrite_policy = BRA_OVERWRITE_ASK;
 
 bool bra_isElf(const char* fn)

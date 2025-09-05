@@ -61,10 +61,7 @@ bool AreFilesContentEquals(const std::filesystem::path& file1, const std::filesy
 ///////////////////////////////////////////////////////////////////////////////
 
 TEST(test_bra_no_output_file)
-// int test_bra_no_output_file()
 {
-    // PRINT_TEST_NAME;
-
     const std::string bra     = CMD_PREFIX + "bra";
     const std::string in_file = "./test.txt";
 
@@ -208,7 +205,7 @@ TEST(test_bra_not_more_than_1_same_file)
     return 0;
 }
 
-int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
+int main(int argc, char* argv[])
 {
     const std::map<std::string, std::function<int()>> m = {
         {TEST_FUNC(test_bra_no_output_file)},

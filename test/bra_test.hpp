@@ -7,6 +7,12 @@
 #include <map>
 #include <functional>
 
+#if defined(__unix__) || defined(__APPLE__)
+#include <sys/wait.h>
+#else
+#define WEXITSTATUS(ret) ret
+#endif
+
 
 #define PRINT_TEST_NAME std::cout << std::format("[TEST] Running Test: {}", std::source_location::current().function_name()) << std::endl
 
@@ -58,6 +64,14 @@
     }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
+
+int call_system(const std::string& sys_args)
+{
+    std::cout << std::format("[TEST] CALLING: {}", sys_args) << std::endl;
+    const int rc  = system(sys_args.c_str());
+    const int ret = WEXITSTATUS(rc);
+    return ret;
+}
 
 int test_main(int argc, char* argv[], const std::map<std::string, std::function<int()>>& test_suite)
 {

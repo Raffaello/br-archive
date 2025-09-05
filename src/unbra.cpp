@@ -85,7 +85,6 @@ bool parse_args(int argc, char* argv[])
         {
             if (g_overwrite_policy != BRA_OVERWRITE_ASK)
             {
-                bra_log_error("can't set %s option, another mutual exclusive option already used.", s.c_str());
                 bra_log_error("can't set %s: another mutually exclusive option is already set.", s.c_str());
                 return false;
             }
@@ -94,9 +93,11 @@ bool parse_args(int argc, char* argv[])
         }
         else if (s == "--no" || s == "-n")
         {
+            // TOD: DRY out all of these block,
+            //      create a method set_overwrite_policy or something
             if (g_overwrite_policy != BRA_OVERWRITE_ASK)
             {
-                bra_log_error("can't set %s option, another mutual exclusive option already used.", s.c_str());
+                bra_log_error("can't set %s: another mutually exclusive option is already set.", s.c_str());
                 return false;
             }
 

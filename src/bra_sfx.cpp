@@ -83,16 +83,16 @@ bool bra_isPE(const char* fn)
 
 void help()
 {
-    cout << format("BR-Archive Utility Version: {}", VERSION) << endl;
-    cout << endl;
-    cout << endl;
-    cout << format("Options:") << endl;
-    cout << format("--help   | -h : display this page.") << endl;
-    cout << format("--list   | -l : view archive content.") << endl;
-    cout << format("--yes    | -y : force a 'yes' response to all the user questions.") << endl;
-    cout << format("--no     | -n : force 'no' to all prompts (skip overwrites).") << endl;
-    cout << format("--update | -u : update an existing archive with missing files from input.") << endl;
-    cout << endl;
+    bra_printf("BR-Archive Utility Version: %s", VERSION);
+    bra_printf("\n");
+    bra_printf("\n");
+    bra_printf("Options:\n");
+    bra_printf("--help   | -h : display this page.\n");
+    bra_printf("--list   | -l : view archive content.\n");
+    bra_printf("--yes    | -y : force a 'yes' response to all the user questions.\n");
+    bra_printf("--no     | -n : force 'no' to all prompts (skip overwrites).\n");
+    bra_printf("--update | -u : update an existing archive with missing files from input.\n");
+    bra_printf("\n");
 }
 
 bool parse_args(int argc, char* argv[])

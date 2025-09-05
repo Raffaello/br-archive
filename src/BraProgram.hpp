@@ -2,6 +2,7 @@
 
 #include <lib_bra_defs.h>
 #include <lib_bra_types.h>
+#include <lib_bra.h>
 #include <bra_fs.hpp>
 
 #include <string>
@@ -12,6 +13,7 @@ class BraProgram
 {
 private:
 protected:
+    bra_io_file_t             m_f{};
     bra_fs_overwrite_policy_e m_overwrite_policy = BRA_OVERWRITE_ASK;
 
     bool set_overwrite_policy(const bra_fs_overwrite_policy_e op, const std::string& s);
@@ -38,5 +40,7 @@ protected:
     virtual int run_prog() = 0;
 
 public:
+    virtual ~BraProgram();
+
     int run(const int argc, const char* argv[]);
 };

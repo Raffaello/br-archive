@@ -32,6 +32,8 @@ private:
     fs::path           m_out_filename;
     bool               m_sfx = false;
 
+    bra_io_file_t m_f2{};
+
 protected:
     void help_usage() override
     {
@@ -124,8 +126,8 @@ protected:
 
 #ifndef NDEBUG
         bra_log_debug("Detected files:");
-        for (const auto& f : m_files)
-            bra_log_debug("- %s", f.string().c_str());
+        for (const auto& m_f : m_files)
+            bra_log_debug("- %s", m_f.string().c_str());
 #endif
 
         // TODO: Here could also start encoding the filenames
@@ -198,15 +200,15 @@ protected:
 
     int run_prog() override
     {
-        string        out_fn = m_out_filename.generic_string();
-        bra_io_file_t f{};
+        string out_fn = m_out_filename.generic_string();
+        // bra_io_file_t m_f{};
 
         // header
-        if (!bra_io_open(&f, out_fn.c_str(), "wb"))
+        if (!bra_io_open(&m_f, out_fn.c_str(), "wb"))
             return 1;
 
         bra_log_printf("Archiving into %s\n", out_fn.c_str());
-        if (!bra_io_write_header(&f, static_cast<uint32_t>(m_files.size())))
+        if (!bra_io_write_header(&m_f, static_cast<uint32_t>(m_files.size())))
             return 1;
 
         uint32_t written_num_files = 0;
@@ -221,14 +223,14 @@ protected:
             }
 
             const string fn = p.generic_string();
-            if (!bra_io_encode_and_write_to_disk(&f, fn.c_str()))
+            if (!bra_io_encode_and_write_to_disk(&m_f, fn.c_str()))
                 return 1;
             else
                 ++written_num_files;
             // }
         }
 
-        bra_io_close(&f);
+        bra_io_close(&m_f);
 
         // TODO: doing an SFX should be in the lib_bra
         if (m_sfx)
@@ -245,52 +247,43 @@ protected:
                 return 2;
             }
 
-            bra_io_file_t f{};
-            if (!bra_io_open(&f, sfx_path.string().c_str(), "rb+"))
+            if (!bra_io_open(&m_f, sfx_path.string().c_str(), "rb+"))
                 goto BRA_SFX_IO_ERROR;
 
-            if (!bra_io_seek(&f, 0, SEEK_END))
+            if (!bra_io_seek(&m_f, 0, SEEK_END))
             {
-                bra_io_file_seek_error(&f);
+                bra_io_file_seek_error(&m_f);
                 return 2;
             }
 
             // save the start of the payload for later...
-            const int64_t header_offset = bra_io_tell(&f);
+            const int64_t header_offset = bra_io_tell(&m_f);
             if (header_offset < 0L)
             {
-                bra_io_file_error(&f, "tell");
+                bra_io_file_error(&m_f, "tell");
                 return 2;
             }
 
             // append bra file
-            bra_io_file_t f2{};
-            if (!bra_io_open(&f2, out_fn.c_str(), "rb"))
-            {
-                bra_io_close(&f);
+            if (!bra_io_open(&m_f2, out_fn.c_str(), "rb"))
                 return 2;
-            }
 
             auto file_size = bra::fs::file_size(out_fn);
             if (!file_size)
-            {
-                bra_io_close(&f);
-                bra_io_close(&f2);
-                return 2;
-            }
-
-            if (!bra_io_copy_file_chunks(&f, &f2, *file_size))
                 return 2;
 
-            bra_io_close(&f2);
+            if (!bra_io_copy_file_chunks(&m_f, &m_f2, *file_size))
+                return 2;
+
+            bra_io_close(&m_f2);
             // write footer
-            if (!bra_io_write_footer(&f, header_offset))
+            if (!bra_io_write_footer(&m_f, header_offset))
             {
-                bra_io_file_write_error(&f);
+                bra_io_file_write_error(&m_f);
                 return 2;
             }
 
-            bra_io_close(&f);
+            bra_io_close(&m_f);
 
 // add executable permission on UNIX
 #if defined(__unix__) || defined(__APPLE__)
@@ -315,6 +308,10 @@ protected:
     }
 
 public:
+    virtual ~Bra()
+    {
+        bra_io_close(&m_f2);
+    }
 };
 
 /////////////////////////////////////////////////////////////////////////

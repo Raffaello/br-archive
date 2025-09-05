@@ -10,6 +10,11 @@ using namespace std;
 
 namespace fs = std::filesystem;
 
+BraProgram::~BraProgram()
+{
+    bra_io_close(&m_f);
+}
+
 bool BraProgram::set_overwrite_policy(const bra_fs_overwrite_policy_e op, const string& s)
 {
     if (m_overwrite_policy != BRA_OVERWRITE_ASK)

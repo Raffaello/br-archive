@@ -102,8 +102,8 @@ namespace bra::fs
  * @note The file is considered a 'regular_file' it won't check if it is a directory.
  *
  * @param path
- * @param overwrite_policy
- * @param single_overwrite if true All and None extra choice are not enabled.
+ * @param overwrite_policy in/out overwrite policy; may be updated by user’s global choice.
+ * @param single_overwrite if true, global choices (“Yes to all” / “No to all”) are disabled.
  * @return std::optional<bool> when has no value the file doesn't exist.
  * @return true overwrite
  * @return false don't overwrite

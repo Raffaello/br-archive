@@ -110,9 +110,9 @@ int _test_bra_unbra_list(const fs::path& input)
     if (fs::exists(out_file))
         fs::remove(out_file);
 
-    ASSERT_TRUE(system((bra + " -o " + out_file + " " + input.string()).c_str()) == 0);
+    ASSERT_EQ(system((bra + " -o " + out_file + " " + input.string()).c_str()), WEXITSTATUS(0));
     ASSERT_TRUE(fs::exists(out_file));
-    ASSERT_TRUE(system((unbra + " -l " + out_file).c_str()) == 0);
+    ASSERT_EQ(system((unbra + " -l " + out_file).c_str()), WEXITSTATUS(0));
 
     return 0;
 }

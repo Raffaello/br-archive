@@ -36,7 +36,7 @@ private:
 protected:
     void help_usage() const override
     {
-        bra_log_printf("  bra [-s] -o <output_file> <input_file1> [<input_file2> ...]\n");
+        bra_log_printf("  %s [-s] -o <output_file> <input_file1> [<input_file2> ...]\n", fs::path(m_argv0).filename().string().c_str());
         bra_log_printf("The [output_file] will have %s (or %s with --sfx)\n", BRA_FILE_EXT, BRA_SFX_FILE_EXT);
     };
 

@@ -29,7 +29,7 @@ bool BraProgram::set_overwrite_policy(const bra_fs_overwrite_policy_e op, const 
 
 void BraProgram::banner() const
 {
-    bra_log_printf("BR-Archive Utility Version: %s\n", VERSION);
+    bra_log_printf("BR-Archive Utility %s Version: %s\n", fs::path(m_argv0).filename().string().c_str(), VERSION);
     bra_log_printf("\n");
 }
 

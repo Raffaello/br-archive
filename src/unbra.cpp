@@ -37,7 +37,7 @@ private:
 protected:
     virtual void help_usage() const override
     {
-        bra_log_printf("  unbra (input_file)%s\n", BRA_FILE_EXT);
+        bra_log_printf("  %s (input_file)%s\n", fs::path(m_argv0).filename().string().c_str(), BRA_FILE_EXT);
     };
 
     virtual void help_example() const override

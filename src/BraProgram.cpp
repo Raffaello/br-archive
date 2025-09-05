@@ -33,13 +33,6 @@ void BraProgram::banner()
     bra_log_printf("\n");
 }
 
-void BraProgram::help_common_options()
-{
-    bra_log_printf("--help   | -h : display this page.\n");
-    bra_log_printf("--yes    | -y : force a 'yes' response to all the user questions.\n");
-    bra_log_printf("--no     | -n : force 'no' to all prompts (skip overwrites).\n");
-}
-
 void BraProgram::help()
 {
     banner();
@@ -53,6 +46,13 @@ void BraProgram::help()
     help_options();
     bra_log_printf("\n");
     bra_log_flush();
+}
+
+void BraProgram::help_common_options()
+{
+    bra_log_printf("--help   | -h : display this page.\n");
+    bra_log_printf("--yes    | -y : force a 'yes' response to all the user questions.\n");
+    bra_log_printf("--no     | -n : force 'no' to all prompts (skip overwrites).\n");
 }
 
 std::optional<bool> BraProgram::parseArgs(const int argc, const char* const argv[])

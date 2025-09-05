@@ -226,7 +226,7 @@ bool validate_args()
         if (!*res)
             return false;
 
-        bra_log_printf("Overwriting file: %s", p.string().c_str());
+        bra_log_printf("Overwriting file: %s\n", p.string().c_str());
 
         // check it is not present in the input files
         g_files.erase(p);

@@ -83,8 +83,7 @@ bool bra_isPE(const char* fn)
 
 void help()
 {
-    bra_log_printf("BR-Archive Utility Version: %s", VERSION);
-    bra_log_printf("\n");
+    bra_log_printf("BR-Archive Utility Version: %s\n", VERSION);
     bra_log_printf("\n");
     bra_log_printf("Options:\n");
     bra_log_printf("--help   | -h : display this page.\n");

@@ -42,7 +42,7 @@ void help()
     bra_log_printf("Example:\n");
     bra_log_printf("  unbra test.BRa\n");
     bra_log_printf("\n");
-    bra_log_printf("(input_file) : (single file only for now) the output\n");
+    bra_log_printf("(input_file) : %s archive to extract.\n", BRA_NAME);
     bra_log_printf("\n");
     bra_log_printf("Options:\n");
     bra_log_printf("--help   | -h : display this page.\n");

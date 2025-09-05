@@ -97,8 +97,7 @@ int test_bra_fs_dir_make()
 {
     PRINT_TEST_NAME;
 
-    std::optional<bool> b;
-    const fs::path      dir1 = "dir1/test";
+    const fs::path dir1 = "dir1/test";
 
     fs::remove(dir1);
     ASSERT_TRUE(!bra::fs::dir_exists(dir1));

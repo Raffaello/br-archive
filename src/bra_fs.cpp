@@ -432,7 +432,7 @@ bool search(const std::filesystem::path& dir, const std::string& pattern, std::l
         {
             // TODO: dir to search only if it is recursive (-r)
             const bool is_dir = entry.is_directory();
-            if (!(entry.is_regular_file() || entry.is_directory()))
+            if (!(entry.is_regular_file() || is_dir))
                 continue;
 
             fs::path          ep       = entry.path();

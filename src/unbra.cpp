@@ -5,16 +5,12 @@
 
 #include <BraProgram.hpp>
 
-#include <format>
-#include <iostream>
 #include <filesystem>
 #include <string>
 #include <list>
 #include <algorithm>
-#include <limits>
 
 #include <cstdint>
-#include <cstdio>
 
 
 using namespace std;
@@ -47,8 +43,8 @@ namespace fs = std::filesystem;
 class Unbra : public BraProgram
 {
 private:
-    fs::path g_bra_file;
-    bool     g_listContent = false;
+    fs::path m_bra_file;
+    bool     m_listContent = false;
 
 protected:
     virtual void help_usage()
@@ -68,12 +64,14 @@ protected:
         bra_log_printf("--list   | -l : view archive content.\n");
     };
 
+    int parseArgs_minArgc() const override { return 2; }
+
     std::optional<bool> parseArgs_option([[maybe_unused]] const int argc, [[maybe_unused]] const char* const argv[], [[maybe_unused]] int& i, const std::string_view& s) override
     {
         if (s == "--list" || s == "-l")
         {
             // list content
-            g_listContent = true;
+            m_listContent = true;
         }
         else
             return nullopt;
@@ -88,7 +86,7 @@ protected:
 
     bool parseArgs_file(const std::filesystem::path& p)
     {
-        g_bra_file = p;
+        m_bra_file = p;
         return true;
     }
 
@@ -108,7 +106,7 @@ protected:
 
     bool validateArgs()
     {
-        if (g_bra_file.empty())
+        if (m_bra_file.empty())
         {
             bra_log_error("no input file provided");
             return false;
@@ -120,23 +118,23 @@ protected:
     int run_prog()
     {
         // forcing to work only on BRA_FILE_EXT
-        if (g_bra_file.extension() != BRA_FILE_EXT)
+        if (m_bra_file.extension() != BRA_FILE_EXT)
         {
-            bra_log_critical("unexpected %s", g_bra_file.string().c_str());
+            bra_log_critical("unexpected %s", m_bra_file.string().c_str());
             return 99;
         }
 
         // header
         bra_io_header_t bh{};
         bra_io_file_t   f{};
-        if (!bra_io_open(&f, g_bra_file.string().c_str(), "rb"))
+        if (!bra_io_open(&f, m_bra_file.string().c_str(), "rb"))
             return 1;
 
         if (!bra_io_read_header(&f, &bh))
             return 1;
 
         bra_log_printf("%s contains num files: %u\n", BRA_NAME, bh.num_files);
-        if (g_listContent)
+        if (m_listContent)
         {
             bra_log_printf("| ATTR |   SIZE    | FILENAME                                |\n");
             bra_log_printf("|------|-----------|-----------------------------------------|\n");

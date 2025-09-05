@@ -36,6 +36,7 @@ protected:
 
     std::optional<bool> parseArgs(const int argc, const char* const argv[]);
 
+    virtual int                 parseArgs_minArgc() const                                                                     = 0;
     virtual std::optional<bool> parseArgs_option(const int argc, const char* const argv[], int& i, const std::string_view& s) = 0;
     virtual void                parseArgs_adjustFilename(std::filesystem::path& p)                                            = 0;
     virtual bool                parseArgs_file(const std::filesystem::path& p)                                                = 0;

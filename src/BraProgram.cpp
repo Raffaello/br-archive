@@ -57,7 +57,7 @@ void BraProgram::help_common_options()
 
 std::optional<bool> BraProgram::parseArgs(const int argc, const char* const argv[])
 {
-    if (argc < 2)
+    if (argc < parseArgs_minArgc())
     {
         help();
         return false;

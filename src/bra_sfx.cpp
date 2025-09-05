@@ -1,20 +1,15 @@
 #include <lib_bra.h>
 #include <bra_log.h>
 #include <version.h>
+#include <BraProgram.hpp>
 
 #include <iostream>
 #include <filesystem>
-#include <format>
-
-#include <cstdio>
 
 
 using namespace std;
 
 namespace fs = std::filesystem;
-
-static bool                      g_listContent      = false;
-static bra_fs_overwrite_policy_e g_overwrite_policy = BRA_OVERWRITE_ASK;
 
 bool bra_isElf(const char* fn)
 {
@@ -81,81 +76,6 @@ bool bra_isPE(const char* fn)
     return pe_magic[0] == 'P' && pe_magic[1] == 'E' && pe_magic[2] == '\0' && pe_magic[3] == '\0';
 }
 
-void help()
-{
-    bra_log_printf("BR-Archive Utility Version: %s\n", VERSION);
-    bra_log_printf("\n");
-    bra_log_printf("Options:\n");
-    bra_log_printf("--help   | -h : display this page.\n");
-    bra_log_printf("--list   | -l : view archive content.\n");
-    bra_log_printf("--yes    | -y : force a 'yes' response to all the user questions.\n");
-    bra_log_printf("--no     | -n : force 'no' to all prompts (skip overwrites).\n");
-    // bra_log_printf("--update | -u : update an existing archive with missing files from input.\n");
-    bra_log_printf("\n");
-}
-
-bool parse_args(int argc, char* argv[])
-{
-    // Supporting only EXE and ELF file type for now
-    if (bra_isElf(argv[0]))
-    {
-        bra_log_info("ELF file detected");
-    }
-    else if (bra_isPE(argv[0]))
-    {
-        bra_log_info("PE file detected");
-    }
-    else
-    {
-        bra_log_error("unsupported file detected: %s", argv[0]);
-        return false;
-    }
-
-    g_listContent      = false;
-    g_overwrite_policy = BRA_OVERWRITE_ASK;
-    for (int i = 1; i < argc; i++)
-    {
-        string s = argv[i];
-        if ((s == "--help") || (s == "-h"))
-        {
-            help();
-            exit(0);    // this is required to terminate the program with a return 0, if returning false, will return != 0
-        }
-        else if (s == "--list" || s == "-l")
-        {
-            // list content
-            g_listContent = true;
-        }
-        else if (s == "--yes" || s == "-y")
-        {
-            if (g_overwrite_policy != BRA_OVERWRITE_ASK)
-            {
-                bra_log_error("can't set %s: another mutually exclusive option is already set.", s.c_str());
-                return false;
-            }
-
-            g_overwrite_policy = BRA_OVERWRITE_ALWAYS_YES;
-        }
-        else if (s == "--no" || s == "-n")
-        {
-            if (g_overwrite_policy != BRA_OVERWRITE_ASK)
-            {
-                bra_log_error("can't set %s: another mutually exclusive option is already set.", s.c_str());
-                return false;
-            }
-
-            g_overwrite_policy = BRA_OVERWRITE_ALWAYS_NO;
-        }
-        else
-        {
-            bra_log_error("unknown argument: %s", s.c_str());
-            return false;
-        }
-    }
-
-    return true;
-}
-
 bool bra_file_open_and_read_footer_header(const char* fn, bra_io_header_t* out_bh, bra_io_file_t* f)
 {
     if (!bra_io_open(f, fn, "rb"))
@@ -182,14 +102,141 @@ bool bra_file_open_and_read_footer_header(const char* fn, bra_io_header_t* out_b
     return true;
 }
 
+/////////////////////////////////////////////////////////////////////////
+
+class BraSfx : public BraProgram
+{
+private:
+    bool m_listContent = false;
+
+protected:
+    virtual void help_usage()
+    {
+        fs::path p(m_argv0);
+
+        bra_log_printf("  %s [-l]     : to start un-archiving or listing.\n", p.filename().string().c_str());
+    };
+
+    virtual void help_example() {
+    };
+
+    // same as unbra
+    virtual void help_options()
+    {
+        bra_log_printf("--list   | -l : view archive content.\n");
+    };
+
+    int parseArgs_minArgc() const override { return 1; }
+
+    // same as unbra
+    std::optional<bool> parseArgs_option([[maybe_unused]] const int argc, [[maybe_unused]] const char* const argv[], [[maybe_unused]] int& i, const std::string_view& s) override
+    {
+        if (s == "--list" || s == "-l")
+        {
+            // list content
+            m_listContent = true;
+        }
+        else
+            return nullopt;
+
+        return true;
+    }
+
+    void parseArgs_adjustFilename([[maybe_unused]] std::filesystem::path& p) override
+    {
+    }
+
+    bool parseArgs_file([[maybe_unused]] const std::filesystem::path& p)
+    {
+        return false;
+    }
+
+    // same as unbra
+    bool parseArgs_dir([[maybe_unused]] const std::filesystem::path& p)
+    {
+        // TODO not implemented yet
+        // it should create the dir and extract in that dir
+        return false;
+    }
+
+    // same as unbra
+    bool parseArgs_wildcard([[maybe_unused]] const std::filesystem::path& p)
+    {
+        // Not supported.
+        // TODO: or for filtering what to extract from the archive?
+        return false;
+    }
+
+    bool validateArgs()
+    {
+        // Supporting only EXE and ELF file type for now
+        if (bra_isElf(m_argv0))
+        {
+            bra_log_info("ELF file detected");
+        }
+        else if (bra_isPE(m_argv0))
+        {
+            bra_log_info("PE file detected");
+        }
+        else
+        {
+            bra_log_error("unsupported file detected: %s", m_argv0);
+            return false;
+        }
+
+        return true;
+    }
+
+    int run_prog()
+    {
+        bra_io_header_t bh;
+        bra_io_file_t   f{};
+
+        // this is the only difference from unbra (read the  footer)
+        // and do not force extension checking to unbra
+        if (!bra_file_open_and_read_footer_header(m_argv0, &bh, &f))
+            return 1;
+
+        // extract payload, encoded data
+        // same as un bra
+        bra_log_printf("%s contains num files: %u\n", BRA_NAME, bh.num_files);
+        if (m_listContent)
+        {
+            bra_log_printf("| ATTR |   SIZE    | FILENAME                                |\n");
+            bra_log_printf("|------|-----------|-----------------------------------------|\n");
+            for (uint32_t i = 0; i < bh.num_files; i++)
+            {
+                if (!bra_print_meta_file(&f))
+                    return 2;
+            }
+        }
+        else
+        {
+            for (uint32_t i = 0; i < bh.num_files; i++)
+            {
+                if (!bra_io_decode_and_write_to_disk(&f, &m_overwrite_policy))
+                    return 1;
+            }
+        }
+        bra_io_close(&f);
+        return 0;
+    }
+
+
+public:
+    const char* m_argv0;
+
+    explicit BraSfx([[maybe_unused]] const int argc, const char* const argv[]) : m_argv0(argv[0]) {}
+};
+
+////////////////////////////////////////////////////////////////////////
+
+
 int main(int argc, char* argv[])
 {
     // TODO: add output directory where to decode
     // TODO: ask to overwrite files, etc..
     // TODO: all these functionalities are common among the utilities
-
-    if (!parse_args(argc, argv))
-        return 1;
 
     // The idea of the SFX is to have a footer at the end of the file
     // The footer contain the location where the embedded data is
@@ -198,27 +245,6 @@ int main(int argc, char* argv[])
 
     // TODO: when extracting should check to do not auto-overwrite itself.
 
-    bra_io_header_t bh;
-    bra_io_file_t   f{};
-    if (!bra_file_open_and_read_footer_header(argv[0], &bh, &f))
-        return 1;
-
-    // extract payload, encoded data
-    for (uint32_t i = 0; i < bh.num_files; ++i)
-    {
-        if (g_listContent)
-        {
-            bra_log_critical("Not implemented yet.");
-            // if (!unbra_list_meta_file(f))
-            return 2;
-        }
-        else
-        {
-            if (!bra_io_decode_and_write_to_disk(&f, &g_overwrite_policy))
-                return 1;
-        }
-    }
-
-    bra_io_close(&f);
-    return 0;
+    BraSfx bra_sfx(argc, argv);
+    return bra_sfx.run(argc, argv);
 }

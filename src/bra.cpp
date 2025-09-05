@@ -52,6 +52,8 @@ protected:
         bra_log_printf("                If the extension %s is missing it will be automatically added.\n", BRA_FILE_EXT);
     };
 
+    int parseArgs_minArgc() const override { return 2; }
+
     std::optional<bool> parseArgs_option(const int argc, const char* const argv[], int& i, const std::string_view& s) override
     {
         if (s == "--out" || s == "-o")

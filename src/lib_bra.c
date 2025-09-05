@@ -73,6 +73,60 @@ char* bra_strdup(const char* str)
     return c;
 }
 
+char bra_list_meta_file_attributes(const uint8_t attributes)
+{
+    switch (attributes)
+    {
+    case BRA_ATTR_FILE:
+        return 'f';
+    case BRA_ATTR_DIR:
+        return 'd';
+    default:
+        return '?';
+    }
+}
+
+void bra_format_bytes(const size_t bytes, char buf[BRA_PRINTF_FMT_BYTES_BUF_SIZE])
+{
+    const size_t KB = 1024;
+    const size_t MB = KB * 1024;
+    const size_t GB = MB * 1024;
+
+    if (bytes >= GB)
+        snprintf(buf, BRA_PRINTF_FMT_BYTES_BUF_SIZE, "%6.1f GB", (double) bytes / GB);
+    else if (bytes >= MB)
+        snprintf(buf, BRA_PRINTF_FMT_BYTES_BUF_SIZE, "%6.1f MB", (double) bytes / MB);
+    else if (bytes >= KB)
+        snprintf(buf, BRA_PRINTF_FMT_BYTES_BUF_SIZE, "%6.1f KB", (double) bytes / KB);
+    else
+        snprintf(buf, BRA_PRINTF_FMT_BYTES_BUF_SIZE, "%6zu  B", bytes);
+}
+
+bool bra_print_meta_file(bra_io_file_t* f)
+{
+    assert_bra_io_file_t(f);
+
+    bra_meta_file_t mf;
+    char            bytes[BRA_PRINTF_FMT_BYTES_BUF_SIZE];
+
+    if (!bra_io_read_meta_file(f, &mf))
+        return false;
+
+    const uint64_t ds   = mf.data_size;
+    const char     attr = bra_list_meta_file_attributes(mf.attributes);
+    bra_format_bytes(mf.data_size, bytes);
+    bra_log_printf("|   %c  | %s | " BRA_PRINTF_FMT_FILENAME "|\n", attr, bytes, mf.name);
+    bra_meta_file_free(&mf);
+    // skip data content
+    if (!bra_io_skip_data(f, ds))
+    {
+        bra_io_file_read_error(f);
+        return false;
+    }
+
+    return true;
+}
+
 void bra_io_file_error(bra_io_file_t* bf, const char* verb)
 {
     assert(bf != NULL);

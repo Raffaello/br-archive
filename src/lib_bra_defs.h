@@ -42,7 +42,9 @@
 #define BRA_ATTR_DIR  1    //!< Directory
 // #define BRA_ATTR_ERR  0xFF    //!< unknown or not implemented ATTR
 
-#define BRA_PRINTF_FMT_FILENAME "%-40.40s"
+#define BRA_PRINTF_FMT_BYTES_BUF_SIZE 12      //!< buffer size to convert meta file sizes into char*.
+
+#define BRA_PRINTF_FMT_FILENAME "%-40.40s"    //!< printf-like format to print a filename.s
 
 #if defined(__APPLE__) || defined(__linux__) || defined(__linux)
 #define BRA_SFX_FILE_EXT ".brx"

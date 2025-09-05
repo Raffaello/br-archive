@@ -27,81 +27,22 @@ namespace fs = std::filesystem;
 
 //////////////////////////////////////////////////////////////////////////
 
-/**
- * @brief
- *
- * @todo move to lib_bra?
- *
- * @param attributes
- * @return char
- */
-char unbra_list_meta_file_attributes(const uint8_t attributes)
-{
-    switch (attributes)
-    {
-    case 0:
-        return 'f';
-    case 1:
-        return 'd';
-    default:
-        return '?';
-    }
-}
 
-/**
- * @brief
- *
- * @todo move to lib_bra?
- *
- * @param bytes
- * @return std::string
- */
-std::string format_bytes(const size_t bytes)
-{
-    constexpr size_t KB = 1024;
-    constexpr size_t MB = KB * 1024;
-    constexpr size_t GB = MB * 1024;
+// std::string format_bytes(const size_t bytes)
+// {
+//     constexpr size_t KB = 1024;
+//     constexpr size_t MB = KB * 1024;
+//     constexpr size_t GB = MB * 1024;
 
-    if (bytes >= GB)
-        return format("{:>6.1f} GB", static_cast<double>(bytes) / GB);
-    else if (bytes >= MB)
-        return format("{:>6.1f} MB", static_cast<double>(bytes) / MB);
-    else if (bytes >= KB)
-        return format("{:>6.1f} KB", static_cast<double>(bytes) / KB);
-    else
-        return format("{:>6}  B", bytes);
-}
-
-/**
- * @brief
- *
- * @todo move into lib_bra
- *
- * @param f
- * @return true
- * @return false
- */
-bool unbra_list_meta_file(bra_io_file_t& f)
-{
-    bra_meta_file_t mf;
-
-    if (!bra_io_read_meta_file(&f, &mf))
-        return false;
-
-    const uint64_t ds = mf.data_size;
-    bra_log_printf("|   %c  | %s | " BRA_PRINTF_FMT_FILENAME "|\n", unbra_list_meta_file_attributes(mf.attributes), format_bytes(mf.data_size).c_str(), mf.name);
-
-    bra_meta_file_free(&mf);
-
-    // skip data content
-    if (!bra_io_skip_data(&f, ds))
-    {
-        bra_io_file_read_error(&f);
-        return false;
-    }
-
-    return true;
-}
+// if (bytes >= GB)
+//     return format("{:>6.1f} GB", static_cast<double>(bytes) / GB);
+// else if (bytes >= MB)
+//     return format("{:>6.1f} MB", static_cast<double>(bytes) / MB);
+// else if (bytes >= KB)
+//     return format("{:>6.1f} KB", static_cast<double>(bytes) / KB);
+// else
+//     return format("{:>6}  B", bytes);
+// }
 
 class Unbra : public BraProgram
 {
@@ -201,7 +142,7 @@ protected:
             bra_log_printf("|------|-----------|-----------------------------------------|\n");
             for (uint32_t i = 0; i < bh.num_files; i++)
             {
-                if (!unbra_list_meta_file(f))
+                if (!bra_print_meta_file(&f))
                     return 2;
             }
         }

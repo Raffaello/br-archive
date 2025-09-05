@@ -90,7 +90,7 @@ void help()
     bra_log_printf("--list   | -l : view archive content.\n");
     bra_log_printf("--yes    | -y : force a 'yes' response to all the user questions.\n");
     bra_log_printf("--no     | -n : force 'no' to all prompts (skip overwrites).\n");
-    bra_log_printf("--update | -u : update an existing archive with missing files from input.\n");
+    // bra_log_printf("--update | -u : update an existing archive with missing files from input.\n");
     bra_log_printf("\n");
 }
 

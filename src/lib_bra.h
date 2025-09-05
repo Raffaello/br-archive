@@ -83,6 +83,31 @@ typedef struct bra_meta_file_t
 char* bra_strdup(const char* str);
 
 /**
+ * @brief Convert meta file @p attributes into a char.
+ *
+ * @param attributes
+ * @return char
+ */
+char bra_list_meta_file_attributes(const uint8_t attributes);
+
+/**
+ * @brief convert @p bytes into a human readble string stored in @p buf
+ *
+ * @param bytes
+ * @param buf
+ */
+void bra_format_bytes(const size_t bytes, char buf[BRA_PRINTF_FMT_BYTES_BUF_SIZE]);
+
+/**
+ * @brief Print a meta file @p f using @ref bra_printf display attributes, size and filename.
+ *
+ * @param f
+ * @return true
+ * @return false
+ */
+bool bra_print_meta_file(bra_io_file_t* f);
+
+/**
  * @brief Print an error message and close the file.
  *
  * @param bf

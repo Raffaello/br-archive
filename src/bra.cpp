@@ -34,13 +34,13 @@ private:
     bra_io_file_t m_f2{};
 
 protected:
-    void help_usage() override
+    void help_usage() const override
     {
         bra_log_printf("  bra [-s] -o <output_file> <input_file1> [<input_file2> ...]\n");
         bra_log_printf("The [output_file] will have %s (or %s with --sfx)\n", BRA_FILE_EXT, BRA_SFX_FILE_EXT);
     };
 
-    void help_example() override
+    void help_example() const override
     {
         bra_log_printf("  bra -o test test.txt\n");
         bra_log_printf("  bra -o test *.txt\n");
@@ -49,7 +49,7 @@ protected:
         bra_log_printf("              Directories expand to <dir/*> (non-recursive); empty directories are ignored.\n");
     };
 
-    void help_options() override
+    void help_options() const override
     {
         bra_log_printf("--sfx    | -s : generate a self-extracting archive\n");
         bra_log_printf("--update | -u : update an existing archive with missing files from input.\n");
@@ -81,7 +81,7 @@ protected:
         return true;
     }
 
-    void parseArgs_adjustFilename([[maybe_unused]] std::filesystem::path& p) {};
+    void parseArgs_adjustFilename([[maybe_unused]] std::filesystem::path& p) override {};
 
     bool parseArgs_file(const std::filesystem::path& p) override
     {

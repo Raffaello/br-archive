@@ -73,7 +73,7 @@ char* bra_strdup(const char* str)
     return c;
 }
 
-char bra_list_meta_file_attributes(const uint8_t attributes)
+char bra_format_meta_attributes(const bra_attr_t attributes)
 {
     switch (attributes)
     {
@@ -113,7 +113,7 @@ bool bra_print_meta_file(bra_io_file_t* f)
         return false;
 
     const uint64_t ds   = mf.data_size;
-    const char     attr = bra_list_meta_file_attributes(mf.attributes);
+    const char     attr = bra_format_meta_attributes(mf.attributes);
     bra_format_bytes(mf.data_size, bytes);
     bra_log_printf("|   %c  | %s | " BRA_PRINTF_FMT_FILENAME "|\n", attr, bytes, mf.name);
     bra_meta_file_free(&mf);

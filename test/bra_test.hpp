@@ -9,13 +9,18 @@
 
 #if defined(__unix__) || defined(__APPLE__)
 #include <sys/wait.h>
-#define EXITSTATUS(ret)          \
-    ASSERT_TRUE(WIFEXITED(ret)); \
-    WEXITSTATUS(ret)
-#else
-#define EXITSTATUS(ret) ret
-#endif
 
+constexpr int EXITSTATUS(int ret)
+{
+    ASSERT_TRUE(WIFEXITED(ret));
+    return WEXITSTATUS(ret);
+}
+#else
+constexpr int EXITSTATUS(int ret)
+{
+    return ret;
+}
+#endif
 
 #define PRINT_TEST_NAME std::cout << std::format("[TEST] Running Test: {}", std::source_location::current().function_name()) << std::endl
 

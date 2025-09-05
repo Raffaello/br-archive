@@ -115,18 +115,18 @@ private:
     bool m_listContent = false;
 
 protected:
-    virtual void help_usage()
+    virtual void help_usage() const override
     {
         fs::path p(m_argv0);
 
         bra_log_printf("  %s [-l]     : to start un-archiving or listing.\n", p.filename().string().c_str());
     };
 
-    virtual void help_example() {
+    virtual void help_example() const override {
     };
 
     // same as unbra
-    virtual void help_options()
+    virtual void help_options() const override
     {
         bra_log_printf("--list   | -l : view archive content.\n");
     };
@@ -151,13 +151,13 @@ protected:
     {
     }
 
-    bool parseArgs_file([[maybe_unused]] const std::filesystem::path& p)
+    bool parseArgs_file([[maybe_unused]] const std::filesystem::path& p) override
     {
         return false;
     }
 
     // same as unbra
-    bool parseArgs_dir([[maybe_unused]] const std::filesystem::path& p)
+    bool parseArgs_dir([[maybe_unused]] const std::filesystem::path& p) override
     {
         // TODO not implemented yet
         // it should create the dir and extract in that dir
@@ -165,14 +165,14 @@ protected:
     }
 
     // same as unbra
-    bool parseArgs_wildcard([[maybe_unused]] const std::filesystem::path& p)
+    bool parseArgs_wildcard([[maybe_unused]] const std::filesystem::path& p) override
     {
         // Not supported.
         // TODO: or for filtering what to extract from the archive?
         return false;
     }
 
-    bool validateArgs()
+    bool validateArgs() override
     {
         // Supporting only EXE and ELF file type for now
         if (bra_isElf(m_argv0))
@@ -192,7 +192,7 @@ protected:
         return true;
     }
 
-    int run_prog()
+    int run_prog() override
     {
         bra_io_header_t bh;
 

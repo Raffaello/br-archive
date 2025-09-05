@@ -52,19 +52,19 @@ private:
     bool     m_listContent = false;
 
 protected:
-    virtual void help_usage()
+    virtual void help_usage() const override
     {
         bra_log_printf("  unbra (input_file)%s\n", BRA_FILE_EXT);
     };
 
-    virtual void help_example()
+    virtual void help_example() const override
     {
         bra_log_printf("  unbra test.BRa\n");
         bra_log_printf("\n");
         bra_log_printf("(input_file) : %s archive to extract.\n", BRA_NAME);
     };
 
-    virtual void help_options()
+    virtual void help_options() const override
     {
         bra_log_printf("--list   | -l : view archive content.\n");
     };
@@ -89,27 +89,27 @@ protected:
         p = bra::fs::filename_archive_adjust(p);
     }
 
-    bool parseArgs_file(const std::filesystem::path& p)
+    bool parseArgs_file(const std::filesystem::path& p) override
     {
         m_bra_file = p;
         return true;
     }
 
-    bool parseArgs_dir([[maybe_unused]] const std::filesystem::path& p)
+    bool parseArgs_dir([[maybe_unused]] const std::filesystem::path& p) override
     {
         // TODO not implemented yet
         // it should create the dir and extract in that dir
         return false;
     }
 
-    bool parseArgs_wildcard([[maybe_unused]] const std::filesystem::path& p)
+    bool parseArgs_wildcard([[maybe_unused]] const std::filesystem::path& p) override
     {
         // Not supported.
         // TODO: or for filtering what to extract from the archive?
         return false;
     }
 
-    bool validateArgs()
+    bool validateArgs() override
     {
         if (m_bra_file.empty())
         {
@@ -120,7 +120,7 @@ protected:
         return true;
     }
 
-    int run_prog()
+    int run_prog() override
     {
         // forcing to work only on BRA_FILE_EXT
         if (m_bra_file.extension() != BRA_FILE_EXT)

@@ -27,13 +27,13 @@ bool BraProgram::set_overwrite_policy(const bra_fs_overwrite_policy_e op, const 
     return true;
 }
 
-void BraProgram::banner()
+void BraProgram::banner() const
 {
     bra_log_printf("BR-Archive Utility Version: %s\n", VERSION);
     bra_log_printf("\n");
 }
 
-void BraProgram::help()
+void BraProgram::help() const
 {
     banner();
     bra_log_printf("Usage:\n");
@@ -48,7 +48,7 @@ void BraProgram::help()
     bra_log_flush();
 }
 
-void BraProgram::help_common_options()
+void BraProgram::help_common_options() const
 {
     bra_log_printf("--help   | -h : display this page.\n");
     bra_log_printf("--yes    | -y : force a 'yes' response to all the user questions.\n");

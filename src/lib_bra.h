@@ -88,7 +88,7 @@ char* bra_strdup(const char* str);
  * @param attributes
  * @return char
  */
-char bra_list_meta_file_attributes(const uint8_t attributes);
+char bra_format_meta_attributes(const bra_attr_t attributes);
 
 /**
  * @brief convert @p bytes into a human readble string stored in @p buf

@@ -30,14 +30,14 @@ protected:
 
     bool set_overwrite_policy(const bra_fs_overwrite_policy_e op, const std::string& s);
 
-    void banner();
+    void banner() const;
 
-    void help();
+    void help() const;
 
-    void         help_common_options();
-    virtual void help_usage()   = 0;
-    virtual void help_example() = 0;
-    virtual void help_options() = 0;
+    void         help_common_options() const;
+    virtual void help_usage() const   = 0;
+    virtual void help_example() const = 0;
+    virtual void help_options() const = 0;
 
     std::optional<bool> parseArgs(const int argc, const char* const argv[]);
 

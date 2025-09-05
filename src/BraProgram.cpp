@@ -97,6 +97,7 @@ std::optional<bool> BraProgram::parseArgs(const int argc, const char* const argv
         {
             // FS sub-section
             fs::path p = s;
+            parseArgs_adjustFilename(p);
             // check if it is file or a dir
             if (bra::fs::file_exists(p))
             {

@@ -35,133 +35,6 @@ static bra_fs_overwrite_policy_e g_overwrite_policy = BRA_OVERWRITE_ASK;
 
 //////////////////////////////////////////////////////////////////////////
 
-class Unbra : public BraProgram
-{
-protected:
-    virtual void help_usage()
-    {
-        bra_log_printf("  unbra (input_file)%s\n", BRA_FILE_EXT);
-    };
-
-    virtual void help_example()
-    {
-        bra_log_printf("  unbra test.BRa\n");
-        bra_log_printf("\n");
-        bra_log_printf("(input_file) : %s archive to extract.\n", BRA_NAME);
-    };
-
-    virtual void help_options()
-    {
-        bra_log_printf("--list   | -l : view archive content.\n");
-    };
-};
-
-//////////////////////////////////////////////////////////////////////////
-
-
-void help()
-{
-    bra_log_printf("BR-Archive Utility Version: %s\n", VERSION);
-    bra_log_printf("\n");
-    bra_log_printf("Usage:\n");
-    bra_log_printf("\n");
-    bra_log_printf("  unbra (input_file).BRa\n");
-    bra_log_printf("The [output_file(s)] will be as they are stored in the archive\n");
-    bra_log_printf("Example:\n");
-    bra_log_printf("  unbra test.BRa\n");
-    bra_log_printf("\n");
-    bra_log_printf("(input_file) : %s archive to extract.\n", BRA_NAME);
-    bra_log_printf("\n");
-    bra_log_printf("Options:\n");
-    bra_log_printf("--help   | -h : display this page.\n");
-    bra_log_printf("--list   | -l : view archive content.\n");
-    bra_log_printf("--yes    | -y : force a 'yes' response to all the user questions.\n");
-    bra_log_printf("--no     | -n : force 'no' to all prompts (skip overwrites).\n");
-    // bra_log_printf("--update | -u : update an existing archive with missing files from input.\n");
-
-    bra_log_printf("\n");
-
-    // Unbra unbra;
-    // unbra.help();
-}
-
-bool parse_args(int argc, char* argv[])
-{
-    g_bra_file.clear();
-
-    if (argc < 2)
-    {
-        help();
-        return false;
-    }
-
-    g_listContent      = false;
-    g_overwrite_policy = BRA_OVERWRITE_ASK;
-    for (int i = 1; i < argc; i++)
-    {
-        string s = argv[i];
-
-        if (s == "--help" || s == "-h")
-        {
-            help();
-            exit(0);
-        }
-        else if (s == "--list" || s == "-l")
-        {
-            // list content
-            g_listContent = true;
-        }
-        else if (s == "--yes" || s == "-y")
-        {
-            if (g_overwrite_policy != BRA_OVERWRITE_ASK)
-            {
-                bra_log_error("can't set %s: another mutually exclusive option is already set.", s.c_str());
-                return false;
-            }
-
-            g_overwrite_policy = BRA_OVERWRITE_ALWAYS_YES;
-        }
-        else if (s == "--no" || s == "-n")
-        {
-            // TODO: DRY out all of these block,
-            //      create a method set_overwrite_policy or something
-            if (g_overwrite_policy != BRA_OVERWRITE_ASK)
-            {
-                bra_log_error("can't set %s: another mutually exclusive option is already set.", s.c_str());
-                return false;
-            }
-
-            g_overwrite_policy = BRA_OVERWRITE_ALWAYS_NO;
-        }
-        // check if it is a file
-        else
-        {
-            // FS sub-section.
-            fs::path p = bra::fs::filename_archive_adjust(s);
-            if (bra::fs::file_exists(p))
-                g_bra_file = p;
-            else
-            {
-                bra_log_error("unknown argument/file not found: %s", s.c_str());
-                return false;
-            }
-        }
-    }
-
-    return true;
-}
-
-bool validate_args()
-{
-    if (g_bra_file.empty())
-    {
-        bra_log_error("no input file provided");
-        return false;
-    }
-
-    return true;
-}
-
 char unbra_list_meta_file_attributes(const uint8_t attributes)
 {
     switch (attributes)
@@ -213,50 +86,123 @@ bool unbra_list_meta_file(bra_io_file_t& f)
     return true;
 }
 
+class Unbra : public BraProgram
+{
+protected:
+    virtual void help_usage()
+    {
+        bra_log_printf("  unbra (input_file)%s\n", BRA_FILE_EXT);
+    };
+
+    virtual void help_example()
+    {
+        bra_log_printf("  unbra test.BRa\n");
+        bra_log_printf("\n");
+        bra_log_printf("(input_file) : %s archive to extract.\n", BRA_NAME);
+    };
+
+    virtual void help_options()
+    {
+        bra_log_printf("--list   | -l : view archive content.\n");
+    };
+
+    std::optional<bool> parseArgs_option([[maybe_unused]] const int argc, [[maybe_unused]] const char* const argv[], [[maybe_unused]] int& i, const std::string_view& s) override
+    {
+        if (s == "--list" || s == "-l")
+        {
+            // list content
+            g_listContent = true;
+        }
+        else
+            return nullopt;
+
+        return true;
+    }
+
+    void parseArgs_adjustFilename(std::filesystem::path& p) override
+    {
+        p = bra::fs::filename_archive_adjust(p);
+    }
+
+    bool parseArgs_file(const std::filesystem::path& p)
+    {
+        g_bra_file = p;
+        return true;
+    }
+
+    bool parseArgs_dir([[maybe_unused]] const std::filesystem::path& p)
+    {
+        // TODO not implemented yet
+        // it should create the dir and extract in that dir
+        return false;
+    }
+
+    bool parseArgs_wildcard([[maybe_unused]] const std::filesystem::path& p)
+    {
+        // Not supported.
+        // TODO: or for filtering what to extract from the archive?
+        return false;
+    }
+
+    bool validateArgs()
+    {
+        if (g_bra_file.empty())
+        {
+            bra_log_error("no input file provided");
+            return false;
+        }
+
+        return true;
+    }
+
+    int run_prog()
+    {
+        // forcing to work only on BRA_FILE_EXT
+        if (g_bra_file.extension() != BRA_FILE_EXT)
+        {
+            bra_log_critical("unexpected %s", g_bra_file.string().c_str());
+            return 99;
+        }
+
+        // header
+        bra_io_header_t bh{};
+        bra_io_file_t   f{};
+        if (!bra_io_open(&f, g_bra_file.string().c_str(), "rb"))
+            return 1;
+
+        if (!bra_io_read_header(&f, &bh))
+            return 1;
+
+        bra_log_printf("%s contains num files: %u\n", BRA_NAME, bh.num_files);
+        if (g_listContent)
+        {
+            bra_log_printf("| ATTR |   SIZE    | FILENAME                                |\n");
+            bra_log_printf("|------|-----------|-----------------------------------------|\n");
+            for (uint32_t i = 0; i < bh.num_files; i++)
+            {
+                if (!unbra_list_meta_file(f))
+                    return 2;
+            }
+        }
+        else
+        {
+            for (uint32_t i = 0; i < bh.num_files; i++)
+            {
+                if (!bra_io_decode_and_write_to_disk(&f, &g_overwrite_policy))
+                    return 1;
+            }
+        }
+
+        bra_io_close(&f);
+        return 0;
+    }
+};
+
+//////////////////////////////////////////////////////////////////////////
+
 int main(int argc, char* argv[])
 {
-    if (!parse_args(argc, argv))
-        return 1;
+    Unbra unbra;
 
-    if (!validate_args())
-        return 1;
-
-    // forcing to work only on BRA_FILE_EXT
-    if (g_bra_file.extension() != BRA_FILE_EXT)
-    {
-        bra_log_critical("unexpected %s", g_bra_file.string().c_str());
-        return 99;
-    }
-
-    // header
-    bra_io_header_t bh{};
-    bra_io_file_t   f{};
-    if (!bra_io_open(&f, g_bra_file.string().c_str(), "rb"))
-        return 1;
-
-    if (!bra_io_read_header(&f, &bh))
-        return 1;
-
-    bra_log_printf("%s contains num files: %u\n", BRA_NAME, bh.num_files);
-    if (g_listContent)
-    {
-        bra_log_printf("| ATTR |   SIZE    | FILENAME                                |\n");
-        bra_log_printf("|------|-----------|-----------------------------------------|\n");
-        for (uint32_t i = 0; i < bh.num_files; i++)
-        {
-            if (!unbra_list_meta_file(f))
-                return 2;
-        }
-    }
-    else
-    {
-        for (uint32_t i = 0; i < bh.num_files; i++)
-        {
-            if (!bra_io_decode_and_write_to_disk(&f, &g_overwrite_policy))
-                return 1;
-        }
-    }
-
-    bra_io_close(&f);
-    return 0;
+    return unbra.run(argc, argv);
 }

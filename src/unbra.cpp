@@ -20,9 +20,14 @@ using namespace std;
 
 namespace fs = std::filesystem;
 
+// TODO: create an abstract class for the program containing basic help parse and validate plus run
+// TODO: create the children unbra, bra, bra_sfx
+// TODO: unbra must be able to read sfx too
 
-fs::path g_bra_file;
-bool     g_listContent = false;
+
+static fs::path                  g_bra_file;
+static bool                      g_listContent      = false;
+static bra_fs_overwrite_policy_e g_overwrite_policy = BRA_OVERWRITE_ASK;
 
 // TODO: add output path as parameter
 
@@ -41,8 +46,12 @@ void help()
     // cout << format("(output_file): output file name without extension") << endl;
     cout << endl;
     cout << format("Options:") << endl;
-    cout << format("--help | -h : display this page.") << endl;
-    cout << format("--list | -l : view archive content.") << endl;
+    cout << format("--help   | -h : display this page.") << endl;
+    cout << format("--list   | -l : view archive content.") << endl;
+    cout << format("--yes    | -y : force a 'yes' response to all the user questions.") << endl;
+    cout << format("--no     | -n : force 'no' to all prompts (skip overwrites).") << endl;
+    cout << format("--update | -u : update an existing archive with missing files from input.") << endl;
+
     cout << endl;
 }
 
@@ -56,7 +65,8 @@ bool parse_args(int argc, char* argv[])
         return false;
     }
 
-    g_listContent = false;
+    g_listContent      = false;
+    g_overwrite_policy = BRA_OVERWRITE_ASK;
     for (int i = 1; i < argc; i++)
     {
         string s = argv[i];
@@ -71,15 +81,38 @@ bool parse_args(int argc, char* argv[])
             // list content
             g_listContent = true;
         }
+        else if (s == "--yes" || s == "-y")
+        {
+            if (g_overwrite_policy != BRA_OVERWRITE_ASK)
+            {
+                bra_log_error("can't set %s: another mutually exclusive option is already set.", s.c_str());
+                return false;
+            }
+
+            g_overwrite_policy = BRA_OVERWRITE_ALWAYS_YES;
+        }
+        else if (s == "--no" || s == "-n")
+        {
+            // TODO: DRY out all of these block,
+            //      create a method set_overwrite_policy or something
+            if (g_overwrite_policy != BRA_OVERWRITE_ASK)
+            {
+                bra_log_error("can't set %s: another mutually exclusive option is already set.", s.c_str());
+                return false;
+            }
+
+            g_overwrite_policy = BRA_OVERWRITE_ALWAYS_NO;
+        }
         // check if it is a file
         else
         {
+            // FS sub-section.
             fs::path p = bra::fs::filename_archive_adjust(s);
             if (bra::fs::file_exists(p))
                 g_bra_file = p;
             else
             {
-                bra_log_error("unknown argument: %s", s.c_str());
+                bra_log_error("unknown argument/file not found: %s", s.c_str());
                 return false;
             }
         }
@@ -119,13 +152,13 @@ std::string format_bytes(const size_t bytes)
     constexpr size_t GB = MB * 1024;
 
     if (bytes >= GB)
-        return format("{:2.2f} GB", static_cast<double>(bytes) / GB);
+        return format("{:>6.1f} GB", static_cast<double>(bytes) / GB);
     else if (bytes >= MB)
-        return format("{:2.2f} MB", static_cast<double>(bytes) / MB);
+        return format("{:>6.1f} MB", static_cast<double>(bytes) / MB);
     else if (bytes >= KB)
-        return format("{:2.2f} KB", static_cast<double>(bytes) / KB);
+        return format("{:>6.1f} KB", static_cast<double>(bytes) / KB);
     else
-        return format("{:4} B ", bytes);
+        return format("{:>6}  B", bytes);
 }
 
 bool unbra_list_meta_file(bra_io_file_t& f)
@@ -136,7 +169,7 @@ bool unbra_list_meta_file(bra_io_file_t& f)
         return false;
 
     const uint64_t ds = mf.data_size;
-    cout << format("- attr: {} | size: {:4} | {}", unbra_list_meta_file_attributes(mf.attributes), format_bytes(mf.data_size), mf.name) << endl;
+    cout << format("- attr: {:1} | size: {:>8} | {:<50}", unbra_list_meta_file_attributes(mf.attributes), format_bytes(mf.data_size), mf.name) << endl;
 
     bra_meta_file_free(&mf);
 
@@ -184,7 +217,7 @@ int main(int argc, char* argv[])
         }
         else
         {
-            if (!bra_io_decode_and_write_to_disk(&f))
+            if (!bra_io_decode_and_write_to_disk(&f, &g_overwrite_policy))
                 return 1;
         }
     }

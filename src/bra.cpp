@@ -22,10 +22,10 @@ using namespace std;
 namespace fs = std::filesystem;
 
 
-static std::set<fs::path> g_files;
-static fs::path           g_out_filename;
-static bool               g_sfx        = false;
-static bool               g_always_yes = false;
+static std::set<fs::path>        g_files;
+static fs::path                  g_out_filename;
+static bool                      g_sfx              = false;
+static bra_fs_overwrite_policy_e g_overwrite_policy = BRA_OVERWRITE_ASK;
 
 //////////////////////////////////////////////////////////////////////////
 
@@ -46,11 +46,13 @@ void help()
     cout << format("              Directories expand to <dir/*> (non-recursive); empty directories are ignored.") << endl;
     cout << endl;
     cout << format("Options:") << endl;
-    cout << format("--help | -h : display this page.") << endl;
-    cout << format("--sfx  | -s : generate a self-extracting archive") << endl;
-    cout << format("--yes  | -y : this will force a 'yes' response to all the user questions.") << endl;
-    cout << format("--out  | -o : <output_filename> it takes the path of the output file.") << endl;
-    cout << format("              If the extension {} is missing it will be automatically added.", BRA_FILE_EXT) << endl;
+    cout << format("--help   | -h : display this page.") << endl;
+    cout << format("--sfx    | -s : generate a self-extracting archive") << endl;
+    cout << format("--yes    | -y : force a 'yes' response to all the user questions.") << endl;
+    cout << format("--no     | -n : force 'no' to all prompts (skip overwrites).") << endl;
+    cout << format("--update | -u : update an existing archive with missing files from input.") << endl;
+    cout << format("--out    | -o : <output_filename> it takes the path of the output file.") << endl;
+    cout << format("                If the extension {} is missing it will be automatically added.", BRA_FILE_EXT) << endl;
     cout << endl;
 }
 
@@ -64,10 +66,11 @@ bool parse_args(int argc, char* argv[])
 
     g_files.clear();
     g_out_filename.clear();
-    g_sfx        = false;
-    g_always_yes = false;
+    g_sfx              = false;
+    g_overwrite_policy = BRA_OVERWRITE_ASK;
     for (int i = 1; i < argc; ++i)
     {
+        // first part is about arguments sections
         string s = argv[i];
 
         if (s == "--help" || s == "-h")
@@ -93,47 +96,66 @@ bool parse_args(int argc, char* argv[])
         }
         else if (s == "--yes" || s == "-y")
         {
-            g_always_yes = true;
-        }
-        // check if it is file or a dir
-        else if (bra::fs::file_exists(s))
-        {
-            fs::path p = s;
-
-            // check file path
-            if (!bra::fs::try_sanitize(p))
+            if (g_overwrite_policy != BRA_OVERWRITE_ASK)
             {
-                bra_log_error("path not valid: %s", p.string().c_str());
+                bra_log_error("can't set %s: another mutually exclusive option is already set.", s.c_str());
                 return false;
             }
 
-            if (!g_files.insert(p).second)
-                bra_log_warn("duplicate file/dir given in input: %s", p.string().c_str());
+            g_overwrite_policy = BRA_OVERWRITE_ALWAYS_YES;
         }
-        else if (bra::fs::dir_exists(s))
+        else if (s == "--no" || s == "-n")
         {
-            // This should match exactly the directory.
-            // so need to be converted as a wildcard adding a `/*' at the end
-            fs::path p = fs::path(s) / "*";
-            if (!bra::fs::wildcard_expand(p, g_files))
+            if (g_overwrite_policy != BRA_OVERWRITE_ASK)
             {
-                bra_log_error("path not valid: %s", p.string().c_str());
+                bra_log_error("can't set %s: another mutually exclusive option is already set.", s.c_str());
                 return false;
             }
-        }
-        // check if it is a wildcard
-        else if (bra::fs::is_wildcard(s))
-        {
-            if (!bra::fs::wildcard_expand(s, g_files))
-            {
-                bra_log_error("unable to expand wildcard: %s", s.c_str());
-                return false;
-            }
+
+            g_overwrite_policy = BRA_OVERWRITE_ALWAYS_NO;
         }
         else
         {
-            bra_log_error("unknown argument/file doesn't exist: %s", s.c_str());
-            return false;
+            // FS sub-section
+            fs::path p = s;
+            // check if it is file or a dir
+            if (bra::fs::file_exists(p))
+            {
+                // check file path
+                if (!bra::fs::try_sanitize(p))
+                {
+                    bra_log_error("path not valid: %s", p.string().c_str());
+                    return false;
+                }
+
+                if (!g_files.insert(p).second)
+                    bra_log_warn("duplicate file given in input: %s", p.string().c_str());
+            }
+            else if (bra::fs::dir_exists(p))
+            {
+                // This should match exactly the directory.
+                // so need to be converted as a wildcard adding a `/*' at the end
+                p /= "*";
+                if (!bra::fs::wildcard_expand(p, g_files))
+                {
+                    bra_log_error("path not valid: %s", p.string().c_str());
+                    return false;
+                }
+            }
+            // check if it is a wildcard
+            else if (bra::fs::is_wildcard(p))
+            {
+                if (!bra::fs::wildcard_expand(p, g_files))
+                {
+                    bra_log_error("unable to expand wildcard: %s", s.c_str());
+                    return false;
+                }
+            }
+            else
+            {
+                bra_log_error("unknown argument/file doesn't exist: %s", s.c_str());
+                return false;
+            }
         }
     }
 
@@ -180,7 +202,7 @@ bool validate_args()
         }
 
         // check if SFX_TMP exists...
-        const auto overwrite = bra::fs::file_exists_ask_overwrite(g_out_filename, g_always_yes);
+        const auto overwrite = bra::fs::file_exists_ask_overwrite(g_out_filename, g_overwrite_policy, true);
         if (overwrite)
         {
             if (!*overwrite)
@@ -189,7 +211,6 @@ bool validate_args()
             cout << format("Overwriting file: {}", g_out_filename.string()) << endl;
         }
     }
-
     else
     {
         g_out_filename = bra::fs::filename_archive_adjust(g_out_filename);
@@ -200,12 +221,17 @@ bool validate_args()
         p = p.replace_extension(BRA_SFX_FILE_EXT);
 
     // TODO: this might not be ok
-    if (auto res = bra::fs::file_exists_ask_overwrite(p, g_always_yes))
+    if (auto res = bra::fs::file_exists_ask_overwrite(p, g_overwrite_policy, true))
     {
         if (!*res)
             return false;
 
         cout << format("Overwriting file: {}", p.string()) << endl;
+
+        // check it is not present in the input files
+        g_files.erase(p);
+        if (p != g_out_filename)
+            g_files.erase(g_out_filename);
     }
     else    // the output directory might not exists...
     {

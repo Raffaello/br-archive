@@ -47,8 +47,8 @@ namespace bra::fs
  * @see file_exists
  *
  * @param path
- * @return true if the path exists and is a directory
- * @return false otherwise
+ * @return true if the path exists and is a directory.
+ * @return false otherwise.
  */
 [[nodiscard]] bool dir_exists(const std::filesystem::path& path);
 
@@ -102,12 +102,13 @@ namespace bra::fs
  * @note The file is considered a 'regular_file' it won't check if it is a directory.
  *
  * @param path
- * @param always_yes if true, assumes yes without asking.
+ * @param overwrite_policy in/out overwrite policy; may be updated by user’s global choice.
+ * @param single_overwrite if true, global choices (“Yes to all” / “No to all”) are disabled.
  * @return std::optional<bool> when has no value the file doesn't exist.
  * @return true overwrite
  * @return false don't overwrite
  */
-[[nodiscard]] std::optional<bool> file_exists_ask_overwrite(const std::filesystem::path& path, const bool always_yes);
+[[nodiscard]] std::optional<bool> file_exists_ask_overwrite(const std::filesystem::path& path, bra_fs_overwrite_policy_e& overwrite_policy, const bool single_overwrite);
 
 /**
  * @brief Get the file attributes for the given @p path.

@@ -24,13 +24,35 @@ using namespace std;
 bool try_sanitize(std::filesystem::path& path)
 {
     error_code ec;
+    auto       err = [&path, &ec]() {
+        bra_log_error("unable to sanitize path %s: %s", path.string().c_str(), ec.message().c_str());
+        return false;
+    };
 
-    path = fs::relative(path, fs::current_path(), ec);
+    const bool rel = fs::absolute(path, ec).string().starts_with(fs::current_path().string());
     if (ec)
+        return err();
+    if (!rel)
         return false;
 
-    if (path.is_absolute() || path.has_root_name())
-        return false;
+    fs::path p = fs::relative(path, fs::current_path(), ec);
+    if (ec)
+        return err();
+
+    if (p.empty())
+    {
+        if (path.is_absolute() || path.has_root_name())
+            // in this case it should have ec.clear()
+            return err();
+
+        // try adding current directory as it might be a wildcard...
+        path = "./" / path;
+        path = fs::relative(path, fs::current_path(), ec);
+        if (ec)
+            return false;
+    }
+    else
+        path = p;
 
     for (const auto& p : path)
     {
@@ -39,7 +61,6 @@ bool try_sanitize(std::filesystem::path& path)
     }
 
     path = path.lexically_normal().generic_string();
-
     return !path.empty();
 }
 
@@ -54,11 +75,21 @@ bool is_wildcard(const std::filesystem::path& path)
 bool dir_exists(const std::filesystem::path& path)
 {
     error_code ec;
-    const bool isDir = fs::is_directory(path, ec);
-
-    // TODO: can't know if it was an error, maybe use an optional instead?
-    if (ec)
+    const auto err = [&path, &ec]() {
+        bra_log_error("can't check dir %s: %s", path.string().c_str(), ec.message().c_str());
         return false;
+    };
+
+    const bool exists = fs::exists(path, ec);
+    if (ec)
+        return err();
+
+    if (!exists)
+        return false;
+
+    const bool isDir = fs::is_directory(path, ec);
+    if (ec)
+        return err();
 
     return isDir;
 }
@@ -115,27 +146,47 @@ std::filesystem::path filename_sfx_adjust(const std::filesystem::path& path, con
 bool file_exists(const std::filesystem::path& path)
 {
     error_code ec;
-    const bool isRegFile = fs::is_regular_file(path, ec);
-
-    if (ec)
+    const auto err = [&path, &ec]() {
+        bra_log_error("can't check file %s: %s", path.string().c_str(), ec.message().c_str());
         return false;
+    };
+
+    const bool exists = fs::exists(path, ec);
+    if (ec)
+        return err();
+
+    if (!exists)
+        return false;
+
+    const bool isRegFile = fs::is_regular_file(path, ec);
+    if (ec)
+        return err();
 
     return isRegFile;
 }
 
-std::optional<bool> file_exists_ask_overwrite(const std::filesystem::path& path, const bool always_yes)
+std::optional<bool> file_exists_ask_overwrite(const std::filesystem::path& path, bra_fs_overwrite_policy_e& overwrite_policy, const bool single_overwrite)
 {
     if (!file_exists(path))
         return nullopt;
 
     char c;
 
-    cout << format("File {} already exists. Overwrite? [Y/N] ", path.string()) << flush;
-    if (always_yes)
+    switch (overwrite_policy)
     {
-        cout << 'y' << endl;
+    case BRA_OVERWRITE_ALWAYS_YES:
         return true;
+    case BRA_OVERWRITE_ALWAYS_NO:
+        return false;
+    default:
+        break;
     }
+
+    // TODO: this should use bra_message, bra_message must be moved into bra_log.h
+    if (single_overwrite)
+        cout << format("File {} already exists. Overwrite? ([y]es/[n]o) ", path.string()) << flush;
+    else
+        cout << format("File {} already exists. Overwrite? ([y]es/[n]o/[A]ll/N[o]ne) ", path.string()) << flush;
 
     do
     {
@@ -147,10 +198,30 @@ std::optional<bool> file_exists_ask_overwrite(const std::filesystem::path& path,
         }
         else
             c = static_cast<char>(tolower(static_cast<unsigned char>(c)));
+
+        if (!single_overwrite)
+        {
+            if (c == 'a' || c == 'o')
+                break;
+        }
     }
     while (c != 'y' && c != 'n');
-
     cout << endl;
+
+    if (!single_overwrite)
+    {
+        if (c == 'a')
+        {
+            overwrite_policy = BRA_OVERWRITE_ALWAYS_YES;
+            c                = 'y';
+        }
+        else if (c == 'o')
+        {
+            overwrite_policy = BRA_OVERWRITE_ALWAYS_NO;
+            c                = 'n';
+        }
+    }
+
     return c == 'y';
 }
 
@@ -209,13 +280,13 @@ bool file_set_add_dir(std::set<std::filesystem::path>& files)
         auto f = listFiles.front();
         listFiles.pop_front();
 
-        if (bra::fs::dir_exists(f))
+        if (dir_exists(f))
         {
             // TODO: only if recursive is not enabled
             //       recursive will also store empty directories.
             bra_log_debug("ignoring directory (non-recursive mode): %s", f.string().c_str());
         }
-        else if (!(bra::fs::file_exists(f)))
+        else if (!file_exists(f))
         {
             bra_log_error("%s is neither a regular file nor a directory", f.string().c_str());
             continue;
@@ -321,14 +392,17 @@ bool wildcard_expand(const std::filesystem::path& wildcard_path, std::set<std::f
 {
     fs::path p = wildcard_path.generic_string();
 
-    if (!try_sanitize(p) || !is_wildcard(p))
+    if (!is_wildcard(p))
+        return false;
+
+    if (!try_sanitize(p))
         return false;
 
     const fs::path dir     = bra::fs::wildcard_extract_dir(p);
     const string   pattern = bra::fs::wildcard_to_regexp(p.string());
 
     std::list<fs::path> files;
-    if (!bra::fs::search(dir, pattern, files))
+    if (!search(dir, pattern, files))
     {
         bra_log_error("search failed in %s for wildcard %s", dir.string().c_str(), p.string().c_str());
         return false;
@@ -357,9 +431,7 @@ bool search(const std::filesystem::path& dir, const std::string& pattern, std::l
         for (const auto& entry : fs::directory_iterator(dir))
         {
             // TODO: dir to search only if it is recursive (-r)
-
-            // const bool is_dir = entry.is_directory();
-            const bool is_dir = false;    // TODO: must be done later, requires to struct into dirs the archive too first.
+            const bool is_dir = entry.is_directory();
             if (!(entry.is_regular_file() || is_dir))
                 continue;
 
@@ -368,22 +440,27 @@ bool search(const std::filesystem::path& dir, const std::string& pattern, std::l
             if (!std::regex_match(filename, r))
                 continue;
 
-            // if (is_dir)
-            // {
-            //     std::cout << "Matched dir: " << filename << endl;
-            //     const std::string p  = pattern.substr(ep.string().size());
-            //     res                 &= search(ep, p);
-            // }
-            // else
-            // std::cout << "[DEBUG] Expected file: " << filename << endl;
-
-            if (!try_sanitize(ep))
+            if (is_dir)
             {
-                bra_log_error("not a valid file: %s", ep.string().c_str());
-                return false;
-            }
+                // bra_log_debug("Matched dir: %s", filename.c_str());
 
-            out_files.push_back(ep);
+                // TODO: if recursive...
+                // if(recursive)
+                // const std::string p = pattern.size() > ep.string().size() ? pattern.substr(ep.string().size()) : pattern;
+                // res                 &= search(ep, p);
+                continue;
+            }
+            else
+            {
+                // ep is a file
+                if (!try_sanitize(ep))
+                {
+                    bra_log_error("not a valid file: %s", ep.string().c_str());
+                    return false;
+                }
+
+                out_files.push_back(ep);
+            }
         }
 
         return true;

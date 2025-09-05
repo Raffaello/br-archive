@@ -13,7 +13,8 @@ using namespace std;
 
 namespace fs = std::filesystem;
 
-// fs::path g_bra_file;
+static bool                      g_listContent      = false;
+static bra_fs_overwrite_policy_e g_overwrite_policy = BRA_OVERWRITE_ASK;
 
 bool bra_isElf(const char* fn)
 {
@@ -86,7 +87,11 @@ void help()
     cout << endl;
     cout << endl;
     cout << format("Options:") << endl;
-    cout << format("--help | -h : display this page.") << endl;
+    cout << format("--help   | -h : display this page.") << endl;
+    cout << format("--list   | -l : view archive content.") << endl;
+    cout << format("--yes    | -y : force a 'yes' response to all the user questions.") << endl;
+    cout << format("--no     | -n : force 'no' to all prompts (skip overwrites).") << endl;
+    cout << format("--update | -u : update an existing archive with missing files from input.") << endl;
     cout << endl;
 }
 
@@ -107,19 +112,41 @@ bool parse_args(int argc, char* argv[])
         return false;
     }
 
+    g_listContent      = false;
+    g_overwrite_policy = BRA_OVERWRITE_ASK;
     for (int i = 1; i < argc; i++)
     {
         string s = argv[i];
         if ((s == "--help") || (s == "-h"))
         {
             help();
-            exit(0);
+            exit(0);    // this is required to terminate the program with a return 0, if returning false, will return != 0
         }
-        // else if ((s == "--list") | (s == "-l"))
-        // {
-        //     // TODO: this is mostly the same as unbra ..
-        //     //       so unbra could be just a class to be reused among the 2 programs.
-        // }
+        else if (s == "--list" || s == "-l")
+        {
+            // list content
+            g_listContent = true;
+        }
+        else if (s == "--yes" || s == "-y")
+        {
+            if (g_overwrite_policy != BRA_OVERWRITE_ASK)
+            {
+                bra_log_error("can't set %s: another mutually exclusive option is already set.", s.c_str());
+                return false;
+            }
+
+            g_overwrite_policy = BRA_OVERWRITE_ALWAYS_YES;
+        }
+        else if (s == "--no" || s == "-n")
+        {
+            if (g_overwrite_policy != BRA_OVERWRITE_ASK)
+            {
+                bra_log_error("can't set %s: another mutually exclusive option is already set.", s.c_str());
+                return false;
+            }
+
+            g_overwrite_policy = BRA_OVERWRITE_ALWAYS_NO;
+        }
         else
         {
             bra_log_error("unknown argument: %s", s.c_str());
@@ -180,8 +207,17 @@ int main(int argc, char* argv[])
     // extract payload, encoded data
     for (uint32_t i = 0; i < bh.num_files; ++i)
     {
-        if (!bra_io_decode_and_write_to_disk(&f))
-            return 1;
+        if (g_listContent)
+        {
+            bra_log_critical("Not implemented yet.");
+            // if (!unbra_list_meta_file(f))
+            return 2;
+        }
+        else
+        {
+            if (!bra_io_decode_and_write_to_disk(&f, &g_overwrite_policy))
+                return 1;
+        }
     }
 
     bra_io_close(&f);

@@ -60,10 +60,8 @@ bool AreFilesContentEquals(const std::filesystem::path& file1, const std::filesy
 
 ///////////////////////////////////////////////////////////////////////////////
 
-int test_bra_no_output_file()
+TEST(test_bra_no_output_file)
 {
-    PRINT_TEST_NAME;
-
     const std::string bra     = CMD_PREFIX + "bra";
     const std::string in_file = "./test.txt";
 
@@ -73,10 +71,8 @@ int test_bra_no_output_file()
     return 0;
 }
 
-int test_bra_unbra()
+TEST(test_bra_unbra)
 {
-    PRINT_TEST_NAME;
-
     const std::string bra      = CMD_PREFIX + "bra";
     const std::string unbra    = CMD_PREFIX + "unbra";
     const std::string in_file  = "./test.txt";
@@ -101,10 +97,8 @@ int test_bra_unbra()
     return 0;
 }
 
-int test_bra_wildcard_dir_unbra_list()
+int _test_bra_unbra_list(const fs::path& input)
 {
-    PRINT_TEST_NAME;
-
     const std::string bra      = CMD_PREFIX + "bra";
     const std::string unbra    = CMD_PREFIX + "unbra";
     const std::string out_file = "./dir.BRa";
@@ -112,9 +106,20 @@ int test_bra_wildcard_dir_unbra_list()
     if (fs::exists(out_file))
         fs::remove(out_file);
 
-    ASSERT_TRUE(system((bra + " -o " + out_file + " " + "dir1/*").c_str()) == 0);
+    ASSERT_EQ(system((bra + " -o " + out_file + " " + input.string()).c_str()), WEXITSTATUS(0));
     ASSERT_TRUE(fs::exists(out_file));
-    ASSERT_TRUE(system((unbra + " -l " + out_file).c_str()) == 0);
+    ASSERT_EQ(system((unbra + " -l " + out_file).c_str()), WEXITSTATUS(0));
+
+    return 0;
+}
+
+TEST(test_bra_wildcard_dir_unbra_list)
+{
+    ASSERT_EQ(_test_bra_unbra_list("dir1/*"), WEXITSTATUS(0));
+    ASSERT_EQ(_test_bra_unbra_list("dir1"), WEXITSTATUS(0));
+    ASSERT_EQ(_test_bra_unbra_list("./dir1/*"), WEXITSTATUS(0));
+    ASSERT_EQ(_test_bra_unbra_list("./dir1"), WEXITSTATUS(0));
+    ASSERT_EQ(_test_bra_unbra_list("./dir?"), WEXITSTATUS(1));    // dir1 won't be added as it is not recursive so no input file added
 
     return 0;
 }
@@ -127,10 +132,6 @@ int _test_bra_sfx(const std::string& out_file)
     const std::string exp_file  = "./test.txt.exp";
     std::string       out_file_sfx;
 
-    // if (out_file_.ends_with(BRA_FILE_EXT))
-    //     out_file_sfx = out_file_ + BRA_SFX_FILE_EXT;
-    // else
-    //     out_file_sfx = out_file_ + BRA_FILE_EXT + BRA_SFX_FILE_EXT;
     out_file_sfx = bra::fs::filename_sfx_adjust(out_file_, false).string();
 
     std::cout << std::format("out_file_sfx: {}", out_file_sfx) << std::endl;
@@ -154,28 +155,23 @@ int _test_bra_sfx(const std::string& out_file)
     return 0;
 }
 
-int test_bra_sfx_0()
+TEST(test_bra_sfx_0)
 {
-    PRINT_TEST_NAME;
     return _test_bra_sfx("test.txt.BRa");
 }
 
-int test_bra_sfx_1()
+TEST(test_bra_sfx_1)
 {
-    PRINT_TEST_NAME;
     return _test_bra_sfx("test.txt");
 }
 
-int test_bra_sfx_2()
+TEST(test_bra_sfx_2)
 {
-    PRINT_TEST_NAME;
     return _test_bra_sfx("test");
 }
 
-int test_bra_not_more_than_1_same_file()
+TEST(test_bra_not_more_than_1_same_file)
 {
-    PRINT_TEST_NAME;
-
     const std::string bra      = CMD_PREFIX + "bra";
     const std::string unbra    = CMD_PREFIX + "unbra";
     const std::string in_file  = "./test.txt ./test.txt test.txt test.txt";

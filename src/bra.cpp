@@ -124,6 +124,12 @@ protected:
             return false;
         }
 
+        if (m_files.size() > std::numeric_limits<uint32_t>::max())
+        {
+            bra_log_critical("Too many files to be archived\n");
+            return false;
+        }
+
         if (!bra::fs::file_set_add_dir(m_files))
             return false;
 
@@ -204,7 +210,6 @@ protected:
     int run_prog() override
     {
         string out_fn = m_out_filename.generic_string();
-        // bra_io_file_t m_f{};
 
         // header
         if (!bra_io_open(&m_f, out_fn.c_str(), "wb"))
@@ -218,6 +223,11 @@ protected:
         for (const auto& fn_ : m_files)
         {
             fs::path p = fn_;
+
+// TODO: write Progress bar?
+#if 0
+            bra_log_printf("[%u/%u] ", written_num_files, static_cast<uint32_t>(m_files.size()));
+#endif
             // no need to sanitize it again, but it won't hurt neither
             if (!bra::fs::try_sanitize(p))
             {
@@ -230,7 +240,6 @@ protected:
                 return 1;
             else
                 ++written_num_files;
-            // }
         }
 
         bra_io_close(&m_f);

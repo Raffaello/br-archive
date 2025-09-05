@@ -123,8 +123,13 @@ TEST(test_bra_wildcard_dir_unbra_list)
     ASSERT_EQ(_test_bra_unbra_list("dir1"), 0);
     ASSERT_EQ(_test_bra_unbra_list("./dir1/*"), 0);
     ASSERT_EQ(_test_bra_unbra_list("./dir1"), 0);
-    ASSERT_EQ(_test_bra_unbra_list("./dir?"), 1);    // dir1 won't be added as it is not recursive so no input file added
 
+#if defined(__APPLE__) || defined(__linux__) || defined(__linux)
+    ASSERT_EQ(_test_bra_unbra_list("./dir\\?"), 1);    // disabling wildcard expansion
+    ASSERT_EQ(_test_bra_unbra_list("./dir?"), 0);
+#else
+    ASSERT_EQ(_test_bra_unbra_list("./dir?"), 1);    // dir1 won't be added as it is not recursive so no input file added
+#endif
     return 0;
 }
 

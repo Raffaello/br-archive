@@ -4,16 +4,12 @@
 #error "bra_wildcards.hpp must be included from a C++ translation unit. Use bra_fs.h when compiling as C."
 #endif
 
-// #include "lib_bra_types.h"
-
-
 #include <filesystem>
 #include <string>
 #include <set>
 
 namespace bra::wildcards
 {
-
 /**
  * @brief Check if the given @p path contains a supported wildcard pattern.
  *
@@ -51,15 +47,4 @@ namespace bra::wildcards
  */
 [[nodiscard]] std::string wildcard_to_regexp(const std::string& wildcard);
 
-/**
- * @brief Expand the given @p wildcard_path and store the resulting paths into @p out_files.
- *        It doesn't clear @p out_files, but it adds on it.
- *
- * @param wildcard_path
- * @param out_files
- * @return true on success and add the results to @p out_files
- * @return false on error (unsupported wildcard, sanitization failure, or search failure).
- */
-// [[nodiscard]] bool wildcard_expand(const std::filesystem::path& wildcard_path, std::set<std::filesystem::path>& out_files);
-
-}
+}    // namespace bra::wildcards

@@ -7,8 +7,6 @@ target_include_directories(test_bra_wildcards PRIVATE ${CMAKE_SOURCE_DIR}/src)
 target_link_libraries(test_bra_wildcards PRIVATE bra_wildcards)
 
 add_test(NAME test_bra_wildcards.is_wildcard           COMMAND test_bra_wildcards test_bra_wildcards_is_wildcard)
-# add_test(NAME test_bra_wildcards.wildcard_expand       COMMAND test_bra_wildcards test_bra_wildcards_wildcard_expand)
-
 add_test(NAME test_bra_wildcards.wildcard_extract_dir  COMMAND test_bra_wildcards test_bra_wildcards_extract_dir)
 add_test(NAME test_bra_wildcards.wildcard_to_regexp    COMMAND test_bra_wildcards test_bra_wildcards_to_regexp)
 
@@ -45,8 +43,6 @@ add_test(NAME test_bra.sfx_2                        COMMAND test_bra test_bra_sf
 add_test(NAME test_bra.not_more_than_1_same_file    COMMAND test_bra test_bra_not_more_than_1_same_file)
 
 #####################################################################################################
-
-
 
 
 # set_tests_properties(

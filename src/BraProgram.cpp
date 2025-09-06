@@ -8,7 +8,9 @@
 #if defined(_WIN32)
 #if defined(__MINGW32__) || defined(__MINGW64__)    // || defined(__MSYS__)
 // Enable wildcard expansion on Windows MSYS2
-extern "C" int _dowildcard = -1;
+extern "C" {
+int _dowildcard = -1;
+}
 #endif
 #endif
 

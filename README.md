@@ -4,7 +4,7 @@ BR-Archive (BRa) is an educational project to compress files with the `DEFLATE` 
 
 The Default extension for the archive format is `.BRa`
 
-Wildcard expansion rely on the shell;  see “Wildcard Expansions” below.
+Wildcard expansion rely on the shell or runtime;  see [Wildcard Expansions](#wildcard-expansions) below.
 
 This lays the foundation for encoding, decoding, and self-extracting archives.
 

@@ -38,7 +38,7 @@ configure_file(src/version.h.in src/version.h)
 
 add_library(bra_log STATIC src/bra_log.c)
 
-add_library(bra_wildcards src/bra_wildcards.cpp)
+add_library(bra_wildcards STATIC src/bra_wildcards.cpp)
 target_include_directories(bra_wildcards PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)
 target_link_libraries(bra_wildcards PUBLIC bra_log)
 

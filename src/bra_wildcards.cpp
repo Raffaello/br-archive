@@ -40,6 +40,8 @@ std::filesystem::path wildcard_extract_dir(std::filesystem::path& path_wildcard)
         bra_log_debug("No wildcard found in here: %s", wildcard.c_str());
         wildcard.clear();
         break;
+    default:
+        break;
     }
 
     if (!wildcard.empty() && dir_pos < pos)

@@ -50,10 +50,10 @@ std::filesystem::path wildcard_extract_dir(std::filesystem::path& path_wildcard)
     return fs::path(dir);
 }
 
-std::string wildcard_to_regexp(const std::string_view wildcard)
+std::string wildcard_to_regexp(std::string_view wildcard)
 {
     std::string regex;
-    // regex.reserve(wildcard.size() * 2);
+    regex.reserve(wildcard.size() * 2);
 
     for (const char& c : wildcard)
     {
@@ -84,6 +84,7 @@ std::string wildcard_to_regexp(const std::string_view wildcard)
         }
     }
 
+    regex.shrink_to_fit();
     return regex;
 }
 

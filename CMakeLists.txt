@@ -43,6 +43,7 @@ target_include_directories(bra_wildcards PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)
 target_link_libraries(bra_wildcards PUBLIC bra_log)
 
 add_library(bra_fs STATIC src/bra_fs.cpp)
+target_include_directories(bra_fs PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)
 target_link_libraries(bra_fs PUBLIC bra_log bra_wildcards)
 
 add_library(bra_fs_c STATIC src/bra_fs_c.cpp)

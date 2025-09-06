@@ -21,6 +21,14 @@ TEST(test_bra_fs_search_wildcard)
     // No wildcard: function should return false and not modify the set
     ASSERT_FALSE(bra::fs::search_wildcard("bra", files));
     ASSERT_TRUE(files.empty());
+    files.clear();
+
+    // No wildcard: function should return false and not modify the set
+    files.insert(fs::path("SENTINEL"));
+    const auto before = files;
+    ASSERT_FALSE(bra::fs::search_wildcard("bra", files));
+    ASSERT_TRUE(files == before);
+    files.clear();
 
     ASSERT_TRUE(bra::fs::search_wildcard("*", files));
     ASSERT_TRUE(files.size() != 0);

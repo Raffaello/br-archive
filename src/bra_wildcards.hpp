@@ -44,6 +44,6 @@ namespace bra::wildcards
  * @param wildcard
  * @return std::string
  */
-[[nodiscard]] std::string wildcard_to_regexp(const std::string_view wildcard);
+[[nodiscard]] std::string wildcard_to_regexp(std::string_view wildcard);
 
 }    // namespace bra::wildcards

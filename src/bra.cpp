@@ -59,7 +59,7 @@ protected:
 
     int parseArgs_minArgc() const override { return 2; }
 
-    std::optional<bool> parseArgs_option(const int argc, const char* const argv[], int& i, const std::string_view s) override
+    std::optional<bool> parseArgs_option(const int argc, const char* const argv[], int& i, std::string_view s) override
     {
         if (s == "--out" || s == "-o")
         {

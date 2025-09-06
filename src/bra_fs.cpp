@@ -423,10 +423,10 @@ bool search_wildcard(const std::filesystem::path& wildcard_path, std::set<std::f
 
     while (!files.empty())
     {
-        const auto& f = std::move(files.front());
-        files.pop_front();
+        const auto& f = files.front();
         if (!out_files.insert(f).second)
             bra_log_warn("duplicate file given in input: %s", f.string().c_str());
+        files.pop_front();
     }
     return true;
 }

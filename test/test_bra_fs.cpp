@@ -10,21 +10,7 @@ using namespace std;
 
 namespace fs = std::filesystem;
 
-TEST(test_bra_fs_is_wildcards)
-{
-    ASSERT_TRUE(bra::fs::is_wildcard("*"));
-    ASSERT_TRUE(bra::fs::is_wildcard(".*"));
-    ASSERT_TRUE(bra::fs::is_wildcard("AbcD?"));
-    // ASSERT_TRUE(is_wildcard("t[1-9]")); // TODO
-
-    ASSERT_TRUE(!bra::fs::is_wildcard(""));
-    ASSERT_TRUE(!bra::fs::is_wildcard("1234"));
-    // ASSERT_TRUE(!is_wildcard("t]1-9["));
-
-    return 0;
-}
-
-TEST(test_bra_fs_wildcard_expand)
+TEST(test_bra_fs_search_wildcard)
 {
     std::set<fs::path> files;
 
@@ -34,32 +20,32 @@ TEST(test_bra_fs_wildcard_expand)
     constexpr size_t exp_files = 1;    // bra.sfx, bra.exe is just bra
 #endif
 
-    ASSERT_TRUE(bra::fs::wildcard_expand("*", files));
+    ASSERT_TRUE(bra::fs::search_wildcard("*", files));
     ASSERT_TRUE(files.size() != 0);
     files.clear();
 
-    ASSERT_TRUE(bra::fs::wildcard_expand("./*", files));
+    ASSERT_TRUE(bra::fs::search_wildcard("./*", files));
     ASSERT_TRUE(files.size() != 0);
     files.clear();
 
-    ASSERT_TRUE(bra::fs::wildcard_expand("bra.*", files));
+    ASSERT_TRUE(bra::fs::search_wildcard("bra.*", files));
     ASSERT_EQ(files.size(), exp_files);
     files.clear();
 
-    ASSERT_TRUE(bra::fs::wildcard_expand("./bra.*", files));
+    ASSERT_TRUE(bra::fs::search_wildcard("./bra.*", files));
     ASSERT_EQ(files.size(), exp_files);
     files.clear();
 
-    ASSERT_TRUE(bra::fs::wildcard_expand("bra*", files));
+    ASSERT_TRUE(bra::fs::search_wildcard("bra*", files));
     ASSERT_EQ(files.size(), 2U);
     files.clear();
 
-    ASSERT_TRUE(bra::fs::wildcard_expand("?ra.?fx", files));
+    ASSERT_TRUE(bra::fs::search_wildcard("?ra.?fx", files));
     ASSERT_EQ(files.size(), 1U);
     ASSERT_EQ(files.begin()->string(), "bra.sfx");
     files.clear();
 
-    ASSERT_TRUE(bra::fs::wildcard_expand("dir?", files));
+    ASSERT_TRUE(bra::fs::search_wildcard("dir?", files));
     ASSERT_EQ(files.size(), 0U);    // matches 'dir1' but as it is a dir without recursion is not added.
     // ASSERT_EQ(files.begin()->string(), "dir1");
     files.clear();
@@ -176,79 +162,14 @@ TEST(test_bra_fs_sfx_filename_adjust)
     return 0;
 }
 
-TEST(test_bra_fs_wildcard_extract_dir)
-{
-    fs::path wildcard;
-
-    wildcard = "*";
-    ASSERT_EQ(bra::fs::wildcard_extract_dir(wildcard).string(), string("./"));
-    ASSERT_EQ(wildcard.string(), "*");
-
-    wildcard = "dir/*";
-    ASSERT_EQ(bra::fs::wildcard_extract_dir(wildcard).string(), string("dir/"));
-    ASSERT_EQ(wildcard.string(), "*");
-
-    // wildcard = "dir\\*";
-    // ASSERT_TRUE(try_sanitize(wildcard));
-    // ASSERT_EQ(wildcard_extract_dir(wildcard).string(), string("dir/"));
-    // ASSERT_EQ(wildcard.string(), "*");
-
-    // not a wild card, in this case this function shouldn't be called.
-    wildcard = "dir/a";
-    ASSERT_EQ(bra::fs::wildcard_extract_dir(wildcard).string(), string("dir/"));
-    ASSERT_EQ(wildcard.string(), "");
-
-    // wildcard = "dir\\a";
-    // ASSERT_EQ(wildcard_extract_dir(wildcard).string(), string("dir/"));
-    // ASSERT_EQ(wildcard.string(), "");
-
-    wildcard = "no_dir_no_wildcard";
-    ASSERT_EQ(bra::fs::wildcard_extract_dir(wildcard).string(), string("./"));
-    ASSERT_EQ(wildcard.string(), "");
-
-    wildcard = "dir/file?.txt";
-    ASSERT_EQ(bra::fs::wildcard_extract_dir(wildcard).string(), string("dir/"));
-    ASSERT_EQ(wildcard.string(), "file?.txt");
-
-    // TODO: to be implemented as it is required a dir struct.
-    // wildcard = "d?r/*";
-    // ASSERT_EQ(wildcard_extract_dir(wildcard).string(), string("d?r/"));
-    // ASSERT_EQ(wildcard, "*");
-
-    // wildcard = "dir\\*";
-    // ASSERT_EQ(wildcard_extract_dir(wildcard).string(), string("dir/"));
-    // ASSERT_EQ(wildcard, "*");
-
-    // wildcard = "dir/a";
-    // ASSERT_EQ(wildcard_extract_dir(wildcard).string(), string("dir/"));
-    // ASSERT_EQ(wildcard, "");
-
-    // wildcard = "dir\\a";
-    // ASSERT_EQ(wildcard_extract_dir(wildcard).string(), string("dir/"));
-    // ASSERT_EQ(wildcard, "");
-
-    return 0;
-}
-
-TEST(test_bra_fs_wildcard_to_regexp)
-{
-    const std::regex r(bra::fs::wildcard_to_regexp("file+name?.txt"));
-    ASSERT_TRUE(std::regex_match("file+name1.txt", r));
-    ASSERT_TRUE(!std::regex_match("filename1.txt", r));    // '+' must be literal
-    return 0;
-}
-
 int main(int argc, char* argv[])
 {
     return test_main(argc, argv, {
-                                     {TEST_FUNC(test_bra_fs_is_wildcards)},
-                                     {TEST_FUNC(test_bra_fs_wildcard_expand)},
+                                     {TEST_FUNC(test_bra_fs_search_wildcard)},
                                      {TEST_FUNC(test_bra_fs_file_exists)},
                                      {TEST_FUNC(test_bra_fs_dir_exists)},
                                      {TEST_FUNC(test_bra_fs_dir_make)},
                                      {TEST_FUNC(test_bra_fs_try_sanitize_path)},
                                      {TEST_FUNC(test_bra_fs_sfx_filename_adjust)},
-                                     {TEST_FUNC(test_bra_fs_wildcard_extract_dir)},
-                                     {TEST_FUNC(test_bra_fs_wildcard_to_regexp)},
                                  });
 }

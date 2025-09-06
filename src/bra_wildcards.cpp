@@ -1,7 +1,6 @@
 #include "bra_wildcards.hpp"
 #include <bra_log.h>
 
-#include <list>
 
 namespace fs = std::filesystem;
 

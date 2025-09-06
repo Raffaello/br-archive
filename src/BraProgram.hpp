@@ -52,7 +52,6 @@ protected:
     virtual void parseArgs_adjustFilename(std::filesystem::path& p) = 0;
     virtual bool parseArgs_file(const std::filesystem::path& p)     = 0;
     virtual bool parseArgs_dir(const std::filesystem::path& p)      = 0;
-    virtual bool parseArgs_wildcard(const std::filesystem::path& p) = 0;
 
     virtual bool validateArgs() = 0;
 

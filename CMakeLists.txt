@@ -19,12 +19,32 @@ elseif (MSVC)
     add_compile_options(/W4)
 endif()
 
+function(win32_wildcard target)
+    if(NOT WIN32)
+        return()
+    endif()
+
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+        # target_link_options(${target} PUBLIC "-print-file-name=CRT_glob.o")
+    elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+        
+    elseif (MSVC)
+        target_link_options(${target} PUBLIC "setargv.obj") # wsetargv.obj
+    endif()
+
+endfunction()
+
 configure_file(src/version.h.in src/version.h)
 
 add_library(bra_log STATIC src/bra_log.c)
 
+add_library(bra_wildcards src/bra_wildcards.cpp)
+target_include_directories(bra_wildcards PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)
+target_link_libraries(bra_wildcards PUBLIC bra_log)
+
 add_library(bra_fs STATIC src/bra_fs.cpp)
-target_link_libraries(bra_fs PRIVATE bra_log)
+target_include_directories(bra_fs PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)
+target_link_libraries(bra_fs PUBLIC bra_log bra_wildcards)
 
 add_library(bra_fs_c STATIC src/bra_fs_c.cpp)
 target_link_libraries(bra_fs_c PRIVATE bra_fs)
@@ -45,12 +65,16 @@ target_link_libraries(bra_prog PUBLIC lib_bra bra_fs)
 
 add_executable(bra src/bra.cpp)
 target_link_libraries(bra PRIVATE bra_prog)
+win32_wildcard(bra)
 
 add_executable(unbra src/unbra.cpp)
 target_link_libraries(unbra PRIVATE bra_prog)
+win32_wildcard(unbra)
 
 add_executable(bra_sfx src/bra_sfx.cpp)
 target_link_libraries(bra_sfx PRIVATE bra_prog)
+win32_wildcard(bra_sfx)
+
 set_target_properties(bra_sfx PROPERTIES
     OUTPUT_NAME "bra"
     SUFFIX ".sfx"

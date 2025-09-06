@@ -1,6 +1,8 @@
 #include "bra_fs.hpp"
 #include "lib_bra_defs.h"
-#include "bra_log.h"
+
+#include <bra_log.h>
+#include <bra_wildcards.hpp>
 
 #include <iostream>
 #include <string>
@@ -43,12 +45,6 @@ bool try_sanitize(std::filesystem::path& path)
         if (path.is_absolute() || path.has_root_name())
             // in this case it should have ec.clear()
             return err();
-
-        // try adding current directory as it might be a wildcard...
-        path = "./" / path;
-        path = fs::relative(path, fs::current_path(), ec);
-        if (ec)
-            return false;
     }
     else
         path = p;
@@ -61,14 +57,6 @@ bool try_sanitize(std::filesystem::path& path)
 
     path = path.lexically_normal().generic_string();
     return !path.empty();
-}
-
-bool is_wildcard(const std::filesystem::path& path)
-{
-    if (path.empty())
-        return false;
-
-    return path.string().find_first_of("?*") != string::npos;
 }
 
 bool dir_exists(const std::filesystem::path& path)
@@ -356,104 +344,6 @@ bool file_set_add_dir(std::set<std::filesystem::path>& files)
     return true;
 }
 
-std::filesystem::path wildcard_extract_dir(std::filesystem::path& path_wildcard)
-{
-    string       dir;
-    string       wildcard = path_wildcard.generic_string();
-    const size_t pos      = wildcard.find_first_of("?*");
-    const size_t dir_pos  = wildcard.find_last_of('/', pos);
-
-    if (dir_pos != string::npos)
-        dir = wildcard.substr(0, dir_pos + 1);    // including '/'
-    else
-        dir = "./";                               // the wildcard is before the directory separator or there is no directory
-
-    switch (pos)
-    {
-    // case 0:
-    // return dir;
-    case string::npos:
-        bra_log_debug("No wildcard found in here: %s", wildcard.c_str());
-        wildcard.clear();
-        break;
-    }
-
-    if (!wildcard.empty() && dir_pos < pos)
-        wildcard = wildcard.substr(dir_pos + 1, wildcard.size());
-
-    path_wildcard = wildcard;
-    return fs::path(dir);
-}
-
-std::string wildcard_to_regexp(const std::string& wildcard)
-{
-    std::string regex;
-    // regex.reserve(wildcard.size() * 2);
-
-    for (const char& c : wildcard)
-    {
-        switch (c)
-        {
-        case '*':
-            regex += ".*";
-            break;    // '*' -> '.*'
-        case '?':
-            regex += '.';
-            break;    // '?' -> '.'
-        case '.':
-        case '^':
-        case '$':
-        case '(':
-        case ')':
-        case '[':
-        case ']':
-        case '{':
-        case '}':
-        case '|':
-        case '+':
-        case '\\':
-            regex += '\\';    // Escape special regex characters
-            [[fallthrough]];
-        default:
-            regex += c;
-        }
-    }
-
-    return regex;
-}
-
-bool wildcard_expand(const std::filesystem::path& wildcard_path, std::set<std::filesystem::path>& out_files)
-{
-    fs::path p = wildcard_path.generic_string();
-
-    if (!is_wildcard(p))
-        return false;
-
-    if (!try_sanitize(p))
-        return false;
-
-    const fs::path dir     = bra::fs::wildcard_extract_dir(p);
-    const string   pattern = bra::fs::wildcard_to_regexp(p.string());
-
-    std::list<fs::path> files;
-    if (!search(dir, pattern, files))
-    {
-        bra_log_error("search failed in %s for wildcard %s", dir.string().c_str(), p.string().c_str());
-        return false;
-    }
-
-    while (!files.empty())
-    {
-        const auto& f = files.front();
-        if (!out_files.insert(f).second)
-            bra_log_warn("duplicate file given in input: %s", f.string().c_str());
-
-        files.pop_front();
-    }
-
-    return true;
-}
-
 bool search(const std::filesystem::path& dir, const std::string& pattern, std::list<std::filesystem::path>& out_files)
 {
     try
@@ -509,6 +399,37 @@ bool search(const std::filesystem::path& dir, const std::string& pattern, std::l
         bra_log_error("Regex: %s", e.what());
         return false;
     }
+}
+
+bool search_wildcard(const std::filesystem::path& wildcard_path, std::set<std::filesystem::path>& out_files)
+{
+    fs::path p = wildcard_path.generic_string();
+
+    if (!bra::wildcards::is_wildcard(p))
+        return false;
+
+    if (!try_sanitize(p))
+        return false;
+
+    const fs::path dir     = bra::wildcards::wildcard_extract_dir(p);
+    const string   pattern = bra::wildcards::wildcard_to_regexp(p.string());
+
+    std::list<fs::path> files;
+    if (!bra::fs::search(dir, pattern, files))
+    {
+        bra_log_error("search failed in %s for wildcard %s", dir.string().c_str(), p.string().c_str());
+        return false;
+    }
+
+    while (!files.empty())
+    {
+        const auto& f = files.front();
+        if (!out_files.insert(f).second)
+            bra_log_warn("duplicate file given in input: %s", f.string().c_str());
+
+        files.pop_front();
+    }
+    return true;
 }
 
 /*/

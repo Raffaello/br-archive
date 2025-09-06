@@ -164,14 +164,6 @@ protected:
         return false;
     }
 
-    // same as unbra
-    bool parseArgs_wildcard([[maybe_unused]] const std::filesystem::path& p) override
-    {
-        // Not supported.
-        // TODO: or for filtering what to extract from the archive?
-        return false;
-    }
-
     bool validateArgs() override
     {
         // Supporting only EXE and ELF file type for now
@@ -228,9 +220,6 @@ protected:
     }
 
 public:
-    // const char* m_argv0;
-
-    // explicit BraSfx([[maybe_unused]] const int argc, const char* const argv[]) : m_argv0(argv[0]) {}
     BraSfx()          = default;
     virtual ~BraSfx() = default;
 };

@@ -5,6 +5,13 @@
 
 #include <string>
 
+#if defined(_WIN32)
+#if defined(__MINGW32__) || defined(__MINGW64__)    // || defined(__MSYS__)
+// Enable wildcard expansion on Windows MSYS2
+int _dowildcard = -1;
+#endif
+#endif
+
 
 using namespace std;
 
@@ -119,16 +126,7 @@ std::optional<bool> BraProgram::parseArgs(const int argc, const char* const argv
             }
             else if (bra::fs::dir_exists(p))
             {
-                // This should match exactly the directory.
-                // so need to be converted as a wildcard adding a `/*' at the end
-                p /= "*";
                 if (!parseArgs_dir(p))
-                    return false;
-            }
-            // check if it is a wildcard
-            else if (bra::fs::is_wildcard(p))
-            {
-                if (!parseArgs_wildcard(p))
                     return false;
             }
             else

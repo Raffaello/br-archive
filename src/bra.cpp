@@ -96,21 +96,12 @@ protected:
 
     bool parseArgs_dir(const std::filesystem::path& p) override
     {
-        if (!bra::fs::wildcard_expand(p, m_files))
+        // This should match exactly the directory.
+        // so adding a wildcard adding a `/*' at the end to include all the files
+        // but with shell expansion and disabling internall wildcards won't work.
+        if (!bra::fs::search_wildcard(p / "*", m_files))
         {
             bra_log_error("path not valid: %s", p.string().c_str());
-            return false;
-        }
-
-        return true;
-    };
-
-    bool parseArgs_wildcard(const std::filesystem::path& p) override
-    {
-        string s = p.string();
-        if (!bra::fs::wildcard_expand(p, m_files))
-        {
-            bra_log_error("unable to expand wildcard: %s", s.c_str());
             return false;
         }
         return true;

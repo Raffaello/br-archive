@@ -128,7 +128,8 @@ TEST(test_bra_wildcard_dir_unbra_list)
     ASSERT_EQ(_test_bra_unbra_list("./dir\\?"), 1);    // disabling wildcard expansion
     ASSERT_EQ(_test_bra_unbra_list("./dir?"), 0);
 #else
-    ASSERT_EQ(_test_bra_unbra_list("./dir?"), 1);    // dir1 won't be added as it is not recursive so no input file added
+    // ASSERT_EQ(_test_bra_unbra_list("./dir^?"), 1);    // disabling wildcard expansion(not sure is working)
+    ASSERT_EQ(_test_bra_unbra_list("./dir?"), 0);
 #endif
     return 0;
 }

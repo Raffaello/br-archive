@@ -85,13 +85,6 @@ protected:
         return false;
     }
 
-    bool parseArgs_wildcard([[maybe_unused]] const std::filesystem::path& p) override
-    {
-        // Not supported.
-        // TODO: or for filtering what to extract from the archive?
-        return false;
-    }
-
     bool validateArgs() override
     {
         if (m_bra_file.empty())

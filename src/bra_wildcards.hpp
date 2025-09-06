@@ -12,7 +12,7 @@ namespace bra::wildcards
 /**
  * @brief Check if the given @p path contains a supported wildcard pattern.
  *
- * @todo instead of bool return size_t: std::npos no wildcard, otherwise first wildcard char position.
+ * @todo instead of bool return size_t std::npos no wildcard, otherwise first wildcard char position.
  *
  * @param path
  * @return true
@@ -23,7 +23,7 @@ namespace bra::wildcards
 /**
  * @brief Extract the directory from a wildcard if it contains any and modify accordingly the @p path_wildcard.
  *        If there is no wildcard, @p path_wildcard will result to be empty.
- *        The @p path_wildcard must have been sanitized with @ref try_sanitize before,
+ *        The @p path_wildcard must have been sanitized with @ref bra::fs::try_sanitize before,
  *        otherwise results are undefined.
  *
  * @note this function doesn't fail if @p path_wildcard doesn't contain any wildcards,
@@ -44,6 +44,6 @@ namespace bra::wildcards
  * @param wildcard
  * @return std::string
  */
-[[nodiscard]] std::string wildcard_to_regexp(const std::string_view& wildcard);
+[[nodiscard]] std::string wildcard_to_regexp(const std::string_view wildcard);
 
 }    // namespace bra::wildcards

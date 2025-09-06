@@ -151,8 +151,8 @@ namespace bra::fs
  * @brief Search for files in the given @p dir matching the regular expression @p pattern.
  *        It stores the results in @p out_files.
  *
- * @note: This performs a non-recursive search in the immediate directory only.
- *        The existing contents of @p out_files are preserved (results are appended).
+ * @note This performs a non-recursive search in the immediate directory only.
+ *       The existing contents of @p out_files are preserved (results are appended).
  *
  * @param dir
  * @param pattern Regular expression pattern (not a wildcard pattern)
@@ -171,7 +171,7 @@ namespace bra::fs
  * @return true on success and add the results to @p out_files
  * @return false on error (unsupported wildcard, sanitization failure, or search failure).
  */
-bool search_wildcard(const std::filesystem::path& wildcard_path, std::set<std::filesystem::path>& out_files);
+[[nodiscard]] bool search_wildcard(const std::filesystem::path& wildcard_path, std::set<std::filesystem::path>& out_files);
 
 /**
  * @brief C++23 generator not supported yet in Ubuntu 24 ... pff!...

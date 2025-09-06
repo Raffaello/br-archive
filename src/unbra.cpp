@@ -54,7 +54,7 @@ protected:
 
     int parseArgs_minArgc() const override { return 2; }
 
-    std::optional<bool> parseArgs_option([[maybe_unused]] const int argc, [[maybe_unused]] const char* const argv[], [[maybe_unused]] int& i, const std::string_view& s) override
+    std::optional<bool> parseArgs_option([[maybe_unused]] const int argc, [[maybe_unused]] const char* const argv[], [[maybe_unused]] int& i, const std::string_view s) override
     {
         if (s == "--list" || s == "-l")
         {

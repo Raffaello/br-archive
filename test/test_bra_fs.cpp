@@ -18,6 +18,10 @@ TEST(test_bra_fs_search_wildcard)
     constexpr size_t exp_files = 1;    // bra.sfx, bra.exe is just bra
 #endif
 
+    // No wildcard: function should return false and not modify the set
+    ASSERT_FALSE(bra::fs::search_wildcard("bra", files));
+    ASSERT_TRUE(files.empty());
+
     ASSERT_TRUE(bra::fs::search_wildcard("*", files));
     ASSERT_TRUE(files.size() != 0);
     files.clear();

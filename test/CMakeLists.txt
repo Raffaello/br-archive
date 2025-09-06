@@ -31,6 +31,8 @@ add_test(NAME test_bra_fs.search_wildcard       COMMAND test_bra_fs test_bra_fs_
 #####################################################################################################
 
 add_executable(test_bra test_bra.cpp)
+target_include_directories(test_bra PRIVATE ${CMAKE_SOURCE_DIR}/src)
+target_link_libraries(test_bra PRIVATE bra_fs)
 add_dependencies(test_bra bra unbra bra_sfx)
 
 add_test(NAME test_bra.help_ret_code                COMMAND test_bra test_bra_help_ret_code)
@@ -55,10 +57,6 @@ add_test(NAME test_bra.not_more_than_1_same_file    COMMAND test_bra test_bra_no
 #     PROPERTIES WORKING_DIRECTORY
 #     ${CMAKE_CURRENT_BINARY_DIR}
 # )
-
-target_include_directories(test_bra PRIVATE ${CMAKE_SOURCE_DIR}/src)
-target_link_libraries(test_bra PRIVATE bra_fs)
-add_dependencies(test_bra bra unbra bra_sfx)
 
 foreach(tgt IN ITEMS bra unbra bra_sfx)
     add_custom_command(TARGET test_bra POST_BUILD 

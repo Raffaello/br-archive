@@ -220,9 +220,6 @@ protected:
     }
 
 public:
-    // const char* m_argv0;
-
-    // explicit BraSfx([[maybe_unused]] const int argc, const char* const argv[]) : m_argv0(argv[0]) {}
     BraSfx()          = default;
     virtual ~BraSfx() = default;
 };

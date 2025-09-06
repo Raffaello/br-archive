@@ -12,7 +12,7 @@ using namespace std;
 namespace bra::wildcards
 {
 
-bool is_wildcard([[maybe_unused]] const std::filesystem::path& path)
+bool is_wildcard(const std::filesystem::path& path)
 {
     if (path.empty())
         return false;
@@ -85,36 +85,5 @@ std::string wildcard_to_regexp(const std::string& wildcard)
 
     return regex;
 }
-
-// bool wildcard_expand([[maybe_unused]] const std::filesystem::path& wildcard_path, [[maybe_unused]] std::set<std::filesystem::path>& out_files)
-// {
-//     fs::path p = wildcard_path.generic_string();
-
-// if (!is_wildcard(p))
-//     return false;
-
-// if (!try_sanitize(p))
-//     return false;
-
-// const fs::path dir     = wildcard_extract_dir(p);
-// const string   pattern = wildcard_to_regexp(p.string());
-
-// std::list<fs::path> files;
-// if (!bra::fs::search(dir, pattern, files))
-// {
-//     bra_log_error("search failed in %s for wildcard %s", dir.string().c_str(), p.string().c_str());
-//     return false;
-// }
-
-// while (!files.empty())
-// {
-//     const auto& f = files.front();
-//     if (!out_files.insert(f).second)
-//         bra_log_warn("duplicate file given in input: %s", f.string().c_str());
-
-// files.pop_front();
-// }
-// return true;
-// }
 
 }    // namespace bra::wildcards

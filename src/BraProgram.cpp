@@ -133,7 +133,7 @@ std::optional<bool> BraProgram::parseArgs(const int argc, const char* const argv
             }
             else
             {
-                bra_log_error("file doesn't exist: %s", s.c_str());
+                bra_log_error("path doesn't exist: %s", s.c_str());
                 return false;
             }
         }

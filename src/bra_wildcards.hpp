@@ -5,8 +5,7 @@
 #endif
 
 #include <filesystem>
-#include <string>
-#include <set>
+#include <string_view>
 
 namespace bra::wildcards
 {
@@ -28,7 +27,7 @@ namespace bra::wildcards
  *        otherwise results are undefined.
  *
  * @note this function doesn't fail if @p path_wildcard doesn't contain any wildcards,
- *       it will just modify to be an empty string.
+ *       it will just modify to be empty.
  *
  * @todo it might be private only.
  *
@@ -45,6 +44,6 @@ namespace bra::wildcards
  * @param wildcard
  * @return std::string
  */
-[[nodiscard]] std::string wildcard_to_regexp(const std::string& wildcard);
+[[nodiscard]] std::string wildcard_to_regexp(const std::string_view& wildcard);
 
 }    // namespace bra::wildcards

@@ -17,8 +17,8 @@ TEST(test_bra_wildcards_is_wildcard)
     ASSERT_TRUE(is_wildcard("AbcD?"));
     // ASSERT_TRUE(is_wildcard("t[1-9]")); // TODO
 
-    ASSERT_TRUE(!is_wildcard(""));
-    ASSERT_TRUE(!is_wildcard("1234"));
+    ASSERT_FALSE(is_wildcard(""));
+    ASSERT_FALSE(is_wildcard("1234"));
     // ASSERT_TRUE(!is_wildcard("t]1-9["));
 
     return 0;
@@ -82,7 +82,7 @@ TEST(test_bra_wildcards_to_regexp)
 {
     const std::regex r(wildcard_to_regexp("file+name?.txt"));
     ASSERT_TRUE(std::regex_match("file+name1.txt", r));
-    ASSERT_TRUE(!std::regex_match("filename1.txt", r));    // '+' must be literal
+    ASSERT_FALSE(std::regex_match("filename1.txt", r));    // '+' must be literal
 
     return 0;
 }

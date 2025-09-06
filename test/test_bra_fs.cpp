@@ -3,8 +3,6 @@
 
 #include <bra_fs.hpp>
 
-#include <regex>
-
 using namespace std;
 
 
@@ -56,8 +54,8 @@ TEST(test_bra_fs_search_wildcard)
 TEST(test_bra_fs_file_exists)
 {
     ASSERT_TRUE(bra::fs::file_exists("test.txt"));
-    ASSERT_TRUE(!bra::fs::file_exists("test99.txt"));
-    ASSERT_TRUE(!bra::fs::file_exists("dir1"));
+    ASSERT_FALSE(bra::fs::file_exists("test99.txt"));
+    ASSERT_FALSE(bra::fs::file_exists("dir1"));
 
     return 0;
 }
@@ -65,8 +63,8 @@ TEST(test_bra_fs_file_exists)
 TEST(test_bra_fs_dir_exists)
 {
     ASSERT_TRUE(bra::fs::dir_exists("dir1"));
-    ASSERT_TRUE(!bra::fs::dir_exists("dir99"));
-    ASSERT_TRUE(!bra::fs::dir_exists("test.txt"));
+    ASSERT_FALSE(bra::fs::dir_exists("dir99"));
+    ASSERT_FALSE(bra::fs::dir_exists("test.txt"));
 
     return 0;
 }
@@ -76,14 +74,14 @@ TEST(test_bra_fs_dir_make)
     const fs::path dir1 = "dir1/test";
 
     fs::remove(dir1);
-    ASSERT_TRUE(!bra::fs::dir_exists(dir1));
+    ASSERT_FALSE(bra::fs::dir_exists(dir1));
     ASSERT_TRUE(bra::fs::dir_make(dir1));
     ASSERT_TRUE(bra::fs::dir_exists(dir1));
     ASSERT_TRUE(bra::fs::dir_make(dir1));
     ASSERT_TRUE(bra::fs::dir_exists(dir1));
 
     fs::remove(dir1);
-    ASSERT_TRUE(!bra::fs::dir_exists(dir1));
+    ASSERT_FALSE(bra::fs::dir_exists(dir1));
 
     return 0;
 }
@@ -94,14 +92,14 @@ TEST(test_bra_fs_try_sanitize_path)
 
 #if defined(_WIN32)
     p = "c:\\not_sane";
-    ASSERT_TRUE(!bra::fs::try_sanitize(p));
+    ASSERT_FALSE(bra::fs::try_sanitize(p));
     p = "..\\not_sane";
-    ASSERT_TRUE(!bra::fs::try_sanitize(p));
+    ASSERT_FALSE(bra::fs::try_sanitize(p));
 #endif
     p = fs::current_path().parent_path();
-    ASSERT_TRUE(!bra::fs::try_sanitize(p));
+    ASSERT_FALSE(bra::fs::try_sanitize(p));
     p = fs::current_path() / "..";
-    ASSERT_TRUE(!bra::fs::try_sanitize(p));
+    ASSERT_FALSE(bra::fs::try_sanitize(p));
 
     p = fs::current_path();
     ASSERT_TRUE(bra::fs::try_sanitize(p));

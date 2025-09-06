@@ -93,7 +93,7 @@ TEST(test_bra_unbra)
     ASSERT_TRUE(fs::exists(out_file));
 
     fs::rename(in_file, exp_file);
-    ASSERT_TRUE(!fs::exists(in_file));
+    ASSERT_FALSE(fs::exists(in_file));
     ASSERT_EQ(call_system(unbra + " " + out_file), 0);
     ASSERT_TRUE(fs::exists(in_file));
     ASSERT_TRUE(AreFilesContentEquals(in_file, exp_file));
@@ -155,7 +155,7 @@ int _test_bra_sfx(const std::string& out_file)
     ASSERT_TRUE(fs::exists(out_file_sfx));
 
     fs::rename(in_file, exp_file);
-    ASSERT_TRUE(!fs::exists(in_file));
+    ASSERT_FALSE(fs::exists(in_file));
     ASSERT_EQ(call_system(out_file_sfx), 0);
     ASSERT_TRUE(fs::exists(in_file));
     ASSERT_TRUE(AreFilesContentEquals(in_file, exp_file));

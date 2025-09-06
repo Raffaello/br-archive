@@ -96,9 +96,8 @@ protected:
 
     bool parseArgs_dir(const std::filesystem::path& p) override
     {
-        // This should match exactly the directory.
-        // so adding a wildcard adding a `/*' at the end to include all the files
-        // but with shell expansion and disabling internall wildcards won't work.
+        // Match exactly the directory:
+        // append `/*` to include all files in it (non-recursive).
         if (!bra::fs::search_wildcard(p / "*", m_files))
         {
             bra_log_error("path not valid: %s", p.string().c_str());

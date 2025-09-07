@@ -221,7 +221,7 @@ protected:
         if (m_files.size() != tot_files)
             bra_log_debug("set<->tree size mismatch: %zu <-> %zu", m_files.size(), tot_files);
 
-        if (m_tot_files == 0)
+        if (tot_files == 0)
         {
             bra_log_error("no input entries to archive");
             return false;

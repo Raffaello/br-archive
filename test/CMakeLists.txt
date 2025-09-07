@@ -26,9 +26,10 @@ add_test(NAME test_bra_fs.dir_exists            COMMAND test_bra_fs test_bra_fs_
 add_test(NAME test_bra_fs.try_sanitize_path     COMMAND test_bra_fs test_bra_fs_try_sanitize_path)
 add_test(NAME test_bra_fs.dir_make              COMMAND test_bra_fs test_bra_fs_dir_make)
 
-add_test(NAME test_bra_fs.sfx_filename_adjust             COMMAND test_bra_fs test_bra_fs_sfx_filename_adjust)
-add_test(NAME test_bra_fs.search_wildcard                 COMMAND test_bra_fs test_bra_fs_search_wildcard)
-add_test(NAME test_bra_fs.search_wildcard_recursive       COMMAND test_bra_fs test_bra_fs_search_wildcard_recursive)
+add_test(NAME test_bra_fs.sfx_filename_adjust               COMMAND test_bra_fs test_bra_fs_sfx_filename_adjust)
+add_test(NAME test_bra_fs.search_wildcard                   COMMAND test_bra_fs test_bra_fs_search_wildcard)
+add_test(NAME test_bra_fs.search_wildcard_recursive_on_dir1 COMMAND test_bra_fs test_bra_fs_search_wildcard_recursive_on_dir1)
+add_test(NAME test_bra_fs.search_wildcard_recursive_in_dir1 COMMAND test_bra_fs test_bra_fs_search_wildcard_recursive_in_dir1)
 
 
 #####################################################################################################

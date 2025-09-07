@@ -216,12 +216,16 @@ protected:
 
         // build tree from the set file list.
         m_tree.clear();
-        if (!bra::fs::make_tree(m_files, m_tree))
+        size_t tot_files = 0;
+        if (!bra::fs::make_tree(m_files, m_tree, tot_files))
             return false;
-        m_tot_files = m_files.size();
+        // m_tot_files = m_files.size();
+        if (m_files.size() != tot_files)
+            bra_log_debug("set<->tree size mismatch: %zu <-> %zu", m_files.size(), tot_files);
+        m_tot_files = static_cast<uint32_t>(tot_files);
 
 #ifndef NDEBUG
-        bra_log_debug("Built Tree:");
+        bra_log_debug("Built Tree : [TOT_FILES: %u]", m_tot_files);
         for (const auto& [dir, files] : m_tree)
         {
             if (m_recursive)

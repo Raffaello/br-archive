@@ -441,16 +441,21 @@ bool search_wildcard(const std::filesystem::path& wildcard_path, std::set<std::f
     return true;
 }
 
-bool make_tree(const std::set<std::filesystem::path>& set_files, std::map<std::filesystem::path, std::set<std::filesystem::path>>& tree)
+bool make_tree(const std::set<std::filesystem::path>& set_files, std::map<std::filesystem::path, std::set<std::filesystem::path>>& tree, size_t& out_tree_size) noexcept
 {
+    out_tree_size = 0;
     for (const auto& f : set_files)
     {
         if (dir_exists(f))
+        {
             tree.insert({f, std::set<fs::path>()});
+            ++out_tree_size;
+        }
         else if (file_exists(f))
         {
             auto d = f.parent_path();
             tree[d].insert(f.filename());
+            ++out_tree_size;
         }
         else
             return false;

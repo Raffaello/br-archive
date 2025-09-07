@@ -179,6 +179,15 @@ namespace bra::fs
  */
 [[nodiscard]] bool search_wildcard(const std::filesystem::path& wildcard_path, std::set<std::filesystem::path>& out_files, const bool recursive) noexcept;
 
-[[nodiscard]] bool make_tree(const std::set<std::filesystem::path>& set_files, std::map<std::filesystem::path, std::set<std::filesystem::path>>& tree);
+/**
+ * @brief Make a tree from @p set_files into @p tree. Counting also all the elements into @p out_tree.
+ *
+ * @param set_files
+ * @param tree
+ * @param out_tree_size
+ * @return true
+ * @return false
+ */
+[[nodiscard]] bool make_tree(const std::set<std::filesystem::path>& set_files, std::map<std::filesystem::path, std::set<std::filesystem::path>>& tree, size_t& out_tree_size) noexcept;
 
 }    // namespace bra::fs

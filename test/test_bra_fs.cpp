@@ -3,6 +3,7 @@
 
 #include <bra_fs.hpp>
 
+#include <unistd.h>    // for chdir
 
 using namespace std;
 
@@ -63,7 +64,7 @@ TEST(test_bra_fs_search_wildcard)
     return 0;
 }
 
-TEST(test_bra_fs_search_wildcard_recursive)
+TEST(test_bra_fs_search_wildcard_recursive_on_dir1)
 {
     std::set<fs::path>    files;
     constexpr const char* gitkeep = "dir1/dir1b/.gitkeep";
@@ -75,35 +76,120 @@ TEST(test_bra_fs_search_wildcard_recursive)
     ASSERT_EQ(files.count("dir1"), 0U);
     ASSERT_EQ(files.count("dir1/dir1a"), 1U);
     ASSERT_EQ(files.count("dir1/dir1a/file1a.txt"), 1U);
+    ASSERT_EQ(files.count("dir1/dir1a/dir1aa"), 1U);
+    ASSERT_EQ(files.count("dir1/dir1a/dir1aa/file1aa.txt"), 1U);
     ASSERT_EQ(files.count("dir1/dir1b"), 1U);
     ASSERT_EQ(files.count("dir1/file1"), 1U);
     ASSERT_EQ(files.count("dir1/file2"), 1U);
+    ASSERT_EQ(files.count("dir1/dir1c"), 1U);
+    ASSERT_EQ(files.count("dir1/dir1c/file1c.txt"), 1U);
+    ASSERT_EQ(files.size(), 9U);
 
     ASSERT_TRUE(bra::fs::file_set_add_dirs(files));
     ASSERT_EQ(files.count("dir1"), 1U);
     ASSERT_EQ(files.count("dir1/dir1a"), 1U);
+    ASSERT_EQ(files.count("dir1/dir1a/dir1aa"), 1U);
+    ASSERT_EQ(files.count("dir1/dir1a/dir1aa/file1aa.txt"), 1U);
     ASSERT_EQ(files.count("dir1/dir1a/file1a.txt"), 1U);
     ASSERT_EQ(files.count("dir1/dir1b"), 1U);
     ASSERT_EQ(files.count("dir1/file1"), 1U);
     ASSERT_EQ(files.count("dir1/file2"), 1U);
+    ASSERT_EQ(files.count("dir1/dir1c"), 1U);
+    ASSERT_EQ(files.count("dir1/dir1c/file1c.txt"), 1U);
+    ASSERT_EQ(files.size(), 10U);
 
     files.clear();
     ASSERT_TRUE(bra::fs::search_wildcard("dir1/*.txt", files, true));
     ASSERT_EQ(files.count("dir1"), 0U);
     ASSERT_EQ(files.count("dir1/dir1a"), 0U);
     ASSERT_EQ(files.count("dir1/dir1a/file1a.txt"), 1U);
+    ASSERT_EQ(files.count("dir1/dir1a/dir1aa"), 0U);
+    ASSERT_EQ(files.count("dir1/dir1a/dir1aa/file1aa.txt"), 1U);
     ASSERT_EQ(files.count("dir1/dir1b"), 0U);
     ASSERT_EQ(files.count("dir1/file1"), 0U);
     ASSERT_EQ(files.count("dir1/file2"), 0U);
+    ASSERT_EQ(files.count("dir1/dir1c"), 0U);
+    ASSERT_EQ(files.count("dir1/dir1c/file1c.txt"), 1U);
+    ASSERT_EQ(files.size(), 3U);
 
     ASSERT_TRUE(bra::fs::file_set_add_dirs(files));
     ASSERT_EQ(files.count("dir1"), 1U);
     ASSERT_EQ(files.count("dir1/dir1a"), 1U);
     ASSERT_EQ(files.count("dir1/dir1a/file1a.txt"), 1U);
+    ASSERT_EQ(files.count("dir1/dir1a/dir1aa"), 1U);
+    ASSERT_EQ(files.count("dir1/dir1a/dir1aa/file1aa.txt"), 1U);
     ASSERT_EQ(files.count("dir1/dir1b"), 0U);
     ASSERT_EQ(files.count("dir1/file1"), 0U);
     ASSERT_EQ(files.count("dir1/file2"), 0U);
+    ASSERT_EQ(files.count("dir1/dir1c"), 1U);
+    ASSERT_EQ(files.count("dir1/dir1c/file1c.txt"), 1U);
+    ASSERT_EQ(files.size(), 7U);
 
+    return 0;
+}
+
+TEST(test_bra_fs_search_wildcard_recursive_in_dir1)
+{
+    std::set<fs::path>    files;
+    constexpr const char* gitkeep = "dir1b/.gitkeep";
+
+    ASSERT_EQ(chdir("dir1"), 0);
+
+    if (fs::exists(gitkeep))
+        fs::remove(gitkeep);
+
+    ASSERT_TRUE(bra::fs::search_wildcard("*", files, true));
+    // ASSERT_EQ(files.count("dir1"), 0U);
+    ASSERT_EQ(files.count("dir1a"), 1U);
+    ASSERT_EQ(files.count("dir1a/file1a.txt"), 1U);
+    ASSERT_EQ(files.count("dir1a/dir1aa"), 1U);
+    ASSERT_EQ(files.count("dir1a/dir1aa/file1aa.txt"), 1U);
+    ASSERT_EQ(files.count("dir1b"), 1U);
+    ASSERT_EQ(files.count("file1"), 1U);
+    ASSERT_EQ(files.count("file2"), 1U);
+    ASSERT_EQ(files.count("dir1c"), 1U);
+    ASSERT_EQ(files.count("dir1c/file1c.txt"), 1U);
+    ASSERT_EQ(files.size(), 9U);
+
+    ASSERT_TRUE(bra::fs::file_set_add_dirs(files));
+    // ASSERT_EQ(files.count("dir1"), 1U);
+    ASSERT_EQ(files.count("dir1a"), 1U);
+    ASSERT_EQ(files.count("dir1a/dir1aa"), 1U);
+    ASSERT_EQ(files.count("dir1a/dir1aa/file1aa.txt"), 1U);
+    ASSERT_EQ(files.count("dir1a/file1a.txt"), 1U);
+    ASSERT_EQ(files.count("dir1b"), 1U);
+    ASSERT_EQ(files.count("file1"), 1U);
+    ASSERT_EQ(files.count("file2"), 1U);
+    ASSERT_EQ(files.count("dir1c"), 1U);
+    ASSERT_EQ(files.count("dir1c/file1c.txt"), 1U);
+    ASSERT_EQ(files.size(), 9U);
+
+    files.clear();
+    ASSERT_TRUE(bra::fs::search_wildcard("*.txt", files, true));
+    // ASSERT_EQ(files.count("dir1"), 0U);
+    ASSERT_EQ(files.count("dir1a"), 0U);
+    ASSERT_EQ(files.count("dir1a/file1a.txt"), 1U);
+    ASSERT_EQ(files.count("dir1a/dir1aa"), 0U);
+    ASSERT_EQ(files.count("dir1a/dir1aa/file1aa.txt"), 1U);
+    ASSERT_EQ(files.count("dir1b"), 0U);
+    ASSERT_EQ(files.count("file1"), 0U);
+    ASSERT_EQ(files.count("file2"), 0U);
+    ASSERT_EQ(files.count("dir1c"), 0U);
+    ASSERT_EQ(files.count("dir1c/file1c.txt"), 1U);
+
+    ASSERT_TRUE(bra::fs::file_set_add_dirs(files));
+    // ASSERT_EQ(files.count("dir1"), 1U);
+    ASSERT_EQ(files.count("dir1a"), 1U);
+    ASSERT_EQ(files.count("dir1a/file1a.txt"), 1U);
+    ASSERT_EQ(files.count("dir1a/dir1aa"), 1U);
+    ASSERT_EQ(files.count("dir1a/dir1aa/file1aa.txt"), 1U);
+    ASSERT_EQ(files.count("dir1b"), 0U);
+    ASSERT_EQ(files.count("file1"), 0U);
+    ASSERT_EQ(files.count("file2"), 0U);
+    ASSERT_EQ(files.count("dir1c"), 1U);
+    ASSERT_EQ(files.count("dir1c/file1c.txt"), 1U);
+
+    ASSERT_EQ(chdir(".."), 0);
     return 0;
 }
 
@@ -209,7 +295,8 @@ int main(int argc, char* argv[])
 {
     return test_main(argc, argv, {
                                      {TEST_FUNC(test_bra_fs_search_wildcard)},
-                                     {TEST_FUNC(test_bra_fs_search_wildcard_recursive)},
+                                     {TEST_FUNC(test_bra_fs_search_wildcard_recursive_on_dir1)},
+                                     {TEST_FUNC(test_bra_fs_search_wildcard_recursive_in_dir1)},
                                      {TEST_FUNC(test_bra_fs_file_exists)},
                                      {TEST_FUNC(test_bra_fs_dir_exists)},
                                      {TEST_FUNC(test_bra_fs_dir_make)},

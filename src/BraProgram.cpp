@@ -1,6 +1,7 @@
 #include "BraProgram.hpp"
 #include <bra_log.h>
 #include <bra_fs.hpp>
+#include <bra_wildcards.hpp>
 #include <version.h>
 
 #include <string>
@@ -130,6 +131,11 @@ std::optional<bool> BraProgram::parseArgs(const int argc, const char* const argv
             else if (bra::fs::dir_exists(p))
             {
                 if (!parseArgs_dir(p))
+                    return false;
+            }
+            else if (bra::wildcards::is_wildcard(p))
+            {
+                if (!parseArgs_wildcards(p))
                     return false;
             }
             else

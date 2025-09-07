@@ -164,6 +164,11 @@ protected:
         return false;
     }
 
+    bool parseArgs_wildcards([[maybe_unused]] const std::filesystem::path& p) override
+    {
+        return false;
+    }
+
     bool validateArgs() override
     {
         // Supporting only EXE and ELF file type for now

@@ -48,9 +48,10 @@ protected:
      * @todo review it is used only in unbra...
      * @param p
      */
-    virtual void parseArgs_adjustFilename(std::filesystem::path& p) = 0;
-    virtual bool parseArgs_file(const std::filesystem::path& p)     = 0;
-    virtual bool parseArgs_dir(const std::filesystem::path& p)      = 0;
+    virtual void parseArgs_adjustFilename(std::filesystem::path& p)  = 0;
+    virtual bool parseArgs_file(const std::filesystem::path& p)      = 0;
+    virtual bool parseArgs_dir(const std::filesystem::path& p)       = 0;
+    virtual bool parseArgs_wildcards(const std::filesystem::path& p) = 0;
 
     virtual bool validateArgs() = 0;
 

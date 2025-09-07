@@ -15,11 +15,13 @@
 namespace fs = std::filesystem;
 
 #if defined(__unix__) || defined(__APPLE__)
-constexpr const std::string CMD_PREFIX = "./";
+constexpr const std::string CMD_PREFIX  = "./";
+constexpr const std::string CMD_PREFIX2 = "../";
 #else
-constexpr const std::string CMD_PREFIX = "";
-#endif
+constexpr const std::string CMD_PREFIX  = "";
+constexpr const std::string CMD_PREFIX2 = "..\\";
 
+#endif
 
 bool AreFilesContentEquals(const std::filesystem::path& file1, const std::filesystem::path& file2)
 {
@@ -103,12 +105,12 @@ TEST(test_bra_unbra)
     return 0;
 }
 
-int _test_bra_unbra_list_recursive_(const fs::path& in_file_path)
+int _test_bra_unbra_list_recursive_(const std::string& cmd_prefix, const fs::path& in_file_path)
 {
     constexpr const char* gitkeep = "dir1/dir1b/.gitkeep";
 
-    const std::string bra      = CMD_PREFIX + "bra -r";
-    const std::string unbra    = CMD_PREFIX + "unbra -l";
+    const std::string bra      = cmd_prefix + "bra -r";
+    const std::string unbra    = cmd_prefix + "unbra -l";
     const std::string in_file  = in_file_path.string();
     const std::string out_file = "./test.txt.BRa";
     // const std::string exp_file = "./test.txt.exp";
@@ -128,13 +130,14 @@ int _test_bra_unbra_list_recursive_(const fs::path& in_file_path)
 
 TEST(test_bra_unbra_list_recursive)
 {
-    ASSERT_EQ(_test_bra_unbra_list_recursive_("dir1"), 0);
-    ASSERT_EQ(_test_bra_unbra_list_recursive_("dir1/*"), 0);
-    ASSERT_EQ(_test_bra_unbra_list_recursive_("dir1/*.txt"), 0);
+    ASSERT_EQ(_test_bra_unbra_list_recursive_(CMD_PREFIX, "dir1"), 0);
+    ASSERT_EQ(_test_bra_unbra_list_recursive_(CMD_PREFIX, "dir1/*"), 0);
+    ASSERT_EQ(_test_bra_unbra_list_recursive_(CMD_PREFIX, "dir1/*.txt"), 0);
     ASSERT_EQ(chdir("dir1"), 0);
-    ASSERT_EQ(_test_bra_unbra_list_recursive_("."), 0);
-    ASSERT_EQ(_test_bra_unbra_list_recursive_("*"), 0);
-    ASSERT_EQ(_test_bra_unbra_list_recursive_("*.txt"), 0);
+
+    ASSERT_EQ(_test_bra_unbra_list_recursive_(CMD_PREFIX2, "."), 0);
+    ASSERT_EQ(_test_bra_unbra_list_recursive_(CMD_PREFIX2, "*"), 0);
+    ASSERT_EQ(_test_bra_unbra_list_recursive_(CMD_PREFIX2, "*.txt"), 0);
     ASSERT_EQ(chdir(".."), 0);
 
     constexpr const char* gitkeep = "dir1/dir1b/.gitkeep";

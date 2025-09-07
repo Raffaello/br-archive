@@ -124,6 +124,11 @@ protected:
         return true;
     };
 
+    bool parseArgs_wildcards(const std::filesystem::path& p) override
+    {
+        return bra::fs::search_wildcard(p, m_files, m_recursive);
+    }
+
     bool validateArgs() override
     {
         if (m_files.empty())

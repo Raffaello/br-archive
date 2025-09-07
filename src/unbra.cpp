@@ -85,6 +85,11 @@ protected:
         return false;
     }
 
+    bool parseArgs_wildcards([[maybe_unused]] const std::filesystem::path& p) override
+    {
+        return false;
+    }
+
     bool validateArgs() override
     {
         if (m_bra_file.empty())

@@ -37,7 +37,7 @@ private:
 protected:
     virtual void help_usage() const override
     {
-        bra_log_printf("  %s (input_file)%s\n", fs::path(m_argv0).filename().string().c_str(), BRA_FILE_EXT);
+        bra_log_printf("  %s <input_file>%s\n", fs::path(m_argv0).filename().string().c_str(), BRA_FILE_EXT);
     };
 
     virtual void help_example() const override
@@ -49,7 +49,7 @@ protected:
 
     virtual void help_options() const override
     {
-        bra_log_printf("--list   | -l : view archive content.\n");
+        bra_log_printf("--list       | -l : view archive content.\n");
     };
 
     int parseArgs_minArgc() const override { return 2; }
@@ -85,6 +85,11 @@ protected:
         return false;
     }
 
+    bool parseArgs_wildcards([[maybe_unused]] const std::filesystem::path& p) override
+    {
+        return false;
+    }
+
     bool validateArgs() override
     {
         if (m_bra_file.empty())
@@ -116,8 +121,11 @@ protected:
         bra_log_printf("%s contains num files: %u\n", BRA_NAME, bh.num_files);
         if (m_listContent)
         {
-            bra_log_printf("| ATTR |   SIZE    | FILENAME                                |\n");
-            bra_log_printf("|------|-----------|-----------------------------------------|\n");
+            bra_log_printf("| ATTR |   SIZE    | " BRA_PRINTF_FMT_FILENAME "|\n", "FILENAME");
+            bra_log_printf("|------|-----------|-");
+            for (int i = 0; i < BRA_PRINTF_FMT_FILENAME_MAX_LENGTH; i++)
+                bra_log_printf("-");
+            bra_log_printf("|\n");
             for (uint32_t i = 0; i < bh.num_files; i++)
             {
                 if (!bra_print_meta_file(&m_f))

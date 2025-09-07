@@ -9,6 +9,7 @@
 #include <cctype>
 #include <regex>
 #include <algorithm>
+#include <limits>
 
 namespace bra::fs
 {
@@ -292,35 +293,36 @@ bool file_permissions(const std::filesystem::path& path, const std::filesystem::
     return true;
 }
 
-bool file_set_add_dir(std::set<std::filesystem::path>& files) noexcept
+bool file_set_add_dirs(std::set<std::filesystem::path>& files) noexcept
 {
     std::list<fs::path> listFiles(files.begin(), files.end());
     files.clear();
     while (!listFiles.empty())
     {
         // NOTE: as it is a set i can just insert multiple time the directory
-        //       and when iterate later it, resolve it resolve on it.
+        //       and when iterate later it, resolve it on it.
         //       need to keep track of the last directory entry to remove from the file.
 
-        auto f = listFiles.front();
+        const auto f = listFiles.front();
         listFiles.pop_front();
 
-        if (dir_exists(f))
-        {
-            // TODO: only if recursive is not enabled
-            //       recursive will also store empty directories.
-            bra_log_debug("ignoring directory (non-recursive mode): %s", f.string().c_str());
-        }
-        else if (!file_exists(f))
+        // skip current dir "." as no valuable information.
+        // it is by default starting from there.
+        if (f == ".")
+            continue;
+
+        if (!dir_exists(f) && !file_exists(f))
         {
             bra_log_error("%s is neither a regular file nor a directory", f.string().c_str());
-            continue;
+
+            return false;
         }
 
         fs::path f_ = f;
         if (!bra::fs::try_sanitize(f_))
         {
             bra_log_error("path not valid: %s - (%s)", f.string().c_str(), f_.string().c_str());
+
             return false;
         }
 
@@ -347,49 +349,51 @@ bool file_set_add_dir(std::set<std::filesystem::path>& files) noexcept
     return true;
 }
 
-bool search(const std::filesystem::path& dir, const std::string& pattern, std::list<std::filesystem::path>& out_files) noexcept
+bool search(const std::filesystem::path& dir, const std::string& pattern, std::list<std::filesystem::path>& out_files, const bool recursive) noexcept
 {
     try
     {
         const std::regex r(pattern);
 
         // TODO: add a cli flag for fs::directory_options::skip_permission_denied
-        // TODO: add a cli flag for fs::directory_options::follow_directory_symlink
+        // TODO: add a cli flag for fs::directory_options::follow_directory_symlink (to replace symlink with the real file)
         for (const auto& entry : fs::directory_iterator(dir))
         {
-            fs::path ep = entry.path();
-            // TODO: dir to search only if it is recursive (-r)
+            fs::path   ep     = entry.path();
             const bool is_dir = dir_exists(ep);
             if (!(file_exists(ep) || is_dir))
                 continue;
 
             const std::string filename = ep.filename().string();
-            if (!std::regex_match(filename, r))
-                continue;
 
             if (is_dir)
             {
-                // bra_log_debug("Matched dir: %s", filename.c_str());
-
-                // TODO: if recursive...
-                //       actually would be better to use recursive_directory_iterator instead
-
-                // if(recursive)
-                // const std::string p = pattern.size() > ep.string().size() ? pattern.substr(ep.string().size()) : pattern;
-                // res                 &= search(ep, p);
-                continue;
-            }
-            else
-            {
-                // ep is a file
-                if (!try_sanitize(ep))
+                // TODO: it might be better to use recursive_directory_iterator instead
+                //       of bra::fs::search being recursive itself.
+                if (!recursive)
                 {
-                    bra_log_error("not a valid file: %s", ep.string().c_str());
-                    return false;
+                    bra_log_info("Skip directory: %s", filename.c_str());
+                    continue;
                 }
 
-                out_files.push_back(ep);
+                bra_log_debug("Matched dir: %s", ep.string().c_str());
+                // out_files.push_back(ep);    // but if it is not a wildcard match it shouldn't be added.
+                if (!search(ep, pattern, out_files, recursive))
+                    return false;
             }
+
+            // here is either a file or a dir
+            if (!std::regex_match(filename, r))
+                continue;
+
+            // ep is a file
+            if (!try_sanitize(ep))
+            {
+                bra_log_error("not a valid file: %s", ep.string().c_str());
+                return false;
+            }
+
+            out_files.push_back(ep);
         }
 
         return true;
@@ -406,7 +410,7 @@ bool search(const std::filesystem::path& dir, const std::string& pattern, std::l
     }
 }
 
-bool search_wildcard(const std::filesystem::path& wildcard_path, std::set<std::filesystem::path>& out_files) noexcept
+bool search_wildcard(const std::filesystem::path& wildcard_path, std::set<std::filesystem::path>& out_files, const bool recursive) noexcept
 {
     fs::path p = wildcard_path.generic_string();
 
@@ -420,7 +424,7 @@ bool search_wildcard(const std::filesystem::path& wildcard_path, std::set<std::f
     const string   pattern = bra::wildcards::wildcard_to_regexp(p.string());
 
     std::list<fs::path> files;
-    if (!bra::fs::search(dir, pattern, files))
+    if (!bra::fs::search(dir, pattern, files, recursive))
     {
         bra_log_error("search failed in %s for wildcard %s", dir.string().c_str(), p.string().c_str());
         return false;
@@ -433,6 +437,29 @@ bool search_wildcard(const std::filesystem::path& wildcard_path, std::set<std::f
             bra_log_warn("duplicate file given in input: %s", f.string().c_str());
         files.pop_front();
     }
+    return true;
+}
+
+bool make_tree(const std::set<std::filesystem::path>& set_files, std::map<std::filesystem::path, std::set<std::filesystem::path>>& tree, size_t& out_tree_size) noexcept
+{
+    out_tree_size = 0;
+    for (const auto& f : set_files)
+    {
+        if (dir_exists(f))
+        {
+            tree.insert({f, std::set<fs::path>()});
+            ++out_tree_size;
+        }
+        else if (file_exists(f))
+        {
+            auto d = f.parent_path();
+            tree[d].insert(f.filename());
+            ++out_tree_size;
+        }
+        else
+            return false;
+    }
+
     return true;
 }
 

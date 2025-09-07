@@ -128,7 +128,7 @@ protected:
     // same as unbra
     virtual void help_options() const override
     {
-        bra_log_printf("--list   | -l : view archive content.\n");
+        bra_log_printf("--list       | -l : view archive content.\n");
     };
 
     int parseArgs_minArgc() const override { return 1; }
@@ -164,6 +164,11 @@ protected:
         return false;
     }
 
+    bool parseArgs_wildcards([[maybe_unused]] const std::filesystem::path& p) override
+    {
+        return false;
+    }
+
     bool validateArgs() override
     {
         // Supporting only EXE and ELF file type for now
@@ -194,12 +199,15 @@ protected:
             return 1;
 
         // extract payload, encoded data
-        // same as un bra
+        // TODO: same as un bra
         bra_log_printf("%s contains num files: %u\n", BRA_NAME, bh.num_files);
         if (m_listContent)
         {
-            bra_log_printf("| ATTR |   SIZE    | FILENAME                                |\n");
-            bra_log_printf("|------|-----------|-----------------------------------------|\n");
+            bra_log_printf("| ATTR |   SIZE    | " BRA_PRINTF_FMT_FILENAME "|\n", "FILENAME");
+            bra_log_printf("|------|-----------|-");
+            for (int i = 0; i < BRA_PRINTF_FMT_FILENAME_MAX_LENGTH; i++)
+                bra_log_printf("-");
+            bra_log_printf("|\n");
             for (uint32_t i = 0; i < bh.num_files; i++)
             {
                 if (!bra_print_meta_file(&m_f))

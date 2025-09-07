@@ -16,8 +16,7 @@
 #include <string>
 #include <list>
 #include <set>
-
-// #include <generator> // C++23 not supported in Ubuntu24 (due to older GCC version 13)
+#include <map>
 
 namespace bra::fs
 {
@@ -149,22 +148,22 @@ namespace bra::fs
  * @return true on success.
  * @return false on error. The @p files set may be left in an invalid state.
  */
-[[nodiscard]] bool file_set_add_dir(std::set<std::filesystem::path>& files) noexcept;
+[[nodiscard]] bool file_set_add_dirs(std::set<std::filesystem::path>& files) noexcept;
 
 /**
  * @brief Search for files in the given @p dir matching the regular expression @p pattern.
  *        It stores the results in @p out_files.
  *
- * @note This performs a non-recursive search in the immediate directory only.
- *       The existing contents of @p out_files are preserved (results are appended).
+ * @note  The existing contents of @p out_files are preserved (results are appended).
  *
  * @param dir
  * @param pattern Regular expression pattern (not a wildcard pattern)
  * @param out_files List to append matching file paths to
+ * @param recursive If false performs a non-recursive search in the immediate directory only; recursive otherwise.
  * @return true if successful
  * @return false otherwise
  */
-[[nodiscard]] bool search(const std::filesystem::path& dir, const std::string& pattern, std::list<std::filesystem::path>& out_files) noexcept;
+[[nodiscard]] bool search(const std::filesystem::path& dir, const std::string& pattern, std::list<std::filesystem::path>& out_files, const bool recursive) noexcept;
 
 /**
  * @brief Expand the given @p wildcard_path and store the resulting paths into @p out_files.
@@ -172,9 +171,21 @@ namespace bra::fs
  *
  * @param wildcard_path
  * @param out_files
+ * @param recursive
  * @return true on success and add the results to @p out_files
  * @return false on error (unsupported wildcard, sanitization failure, or search failure).
  */
-[[nodiscard]] bool search_wildcard(const std::filesystem::path& wildcard_path, std::set<std::filesystem::path>& out_files) noexcept;
+[[nodiscard]] bool search_wildcard(const std::filesystem::path& wildcard_path, std::set<std::filesystem::path>& out_files, const bool recursive) noexcept;
+
+/**
+ * @brief Make a tree from @p set_files into @p tree. Counting also all the elements into @p out_tree.
+ *
+ * @param set_files
+ * @param tree
+ * @param out_tree_size
+ * @return true
+ * @return false
+ */
+[[nodiscard]] bool make_tree(const std::set<std::filesystem::path>& set_files, std::map<std::filesystem::path, std::set<std::filesystem::path>>& tree, size_t& out_tree_size) noexcept;
 
 }    // namespace bra::fs

@@ -32,6 +32,14 @@ static inline uint64_t bra_min(const uint64_t a, const uint64_t b)
     return a < b ? a : b;
 }
 
+static inline void bra_print_string_max_length(const char* buf, const int buf_length, const int max_length)
+{
+    if (buf_length > max_length)
+        bra_log_printf("%.*s...", max_length - 3, buf);
+    else
+        bra_log_printf("%*.*s", -max_length, buf_length, buf);
+}
+
 static inline bool bra_validate_meta_filename(const bra_meta_file_t* mf)
 {
     // sanitize output path: reject absolute or parent traversal
@@ -131,7 +139,11 @@ bool bra_print_meta_file(bra_io_file_t* f)
     const uint64_t ds   = mf.data_size;
     const char     attr = bra_format_meta_attributes(mf.attributes);
     bra_format_bytes(mf.data_size, bytes);
-    bra_log_printf("|   %c  | %s | " BRA_PRINTF_FMT_FILENAME "|\n", attr, bytes, mf.name);
+
+    bra_log_printf("|   %c  | %s | ", attr, bytes);
+    bra_print_string_max_length(mf.name, mf.name_size, BRA_PRINTF_FMT_FILENAME_MAX_LENGTH);
+    bra_log_printf("|\n");
+
     bra_meta_file_free(&mf);
     // skip data content
     if (!bra_io_skip_data(f, ds))
@@ -368,12 +380,12 @@ bool bra_io_read_meta_file(bra_io_file_t* f, bra_meta_file_t* mf)
     // 4. data size
     if (mf->attributes == BRA_ATTR_DIR)
     {
-        // NOTE: for directory doesn have data-size nor data,
+        // NOTE: for directory doesn't have data-size nor data,
         // NOTE: here if it is a sub-dir
         //       it could cut some extra chars, and be constructed from the other dir
         //       but the file won't be able to reconstruct its full relative path.
         //   SO: I can't optimize sub-dir length with this struct
-        //       I must replicated the parent-dir too
+        //       I must replicate the parent-dir too
         // TODO: unless dir attribute has a 2nd bit to tell sub-dir or dir
         //       but then must track the sub-dir (postponed for now until recursive)
         strncpy(g_last_dir, buf, buf_size);
@@ -442,7 +454,13 @@ bool bra_io_write_meta_file(bra_io_file_t* f, const bra_meta_file_t* mf)
     case BRA_ATTR_FILE:
     {
         if (g_last_dir_size >= mf->name_size)
+        {
+            // In this case is a parent/sibling folder.
+            // but it should have read a dir instead.
+            // error because two consecutive files in different
+            // folders are been submitted.
             goto BRA_IO_WRITE_ERR;
+        }
 
         if (strncmp(mf->name, g_last_dir, g_last_dir_size) != 0)    // g_last_dir doesn't have '/'
             goto BRA_IO_WRITE_ERR;
@@ -457,6 +475,7 @@ bool bra_io_write_meta_file(bra_io_file_t* f, const bra_meta_file_t* mf)
     }
     case BRA_ATTR_DIR:
     {
+        // As a safe-guard, but pointless otherwise
         if (mf->data_size != 0)
             goto BRA_IO_WRITE_ERR;
 
@@ -568,17 +587,25 @@ bool bra_io_encode_and_write_to_disk(bra_io_file_t* f, const char* fn)
         bra_io_close(f);
         return false;
     }
+
+    // TODO: can just use it as an index and printing the right word instead.
+    //       avoiding to do a switch statement using a bit mask to manage eventual errors
     switch (attributes)
     {
     case BRA_ATTR_DIR:
-        bra_log_printf("Archiving dir :  " BRA_PRINTF_FMT_FILENAME, fn);
+        // bra_log_printf("Archiving dir :  " BRA_PRINTF_FMT_FILENAME, fn);
+        bra_log_printf("Archiving dir :  ");
         break;
     case BRA_ATTR_FILE:
-        bra_log_printf("Archiving file:  " BRA_PRINTF_FMT_FILENAME, fn);
+        // bra_log_printf("Archiving file:  " BRA_PRINTF_FMT_FILENAME, fn);
+        bra_log_printf("Archiving file:  ");
+
         break;
     default:
         goto BRA_IO_WRITE_CLOSE_ERROR;
     }
+
+    bra_print_string_max_length(fn, strlen(fn), BRA_PRINTF_FMT_FILENAME_MAX_LENGTH);
 
     // 2. file name length
     const size_t fn_len = strnlen(fn, BRA_MAX_PATH_LENGTH);
@@ -615,7 +642,9 @@ bool bra_io_encode_and_write_to_disk(bra_io_file_t* f, const char* fn)
     if (!res)
         return false;    // f closed already
 
-    // 4. data
+    // 4. data (this should be paired with data_size to avoid confusion
+    //          instead is in the meta file write function
+    //          NOTE: that data_size is written only for file in there)
     switch (attributes)
     {
     case BRA_ATTR_DIR:

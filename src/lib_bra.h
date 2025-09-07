@@ -61,8 +61,8 @@ typedef struct bra_meta_file_t
     // TODO: add CRC ... file permissions, etc... ?
     bra_attr_t attributes;    //!< file attributes: #BRA_ATTR_FILE (regular) or #BRA_ATTR_DIR (directory)
     uint8_t    name_size;     //!< length in bytes excluding the trailing NUL; [1..UINT8_MAX]
-    char*      name;          //!< filename (owned; free via @ref bra_meta_file_free)
-    uint64_t   data_size;     //!< file contents size in bytes
+    char*      name;          //!< filename/dirname (owned; free via @ref bra_meta_file_free)
+    uint64_t   data_size;     //!< file contents size in bytes. Not saved for dir.
 } bra_meta_file_t;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -288,7 +288,7 @@ bool bra_io_copy_file_chunks(bra_io_file_t* dst, bra_io_file_t* src, const uint6
 bool bra_io_skip_data(bra_io_file_t* f, const uint64_t data_size);
 
 /**
- * @brief Encode a file  or directory @p fn and append it to the open archive @p f.
+ * @brief Encode a file or directory @p fn and append it to the open archive @p f.
  *        On error closes @p f via @ref bra_io_close.
  *
  * @param f Open archive handle.

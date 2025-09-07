@@ -33,15 +33,16 @@ private:
     std::set<fs::path>                     m_files;
     std::map<fs::path, std::set<fs::path>> m_tree;
     fs::path                               m_out_filename;
-    uint32_t                               m_tot_files = 0;
-    bool                                   m_sfx       = false;
-    bool                                   m_recursive = false;
+    uint32_t                               m_tot_files         = 0;
+    uint32_t                               m_written_num_files = 0;
+    bool                                   m_sfx               = false;
+    bool                                   m_recursive         = false;
 
 
 protected:
     void help_usage() const override
     {
-        bra_log_printf("  %s [-s] -o <output_file> <input_file1> [<input_file2> ...]\n", fs::path(m_argv0).filename().string().c_str());
+        bra_log_printf("  %s [-s] [-r] -o <output_file> <input_file1> [<input_file2> ...]\n", fs::path(m_argv0).filename().string().c_str());
         bra_log_printf("The <output_file> will have %s (or %s with --sfx)\n", BRA_FILE_EXT, BRA_SFX_FILE_EXT);
     };
 
@@ -136,12 +137,6 @@ protected:
             return false;
         }
 
-        if (m_files.size() > std::numeric_limits<uint32_t>::max())
-        {
-            bra_log_critical("Too many files to be archived\n");
-            return false;
-        }
-
         if (!bra::fs::file_set_add_dirs(m_files))
             return false;
 
@@ -223,11 +218,15 @@ protected:
         size_t tot_files = 0;
         if (!bra::fs::make_tree(m_files, m_tree, tot_files))
             return false;
-        // m_tot_files = m_files.size();
         if (m_files.size() != tot_files)
             bra_log_debug("set<->tree size mismatch: %zu <-> %zu", m_files.size(), tot_files);
 
-        if (tot_files > std::numeric_limits<uint32_t>::max())
+        if (m_tot_files == 0)
+        {
+            bra_log_error("no input entries to archive");
+            return false;
+        }
+        else if (tot_files > std::numeric_limits<uint32_t>::max())
         {
             bra_log_critical("Too many entries to archive: %zu", tot_files);
             return false;
@@ -250,23 +249,23 @@ protected:
         return true;
     };
 
-    bool run_encode(std::filesystem::path& p)
+    bool run_encode(const std::filesystem::path& p)
     {
-        const auto path = p;
+        auto path = p;
 
         // TODO: write Progress bar?
 #if 0
-            bra_log_printf("[%u/%u] ", written_num_files, static_cast<uint32_t>(m_tot_files)));
+            bra_log_printf("[%u/%u] ", m_written_num_files, static_cast<uint32_t>(m_tot_files)s);
 #endif
 
         // no need to sanitize it again, but it won't hurt neither
-        if (!bra::fs::try_sanitize(p))
+        if (!bra::fs::try_sanitize(path))
         {
-            bra_log_error("invalid path: %s", path.string().c_str());
+            bra_log_error("invalid path: %s", p.string().c_str());
             return false;
         }
 
-        const string fn = p.generic_string();
+        const string fn = path.generic_string();
         if (!bra_io_encode_and_write_to_disk(&m_f, fn.c_str()))
             return false;
 
@@ -285,7 +284,7 @@ protected:
         if (!bra_io_write_header(&m_f, static_cast<uint32_t>(m_tot_files)))
             return 1;
 
-        uint32_t written_num_files = 0;
+        m_written_num_files = 0;
         for (const auto& [dir, files] : m_tree)
         {
             // write dir first...
@@ -295,7 +294,7 @@ protected:
                 if (!run_encode(p))
                     return 3;
 
-                ++written_num_files;
+                ++m_written_num_files;
             }
 
             // ...then all its files
@@ -305,15 +304,15 @@ protected:
                 if (!run_encode(p))
                     return 3;
 
-                ++written_num_files;
+                ++m_written_num_files;
             }
         }
 
         bra_io_close(&m_f);
 
 #ifndef NDEBUG
-        if (written_num_files != m_tot_files)
-            bra_log_warn("written entries (%u) != header count (%u)", written_num_files, m_tot_files);
+        if (m_written_num_files != m_tot_files)
+            bra_log_warn("written entries (%u) != header count (%u)", m_written_num_files, m_tot_files);
 #endif
 
         // TODO: doing an SFX should be in the lib_bra

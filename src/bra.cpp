@@ -107,13 +107,14 @@ protected:
         {
             if (!m_files.insert(p).second)
                 bra_log_warn("duplicate dir given in input: %s\n", p.string().c_str());
-
-            if (!bra::fs::search_wildcard(p / "*", m_files, m_recursive))
+            else if (!bra::fs::search_wildcard(p / "*", m_files, m_recursive))
             {
                 bra_log_error("path not valid: %s", p.string().c_str());
+
                 return false;
             }
         }
+
         return true;
     };
 

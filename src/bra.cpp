@@ -46,7 +46,7 @@ protected:
         bra_log_printf("  bra -o test *.txt\n");
         bra_log_printf("\n");
         bra_log_printf("(input_file): path to an existing file or a wildcard pattern\n");
-        bra_log_printf("              Directories expand to <dir/*> (non-recursive); empty directories are ignored.\n");
+        bra_log_printf("              empty directories are ignored if non-recursive.\n");
     };
 
     void help_options() const override

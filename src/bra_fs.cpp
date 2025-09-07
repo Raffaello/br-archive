@@ -30,28 +30,31 @@ bool try_sanitize(std::filesystem::path& path) noexcept
         return false;
     };
 
-    const bool rel = fs::absolute(path, ec).string().starts_with(fs::current_path().string());
+    auto abs = fs::absolute(path, ec);
     if (ec)
         return err();
-    if (!rel)
+
+    fs::path p = abs.lexically_relative(fs::current_path(ec));
+    if (ec)
+        return err();
+    if (p.empty())
         return false;
 
-    fs::path p = fs::relative(path, fs::current_path(), ec);
+    p = fs::relative(p, fs::current_path(), ec);
     if (ec)
         return err();
 
     if (p.empty())
     {
         if (path.is_absolute() || path.has_root_name())
-            // in this case it should have ec.clear()
-            return err();
+            return false;
     }
     else
         path = p;
 
-    for (const auto& p : path)
+    for (const auto& p_ : path)
     {
-        if (p == "..")
+        if (p_ == "..")
             return false;
     }
 

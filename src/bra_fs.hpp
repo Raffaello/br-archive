@@ -16,7 +16,7 @@
 #include <string>
 #include <list>
 #include <set>
-#include <queue>
+#include <map>
 
 // #include <generator> // C++23 not supported in Ubuntu24 (due to older GCC version 13)
 
@@ -179,6 +179,6 @@ namespace bra::fs
  */
 [[nodiscard]] bool search_wildcard(const std::filesystem::path& wildcard_path, std::set<std::filesystem::path>& out_files, const bool recursive) noexcept;
 
-[[nodiscard]] bool group_set_by_dir(const std::set<std::filesystem::path>& set_files, std::priority_queue<std::filesystem::path>& files_pq);
+[[nodiscard]] bool make_tree(const std::set<std::filesystem::path>& set_files, std::map<std::filesystem::path, std::set<std::filesystem::path>>& tree);
 
 }    // namespace bra::fs

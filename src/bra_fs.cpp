@@ -434,4 +434,22 @@ bool search_wildcard(const std::filesystem::path& wildcard_path, std::set<std::f
     return true;
 }
 
+bool make_tree(const std::set<std::filesystem::path>& set_files, std::map<std::filesystem::path, std::set<std::filesystem::path>>& tree)
+{
+    for (const auto& f : set_files)
+    {
+        if (dir_exists(f))
+            tree.insert({f, std::set<fs::path>()});
+        else if (file_exists(f))
+        {
+            auto d = f.parent_path();
+            tree[d].insert(f.filename());
+        }
+        else
+            return false;
+    }
+
+    return true;
+}
+
 }    // namespace bra::fs

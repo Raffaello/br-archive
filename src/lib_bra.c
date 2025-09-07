@@ -442,7 +442,13 @@ bool bra_io_write_meta_file(bra_io_file_t* f, const bra_meta_file_t* mf)
     case BRA_ATTR_FILE:
     {
         if (g_last_dir_size >= mf->name_size)
+        {
+            // In this case is a parent/sibling folder.
+            // but it should have read a dir instead.
+            // error because two consecutive files in different
+            // folders are been submitted.
             goto BRA_IO_WRITE_ERR;
+        }
 
         if (strncmp(mf->name, g_last_dir, g_last_dir_size) != 0)    // g_last_dir doesn't have '/'
             goto BRA_IO_WRITE_ERR;
@@ -457,6 +463,7 @@ bool bra_io_write_meta_file(bra_io_file_t* f, const bra_meta_file_t* mf)
     }
     case BRA_ATTR_DIR:
     {
+        // As a safe-guard, but pointless otherwise
         if (mf->data_size != 0)
             goto BRA_IO_WRITE_ERR;
 
@@ -568,6 +575,9 @@ bool bra_io_encode_and_write_to_disk(bra_io_file_t* f, const char* fn)
         bra_io_close(f);
         return false;
     }
+
+    // TODO: can just use it as an index and printing the right word instead.
+    //       avoiding to do a switch statement using a bit mask to manage eventual errors
     switch (attributes)
     {
     case BRA_ATTR_DIR:
@@ -615,7 +625,9 @@ bool bra_io_encode_and_write_to_disk(bra_io_file_t* f, const char* fn)
     if (!res)
         return false;    // f closed already
 
-    // 4. data
+    // 4. data (this should be paired with data_size to avoid confusion
+    //          instead is in the meta file write function
+    //          NOTE: that data_size is written only for file in there)
     switch (attributes)
     {
     case BRA_ATTR_DIR:

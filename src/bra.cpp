@@ -10,6 +10,9 @@
 #include <set>
 #include <algorithm>
 
+// #include <ranges>
+#include <map>
+
 #include <cstdint>
 
 
@@ -27,10 +30,12 @@ private:
     Bra(Bra&&)                 = delete;
     Bra& operator=(Bra&&)      = delete;
 
-    std::set<fs::path> m_files;
-    fs::path           m_out_filename;
-    bool               m_sfx       = false;
-    bool               m_recursive = false;
+    uint32_t                               m_tot_files;
+    std::set<fs::path>                     m_files;
+    std::map<fs::path, std::set<fs::path>> m_tree;
+    fs::path                               m_out_filename;
+    bool                                   m_sfx       = false;
+    bool                                   m_recursive = false;
 
     bra_io_file_t m_f2{};
 
@@ -137,8 +142,8 @@ protected:
 
 #ifndef NDEBUG
         bra_log_debug("Detected files:");
-        for (const auto& m_f : m_files)
-            bra_log_debug("- %s", m_f.string().c_str());
+        for (const auto& file : m_files)
+            bra_log_debug("- %s", file.string().c_str());
 #endif
 
         // TODO: Here could also start encoding the filenames
@@ -206,6 +211,24 @@ protected:
             }
         }
 
+        // build tree from the set file list.
+        m_tree.clear();
+        if (!bra::fs::make_tree(m_files, m_tree))
+            return false;
+        m_tot_files = m_files.size();
+
+#ifndef NDEBUG
+        bra_log_debug("Built Tree:");
+        for (const auto& [dir, files] : m_tree)
+        {
+            for (const auto& file : files)
+                bra_log_debug("- [%s]/%s", dir.string().c_str(), file.string().c_str());
+        }
+#endif
+
+        bra_log_debug("TREE SIZE: %zu -- %zu", m_tree.size(), m_files.size());
+        m_files.clear();
+
         return true;
     };
 
@@ -218,30 +241,65 @@ protected:
             return 1;
 
         bra_log_printf("Archiving into %s\n", out_fn.c_str());
-        if (!bra_io_write_header(&m_f, static_cast<uint32_t>(m_files.size())))
+        if (!bra_io_write_header(&m_f, static_cast<uint32_t>(m_tot_files)))
             return 1;
 
         uint32_t written_num_files = 0;
-        for (const auto& fn_ : m_files)
+        // for (const auto& fn_ : m_files)
+        for (const auto& [dir, files] : m_tree)
         {
-            fs::path p = fn_;
+            // write dir first
+            fs::path p = dir;
 
 // TODO: write Progress bar?
 #if 0
-            bra_log_printf("[%u/%u] ", written_num_files, static_cast<uint32_t>(m_files.size()));
+            bra_log_printf("[%u/%u] ", written_num_files, static_cast<uint32_t>(m_tot_files)));
 #endif
-            // no need to sanitize it again, but it won't hurt neither
-            if (!bra::fs::try_sanitize(p))
+            bra_log_debug("DIR: %s\n", p.string().c_str());
+            if (!p.empty())
             {
-                bra_log_error("invalid path: %s", fn_.string().c_str());
-                return 1;
+                // no need to sanitize it again, but it won't hurt neither
+                if (!bra::fs::try_sanitize(p))
+                {
+                    bra_log_error("invalid path: %s", dir.string().c_str());
+                    return 1;
+                }
+
+                const string fn = p.generic_string();
+                if (!bra_io_encode_and_write_to_disk(&m_f, fn.c_str()))
+                    return 1;
+                else
+                    ++written_num_files;
             }
 
-            const string fn = p.generic_string();
-            if (!bra_io_encode_and_write_to_disk(&m_f, fn.c_str()))
-                return 1;
-            else
-                ++written_num_files;
+
+            // then all its files...
+            for (const auto& fn_ : files)
+            {
+                fs::path p;
+                if (!dir.empty())
+                    p = dir / fn_;
+                else
+                    p = fn_;
+
+                bra_log_debug("File: %s\n", p.string().c_str());
+// TODO: write Progress bar?
+#if 0
+            bra_log_printf("[%u/%u] ", written_num_files, static_cast<uint32_t>(m_tot_files)));
+#endif
+                // no need to sanitize it again, but it won't hurt neither
+                if (!bra::fs::try_sanitize(p))
+                {
+                    bra_log_error("invalid path: %s", fn_.string().c_str());
+                    return 1;
+                }
+
+                const string fn = p.generic_string();
+                if (!bra_io_encode_and_write_to_disk(&m_f, fn.c_str()))
+                    return 1;
+                else
+                    ++written_num_files;
+            }
         }
 
         bra_io_close(&m_f);

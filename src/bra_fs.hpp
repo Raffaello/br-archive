@@ -18,8 +18,6 @@
 #include <set>
 #include <map>
 
-// #include <generator> // C++23 not supported in Ubuntu24 (due to older GCC version 13)
-
 namespace bra::fs
 {
 

@@ -10,8 +10,6 @@
 #include <set>
 #include <algorithm>
 #include <limits>
-
-// #include <ranges>
 #include <map>
 
 #include <cstdint>
@@ -255,6 +253,12 @@ protected:
     bool run_encode(std::filesystem::path& p)
     {
         const auto path = p;
+
+        // TODO: write Progress bar?
+#if 0
+            bra_log_printf("[%u/%u] ", written_num_files, static_cast<uint32_t>(m_tot_files)));
+#endif
+
         // no need to sanitize it again, but it won't hurt neither
         if (!bra::fs::try_sanitize(p))
         {
@@ -285,15 +289,9 @@ protected:
         for (const auto& [dir, files] : m_tree)
         {
             // write dir first...
-
-// TODO: write Progress bar?
-#if 0
-            bra_log_printf("[%u/%u] ", written_num_files, static_cast<uint32_t>(m_tot_files)));
-#endif
             if (!dir.empty())
             {
                 fs::path p = dir;
-
                 if (!run_encode(p))
                     return 3;
 
@@ -304,11 +302,6 @@ protected:
             for (const auto& fn_ : files)
             {
                 fs::path p = dir / fn_;
-
-// TODO: write Progress bar?
-#if 0
-            bra_log_printf("[%u/%u] ", written_num_files, static_cast<uint32_t>(m_tot_files)));
-#endif
                 if (!run_encode(p))
                     return 3;
 

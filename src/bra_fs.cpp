@@ -381,20 +381,19 @@ bool search(const std::filesystem::path& dir, const std::string& pattern, std::l
                 if (!search(ep, pattern, out_files, recursive))
                     return false;
             }
-            // else
+
+            // here is either a file or a dir
+            if (!std::regex_match(filename, r))
+                continue;
+
+            // ep is a file
+            if (!try_sanitize(ep))
             {
-                if (!std::regex_match(filename, r))
-                    continue;
-
-                // ep is a file
-                if (!try_sanitize(ep))
-                {
-                    bra_log_error("not a valid file: %s", ep.string().c_str());
-                    return false;
-                }
-
-                out_files.push_back(ep);
+                bra_log_error("not a valid file: %s", ep.string().c_str());
+                return false;
             }
+
+            out_files.push_back(ep);
         }
 
         return true;

@@ -35,6 +35,7 @@ private:
     fs::path                               m_out_filename;
     uint32_t                               m_tot_files         = 0;
     uint32_t                               m_written_num_files = 0;
+    int64_t                                m_header_offset     = 0;
     bool                                   m_sfx               = false;
     bool                                   m_recursive         = false;
 
@@ -274,13 +275,49 @@ protected:
 
     int run_prog() override
     {
-        string out_fn = m_out_filename.generic_string();
+        string   out_fn = m_out_filename.generic_string();
+        fs::path sfx_path;
 
-        // header
-        if (!bra_io_open(&m_f, out_fn.c_str(), "wb"))
-            return 1;
+        if (m_sfx)
+        {
+            sfx_path = out_fn;    // here is with BRA_SFX_TMP_FILE_EXT
+            sfx_path.replace_extension(BRA_SFX_FILE_EXT);
 
-        bra_log_printf("Archiving into %s\n", out_fn.c_str());
+            bra_log_printf("Creating Self-Extracting Archive: %s\n", sfx_path.string().c_str());
+            if (!fs::copy_file(BRA_SFX_FILENAME, out_fn, fs::copy_options::overwrite_existing))
+            {
+            BRA_SFX_IO_ERROR:
+                bra_log_error("unable to create a %s-SFX file", BRA_NAME);
+                return 2;
+            }
+
+            // header
+            if (!bra_io_open(&m_f, out_fn.c_str(), "rb+"))
+                goto BRA_SFX_IO_ERROR;
+
+            if (!bra_io_seek(&m_f, 0, SEEK_END))
+            {
+                bra_io_file_seek_error(&m_f);
+                return 2;
+            }
+
+            // save the start of the payload for later...
+            m_header_offset = bra_io_tell(&m_f);
+            if (m_header_offset < 0L)
+            {
+                bra_io_file_error(&m_f, "tell");
+                return 2;
+            }
+        }
+        else
+        {
+            bra_log_printf("Archiving Into: %s\n", out_fn.c_str());
+
+            // header
+            if (!bra_io_open(&m_f, out_fn.c_str(), "wb"))
+                return 1;
+        }
+
         if (!bra_io_write_header(&m_f, static_cast<uint32_t>(m_tot_files)))
             return 1;
 
@@ -308,8 +345,6 @@ protected:
             }
         }
 
-        bra_io_close(&m_f);
-
 #ifndef NDEBUG
         if (m_written_num_files != m_tot_files)
             bra_log_warn("written entries (%u) != header count (%u)", m_written_num_files, m_tot_files);
@@ -318,55 +353,61 @@ protected:
         // TODO: doing an SFX should be in the lib_bra
         if (m_sfx)
         {
-            fs::path sfx_path = m_out_filename;
-            sfx_path.replace_extension(BRA_SFX_FILE_EXT);
 
-            bra_log_printf("creating Self-extracting archive %s...", sfx_path.string().c_str());
+            // bra_log_printf("creating Self-extracting archive %s...", sfx_path.string().c_str());
 
-            if (!fs::copy_file(BRA_SFX_FILENAME, sfx_path, fs::copy_options::overwrite_existing))
-            {
-            BRA_SFX_IO_ERROR:
-                bra_log_error("unable to create a %s-SFX file", BRA_NAME);
-                return 2;
-            }
+            // if (!fs::copy_file(BRA_SFX_FILENAME, sfx_path, fs::copy_options::overwrite_existing))
+            // {
+            // BRA_SFX_IO_ERROR:
+            //     bra_log_error("unable to create a %s-SFX file", BRA_NAME);
+            //     return 2;
+            // }
 
-            if (!bra_io_open(&m_f, sfx_path.string().c_str(), "rb+"))
-                goto BRA_SFX_IO_ERROR;
+            // if (!bra_io_open(&m_f, sfx_path.string().c_str(), "rb+"))
+            //     goto BRA_SFX_IO_ERROR;
 
-            if (!bra_io_seek(&m_f, 0, SEEK_END))
-            {
-                bra_io_file_seek_error(&m_f);
-                return 2;
-            }
+            // if (!bra_io_seek(&m_f, 0, SEEK_END))
+            // {
+            //     bra_io_file_seek_error(&m_f);
+            //     return 2;
+            // }
 
-            // save the start of the payload for later...
-            const int64_t header_offset = bra_io_tell(&m_f);
-            if (header_offset < 0L)
-            {
-                bra_io_file_error(&m_f, "tell");
-                return 2;
-            }
+            // // save the start of the payload for later...
+            // const int64_t header_offset = bra_io_tell(&m_f);
+            // if (header_offset < 0L)
+            // {
+            //     bra_io_file_error(&m_f, "tell");
+            //     return 2;
+            // }
 
             // append bra file
-            if (!bra_io_open(&m_f2, out_fn.c_str(), "rb"))
-                return 2;
+            // if (!bra_io_open(&m_f2, out_fn.c_str(), "rb"))
+            //     return 2;
 
-            auto file_size = bra::fs::file_size(out_fn);
-            if (!file_size)
-                return 2;
+            // auto file_size = bra::fs::file_size(out_fn);
+            // if (!file_size)
+            //     return 2;
 
-            if (!bra_io_copy_file_chunks(&m_f, &m_f2, *file_size))
-                return 2;
+            // if (!bra_io_copy_file_chunks(&m_f, &m_f2, *file_size))
+            //     return 2;
 
-            bra_io_close(&m_f2);
+            // bra_io_close(&m_f2);
             // write footer
-            if (!bra_io_write_footer(&m_f, header_offset))
+            if (!bra_io_write_footer(&m_f, m_header_offset))
             {
                 bra_io_file_write_error(&m_f);
                 return 2;
             }
 
             bra_io_close(&m_f);
+
+            error_code ec;
+            fs::rename(out_fn, sfx_path, ec);
+            if (ec)
+            {
+                bra_log_error("unable to rename %s to %s", out_fn.c_str(), sfx_path.string().c_str());
+                return 2;
+            }
 
             // add executable permission (on UNIX)
             if (!bra::fs::file_permissions(sfx_path,
@@ -382,12 +423,11 @@ protected:
             // TODO: better starting with the SFX file then append the file
             //       it will save disk space as in this way requires twice the archive size
             //       to do an SFX
-            if (!bra::fs::file_remove(m_out_filename))
-                bra_log_warn("unable to delete SFX_TMP_FILE");
-
-            bra_log_printf("OK\n");
+            // if (!bra::fs::file_remove(m_out_filename))
+            //     bra_log_warn("unable to delete SFX_TMP_FILE");
         }
 
+        bra_io_close(&m_f);
         return 0;
     }
 

@@ -101,6 +101,30 @@ TEST(test_bra_unbra)
     return 0;
 }
 
+int _test_bra_dir_no_wildcard(const fs::path& input)
+{
+    const std::string bra      = CMD_PREFIX + "bra";
+    const std::string out_file = "./dir.BRa";
+
+    if (fs::exists(out_file))
+        fs::remove(out_file);
+
+    int ret = call_system(bra + " -o " + out_file + " " + input.string());
+    ASSERT_FALSE(fs::exists(out_file));
+
+    return ret;
+}
+
+TEST(test_bra_dir_no_wildcard)
+{
+    // dir only, without recursion: "no input files"
+    ASSERT_EQ(_test_bra_dir_no_wildcard("dir1"), 1);
+    ASSERT_EQ(_test_bra_dir_no_wildcard("./dir1"), 1);
+    ASSERT_EQ(_test_bra_dir_no_wildcard("../test/"), 1);
+
+    return 0;
+}
+
 int _test_bra_unbra_list(const fs::path& input)
 {
     const std::string bra      = CMD_PREFIX + "bra";
@@ -119,12 +143,6 @@ int _test_bra_unbra_list(const fs::path& input)
 
 TEST(test_bra_wildcard_dir_unbra_list)
 {
-    // dir only, without recursion: "no input files"
-    ASSERT_EQ(_test_bra_unbra_list("dir1"), 1);
-    ASSERT_EQ(_test_bra_unbra_list("./dir1"), 1);
-    ASSERT_EQ(_test_bra_unbra_list("../test/"), 1);
-
-
     ASSERT_EQ(_test_bra_unbra_list("dir1/*"), 0);
     ASSERT_EQ(_test_bra_unbra_list("./dir1/*"), 0);
 
@@ -225,6 +243,7 @@ int main(int argc, char* argv[])
         {TEST_FUNC(test_bra_help_ret_code)},
         {TEST_FUNC(test_bra_no_output_file)},
         {TEST_FUNC(test_bra_unbra)},
+        {TEST_FUNC(test_bra_dir_no_wildcard)},
         {TEST_FUNC(test_bra_wildcard_dir_unbra_list)},
         {TEST_FUNC(test_bra_sfx_0)},
         {TEST_FUNC(test_bra_sfx_1)},

@@ -150,7 +150,7 @@ namespace bra::fs
  * @return true on success.
  * @return false on error. The @p files set may be left in an invalid state.
  */
-[[nodiscard]] bool file_set_add_dir(std::set<std::filesystem::path>& files) noexcept;
+[[nodiscard]] bool file_set_add_dirs(std::set<std::filesystem::path>& files) noexcept;
 
 /**
  * @brief Search for files in the given @p dir matching the regular expression @p pattern.

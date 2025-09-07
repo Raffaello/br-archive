@@ -132,7 +132,7 @@ protected:
             return false;
         }
 
-        if (!bra::fs::file_set_add_dir(m_files))
+        if (!bra::fs::file_set_add_dirs(m_files))
             return false;
 
 #ifndef NDEBUG

@@ -292,7 +292,7 @@ bool file_permissions(const std::filesystem::path& path, const std::filesystem::
     return true;
 }
 
-bool file_set_add_dir(std::set<std::filesystem::path>& files) noexcept
+bool file_set_add_dirs(std::set<std::filesystem::path>& files) noexcept
 {
     std::list<fs::path> listFiles(files.begin(), files.end());
     files.clear();

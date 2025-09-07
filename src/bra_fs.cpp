@@ -122,11 +122,13 @@ std::filesystem::path filename_sfx_adjust(const std::filesystem::path& path, con
     else
         p = path;
 
-
     if (p.extension() == BRA_FILE_EXT)
         p += sfx_ext;
     else
-        p += string(BRA_FILE_EXT) + sfx_ext.string();
+    {
+        p += BRA_FILE_EXT;
+        p += sfx_ext;
+    }
 
     return p;
 }
@@ -349,22 +351,13 @@ bool search(const std::filesystem::path& dir, const std::string& pattern, std::l
 {
     try
     {
-        error_code       ec;
-        const std::regex r(pattern, std::regex::ECMAScript | std::regex::optimize);
+        const std::regex r(pattern);
 
         // TODO: add a cli flag for fs::directory_options::skip_permission_denied
         // TODO: add a cli flag for fs::directory_options::follow_directory_symlink
-        for (fs::directory_iterator it(dir, ec), end; it != end; it.increment(ec))
+        for (const auto& entry : fs::directory_iterator(dir))
         {
-            if (ec)
-            {
-                bra_log_warn("Skipping entry: %s", ec.message().c_str());
-                ec.clear();
-                continue;
-            }
-
-            const auto& entry = *it;
-            fs::path    ep    = entry.path();
+            fs::path ep = entry.path();
             // TODO: dir to search only if it is recursive (-r)
             const bool is_dir = dir_exists(ep);
             if (!(file_exists(ep) || is_dir))

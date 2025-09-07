@@ -3,8 +3,8 @@
 
 #include <bra_fs.hpp>
 
-using namespace std;
 
+using namespace std;
 
 namespace fs = std::filesystem;
 
@@ -124,51 +124,14 @@ TEST(test_bra_fs_try_sanitize_path)
     p = fs::current_path() / "..";
     ASSERT_FALSE(bra::fs::try_sanitize(p));
 
-    // p = fs::current_path();
-    // ASSERT_TRUE(bra::fs::try_sanitize(p));
-    // ASSERT_EQ(p.string(), ".");
     ASSERT_EQ(_test_bra_fs_try_sanitize_path(fs::current_path(), "."), 0);
-
-    // p = fs::current_path() / "test.txt";
-    // ASSERT_TRUE(bra::fs::try_sanitize(p));
-    // ASSERT_EQ(p.string(), "test.txt");
     ASSERT_EQ(_test_bra_fs_try_sanitize_path(fs::current_path() / "test.txt", "test.txt"), 0);
-
-    // p = fs::current_path() / "not_existing_dir" / ".." / "test.txt";
-    // ASSERT_TRUE(bra::fs::try_sanitize(p));
-    // ASSERT_EQ(p.string(), "test.txt");
     ASSERT_EQ(_test_bra_fs_try_sanitize_path(fs::current_path() / "not_existing_dir" / ".." / "test.txt", "test.txt"), 0);
-
-    // p = "./wildcards/*";
-    // ASSERT_TRUE(bra::fs::try_sanitize(p));
-    // ASSERT_EQ(p.string(), "wildcards/*");
     ASSERT_EQ(_test_bra_fs_try_sanitize_path("./wildcards/*", "wildcards/*"), 0);
-
-    // p = "./*";
-    // ASSERT_TRUE(bra::fs::try_sanitize(p));
-    // ASSERT_EQ(p.string(), "*");
     ASSERT_EQ(_test_bra_fs_try_sanitize_path("./*", "*"), 0);
-
-
-    // p = "*";
-    // ASSERT_TRUE(bra::fs::try_sanitize(p));
-    // ASSERT_EQ(p.string(), "*");
     ASSERT_EQ(_test_bra_fs_try_sanitize_path("*", "*"), 0);
-
-    // p = "./bra.*";
-    // ASSERT_TRUE(bra::fs::try_sanitize(p));
-    // ASSERT_EQ(p.string(), "bra.*");
     ASSERT_EQ(_test_bra_fs_try_sanitize_path("./bra.*", "bra.*"), 0);
-
-    // p = "bra.*";
-    // ASSERT_TRUE(bra::fs::try_sanitize(p));
-    // ASSERT_EQ(p.string(), "bra.*");
     ASSERT_EQ(_test_bra_fs_try_sanitize_path("bra.*", "bra.*"), 0);
-
-
-    // p = "dir?";
-    // ASSERT_TRUE(bra::fs::try_sanitize(p));
-    // ASSERT_EQ(p.string(), "dir?");
     ASSERT_EQ(_test_bra_fs_try_sanitize_path("dir?", "dir?"), 0);
     ASSERT_EQ(_test_bra_fs_try_sanitize_path("./dir?", "dir?"), 0);
 

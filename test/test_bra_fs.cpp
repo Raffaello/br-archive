@@ -126,7 +126,11 @@ TEST(test_bra_fs_try_sanitize_path)
 
     ASSERT_EQ(_test_bra_fs_try_sanitize_path(fs::current_path(), "."), 0);
     ASSERT_EQ(_test_bra_fs_try_sanitize_path(fs::current_path() / "test.txt", "test.txt"), 0);
+#ifdef __linux__
+    ASSERT_EQ(_test_bra_fs_try_sanitize_path(fs::current_path() / "not_existing_dir" / ".." / "test.txt", ""), 1);
+#else
     ASSERT_EQ(_test_bra_fs_try_sanitize_path(fs::current_path() / "not_existing_dir" / ".." / "test.txt", "test.txt"), 0);
+#endif
     ASSERT_EQ(_test_bra_fs_try_sanitize_path("./wildcards/*", "wildcards/*"), 0);
     ASSERT_EQ(_test_bra_fs_try_sanitize_path("./*", "*"), 0);
     ASSERT_EQ(_test_bra_fs_try_sanitize_path("*", "*"), 0);

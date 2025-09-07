@@ -305,6 +305,11 @@ bool file_set_add_dir(std::set<std::filesystem::path>& files) noexcept
         const auto f = listFiles.front();
         listFiles.pop_front();
 
+        // skip current dir "." as no valuable information.
+        // it is by default starting from there.
+        if (f == ".")
+            continue;
+
         if (!dir_exists(f) && !file_exists(f))
         {
             bra_log_error("%s is neither a regular file nor a directory", f.string().c_str());

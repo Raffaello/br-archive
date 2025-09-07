@@ -16,6 +16,7 @@
 #include <string>
 #include <list>
 #include <set>
+#include <queue>
 
 // #include <generator> // C++23 not supported in Ubuntu24 (due to older GCC version 13)
 
@@ -177,5 +178,7 @@ namespace bra::fs
  * @return false on error (unsupported wildcard, sanitization failure, or search failure).
  */
 [[nodiscard]] bool search_wildcard(const std::filesystem::path& wildcard_path, std::set<std::filesystem::path>& out_files, const bool recursive) noexcept;
+
+[[nodiscard]] bool group_set_by_dir(const std::set<std::filesystem::path>& set_files, std::priority_queue<std::filesystem::path>& files_pq);
 
 }    // namespace bra::fs

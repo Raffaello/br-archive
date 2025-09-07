@@ -368,12 +368,12 @@ bool bra_io_read_meta_file(bra_io_file_t* f, bra_meta_file_t* mf)
     // 4. data size
     if (mf->attributes == BRA_ATTR_DIR)
     {
-        // NOTE: for directory doesn have data-size nor data,
+        // NOTE: for directory doesn't have data-size nor data,
         // NOTE: here if it is a sub-dir
         //       it could cut some extra chars, and be constructed from the other dir
         //       but the file won't be able to reconstruct its full relative path.
         //   SO: I can't optimize sub-dir length with this struct
-        //       I must replicated the parent-dir too
+        //       I must replicate the parent-dir too
         // TODO: unless dir attribute has a 2nd bit to tell sub-dir or dir
         //       but then must track the sub-dir (postponed for now until recursive)
         strncpy(g_last_dir, buf, buf_size);

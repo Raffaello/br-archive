@@ -4,7 +4,7 @@
 #error "bra_fs.hpp must be included from a C++ translation unit. Use bra_fs_c.h when compiling as C."
 #endif
 
-#if __cplusplus < 201703L
+#if __cplusplus < 201703L && !(defined(_MSC_VER) && (_MSVC_LANG >= 201703L))
 #error "requires C++17 or later (std::filesystem)."
 #endif
 

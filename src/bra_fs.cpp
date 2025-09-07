@@ -50,13 +50,13 @@ bool try_sanitize(std::filesystem::path& path) noexcept
     else
         path = p;
 
+    path = path.lexically_normal().generic_string();
     for (const auto& p_ : path)
     {
         if (p_ == "..")
             return false;
     }
 
-    path = path.lexically_normal().generic_string();
     return !path.empty();
 }
 
@@ -229,7 +229,7 @@ std::optional<bra_attr_t> file_attributes(const std::filesystem::path& path) noe
     else if (fs::is_directory(path, ec))
         return BRA_ATTR_DIR;
 
-    return err();
+    return nullopt;
 }
 
 std::optional<uint64_t> file_size(const std::filesystem::path& path) noexcept
@@ -253,7 +253,7 @@ std::optional<uint64_t> file_size(const std::filesystem::path& path) noexcept
         return size;
     }
 
-    return err();
+    return nullopt;
 }
 
 bool file_remove(const std::filesystem::path& path) noexcept
@@ -349,18 +349,27 @@ bool search(const std::filesystem::path& dir, const std::string& pattern, std::l
 {
     try
     {
-        const std::regex r(pattern);
+        error_code       ec;
+        const std::regex r(pattern, std::regex::ECMAScript | std::regex::optimize);
 
         // TODO: add a cli flag for fs::directory_options::skip_permission_denied
         // TODO: add a cli flag for fs::directory_options::follow_directory_symlink
-        for (const auto& entry : fs::directory_iterator(dir))
+        for (fs::directory_iterator it(dir, ec), end; it != end; it.increment(ec))
         {
+            if (ec)
+            {
+                bra_log_warn("Skipping entry: %s", ec.message().c_str());
+                ec.clear();
+                continue;
+            }
+
+            const auto& entry = *it;
+            fs::path    ep    = entry.path();
             // TODO: dir to search only if it is recursive (-r)
-            const bool is_dir = entry.is_directory();
-            if (!(entry.is_regular_file() || is_dir))
+            const bool is_dir = dir_exists(ep);
+            if (!(file_exists(ep) || is_dir))
                 continue;
 
-            fs::path          ep       = entry.path();
             const std::string filename = ep.filename().string();
             if (!std::regex_match(filename, r))
                 continue;
@@ -370,6 +379,8 @@ bool search(const std::filesystem::path& dir, const std::string& pattern, std::l
                 // bra_log_debug("Matched dir: %s", filename.c_str());
 
                 // TODO: if recursive...
+                //       actually would be better to use recursive_directory_iterator instead
+
                 // if(recursive)
                 // const std::string p = pattern.size() > ep.string().size() ? pattern.substr(ep.string().size()) : pattern;
                 // res                 &= search(ep, p);

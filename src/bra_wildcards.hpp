@@ -1,7 +1,7 @@
 #pragma once
 
 #ifndef __cplusplus
-#error "bra_wildcards.hpp must be included from a C++ translation unit. Use bra_fs.h when compiling as C."
+#error "bra_wildcards.hpp must be included from a C++ translation unit."
 #endif
 
 #include <filesystem>

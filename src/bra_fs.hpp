@@ -1,7 +1,7 @@
 #pragma once
 
 #ifndef __cplusplus
-#error "bra_fs.hpp must be included from a C++ translation unit. Use bra_fs.h when compiling as C."
+#error "bra_fs.hpp must be included from a C++ translation unit. Use bra_fs_c.h when compiling as C."
 #endif
 
 #include "lib_bra_types.h"

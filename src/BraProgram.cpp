@@ -6,7 +6,7 @@
 #include <string>
 
 #if defined(_WIN32)
-#if defined(__MINGW32__) || defined(__MINGW64__)    // || defined(__MSYS__)
+#if defined(__MINGW32__) || defined(__MINGW64__) || defined(__MSYS__)
 // Enable wildcard expansion on Windows MSYS2
 extern "C" {
 int _dowildcard = -1;
@@ -113,16 +113,17 @@ std::optional<bool> BraProgram::parseArgs(const int argc, const char* const argv
             // FS sub-section
             fs::path p = s;
             parseArgs_adjustFilename(p);
+
+            // check file path
+            if (!bra::fs::try_sanitize(p))
+            {
+                bra_log_error("path not valid: %s", p.string().c_str());
+                return false;
+            }
+
             // check if it is file or a dir
             if (bra::fs::file_exists(p))
             {
-                // check file path
-                if (!bra::fs::try_sanitize(p))
-                {
-                    bra_log_error("path not valid: %s", p.string().c_str());
-                    return false;
-                }
-
                 if (!parseArgs_file(p))
                     return false;
             }

@@ -59,7 +59,7 @@ protected:
 
     int parseArgs_minArgc() const override { return 2; }
 
-    std::optional<bool> parseArgs_option(const int argc, const char* const argv[], int& i, std::string_view s) override
+    std::optional<bool> parseArgs_option(const int argc, const char* const argv[], int& i, const std::string& s) override
     {
         if (s == "--out" || s == "-o")
         {
@@ -67,7 +67,7 @@ protected:
             ++i;
             if (i >= argc)
             {
-                bra_log_error("%.*s missing argument <output_filename>", static_cast<int>(s.size()), s.data());
+                bra_log_error("%s missing argument <output_filename>", s.c_str());
                 return false;
             }
 
@@ -85,6 +85,7 @@ protected:
 
     bool parseArgs_file(const std::filesystem::path& p) override
     {
+
         if (!m_files.insert(p).second)
         {
             bra_log_warn("duplicate file given in input: %s\n", p.string().c_str());
@@ -94,15 +95,28 @@ protected:
         return true;
     };
 
-    bool parseArgs_dir(const std::filesystem::path& p) override
+    bool parseArgs_dir([[maybe_unused]] const std::filesystem::path& p) override
     {
+        // TODO: do recursive
+
+        // to understand if it is just 1 level directory.
+        // size_t num_parts = 0;
+        // for ([[maybe_unused]] const auto& part : p)
+        //     ++num_parts;
+
         // Match exactly the directory:
+        // (TODO: this must be removed as it is not possible to know if it is expanded by the shell
+        //        or it is a user input, user must add the wildcard herself)
         // append `/*` to include all files in it (non-recursive).
-        if (!bra::fs::search_wildcard(p / "*", m_files))
-        {
-            bra_log_error("path not valid: %s", p.string().c_str());
-            return false;
-        }
+
+        // if (num_parts == 1)    // if recursive ...
+        // {
+        // if (!bra::fs::search_wildcard(p / "*", m_files))
+        // {
+        //     bra_log_error("path not valid: %s", p.string().c_str());
+        //     return false;
+        // }
+        // }
         return true;
     };
 

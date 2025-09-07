@@ -119,18 +119,24 @@ int _test_bra_unbra_list(const fs::path& input)
 
 TEST(test_bra_wildcard_dir_unbra_list)
 {
+    // dir only, without recursion: "no input files"
+    ASSERT_EQ(_test_bra_unbra_list("dir1"), 1);
+    ASSERT_EQ(_test_bra_unbra_list("./dir1"), 1);
+    ASSERT_EQ(_test_bra_unbra_list("../test/"), 1);
+
+
     ASSERT_EQ(_test_bra_unbra_list("dir1/*"), 0);
-    ASSERT_EQ(_test_bra_unbra_list("dir1"), 0);
     ASSERT_EQ(_test_bra_unbra_list("./dir1/*"), 0);
-    ASSERT_EQ(_test_bra_unbra_list("./dir1"), 0);
 
 #if defined(__APPLE__) || defined(__linux__) || defined(__unix__)
-    ASSERT_EQ(_test_bra_unbra_list("./dir\\?"), 1);    // disabling wildcard expansion
-    ASSERT_EQ(_test_bra_unbra_list("./dir?"), 0);
+    ASSERT_EQ(_test_bra_unbra_list("./dir\\?/*"), 1);    // disabling wildcard expansion
+    ASSERT_EQ(_test_bra_unbra_list("./dir?/*"), 0);
 #else
     // ASSERT_EQ(_test_bra_unbra_list("./dir^?"), 1);    // disabling wildcard expansion(not sure is working)
-    ASSERT_EQ(_test_bra_unbra_list("./dir?"), 0);
+    ASSERT_EQ(_test_bra_unbra_list("./dir1/file?"), 0);
 #endif
+
+    ASSERT_EQ(_test_bra_unbra_list("../test/*"), 0);
     return 0;
 }
 

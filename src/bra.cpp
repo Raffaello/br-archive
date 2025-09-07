@@ -85,7 +85,6 @@ protected:
 
     bool parseArgs_file(const std::filesystem::path& p) override
     {
-
         if (!m_files.insert(p).second)
         {
             bra_log_warn("duplicate file given in input: %s\n", p.string().c_str());

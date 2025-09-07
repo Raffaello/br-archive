@@ -38,7 +38,7 @@ bool BraProgram::set_overwrite_policy(const bra_fs_overwrite_policy_e op, const 
 
 void BraProgram::banner() const
 {
-    bra_log_printf("BR-Archive Utility %s Version: %s\n", fs::path(m_argv0).filename().string().c_str(), VERSION);
+    bra_log_printf("BR-Archive Utility %s | Version: %s\n", fs::path(m_argv0).filename().string().c_str(), VERSION);
     bra_log_printf("\n");
 }
 
@@ -59,9 +59,9 @@ void BraProgram::help() const
 
 void BraProgram::help_common_options() const
 {
-    bra_log_printf("--help   | -h : display this page.\n");
-    bra_log_printf("--yes    | -y : force a 'yes' response to all the user questions.\n");
-    bra_log_printf("--no     | -n : force 'no' to all prompts (skip overwrites).\n");
+    bra_log_printf("--help       | -h : display this page.\n");
+    bra_log_printf("--yes        | -y : force a 'yes' response to all the user questions.\n");
+    bra_log_printf("--no         | -n : force 'no' to all prompts (skip overwrites).\n");
 }
 
 std::optional<bool> BraProgram::parseArgs(const int argc, const char* const argv[])

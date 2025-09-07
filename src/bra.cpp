@@ -37,7 +37,7 @@ protected:
     void help_usage() const override
     {
         bra_log_printf("  %s [-s] -o <output_file> <input_file1> [<input_file2> ...]\n", fs::path(m_argv0).filename().string().c_str());
-        bra_log_printf("The [output_file] will have %s (or %s with --sfx)\n", BRA_FILE_EXT, BRA_SFX_FILE_EXT);
+        bra_log_printf("The <output_file> will have %s (or %s with --sfx)\n", BRA_FILE_EXT, BRA_SFX_FILE_EXT);
     };
 
     void help_example() const override
@@ -45,16 +45,18 @@ protected:
         bra_log_printf("  bra -o test test.txt\n");
         bra_log_printf("  bra -o test *.txt\n");
         bra_log_printf("\n");
-        bra_log_printf("(input_file): path to an existing file or a wildcard pattern\n");
-        bra_log_printf("              Use shell wildcards like 'dir/*' to include files from directories; bare directory arguments are ignored without recursion.\n");
+        bra_log_printf("<input_file>      : path to an existing file or a wildcard pattern\n");
+        bra_log_printf("                    Use shell wildcards like 'dir/*' to include files from directories;\n");
+        bra_log_printf("                    bare directory arguments are ignored without recursion.\n");
     };
 
     void help_options() const override
     {
-        bra_log_printf("--sfx    | -s : generate a self-extracting archive\n");
-        bra_log_printf("--update | -u : update an existing archive with missing files from input.\n");
-        bra_log_printf("--out    | -o : <output_filename> it takes the path of the output file.\n");
-        bra_log_printf("                If the extension %s is missing it will be automatically added.\n", BRA_FILE_EXT);
+        bra_log_printf("--sfx        | -s : generate a self-extracting archive\n");
+        bra_log_printf(" --recursive | -r : recursively scan files and directories. \n");
+        bra_log_printf("--update     | -u : update an existing archive with missing files from input.\n");
+        bra_log_printf("--out        | -o : <output_filename> it takes the path of the output file.\n");
+        bra_log_printf("                    If the extension %s is missing it will be automatically added.\n", BRA_FILE_EXT);
     };
 
     int parseArgs_minArgc() const override { return 2; }

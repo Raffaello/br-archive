@@ -37,7 +37,7 @@ private:
 protected:
     virtual void help_usage() const override
     {
-        bra_log_printf("  %s (input_file)%s\n", fs::path(m_argv0).filename().string().c_str(), BRA_FILE_EXT);
+        bra_log_printf("  %s <input_file>%s\n", fs::path(m_argv0).filename().string().c_str(), BRA_FILE_EXT);
     };
 
     virtual void help_example() const override
@@ -49,7 +49,7 @@ protected:
 
     virtual void help_options() const override
     {
-        bra_log_printf("--list   | -l : view archive content.\n");
+        bra_log_printf("--list       | -l : view archive content.\n");
     };
 
     int parseArgs_minArgc() const override { return 2; }

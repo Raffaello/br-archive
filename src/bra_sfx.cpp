@@ -128,7 +128,7 @@ protected:
     // same as unbra
     virtual void help_options() const override
     {
-        bra_log_printf("--list   | -l : view archive content.\n");
+        bra_log_printf("--list       | -l : view archive content.\n");
     };
 
     int parseArgs_minArgc() const override { return 1; }

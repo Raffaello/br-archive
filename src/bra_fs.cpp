@@ -9,6 +9,7 @@
 #include <cctype>
 #include <regex>
 #include <algorithm>
+#include <limits>
 
 namespace bra::fs
 {
@@ -364,8 +365,6 @@ bool search(const std::filesystem::path& dir, const std::string& pattern, std::l
                 continue;
 
             const std::string filename = ep.filename().string();
-            if (!std::regex_match(filename, r))
-                continue;
 
             if (is_dir)
             {
@@ -378,12 +377,15 @@ bool search(const std::filesystem::path& dir, const std::string& pattern, std::l
                 }
 
                 bra_log_debug("Matched dir: %s", ep.string().c_str());
-                out_files.push_back(ep);
+                // out_files.push_back(ep);    // but if it is not a wildcard match it shouldn't be added.
                 if (!search(ep, pattern, out_files, recursive))
                     return false;
             }
-            else
+            // else
             {
+                if (!std::regex_match(filename, r))
+                    continue;
+
                 // ep is a file
                 if (!try_sanitize(ep))
                 {

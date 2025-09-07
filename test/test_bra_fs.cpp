@@ -72,10 +72,37 @@ TEST(test_bra_fs_search_wildcard_recursive)
         fs::remove(gitkeep);
 
     ASSERT_TRUE(bra::fs::search_wildcard("dir1/*", files, true));
-    ASSERT_TRUE(files.count("dir1/dir1a/file1a") == 1);
-    ASSERT_TRUE(files.count("dir1/dir1b") == 1);
-    ASSERT_TRUE(files.count("dir1/file1") == 1);
-    ASSERT_TRUE(files.count("dir1/file2") == 1);
+    ASSERT_EQ(files.count("dir1"), 0U);
+    ASSERT_EQ(files.count("dir1/dir1a"), 1U);
+    ASSERT_EQ(files.count("dir1/dir1a/file1a.txt"), 1U);
+    ASSERT_EQ(files.count("dir1/dir1b"), 1U);
+    ASSERT_EQ(files.count("dir1/file1"), 1U);
+    ASSERT_EQ(files.count("dir1/file2"), 1U);
+
+    ASSERT_TRUE(bra::fs::file_set_add_dirs(files));
+    ASSERT_EQ(files.count("dir1"), 1U);
+    ASSERT_EQ(files.count("dir1/dir1a"), 1U);
+    ASSERT_EQ(files.count("dir1/dir1a/file1a.txt"), 1U);
+    ASSERT_EQ(files.count("dir1/dir1b"), 1U);
+    ASSERT_EQ(files.count("dir1/file1"), 1U);
+    ASSERT_EQ(files.count("dir1/file2"), 1U);
+
+    files.clear();
+    ASSERT_TRUE(bra::fs::search_wildcard("dir1/*.txt", files, true));
+    ASSERT_EQ(files.count("dir1"), 0U);
+    ASSERT_EQ(files.count("dir1/dir1a"), 0U);
+    ASSERT_EQ(files.count("dir1/dir1a/file1a.txt"), 1U);
+    ASSERT_EQ(files.count("dir1/dir1b"), 0U);
+    ASSERT_EQ(files.count("dir1/file1"), 0U);
+    ASSERT_EQ(files.count("dir1/file2"), 0U);
+
+    ASSERT_TRUE(bra::fs::file_set_add_dirs(files));
+    ASSERT_EQ(files.count("dir1"), 1U);
+    ASSERT_EQ(files.count("dir1/dir1a"), 1U);
+    ASSERT_EQ(files.count("dir1/dir1a/file1a.txt"), 1U);
+    ASSERT_EQ(files.count("dir1/dir1b"), 0U);
+    ASSERT_EQ(files.count("dir1/file1"), 0U);
+    ASSERT_EQ(files.count("dir1/file2"), 0U);
 
     return 0;
 }

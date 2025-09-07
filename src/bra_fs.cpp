@@ -302,7 +302,7 @@ bool file_set_add_dir(std::set<std::filesystem::path>& files) noexcept
         //       and when iterate later it, resolve it on it.
         //       need to keep track of the last directory entry to remove from the file.
 
-        auto f = listFiles.front();
+        const auto f = listFiles.front();
         listFiles.pop_front();
 
         if (!dir_exists(f) && !file_exists(f))
@@ -351,8 +351,7 @@ bool search(const std::filesystem::path& dir, const std::string& pattern, std::l
         // TODO: add a cli flag for fs::directory_options::follow_directory_symlink
         for (const auto& entry : fs::directory_iterator(dir))
         {
-            fs::path ep = entry.path();
-            // TODO: dir to search only if it is recursive (-r)
+            fs::path   ep     = entry.path();
             const bool is_dir = dir_exists(ep);
             if (!(file_exists(ep) || is_dir))
                 continue;
@@ -363,14 +362,8 @@ bool search(const std::filesystem::path& dir, const std::string& pattern, std::l
 
             if (is_dir)
             {
-
-                // TODO: if recursive...
-                //       actually would be better to use recursive_directory_iterator instead
-
-                // if(recursive)
-                // const std::string p = pattern.size() > ep.string().size() ? pattern.substr(ep.string().size()) : pattern;
-                // res                 &= search(ep, p);
-
+                // TODO: it might be better to use recursive_directory_iterator instead
+                //       of search being recursive itself.
                 if (!recursive)
                     continue;
 

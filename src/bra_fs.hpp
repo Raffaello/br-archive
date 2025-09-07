@@ -155,13 +155,12 @@ namespace bra::fs
  * @brief Search for files in the given @p dir matching the regular expression @p pattern.
  *        It stores the results in @p out_files.
  *
- * @note This performs a non-recursive search in the immediate directory only.
- *       The existing contents of @p out_files are preserved (results are appended).
+ * @note  The existing contents of @p out_files are preserved (results are appended).
  *
  * @param dir
  * @param pattern Regular expression pattern (not a wildcard pattern)
  * @param out_files List to append matching file paths to
- * @param recursive
+ * @param recursive If false performs a non-recursive search in the immediate directory only; recursive otherwise.
  * @return true if successful
  * @return false otherwise
  */

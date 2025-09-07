@@ -103,26 +103,6 @@ protected:
 
     bool parseArgs_dir([[maybe_unused]] const std::filesystem::path& p) override
     {
-        // TODO: do recursive
-
-        // to understand if it is just 1 level directory.
-        // size_t num_parts = 0;
-        // for ([[maybe_unused]] const auto& part : p)
-        //     ++num_parts;
-
-        // Match exactly the directory:
-        // (TODO: this must be removed as it is not possible to know if it is expanded by the shell
-        //        or it is a user input, user must add the wildcard herself)
-        // append `/*` to include all files in it (non-recursive).
-
-        // if (num_parts == 1)    // if recursive ...
-        // {
-        // if (!bra::fs::search_wildcard(p / "*", m_files))
-        // {
-        //     bra_log_error("path not valid: %s", p.string().c_str());
-        //     return false;
-        // }
-        // }
         if (m_recursive)
         {
             if (!m_files.insert(p).second)
@@ -318,8 +298,7 @@ protected:
 
             bra_io_close(&m_f);
 
-            // add executable permission on UNIX
-            // #if defined(__unix__) || defined(__APPLE__)
+            // add executable permission (on UNIX)
             if (!bra::fs::file_permissions(sfx_path,
                                            fs::perms::owner_exec | fs::perms::owner_read | fs::perms::owner_write |
                                                fs::perms::group_exec | fs::perms::group_read |
@@ -328,13 +307,11 @@ protected:
             {
                 bra_log_warn("unable to set executable bit on %s", sfx_path.string().c_str());
             }
-            // #endif
 
             // remove TMP SFX FILE
             // TODO: better starting with the SFX file then append the file
             //       it will save disk space as in this way requires twice the archive size
             //       to do an SFX
-
             if (!bra::fs::file_remove(m_out_filename))
                 bra_log_warn("unable to delete SFX_TMP_FILE");
 

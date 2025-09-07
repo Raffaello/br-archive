@@ -46,7 +46,7 @@ protected:
         bra_log_printf("  bra -o test *.txt\n");
         bra_log_printf("\n");
         bra_log_printf("(input_file): path to an existing file or a wildcard pattern\n");
-        bra_log_printf("              empty directories are ignored if non-recursive.\n");
+        bra_log_printf("              Use shell wildcards like 'dir/*' to include files from directories; bare directory arguments are ignored without recursion.\n");
     };
 
     void help_options() const override

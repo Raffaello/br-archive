@@ -177,10 +177,4 @@ namespace bra::fs
  */
 [[nodiscard]] bool search_wildcard(const std::filesystem::path& wildcard_path, std::set<std::filesystem::path>& out_files) noexcept;
 
-/**
- * @brief C++23 generator not supported yet in Ubuntu 24 ... pff!...
- *
- */
-// std::generator<std::filesystem::path> bra_fs_co_search(const std::filesystem::path& dir, const std::string& pattern);
-
 }    // namespace bra::fs

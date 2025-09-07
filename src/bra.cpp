@@ -227,6 +227,13 @@ protected:
         // m_tot_files = m_files.size();
         if (m_files.size() != tot_files)
             bra_log_debug("set<->tree size mismatch: %zu <-> %zu", m_files.size(), tot_files);
+
+        if (tot_files > std::numeric_limits<uint32_t>::max())
+        {
+            bra_log_critical("Too many entries to archive: %zu", tot_files);
+            return false;
+        }
+
         m_tot_files = static_cast<uint32_t>(tot_files);
 
 #ifndef NDEBUG
@@ -309,6 +316,11 @@ protected:
         }
 
         bra_io_close(&m_f);
+
+#ifndef NDEBUG
+        if (written_num_files != m_tot_files)
+            bra_log_warn("written entries (%u) != header count (%u)", written_num_files, m_tot_files);
+#endif
 
         // TODO: doing an SFX should be in the lib_bra
         if (m_sfx)

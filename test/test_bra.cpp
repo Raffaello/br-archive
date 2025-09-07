@@ -7,9 +7,6 @@
 #include <fstream>
 #include <cstdio>
 
-#include <unistd.h>    // for chdir
-
-
 #include <lib_bra.h>
 
 namespace fs = std::filesystem;
@@ -124,6 +121,8 @@ int _test_bra_unbra_list_recursive_(const std::string& cmd_prefix, const fs::pat
     ASSERT_EQ(call_system(bra + " -o " + out_file + " " + in_file), 0);
     ASSERT_TRUE(fs::exists(out_file));
     ASSERT_EQ(call_system(unbra + " " + out_file), 0);
+    ASSERT_TRUE(fs::exists(out_file));
+    fs::remove(out_file);
 
     return 0;
 }
@@ -133,13 +132,13 @@ TEST(test_bra_unbra_list_recursive)
     ASSERT_EQ(_test_bra_unbra_list_recursive_(CMD_PREFIX, "dir1"), 0);
     ASSERT_EQ(_test_bra_unbra_list_recursive_(CMD_PREFIX, "dir1/*"), 0);
     ASSERT_EQ(_test_bra_unbra_list_recursive_(CMD_PREFIX, "dir1/*.txt"), 0);
-    ASSERT_EQ(chdir("dir1"), 0);
 
+    const fs::path old_path = fs::current_path();
+    fs::current_path("dir1");
     ASSERT_EQ(_test_bra_unbra_list_recursive_(CMD_PREFIX2, "."), 0);
     ASSERT_EQ(_test_bra_unbra_list_recursive_(CMD_PREFIX2, "*"), 0);
     ASSERT_EQ(_test_bra_unbra_list_recursive_(CMD_PREFIX2, "*.txt"), 0);
-    ASSERT_EQ(chdir(".."), 0);
-
+    fs::current_path(old_path);
     constexpr const char* gitkeep = "dir1/dir1b/.gitkeep";
 
     const std::string bra      = CMD_PREFIX + "bra -r";

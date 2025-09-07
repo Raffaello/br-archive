@@ -3,7 +3,6 @@
 
 #include <bra_fs.hpp>
 
-#include <unistd.h>    // for chdir
 
 using namespace std;
 
@@ -133,7 +132,8 @@ TEST(test_bra_fs_search_wildcard_recursive_in_dir1)
     std::set<fs::path>    files;
     constexpr const char* gitkeep = "dir1b/.gitkeep";
 
-    ASSERT_EQ(chdir("dir1"), 0);
+    const fs::path old_path = fs::current_path();
+    fs::current_path("dir1");
 
     if (fs::exists(gitkeep))
         fs::remove(gitkeep);
@@ -189,7 +189,7 @@ TEST(test_bra_fs_search_wildcard_recursive_in_dir1)
     ASSERT_EQ(files.count("dir1c"), 1U);
     ASSERT_EQ(files.count("dir1c/file1c.txt"), 1U);
 
-    ASSERT_EQ(chdir(".."), 0);
+    fs::current_path(old_path);
     return 0;
 }
 

@@ -34,7 +34,7 @@ private:
     fs::path                               m_out_filename;
     uint32_t                               m_tot_files         = 0;
     uint32_t                               m_written_num_files = 0;
-    int64_t                                m_header_offset     = 0;
+    int64_t                                m_header_offset     = -1;
     bool                                   m_sfx               = false;
     bool                                   m_recursive         = false;
 

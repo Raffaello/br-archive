@@ -1,11 +1,15 @@
 #pragma once
 
 #ifndef __cplusplus
-#error "bra_fs.hpp must be included from a C++ translation unit. Use bra_fs.h when compiling as C."
+#error "bra_fs.hpp must be included from a C++ translation unit. Use bra_fs_c.h when compiling as C."
 #endif
 
-#include "lib_bra_types.h"
+#if __cplusplus < 201703L && !(defined(_MSC_VER) && (_MSVC_LANG >= 201703L))
+#error "requires C++17 or later (std::filesystem)."
+#endif
 
+
+#include "lib_bra_types.h"
 
 #include <filesystem>
 #include <optional>
@@ -28,18 +32,7 @@ namespace bra::fs
  * @return true if it is successful
  * @return false otherwise
  */
-[[nodiscard]] bool try_sanitize(std::filesystem::path& path);
-
-/**
- * @brief Check if the given @p path contains a supported wildcard pattern.
- *
- * @todo instead of bool return size_t: std::npos no wildcard, otherwise first wildcard char position.
- *
- * @param path
- * @return true
- * @return false
- */
-[[nodiscard]] bool is_wildcard(const std::filesystem::path& path);
+[[nodiscard]] bool try_sanitize(std::filesystem::path& path) noexcept;
 
 /**
  * @brief Check if the given @p path exists and is a directory.
@@ -50,7 +43,7 @@ namespace bra::fs
  * @return true if the path exists and is a directory.
  * @return false otherwise.
  */
-[[nodiscard]] bool dir_exists(const std::filesystem::path& path);
+[[nodiscard]] bool dir_exists(const std::filesystem::path& path) noexcept;
 
 /**
  * @brief Create the directory at @p path.
@@ -64,7 +57,7 @@ namespace bra::fs
  * @return true if the directory was created or already existed.
  * @return false on error
  */
-[[nodiscard]] bool dir_make(const std::filesystem::path& path);
+[[nodiscard]] bool dir_make(const std::filesystem::path& path) noexcept;
 
 /**
  * @brief
@@ -72,7 +65,7 @@ namespace bra::fs
  * @param path
  * @return std::filesystem::path
  */
-[[nodiscard]] std::filesystem::path filename_archive_adjust(const std::filesystem::path& path);
+[[nodiscard]] std::filesystem::path filename_archive_adjust(const std::filesystem::path& path) noexcept;
 
 /**
  * @brief Return the given filename ending always with the correct extension.
@@ -83,7 +76,7 @@ namespace bra::fs
  * @param tmp
  * @return std::filesystem::path the adjusted path.
  */
-[[nodiscard]] std::filesystem::path filename_sfx_adjust(const std::filesystem::path& path, const bool tmp);
+[[nodiscard]] std::filesystem::path filename_sfx_adjust(const std::filesystem::path& path, const bool tmp) noexcept;
 
 /**
  * @brief Check if the given @p path is a regular file and exists.
@@ -94,7 +87,7 @@ namespace bra::fs
  * @return true
  * @return false
  */
-[[nodiscard]] bool file_exists(const std::filesystem::path& path);
+[[nodiscard]] bool file_exists(const std::filesystem::path& path) noexcept;
 
 /**
  * @brief Check if the file in @p path exists and ask the user to overwrite.
@@ -108,7 +101,7 @@ namespace bra::fs
  * @return true overwrite
  * @return false don't overwrite
  */
-[[nodiscard]] std::optional<bool> file_exists_ask_overwrite(const std::filesystem::path& path, bra_fs_overwrite_policy_e& overwrite_policy, const bool single_overwrite);
+[[nodiscard]] std::optional<bool> file_exists_ask_overwrite(const std::filesystem::path& path, bra_fs_overwrite_policy_e& overwrite_policy, const bool single_overwrite) noexcept;
 
 /**
  * @brief Get the file attributes for the given @p path.
@@ -116,7 +109,7 @@ namespace bra::fs
  * @param path
  * @return std::optional<bra_attr_t> #BRA_ATTR_FILE for regular files, #BRA_ATTR_DIR for directories, @c nullopt for errors or unknown types.
  */
-[[nodiscard]] std::optional<bra_attr_t> file_attributes(const std::filesystem::path& path);
+[[nodiscard]] std::optional<bra_attr_t> file_attributes(const std::filesystem::path& path) noexcept;
 
 /**
  * @brief Get the size of a file or directory.
@@ -124,7 +117,7 @@ namespace bra::fs
  * @param path
  * @return std::optional<uint64_t> File size in bytes for regular files, 0 for directories, @c nullopt on error
  */
-[[nodiscard]] std::optional<uint64_t> file_size(const std::filesystem::path& path);
+[[nodiscard]] std::optional<uint64_t> file_size(const std::filesystem::path& path) noexcept;
 
 /**
  * @brief Remove the file at the @p path.
@@ -133,7 +126,7 @@ namespace bra::fs
  * @return true on success (also when the file does not exist)
  * @return false on error
  */
-[[nodiscard]] bool file_remove(const std::filesystem::path& path);
+[[nodiscard]] bool file_remove(const std::filesystem::path& path) noexcept;
 
 /**
  * @brief set the @p permissions with options @p perm_options on the file @p path.
@@ -144,7 +137,7 @@ namespace bra::fs
  * @return true on success
  * @return false on error
  */
-[[nodiscard]] bool file_permissions(const std::filesystem::path& path, const std::filesystem::perms permissions, const std::filesystem::perm_options perm_options);
+[[nodiscard]] bool file_permissions(const std::filesystem::path& path, const std::filesystem::perms permissions, const std::filesystem::perm_options perm_options) noexcept;
 
 
 /**
@@ -156,33 +149,22 @@ namespace bra::fs
  * @return true on success.
  * @return false on error. The @p files set may be left in an invalid state.
  */
-[[nodiscard]] bool file_set_add_dir(std::set<std::filesystem::path>& files);
+[[nodiscard]] bool file_set_add_dir(std::set<std::filesystem::path>& files) noexcept;
 
 /**
- * @brief Extract the directory from a wildcard if it contains any and modify accordingly the @p path_wildcard.
- *        If there is no wildcard, @p path_wildcard will result to be empty.
- *        The @p path_wildcard must have been sanitized with @ref try_sanitize before,
- *        otherwise results are undefined.
+ * @brief Search for files in the given @p dir matching the regular expression @p pattern.
+ *        It stores the results in @p out_files.
  *
- * @note this function doesn't fail if @p path_wildcard doesn't contain any wildcards,
- *       it will just modify to be an empty string.
+ * @note This performs a non-recursive search in the immediate directory only.
+ *       The existing contents of @p out_files are preserved (results are appended).
  *
- * @todo it might be private only.
- *
- * @param path_wildcard this is changed stripping the dir. If it wasn't a wildcard it will be empty
- * @return std::filesystem::path
+ * @param dir
+ * @param pattern Regular expression pattern (not a wildcard pattern)
+ * @param out_files List to append matching file paths to
+ * @return true if successful
+ * @return false otherwise
  */
-[[nodiscard]] std::filesystem::path wildcard_extract_dir(std::filesystem::path& path_wildcard);
-
-/**
- * @brief Convert the wildcard to a regular expression for internal use.
- *
- * @todo this should most likely be private. Paired with @ref wildcard_extract_dir
- *
- * @param wildcard
- * @return std::string
- */
-[[nodiscard]] std::string wildcard_to_regexp(const std::string& wildcard);
+[[nodiscard]] bool search(const std::filesystem::path& dir, const std::string& pattern, std::list<std::filesystem::path>& out_files) noexcept;
 
 /**
  * @brief Expand the given @p wildcard_path and store the resulting paths into @p out_files.
@@ -193,24 +175,6 @@ namespace bra::fs
  * @return true on success and add the results to @p out_files
  * @return false on error (unsupported wildcard, sanitization failure, or search failure).
  */
-[[nodiscard]] bool wildcard_expand(const std::filesystem::path& wildcard_path, std::set<std::filesystem::path>& out_files);
-
-/**
- * @brief Search all the files in the given @p dir matching the regular expression @p pattern.
- *        It stores the results in @p out_files.
- *
- * @param dir
- * @param pattern
- * @param out_files
- * @return true if successful
- * @return false otherwise
- */
-[[nodiscard]] bool search(const std::filesystem::path& dir, const std::string& pattern, std::list<std::filesystem::path>& out_files);
-
-/**
- * @brief C++23 generator not supported yet in Ubuntu 24 ... pff!...
- *
- */
-// std::generator<std::filesystem::path> bra_fs_co_search(const std::filesystem::path& dir, const std::string& pattern);
+[[nodiscard]] bool search_wildcard(const std::filesystem::path& wildcard_path, std::set<std::filesystem::path>& out_files) noexcept;
 
 }    // namespace bra::fs

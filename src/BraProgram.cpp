@@ -5,6 +5,15 @@
 
 #include <string>
 
+#if defined(_WIN32)
+#if defined(__MINGW32__) || defined(__MINGW64__) || defined(__MSYS__)
+// Enable wildcard expansion on Windows MSYS2
+extern "C" {
+int _dowildcard = -1;
+}
+#endif
+#endif
+
 
 using namespace std;
 
@@ -104,36 +113,28 @@ std::optional<bool> BraProgram::parseArgs(const int argc, const char* const argv
             // FS sub-section
             fs::path p = s;
             parseArgs_adjustFilename(p);
+
+            // check file path
+            if (!bra::fs::try_sanitize(p))
+            {
+                bra_log_error("path not valid: %s", p.string().c_str());
+                return false;
+            }
+
             // check if it is file or a dir
             if (bra::fs::file_exists(p))
             {
-                // check file path
-                if (!bra::fs::try_sanitize(p))
-                {
-                    bra_log_error("path not valid: %s", p.string().c_str());
-                    return false;
-                }
-
                 if (!parseArgs_file(p))
                     return false;
             }
             else if (bra::fs::dir_exists(p))
             {
-                // This should match exactly the directory.
-                // so need to be converted as a wildcard adding a `/*' at the end
-                p /= "*";
                 if (!parseArgs_dir(p))
-                    return false;
-            }
-            // check if it is a wildcard
-            else if (bra::fs::is_wildcard(p))
-            {
-                if (!parseArgs_wildcard(p))
                     return false;
             }
             else
             {
-                bra_log_error("file doesn't exist: %s", s.c_str());
+                bra_log_error("path doesn't exist: %s", s.c_str());
                 return false;
             }
         }

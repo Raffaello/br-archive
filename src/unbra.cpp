@@ -54,7 +54,7 @@ protected:
 
     int parseArgs_minArgc() const override { return 2; }
 
-    std::optional<bool> parseArgs_option([[maybe_unused]] const int argc, [[maybe_unused]] const char* const argv[], [[maybe_unused]] int& i, const std::string_view& s) override
+    std::optional<bool> parseArgs_option([[maybe_unused]] const int argc, [[maybe_unused]] const char* const argv[], [[maybe_unused]] int& i, const std::string& s) override
     {
         if (s == "--list" || s == "-l")
         {
@@ -82,13 +82,6 @@ protected:
     {
         // TODO not implemented yet
         // it should create the dir and extract in that dir
-        return false;
-    }
-
-    bool parseArgs_wildcard([[maybe_unused]] const std::filesystem::path& p) override
-    {
-        // Not supported.
-        // TODO: or for filtering what to extract from the archive?
         return false;
     }
 

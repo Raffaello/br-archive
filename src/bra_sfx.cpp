@@ -134,7 +134,7 @@ protected:
     int parseArgs_minArgc() const override { return 1; }
 
     // same as unbra
-    std::optional<bool> parseArgs_option([[maybe_unused]] const int argc, [[maybe_unused]] const char* const argv[], [[maybe_unused]] int& i, const std::string_view& s) override
+    std::optional<bool> parseArgs_option([[maybe_unused]] const int argc, [[maybe_unused]] const char* const argv[], [[maybe_unused]] int& i, const std::string& s) override
     {
         if (s == "--list" || s == "-l")
         {
@@ -161,14 +161,6 @@ protected:
     {
         // TODO not implemented yet
         // it should create the dir and extract in that dir
-        return false;
-    }
-
-    // same as unbra
-    bool parseArgs_wildcard([[maybe_unused]] const std::filesystem::path& p) override
-    {
-        // Not supported.
-        // TODO: or for filtering what to extract from the archive?
         return false;
     }
 
@@ -228,9 +220,6 @@ protected:
     }
 
 public:
-    // const char* m_argv0;
-
-    // explicit BraSfx([[maybe_unused]] const int argc, const char* const argv[]) : m_argv0(argv[0]) {}
     BraSfx()          = default;
     virtual ~BraSfx() = default;
 };

@@ -93,10 +93,34 @@ TEST(test_bra_unbra)
     ASSERT_TRUE(fs::exists(out_file));
 
     fs::rename(in_file, exp_file);
-    ASSERT_TRUE(!fs::exists(in_file));
+    ASSERT_FALSE(fs::exists(in_file));
     ASSERT_EQ(call_system(unbra + " " + out_file), 0);
     ASSERT_TRUE(fs::exists(in_file));
     ASSERT_TRUE(AreFilesContentEquals(in_file, exp_file));
+
+    return 0;
+}
+
+int _test_bra_dir_no_wildcard(const fs::path& input)
+{
+    const std::string bra      = CMD_PREFIX + "bra";
+    const std::string out_file = "./dir.BRa";
+
+    if (fs::exists(out_file))
+        fs::remove(out_file);
+
+    int ret = call_system(bra + " -o " + out_file + " " + input.string());
+    ASSERT_FALSE(fs::exists(out_file));
+
+    return ret;
+}
+
+TEST(test_bra_dir_no_wildcard)
+{
+    // dir only, without recursion: "no input files"
+    ASSERT_EQ(_test_bra_dir_no_wildcard("dir1"), 1);
+    ASSERT_EQ(_test_bra_dir_no_wildcard("./dir1"), 1);
+    ASSERT_EQ(_test_bra_dir_no_wildcard("../test/"), 1);
 
     return 0;
 }
@@ -120,16 +144,17 @@ int _test_bra_unbra_list(const fs::path& input)
 TEST(test_bra_wildcard_dir_unbra_list)
 {
     ASSERT_EQ(_test_bra_unbra_list("dir1/*"), 0);
-    ASSERT_EQ(_test_bra_unbra_list("dir1"), 0);
     ASSERT_EQ(_test_bra_unbra_list("./dir1/*"), 0);
-    ASSERT_EQ(_test_bra_unbra_list("./dir1"), 0);
 
 #if defined(__APPLE__) || defined(__linux__) || defined(__unix__)
-    ASSERT_EQ(_test_bra_unbra_list("./dir\\?"), 1);    // disabling wildcard expansion
-    ASSERT_EQ(_test_bra_unbra_list("./dir?"), 0);
+    ASSERT_EQ(_test_bra_unbra_list("./dir\\?/*"), 1);    // disabling wildcard expansion
+    ASSERT_EQ(_test_bra_unbra_list("./dir?/*"), 0);
 #else
-    ASSERT_EQ(_test_bra_unbra_list("./dir?"), 1);    // dir1 won't be added as it is not recursive so no input file added
+    // ASSERT_EQ(_test_bra_unbra_list("./dir^?"), 1);    // disabling wildcard expansion(not sure is working)
+    ASSERT_EQ(_test_bra_unbra_list("./dir1/file?"), 0);
 #endif
+
+    ASSERT_EQ(_test_bra_unbra_list("../test/*"), 0);
     return 0;
 }
 
@@ -154,7 +179,7 @@ int _test_bra_sfx(const std::string& out_file)
     ASSERT_TRUE(fs::exists(out_file_sfx));
 
     fs::rename(in_file, exp_file);
-    ASSERT_TRUE(!fs::exists(in_file));
+    ASSERT_FALSE(fs::exists(in_file));
     ASSERT_EQ(call_system(out_file_sfx), 0);
     ASSERT_TRUE(fs::exists(in_file));
     ASSERT_TRUE(AreFilesContentEquals(in_file, exp_file));
@@ -218,6 +243,7 @@ int main(int argc, char* argv[])
         {TEST_FUNC(test_bra_help_ret_code)},
         {TEST_FUNC(test_bra_no_output_file)},
         {TEST_FUNC(test_bra_unbra)},
+        {TEST_FUNC(test_bra_dir_no_wildcard)},
         {TEST_FUNC(test_bra_wildcard_dir_unbra_list)},
         {TEST_FUNC(test_bra_sfx_0)},
         {TEST_FUNC(test_bra_sfx_1)},

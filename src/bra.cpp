@@ -46,7 +46,7 @@ protected:
         bra_log_printf("  bra -o test *.txt\n");
         bra_log_printf("\n");
         bra_log_printf("(input_file): path to an existing file or a wildcard pattern\n");
-        bra_log_printf("              Directories expand to <dir/*> (non-recursive); empty directories are ignored.\n");
+        bra_log_printf("              Use shell wildcards like 'dir/*' to include files from directories; bare directory arguments are ignored without recursion.\n");
     };
 
     void help_options() const override
@@ -59,7 +59,7 @@ protected:
 
     int parseArgs_minArgc() const override { return 2; }
 
-    std::optional<bool> parseArgs_option(const int argc, const char* const argv[], int& i, const std::string_view& s) override
+    std::optional<bool> parseArgs_option(const int argc, const char* const argv[], int& i, const std::string& s) override
     {
         if (s == "--out" || s == "-o")
         {
@@ -67,7 +67,7 @@ protected:
             ++i;
             if (i >= argc)
             {
-                bra_log_error("%.*s missing argument <output_filename>", static_cast<int>(s.size()), s.data());
+                bra_log_error("%s missing argument <output_filename>", s.c_str());
                 return false;
             }
 
@@ -94,25 +94,28 @@ protected:
         return true;
     };
 
-    bool parseArgs_dir(const std::filesystem::path& p) override
+    bool parseArgs_dir([[maybe_unused]] const std::filesystem::path& p) override
     {
-        if (!bra::fs::wildcard_expand(p, m_files))
-        {
-            bra_log_error("path not valid: %s", p.string().c_str());
-            return false;
-        }
+        // TODO: do recursive
 
-        return true;
-    };
+        // to understand if it is just 1 level directory.
+        // size_t num_parts = 0;
+        // for ([[maybe_unused]] const auto& part : p)
+        //     ++num_parts;
 
-    bool parseArgs_wildcard(const std::filesystem::path& p) override
-    {
-        string s = p.string();
-        if (!bra::fs::wildcard_expand(p, m_files))
-        {
-            bra_log_error("unable to expand wildcard: %s", s.c_str());
-            return false;
-        }
+        // Match exactly the directory:
+        // (TODO: this must be removed as it is not possible to know if it is expanded by the shell
+        //        or it is a user input, user must add the wildcard herself)
+        // append `/*` to include all files in it (non-recursive).
+
+        // if (num_parts == 1)    // if recursive ...
+        // {
+        // if (!bra::fs::search_wildcard(p / "*", m_files))
+        // {
+        //     bra_log_error("path not valid: %s", p.string().c_str());
+        //     return false;
+        // }
+        // }
         return true;
     };
 

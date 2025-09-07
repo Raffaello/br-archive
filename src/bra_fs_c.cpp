@@ -3,7 +3,7 @@
 
 namespace fs = std::filesystem;
 
-extern "C" bool bra_fs_dir_exists(const char* path)
+bool bra_fs_dir_exists(const char* path)
 {
     if (path == nullptr)
         return false;
@@ -12,7 +12,7 @@ extern "C" bool bra_fs_dir_exists(const char* path)
     return bra::fs::dir_exists(p);
 }
 
-extern "C" bool bra_fs_dir_make(const char* path)
+bool bra_fs_dir_make(const char* path)
 {
     if (path == nullptr)
         return false;
@@ -21,7 +21,7 @@ extern "C" bool bra_fs_dir_make(const char* path)
     return bra::fs::dir_make(p);
 }
 
-extern "C" bool bra_fs_file_exists(const char* path)
+bool bra_fs_file_exists(const char* path)
 {
     if (path == nullptr)
         return false;
@@ -30,7 +30,7 @@ extern "C" bool bra_fs_file_exists(const char* path)
     return bra::fs::file_exists(p);
 }
 
-extern "C" bool bra_fs_file_attributes(const char* path, bra_attr_t* attr)
+bool bra_fs_file_attributes(const char* path, bra_attr_t* attr)
 {
     if (attr == nullptr || path == nullptr)
         return false;
@@ -44,7 +44,7 @@ extern "C" bool bra_fs_file_attributes(const char* path, bra_attr_t* attr)
     return true;
 }
 
-extern "C" bool bra_fs_file_size(const char* path, uint64_t* file_size)
+bool bra_fs_file_size(const char* path, uint64_t* file_size)
 {
     if (file_size == nullptr || path == nullptr)
         return false;
@@ -58,7 +58,7 @@ extern "C" bool bra_fs_file_size(const char* path, uint64_t* file_size)
     return true;
 }
 
-extern "C" bool bra_fs_file_exists_ask_overwrite(const char* path, bra_fs_overwrite_policy_e* overwrite_policy, const bool single_overwrite)
+bool bra_fs_file_exists_ask_overwrite(const char* path, bra_fs_overwrite_policy_e* overwrite_policy, const bool single_overwrite)
 {
     if (path == nullptr || overwrite_policy == nullptr)
         return false;

@@ -44,6 +44,8 @@
         return 1;                                                                 \
     }
 
+#define ASSERT_FALSE(x) ASSERT_TRUE(!(x))
+
 #define ASSERT_EQ(x, y)                                                        \
     {                                                                          \
         auto res_x = x;                                                        \

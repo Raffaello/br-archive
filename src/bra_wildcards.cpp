@@ -11,7 +11,7 @@ using namespace std;
 namespace bra::wildcards
 {
 
-bool is_wildcard(const std::filesystem::path& path)
+bool is_wildcard(const std::filesystem::path& path) noexcept
 {
     if (path.empty())
         return false;
@@ -19,7 +19,7 @@ bool is_wildcard(const std::filesystem::path& path)
     return path.string().find_first_of("?*") != string::npos;
 }
 
-std::filesystem::path wildcard_extract_dir(std::filesystem::path& path_wildcard)
+std::filesystem::path wildcard_extract_dir(std::filesystem::path& path_wildcard) noexcept
 {
     string       dir;
     string       wildcard = path_wildcard.generic_string();
@@ -50,7 +50,7 @@ std::filesystem::path wildcard_extract_dir(std::filesystem::path& path_wildcard)
     return fs::path(dir);
 }
 
-std::string wildcard_to_regexp(std::string_view wildcard)
+std::string wildcard_to_regexp(std::string_view wildcard) noexcept
 {
     std::string regex;
     regex.reserve(wildcard.size() * 2);

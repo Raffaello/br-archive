@@ -22,7 +22,7 @@ using namespace std;
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-bool try_sanitize(std::filesystem::path& path)
+bool try_sanitize(std::filesystem::path& path) noexcept
 {
     error_code ec;
     auto       err = [&path, &ec]() {
@@ -59,7 +59,7 @@ bool try_sanitize(std::filesystem::path& path)
     return !path.empty();
 }
 
-bool dir_exists(const std::filesystem::path& path)
+bool dir_exists(const std::filesystem::path& path) noexcept
 {
     error_code ec;
     const auto err = [&path, &ec]() {
@@ -81,7 +81,7 @@ bool dir_exists(const std::filesystem::path& path)
     return isDir;
 }
 
-bool dir_make(const std::filesystem::path& path)
+bool dir_make(const std::filesystem::path& path) noexcept
 {
     error_code ec;
 
@@ -101,7 +101,7 @@ bool dir_make(const std::filesystem::path& path)
     return created;
 }
 
-std::filesystem::path filename_archive_adjust(const std::filesystem::path& path)
+std::filesystem::path filename_archive_adjust(const std::filesystem::path& path) noexcept
 {
     fs::path p = path;
 
@@ -111,7 +111,7 @@ std::filesystem::path filename_archive_adjust(const std::filesystem::path& path)
     return p;
 }
 
-std::filesystem::path filename_sfx_adjust(const std::filesystem::path& path, const bool tmp)
+std::filesystem::path filename_sfx_adjust(const std::filesystem::path& path, const bool tmp) noexcept
 {
     fs::path       p;
     const fs::path sfx_ext = tmp ? BRA_SFX_TMP_FILE_EXT : BRA_SFX_FILE_EXT;
@@ -130,7 +130,7 @@ std::filesystem::path filename_sfx_adjust(const std::filesystem::path& path, con
     return p;
 }
 
-bool file_exists(const std::filesystem::path& path)
+bool file_exists(const std::filesystem::path& path) noexcept
 {
     error_code ec;
     const auto err = [&path, &ec]() {
@@ -152,7 +152,7 @@ bool file_exists(const std::filesystem::path& path)
     return isRegFile;
 }
 
-std::optional<bool> file_exists_ask_overwrite(const std::filesystem::path& path, bra_fs_overwrite_policy_e& overwrite_policy, const bool single_overwrite)
+std::optional<bool> file_exists_ask_overwrite(const std::filesystem::path& path, bra_fs_overwrite_policy_e& overwrite_policy, const bool single_overwrite) noexcept
 {
     if (!file_exists(path))
         return nullopt;
@@ -213,7 +213,7 @@ std::optional<bool> file_exists_ask_overwrite(const std::filesystem::path& path,
     return c == 'y';
 }
 
-std::optional<bra_attr_t> file_attributes(const std::filesystem::path& path)
+std::optional<bra_attr_t> file_attributes(const std::filesystem::path& path) noexcept
 {
     std::error_code ec;
     auto            err = [&path, &ec]() {
@@ -231,7 +231,7 @@ std::optional<bra_attr_t> file_attributes(const std::filesystem::path& path)
     return err();
 }
 
-std::optional<uint64_t> file_size(const std::filesystem::path& path)
+std::optional<uint64_t> file_size(const std::filesystem::path& path) noexcept
 {
     std::error_code ec;
     auto            err = [&path, &ec]() {
@@ -255,7 +255,7 @@ std::optional<uint64_t> file_size(const std::filesystem::path& path)
     return err();
 }
 
-bool file_remove(const std::filesystem::path& path)
+bool file_remove(const std::filesystem::path& path) noexcept
 {
     if (!file_exists(path))
         return true;
@@ -272,7 +272,7 @@ bool file_remove(const std::filesystem::path& path)
     return true;
 }
 
-bool file_permissions(const std::filesystem::path& path, const std::filesystem::perms permissions, const std::filesystem::perm_options perm_options)
+bool file_permissions(const std::filesystem::path& path, const std::filesystem::perms permissions, const std::filesystem::perm_options perm_options) noexcept
 {
     if (!file_exists(path))
         return false;
@@ -289,7 +289,7 @@ bool file_permissions(const std::filesystem::path& path, const std::filesystem::
     return true;
 }
 
-bool file_set_add_dir(std::set<std::filesystem::path>& files)
+bool file_set_add_dir(std::set<std::filesystem::path>& files) noexcept
 {
     std::list<fs::path> listFiles(files.begin(), files.end());
     files.clear();
@@ -344,7 +344,7 @@ bool file_set_add_dir(std::set<std::filesystem::path>& files)
     return true;
 }
 
-bool search(const std::filesystem::path& dir, const std::string& pattern, std::list<std::filesystem::path>& out_files)
+bool search(const std::filesystem::path& dir, const std::string& pattern, std::list<std::filesystem::path>& out_files) noexcept
 {
     try
     {
@@ -401,7 +401,7 @@ bool search(const std::filesystem::path& dir, const std::string& pattern, std::l
     }
 }
 
-bool search_wildcard(const std::filesystem::path& wildcard_path, std::set<std::filesystem::path>& out_files)
+bool search_wildcard(const std::filesystem::path& wildcard_path, std::set<std::filesystem::path>& out_files) noexcept
 {
     fs::path p = wildcard_path.generic_string();
 

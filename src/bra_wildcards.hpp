@@ -4,8 +4,14 @@
 #error "bra_wildcards.hpp must be included from a C++ translation unit."
 #endif
 
+#if __cplusplus < 201703L
+#error "requires C++17 or later (std::filesystem)."
+#endif
+
+
 #include <filesystem>
 #include <string_view>
+#include <string>
 
 namespace bra::wildcards
 {
@@ -18,7 +24,7 @@ namespace bra::wildcards
  * @return true
  * @return false
  */
-[[nodiscard]] bool is_wildcard(const std::filesystem::path& path);
+[[nodiscard]] bool is_wildcard(const std::filesystem::path& path) noexcept;
 
 /**
  * @brief Extract the directory from a wildcard if it contains any and modify accordingly the @p path_wildcard.
@@ -34,7 +40,7 @@ namespace bra::wildcards
  * @param path_wildcard this is changed stripping the dir. If it wasn't a wildcard it will be empty
  * @return std::filesystem::path
  */
-[[nodiscard]] std::filesystem::path wildcard_extract_dir(std::filesystem::path& path_wildcard);
+[[nodiscard]] std::filesystem::path wildcard_extract_dir(std::filesystem::path& path_wildcard) noexcept;
 
 /**
  * @brief Convert the wildcard to a regular expression for internal use.
@@ -44,6 +50,6 @@ namespace bra::wildcards
  * @param wildcard
  * @return std::string
  */
-[[nodiscard]] std::string wildcard_to_regexp(std::string_view wildcard);
+[[nodiscard]] std::string wildcard_to_regexp(std::string_view wildcard) noexcept;
 
 }    // namespace bra::wildcards

@@ -31,14 +31,14 @@ private:
     Bra(Bra&&)                 = delete;
     Bra& operator=(Bra&&)      = delete;
 
-    uint32_t                               m_tot_files;
+    bra_io_file_t                          m_f2{};
     std::set<fs::path>                     m_files;
     std::map<fs::path, std::set<fs::path>> m_tree;
     fs::path                               m_out_filename;
+    uint32_t                               m_tot_files = 0;
     bool                                   m_sfx       = false;
     bool                                   m_recursive = false;
 
-    bra_io_file_t m_f2{};
 
 protected:
     void help_usage() const override
@@ -61,7 +61,8 @@ protected:
     {
         bra_log_printf("--sfx        | -s : generate a self-extracting archive\n");
         bra_log_printf("--recursive  | -r : recursively scan files and directories. \n");
-        bra_log_printf("--update     | -u : update an existing archive with missing files from input.\n");
+        // bra_log_printf("--update     | -u : update an existing archive with missing files from input.\n");
+        // bra_log_printf("--test       | -t : test an existing archive.\n");
         bra_log_printf("--out        | -o : <output_filename> it takes the path of the output file.\n");
         bra_log_printf("                    If the extension %s is missing it will be automatically added.\n", BRA_FILE_EXT);
     };

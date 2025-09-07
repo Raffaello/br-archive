@@ -313,13 +313,15 @@ bool file_set_add_dirs(std::set<std::filesystem::path>& files) noexcept
         if (!dir_exists(f) && !file_exists(f))
         {
             bra_log_error("%s is neither a regular file nor a directory", f.string().c_str());
-            continue;
+
+            return false;
         }
 
         fs::path f_ = f;
         if (!bra::fs::try_sanitize(f_))
         {
             bra_log_error("path not valid: %s - (%s)", f.string().c_str(), f_.string().c_str());
+
             return false;
         }
 
@@ -373,7 +375,7 @@ bool search(const std::filesystem::path& dir, const std::string& pattern, std::l
                     continue;
 
                 bra_log_debug("Matched dir: %s", filename.c_str());
-
+                out_files.push_back(ep);
                 if (!search(ep, pattern, out_files, recursive))
                     return false;
             }

@@ -59,7 +59,7 @@ protected:
     void help_options() const override
     {
         bra_log_printf("--sfx        | -s : generate a self-extracting archive\n");
-        bra_log_printf(" --recursive | -r : recursively scan files and directories. \n");
+        bra_log_printf("--recursive  | -r : recursively scan files and directories. \n");
         bra_log_printf("--update     | -u : update an existing archive with missing files from input.\n");
         bra_log_printf("--out        | -o : <output_filename> it takes the path of the output file.\n");
         bra_log_printf("                    If the extension %s is missing it will be automatically added.\n", BRA_FILE_EXT);
@@ -140,10 +140,12 @@ protected:
         if (!bra::fs::file_set_add_dirs(m_files))
             return false;
 
+#if 0
 #ifndef NDEBUG
         bra_log_debug("Detected files:");
         for (const auto& file : m_files)
             bra_log_debug("- %s", file.string().c_str());
+#endif
 #endif
 
         // TODO: Here could also start encoding the filenames
@@ -221,14 +223,14 @@ protected:
         bra_log_debug("Built Tree:");
         for (const auto& [dir, files] : m_tree)
         {
+            if (m_recursive)
+                bra_log_debug("- [%s]", dir.string().c_str());
             for (const auto& file : files)
                 bra_log_debug("- [%s]/%s", dir.string().c_str(), file.string().c_str());
         }
 #endif
 
-        bra_log_debug("TREE SIZE: %zu -- %zu", m_tree.size(), m_files.size());
         m_files.clear();
-
         return true;
     };
 

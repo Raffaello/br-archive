@@ -63,6 +63,23 @@ TEST(test_bra_fs_search_wildcard)
     return 0;
 }
 
+TEST(test_bra_fs_search_wildcard_recursive)
+{
+    std::set<fs::path>    files;
+    constexpr const char* gitkeep = "dir1/dir1b/.gitkeep";
+
+    if (fs::exists(gitkeep))
+        fs::remove(gitkeep);
+
+    ASSERT_TRUE(bra::fs::search_wildcard("dir1/*", files, true));
+    ASSERT_TRUE(files.count("dir1/dir1a/file1a") == 1);
+    ASSERT_TRUE(files.count("dir1/dir1b") == 1);
+    ASSERT_TRUE(files.count("dir1/file1") == 1);
+    ASSERT_TRUE(files.count("dir1/file2") == 1);
+
+    return 0;
+}
+
 TEST(test_bra_fs_file_exists)
 {
     ASSERT_TRUE(bra::fs::file_exists("test.txt"));
@@ -165,6 +182,7 @@ int main(int argc, char* argv[])
 {
     return test_main(argc, argv, {
                                      {TEST_FUNC(test_bra_fs_search_wildcard)},
+                                     {TEST_FUNC(test_bra_fs_search_wildcard_recursive)},
                                      {TEST_FUNC(test_bra_fs_file_exists)},
                                      {TEST_FUNC(test_bra_fs_dir_exists)},
                                      {TEST_FUNC(test_bra_fs_dir_make)},

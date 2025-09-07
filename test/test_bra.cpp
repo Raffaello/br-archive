@@ -101,6 +101,37 @@ TEST(test_bra_unbra)
     return 0;
 }
 
+TEST(test_bra_unbra_list_recursive)
+{
+    constexpr const char* gitkeep = "dir1/dir1b/.gitkeep";
+
+    const std::string bra      = CMD_PREFIX + "bra -r";
+    const std::string unbra    = CMD_PREFIX + "unbra -l";
+    const std::string in_file  = "dir1";
+    const std::string out_file = "./test.txt.BRa";
+    // const std::string exp_file = "./test.txt.exp";
+
+    if (fs::exists(gitkeep))
+        fs::remove(gitkeep);
+
+    if (fs::exists(out_file))
+        fs::remove(out_file);
+
+    // if (fs::exists(exp_file))
+    //     fs::remove(exp_file);
+
+    ASSERT_EQ(call_system(bra + " -o " + out_file + " " + in_file), 0);
+    ASSERT_TRUE(fs::exists(out_file));
+
+    // fs::rename(in_file, exp_file);
+    // ASSERT_FALSE(fs::exists(in_file));
+    ASSERT_EQ(call_system(unbra + " " + out_file), 0);
+    // ASSERT_TRUE(fs::exists(in_file));
+    // ASSERT_TRUE(AreFilesContentEquals(in_file, exp_file));
+
+    return 0;
+}
+
 int _test_bra_dir_no_wildcard(const fs::path& input)
 {
     const std::string bra      = CMD_PREFIX + "bra";
@@ -243,6 +274,7 @@ int main(int argc, char* argv[])
         {TEST_FUNC(test_bra_help_ret_code)},
         {TEST_FUNC(test_bra_no_output_file)},
         {TEST_FUNC(test_bra_unbra)},
+        {TEST_FUNC(test_bra_unbra_list_recursive)},
         {TEST_FUNC(test_bra_dir_no_wildcard)},
         {TEST_FUNC(test_bra_wildcard_dir_unbra_list)},
         {TEST_FUNC(test_bra_sfx_0)},

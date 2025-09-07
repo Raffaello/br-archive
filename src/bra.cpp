@@ -353,33 +353,20 @@ protected:
         if (m_sfx)
         {
             if (!bra_io_write_footer(&m_f, m_header_offset))
-            {
-                bra_io_file_write_error(&m_f);
                 return 2;
-            }
 
             bra_io_close(&m_f);
 
-            error_code ec;
-            fs::rename(out_fn, sfx_path, ec);
-            if (ec)
-            {
-                bra_log_error("unable to rename %s to %s", out_fn.c_str(), sfx_path.string().c_str());
-                return 2;
-            }
+            if (!bra::fs::file_rename(out_fn, sfx_path))
+                goto BRA_SFX_IO_ERROR;
 
             // add executable permission (on UNIX)
-            if (!bra::fs::file_permissions(sfx_path,
-                                           fs::perms::owner_exec | fs::perms::owner_read | fs::perms::owner_write |
-                                               fs::perms::group_exec | fs::perms::group_read |
-                                               fs::perms::others_exec | fs::perms::others_read,
-                                           fs::perm_options::add))
-            {
+            if (!bra::fs::file_permissions(sfx_path, fs::perms::owner_exec, fs::perm_options::add))
                 bra_log_warn("unable to set executable bit on %s", sfx_path.string().c_str());
-            }
         }
+        else
+            bra_io_close(&m_f);
 
-        bra_io_close(&m_f);
         return 0;
     }
 

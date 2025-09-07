@@ -128,6 +128,16 @@ namespace bra::fs
 [[nodiscard]] bool file_remove(const std::filesystem::path& path) noexcept;
 
 /**
+ * @brief This enforce a file rename. if the @p to file exists will be removed or overwritten.
+ *
+ * @param from
+ * @param to
+ * @return true  On success.
+ * @return false On error
+ */
+[[nodiscard]] bool file_rename(const std::filesystem::path& from, const std::filesystem::path& to) noexcept;
+
+/**
  * @brief set the @p permissions with options @p perm_options on the file @p path.
  *
  * @param path

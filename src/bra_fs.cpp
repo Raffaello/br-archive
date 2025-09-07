@@ -276,6 +276,34 @@ bool file_remove(const std::filesystem::path& path) noexcept
     return true;
 }
 
+bool file_rename(const std::filesystem::path& from, const std::filesystem::path& to) noexcept
+{
+    error_code ec;
+
+    // if erroring is most likely not present,
+    // if it is for something else, will fail again later.
+    // so no need to check ec.
+    fs::remove(to, ec);
+    fs::rename(from, to, ec);
+    if (ec)
+    {
+        // Fallback: copy then remove source
+        ec.clear();
+        fs::copy_file(from, to, fs::copy_options::overwrite_existing, ec);
+        if (ec)
+        {
+            bra_log_error("unable to rename %s to %s (%s)", from.string().c_str(), to.string().c_str(), ec.message().c_str());
+            return false;
+        }
+
+        fs::remove(from, ec);    // best-effort cleanup
+        if (ec)
+            bra_log_warn("unable to clean-up %s  (%s)", from.string().c_str(), ec.message().c_str());
+    }
+
+    return true;
+}
+
 bool file_permissions(const std::filesystem::path& path, const std::filesystem::perms permissions, const std::filesystem::perm_options perm_options) noexcept
 {
     if (!file_exists(path))

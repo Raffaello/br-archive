@@ -32,6 +32,14 @@ static inline uint64_t bra_min(const uint64_t a, const uint64_t b)
     return a < b ? a : b;
 }
 
+static inline void bra_print_string_max_length(const char* buf, const int buf_length, const int max_length)
+{
+    if (buf_length > max_length)
+        bra_log_printf("%.*s...", max_length - 3, buf);
+    else
+        bra_log_printf("%*.*s", -max_length, buf_length, buf);
+}
+
 static inline bool bra_validate_meta_filename(const bra_meta_file_t* mf)
 {
     // sanitize output path: reject absolute or parent traversal
@@ -131,7 +139,11 @@ bool bra_print_meta_file(bra_io_file_t* f)
     const uint64_t ds   = mf.data_size;
     const char     attr = bra_format_meta_attributes(mf.attributes);
     bra_format_bytes(mf.data_size, bytes);
-    bra_log_printf("|   %c  | %s | " BRA_PRINTF_FMT_FILENAME "|\n", attr, bytes, mf.name);
+
+    bra_log_printf("|   %c  | %s | ", attr, bytes);
+    bra_print_string_max_length(mf.name, mf.name_size, BRA_PRINTF_FMT_FILENAME_MAX_LENGTH);
+    bra_log_printf("|\n");
+
     bra_meta_file_free(&mf);
     // skip data content
     if (!bra_io_skip_data(f, ds))
@@ -581,14 +593,19 @@ bool bra_io_encode_and_write_to_disk(bra_io_file_t* f, const char* fn)
     switch (attributes)
     {
     case BRA_ATTR_DIR:
-        bra_log_printf("Archiving dir :  " BRA_PRINTF_FMT_FILENAME, fn);
+        // bra_log_printf("Archiving dir :  " BRA_PRINTF_FMT_FILENAME, fn);
+        bra_log_printf("Archiving dir :  ");
         break;
     case BRA_ATTR_FILE:
-        bra_log_printf("Archiving file:  " BRA_PRINTF_FMT_FILENAME, fn);
+        // bra_log_printf("Archiving file:  " BRA_PRINTF_FMT_FILENAME, fn);
+        bra_log_printf("Archiving file:  ");
+
         break;
     default:
         goto BRA_IO_WRITE_CLOSE_ERROR;
     }
+
+    bra_print_string_max_length(fn, strlen(fn), BRA_PRINTF_FMT_FILENAME_MAX_LENGTH);
 
     // 2. file name length
     const size_t fn_len = strnlen(fn, BRA_MAX_PATH_LENGTH);

@@ -355,7 +355,7 @@ bool search(const std::filesystem::path& dir, const std::string& pattern, std::l
         const std::regex r(pattern);
 
         // TODO: add a cli flag for fs::directory_options::skip_permission_denied
-        // TODO: add a cli flag for fs::directory_options::follow_directory_symlink
+        // TODO: add a cli flag for fs::directory_options::follow_directory_symlink (to replace symlink with the real file)
         for (const auto& entry : fs::directory_iterator(dir))
         {
             fs::path   ep     = entry.path();
@@ -370,11 +370,14 @@ bool search(const std::filesystem::path& dir, const std::string& pattern, std::l
             if (is_dir)
             {
                 // TODO: it might be better to use recursive_directory_iterator instead
-                //       of search being recursive itself.
+                //       of bra::fs::search being recursive itself.
                 if (!recursive)
+                {
+                    bra_log_info("Skip directory: %s", filename.c_str());
                     continue;
+                }
 
-                bra_log_debug("Matched dir: %s", filename.c_str());
+                bra_log_debug("Matched dir: %s", ep.string().c_str());
                 out_files.push_back(ep);
                 if (!search(ep, pattern, out_files, recursive))
                     return false;

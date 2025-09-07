@@ -106,7 +106,7 @@ protected:
         return true;
     };
 
-    bool parseArgs_dir([[maybe_unused]] const std::filesystem::path& p) override
+    bool parseArgs_dir(const std::filesystem::path& p) override
     {
         if (m_recursive)
         {
@@ -232,6 +232,23 @@ protected:
         return true;
     };
 
+    bool run_encode(std::filesystem::path& p)
+    {
+        const auto path = p;
+        // no need to sanitize it again, but it won't hurt neither
+        if (!bra::fs::try_sanitize(p))
+        {
+            bra_log_error("invalid path: %s", path.string().c_str());
+            return false;
+        }
+
+        const string fn = p.generic_string();
+        if (!bra_io_encode_and_write_to_disk(&m_f, fn.c_str()))
+            return false;
+
+        return true;
+    }
+
     int run_prog() override
     {
         string out_fn = m_out_filename.generic_string();
@@ -245,60 +262,37 @@ protected:
             return 1;
 
         uint32_t written_num_files = 0;
-        // for (const auto& fn_ : m_files)
         for (const auto& [dir, files] : m_tree)
         {
-            // write dir first
-            fs::path p = dir;
+            // write dir first...
 
 // TODO: write Progress bar?
 #if 0
             bra_log_printf("[%u/%u] ", written_num_files, static_cast<uint32_t>(m_tot_files)));
 #endif
-            bra_log_debug("DIR: %s\n", p.string().c_str());
-            if (!p.empty())
+            if (!dir.empty())
             {
-                // no need to sanitize it again, but it won't hurt neither
-                if (!bra::fs::try_sanitize(p))
-                {
-                    bra_log_error("invalid path: %s", dir.string().c_str());
-                    return 1;
-                }
+                fs::path p = dir;
 
-                const string fn = p.generic_string();
-                if (!bra_io_encode_and_write_to_disk(&m_f, fn.c_str()))
-                    return 1;
-                else
-                    ++written_num_files;
+                if (!run_encode(p))
+                    return 3;
+
+                ++written_num_files;
             }
 
-
-            // then all its files...
+            // ...then all its files
             for (const auto& fn_ : files)
             {
-                fs::path p;
-                if (!dir.empty())
-                    p = dir / fn_;
-                else
-                    p = fn_;
+                fs::path p = dir / fn_;
 
-                bra_log_debug("File: %s\n", p.string().c_str());
 // TODO: write Progress bar?
 #if 0
             bra_log_printf("[%u/%u] ", written_num_files, static_cast<uint32_t>(m_tot_files)));
 #endif
-                // no need to sanitize it again, but it won't hurt neither
-                if (!bra::fs::try_sanitize(p))
-                {
-                    bra_log_error("invalid path: %s", fn_.string().c_str());
-                    return 1;
-                }
+                if (!run_encode(p))
+                    return 3;
 
-                const string fn = p.generic_string();
-                if (!bra_io_encode_and_write_to_disk(&m_f, fn.c_str()))
-                    return 1;
-                else
-                    ++written_num_files;
+                ++written_num_files;
             }
         }
 

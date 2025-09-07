@@ -384,8 +384,7 @@ protected:
     }
 
 public:
-    Bra() = default;
-
+    Bra()          = default;
     virtual ~Bra() = default;
 };
 

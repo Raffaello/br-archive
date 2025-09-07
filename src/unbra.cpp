@@ -116,8 +116,11 @@ protected:
         bra_log_printf("%s contains num files: %u\n", BRA_NAME, bh.num_files);
         if (m_listContent)
         {
-            bra_log_printf("| ATTR |   SIZE    | FILENAME                                |\n");
-            bra_log_printf("|------|-----------|-----------------------------------------|\n");
+            bra_log_printf("| ATTR |   SIZE    | " BRA_PRINTF_FMT_FILENAME "|\n", "FILENAME");
+            bra_log_printf("|------|-----------|-");
+            for (int i = 0; i < BRA_PRINTF_FMT_FILENAME_MAX_LENGTH; i++)
+                bra_log_printf("-");
+            bra_log_printf("|\n");
             for (uint32_t i = 0; i < bh.num_files; i++)
             {
                 if (!bra_print_meta_file(&m_f))

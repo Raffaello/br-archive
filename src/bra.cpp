@@ -29,7 +29,6 @@ private:
     Bra(Bra&&)                 = delete;
     Bra& operator=(Bra&&)      = delete;
 
-    bra_io_file_t                          m_f2{};
     std::set<fs::path>                     m_files;
     std::map<fs::path, std::set<fs::path>> m_tree;
     fs::path                               m_out_filename;
@@ -353,46 +352,6 @@ protected:
         // TODO: doing an SFX should be in the lib_bra
         if (m_sfx)
         {
-
-            // bra_log_printf("creating Self-extracting archive %s...", sfx_path.string().c_str());
-
-            // if (!fs::copy_file(BRA_SFX_FILENAME, sfx_path, fs::copy_options::overwrite_existing))
-            // {
-            // BRA_SFX_IO_ERROR:
-            //     bra_log_error("unable to create a %s-SFX file", BRA_NAME);
-            //     return 2;
-            // }
-
-            // if (!bra_io_open(&m_f, sfx_path.string().c_str(), "rb+"))
-            //     goto BRA_SFX_IO_ERROR;
-
-            // if (!bra_io_seek(&m_f, 0, SEEK_END))
-            // {
-            //     bra_io_file_seek_error(&m_f);
-            //     return 2;
-            // }
-
-            // // save the start of the payload for later...
-            // const int64_t header_offset = bra_io_tell(&m_f);
-            // if (header_offset < 0L)
-            // {
-            //     bra_io_file_error(&m_f, "tell");
-            //     return 2;
-            // }
-
-            // append bra file
-            // if (!bra_io_open(&m_f2, out_fn.c_str(), "rb"))
-            //     return 2;
-
-            // auto file_size = bra::fs::file_size(out_fn);
-            // if (!file_size)
-            //     return 2;
-
-            // if (!bra_io_copy_file_chunks(&m_f, &m_f2, *file_size))
-            //     return 2;
-
-            // bra_io_close(&m_f2);
-            // write footer
             if (!bra_io_write_footer(&m_f, m_header_offset))
             {
                 bra_io_file_write_error(&m_f);
@@ -418,13 +377,6 @@ protected:
             {
                 bra_log_warn("unable to set executable bit on %s", sfx_path.string().c_str());
             }
-
-            // remove TMP SFX FILE
-            // TODO: better starting with the SFX file then append the file
-            //       it will save disk space as in this way requires twice the archive size
-            //       to do an SFX
-            // if (!bra::fs::file_remove(m_out_filename))
-            //     bra_log_warn("unable to delete SFX_TMP_FILE");
         }
 
         bra_io_close(&m_f);
@@ -434,10 +386,7 @@ protected:
 public:
     Bra() = default;
 
-    virtual ~Bra()
-    {
-        bra_io_close(&m_f2);
-    }
+    virtual ~Bra() = default;
 };
 
 /////////////////////////////////////////////////////////////////////////

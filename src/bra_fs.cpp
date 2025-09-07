@@ -299,19 +299,13 @@ bool file_set_add_dir(std::set<std::filesystem::path>& files) noexcept
     while (!listFiles.empty())
     {
         // NOTE: as it is a set i can just insert multiple time the directory
-        //       and when iterate later it, resolve it resolve on it.
+        //       and when iterate later it, resolve it on it.
         //       need to keep track of the last directory entry to remove from the file.
 
         auto f = listFiles.front();
         listFiles.pop_front();
 
-        if (dir_exists(f))
-        {
-            // TODO: only if recursive is not enabled
-            //       recursive will also store empty directories.
-            bra_log_debug("ignoring directory (non-recursive mode): %s", f.string().c_str());
-        }
-        else if (!file_exists(f))
+        if (!dir_exists(f) && !file_exists(f))
         {
             bra_log_error("%s is neither a regular file nor a directory", f.string().c_str());
             continue;
@@ -347,7 +341,7 @@ bool file_set_add_dir(std::set<std::filesystem::path>& files) noexcept
     return true;
 }
 
-bool search(const std::filesystem::path& dir, const std::string& pattern, std::list<std::filesystem::path>& out_files) noexcept
+bool search(const std::filesystem::path& dir, const std::string& pattern, std::list<std::filesystem::path>& out_files, const bool recursive) noexcept
 {
     try
     {
@@ -369,7 +363,6 @@ bool search(const std::filesystem::path& dir, const std::string& pattern, std::l
 
             if (is_dir)
             {
-                // bra_log_debug("Matched dir: %s", filename.c_str());
 
                 // TODO: if recursive...
                 //       actually would be better to use recursive_directory_iterator instead
@@ -377,7 +370,14 @@ bool search(const std::filesystem::path& dir, const std::string& pattern, std::l
                 // if(recursive)
                 // const std::string p = pattern.size() > ep.string().size() ? pattern.substr(ep.string().size()) : pattern;
                 // res                 &= search(ep, p);
-                continue;
+
+                if (!recursive)
+                    continue;
+
+                bra_log_debug("Matched dir: %s", filename.c_str());
+
+                if (!search(ep, pattern, out_files, recursive))
+                    return false;
             }
             else
             {
@@ -406,7 +406,7 @@ bool search(const std::filesystem::path& dir, const std::string& pattern, std::l
     }
 }
 
-bool search_wildcard(const std::filesystem::path& wildcard_path, std::set<std::filesystem::path>& out_files) noexcept
+bool search_wildcard(const std::filesystem::path& wildcard_path, std::set<std::filesystem::path>& out_files, const bool recursive) noexcept
 {
     fs::path p = wildcard_path.generic_string();
 
@@ -420,7 +420,7 @@ bool search_wildcard(const std::filesystem::path& wildcard_path, std::set<std::f
     const string   pattern = bra::wildcards::wildcard_to_regexp(p.string());
 
     std::list<fs::path> files;
-    if (!bra::fs::search(dir, pattern, files))
+    if (!bra::fs::search(dir, pattern, files, recursive))
     {
         bra_log_error("search failed in %s for wildcard %s", dir.string().c_str(), p.string().c_str());
         return false;

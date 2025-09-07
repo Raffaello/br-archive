@@ -161,10 +161,11 @@ namespace bra::fs
  * @param dir
  * @param pattern Regular expression pattern (not a wildcard pattern)
  * @param out_files List to append matching file paths to
+ * @param recursive
  * @return true if successful
  * @return false otherwise
  */
-[[nodiscard]] bool search(const std::filesystem::path& dir, const std::string& pattern, std::list<std::filesystem::path>& out_files) noexcept;
+[[nodiscard]] bool search(const std::filesystem::path& dir, const std::string& pattern, std::list<std::filesystem::path>& out_files, const bool recursive) noexcept;
 
 /**
  * @brief Expand the given @p wildcard_path and store the resulting paths into @p out_files.
@@ -172,9 +173,10 @@ namespace bra::fs
  *
  * @param wildcard_path
  * @param out_files
+ * @param recursive
  * @return true on success and add the results to @p out_files
  * @return false on error (unsupported wildcard, sanitization failure, or search failure).
  */
-[[nodiscard]] bool search_wildcard(const std::filesystem::path& wildcard_path, std::set<std::filesystem::path>& out_files) noexcept;
+[[nodiscard]] bool search_wildcard(const std::filesystem::path& wildcard_path, std::set<std::filesystem::path>& out_files, const bool recursive) noexcept;
 
 }    // namespace bra::fs

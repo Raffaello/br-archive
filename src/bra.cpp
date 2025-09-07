@@ -29,7 +29,8 @@ private:
 
     std::set<fs::path> m_files;
     fs::path           m_out_filename;
-    bool               m_sfx = false;
+    bool               m_sfx       = false;
+    bool               m_recursive = false;
 
     bra_io_file_t m_f2{};
 
@@ -77,6 +78,10 @@ protected:
         }
         else if (s == "--sfx" || s == "-s")
             m_sfx = true;
+        else if (s == "--recursive" || s == "-r")
+        {
+            m_recursive = true;
+        }
         else
             return nullopt;
 
@@ -118,6 +123,17 @@ protected:
         //     return false;
         // }
         // }
+        if (m_recursive)
+        {
+            if (!m_files.insert(p).second)
+                bra_log_warn("duplicate dir given in input: %s\n", p.string().c_str());
+
+            if (!bra::fs::search_wildcard(p / "*", m_files, m_recursive))
+            {
+                bra_log_error("path not valid: %s", p.string().c_str());
+                return false;
+            }
+        }
         return true;
     };
 

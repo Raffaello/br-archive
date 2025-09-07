@@ -19,43 +19,43 @@ TEST(test_bra_fs_search_wildcard)
 #endif
 
     // No wildcard: function should return false and not modify the set
-    ASSERT_FALSE(bra::fs::search_wildcard("bra", files));
+    ASSERT_FALSE(bra::fs::search_wildcard("bra", files, false));
     ASSERT_TRUE(files.empty());
     files.clear();
 
     // No wildcard: function should return false and not modify the set
     files.insert(fs::path("SENTINEL"));
     const auto before = files;
-    ASSERT_FALSE(bra::fs::search_wildcard("bra", files));
+    ASSERT_FALSE(bra::fs::search_wildcard("bra", files, false));
     ASSERT_TRUE(files == before);
     files.clear();
 
-    ASSERT_TRUE(bra::fs::search_wildcard("*", files));
+    ASSERT_TRUE(bra::fs::search_wildcard("*", files, false));
     ASSERT_TRUE(files.size() != 0);
     files.clear();
 
-    ASSERT_TRUE(bra::fs::search_wildcard("./*", files));
+    ASSERT_TRUE(bra::fs::search_wildcard("./*", files, false));
     ASSERT_TRUE(files.size() != 0);
     files.clear();
 
-    ASSERT_TRUE(bra::fs::search_wildcard("bra.*", files));
+    ASSERT_TRUE(bra::fs::search_wildcard("bra.*", files, false));
     ASSERT_EQ(files.size(), exp_files);
     files.clear();
 
-    ASSERT_TRUE(bra::fs::search_wildcard("./bra.*", files));
+    ASSERT_TRUE(bra::fs::search_wildcard("./bra.*", files, false));
     ASSERT_EQ(files.size(), exp_files);
     files.clear();
 
-    ASSERT_TRUE(bra::fs::search_wildcard("bra*", files));
+    ASSERT_TRUE(bra::fs::search_wildcard("bra*", files, false));
     ASSERT_EQ(files.size(), 2U);
     files.clear();
 
-    ASSERT_TRUE(bra::fs::search_wildcard("?ra.?fx", files));
+    ASSERT_TRUE(bra::fs::search_wildcard("?ra.?fx", files, false));
     ASSERT_EQ(files.size(), 1U);
     ASSERT_EQ(files.begin()->string(), "bra.sfx");
     files.clear();
 
-    ASSERT_TRUE(bra::fs::search_wildcard("dir?", files));
+    ASSERT_TRUE(bra::fs::search_wildcard("dir?", files, false));
     ASSERT_EQ(files.size(), 0U);    // matches 'dir1' but as it is a dir without recursion is not added.
     // ASSERT_EQ(files.begin()->string(), "dir1");
     files.clear();

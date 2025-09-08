@@ -89,39 +89,27 @@ private:
     BraSfx(BraSfx&&)                 = delete;
     BraSfx& operator=(BraSfx&&)      = delete;
 
-    bool m_listContent = false;
-
 protected:
     virtual void help_usage() const override
     {
         const fs::path p(m_argv0);
 
-        bra_log_printf("  %s [-l]     : to start un-archiving or listing.\n", p.filename().string().c_str());
+        bra_log_printf("  %s          : to start un-archiving or listing.\n", p.filename().string().c_str());
     };
 
     virtual void help_example() const override {
     };
 
     // same as unbra
-    virtual void help_options() const override
-    {
-        bra_log_printf("--list       | -l : view archive content.\n");
+    virtual void help_options() const override {
     };
 
     int parseArgs_minArgc() const override { return 1; }
 
     // same as unbra
-    std::optional<bool> parseArgs_option([[maybe_unused]] const int argc, [[maybe_unused]] const char* const argv[], [[maybe_unused]] int& i, const std::string& s) override
+    std::optional<bool> parseArgs_option([[maybe_unused]] const int argc, [[maybe_unused]] const char* const argv[], [[maybe_unused]] int& i, [[maybe_unused]] const std::string& s) override
     {
-        if (s == "--list" || s == "-l")
-        {
-            // list content
-            m_listContent = true;
-        }
-        else
-            return nullopt;
-
-        return true;
+        return nullopt;
     }
 
     void parseArgs_adjustFilename([[maybe_unused]] std::filesystem::path& p) override
@@ -176,36 +164,21 @@ protected:
             return 1;
 
         // extract payload, encoded data
-        // TODO: same as unbra, move to lib_bra as bra_io_printf_list_files or somethings
         bra_log_printf("%s contains num files: %u\n", BRA_NAME, bh.num_files);
-        if (m_listContent)
+        for (uint32_t i = 0; i < bh.num_files; i++)
         {
-            bra_log_printf("| ATTR |   SIZE    | " BRA_PRINTF_FMT_FILENAME "|\n", "FILENAME");
-            bra_log_printf("|------|-----------|-");
-            for (int i = 0; i < BRA_PRINTF_FMT_FILENAME_MAX_LENGTH; i++)
-                bra_log_printf("-");
-            bra_log_printf("|\n");
-            for (uint32_t i = 0; i < bh.num_files; i++)
-            {
-                if (!bra_print_meta_file(&m_f))
-                    return 2;
-            }
+            if (!bra_io_decode_and_write_to_disk(&m_f, &m_overwrite_policy))
+                return 1;
         }
-        else
-        {
-            for (uint32_t i = 0; i < bh.num_files; i++)
-            {
-                if (!bra_io_decode_and_write_to_disk(&m_f, &m_overwrite_policy))
-                    return 1;
-            }
-        }
+
 
         bra_io_close(&m_f);
         return 0;
     }
 
 public:
-    BraSfx()          = default;
+    BraSfx() = default;
+
     virtual ~BraSfx() = default;
 };
 

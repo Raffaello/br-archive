@@ -126,7 +126,7 @@ void bra_format_bytes(const size_t bytes, char buf[BRA_PRINTF_FMT_BYTES_BUF_SIZE
 #endif
 }
 
-bool bra_print_meta_file(bra_io_file_t* f)
+bool bra_io_print_meta_file(bra_io_file_t* f)
 {
     assert_bra_io_file_t(f);
 

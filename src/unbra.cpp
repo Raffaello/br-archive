@@ -128,7 +128,7 @@ protected:
             bra_log_printf("|\n");
             for (uint32_t i = 0; i < bh.num_files; i++)
             {
-                if (!bra_print_meta_file(&m_f))
+                if (!bra_io_print_meta_file(&m_f))
                     return 2;
             }
         }

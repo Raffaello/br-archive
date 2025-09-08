@@ -29,15 +29,16 @@ protected:
     {
         const fs::path p(m_argv0);
 
-        bra_log_printf("  %s          : to start un-archiving or listing.\n", p.filename().string().c_str());
+        bra_log_printf("  %s       : to start un-archiving.\n", p.filename().string().c_str());
     };
 
-    virtual void help_example() const override {
+    virtual void help_example() const override
+    {
+        bra_log_printf("  %s\n", fs::path(m_argv0).filename().string().c_str());
     };
 
     // same as unbra
-    virtual void help_options() const override {
-    };
+    virtual void help_options() const override {};
 
     int parseArgs_minArgc() const override { return 1; }
 

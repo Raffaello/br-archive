@@ -48,6 +48,7 @@ void BraProgram::help() const
     banner();
     bra_log_printf("Usage:\n");
     help_usage();
+    bra_log_printf("\n");
     bra_log_printf("Examples:\n");
     help_example();
     bra_log_printf("\n");

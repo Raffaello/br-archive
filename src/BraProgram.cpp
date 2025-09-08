@@ -132,13 +132,17 @@ std::optional<bool> BraProgram::parseArgs(const int argc, const char* const argv
             }
             else if (bra::fs::dir_exists(p))
             {
-                if (!parseArgs_dir(p))
+                if (auto d = parseArgs_dir(p); d && !*d)
                     return false;
+                else
+                    bra_log_warn("dir %s is not a valid input.", p.string().c_str());
             }
             else if (bra::wildcards::is_wildcard(p))
             {
-                if (!parseArgs_wildcards(p))
+                if (auto w = parseArgs_wildcards(p); w && !*w)
                     return false;
+                else
+                    bra_log_warn("wildcard %s is not a valid input.", p.string().c_str());
             }
             else
             {

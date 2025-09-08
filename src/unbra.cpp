@@ -73,8 +73,6 @@ protected:
     {
         // current file
         const auto path = p;
-        if (bra::fs::file_exists(p))
-            return;
 
         // file .BRa
         p = bra::fs::filename_archive_adjust(p);

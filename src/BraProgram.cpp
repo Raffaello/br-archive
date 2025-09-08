@@ -115,14 +115,14 @@ std::optional<bool> BraProgram::parseArgs(const int argc, const char* const argv
             // FS sub-section
             fs::path p = s;
 
+            parseArgs_adjustFilename(p);
+
             // check file path
             if (!bra::fs::try_sanitize(p))
             {
                 bra_log_error("path not valid: %s", p.string().c_str());
                 return false;
             }
-
-            parseArgs_adjustFilename(p);
 
             // check if it is file or a dir
             if (bra::fs::file_exists(p))

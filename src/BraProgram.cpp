@@ -151,6 +151,11 @@ std::optional<bool> BraProgram::parseArgs(const int argc, const char* const argv
 
 int BraProgram::run(const int argc, const char* const argv[])
 {
+#ifndef NDEBUG
+    for (int i = 1; i < argc; ++i)
+        bra_log_verbose("- %d. %s\n", i, argv[i]);
+#endif
+
     m_argv0 = argv[0];
     if (auto pa = parseArgs(argc, argv))
     {

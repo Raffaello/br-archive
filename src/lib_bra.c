@@ -218,6 +218,34 @@ void bra_io_close(bra_io_file_t* bf)
     }
 }
 
+bool bra_io_sfx_open(bra_io_file_t* f, const char* fn, const char* mode)
+{
+    if (!bra_io_open(f, fn, mode))
+        return false;
+
+    // check if it can have the footer
+    if (!bra_io_seek(f, 0, SEEK_END))
+    {
+        bra_io_file_seek_error(f);
+        return false;
+    }
+    if (bra_io_tell(f) < (int64_t) sizeof(bra_io_footer_t))
+    {
+        bra_log_error("%s-SFX module too small (missing footer placeholder): %s", BRA_NAME, f->fn);
+        bra_io_close(f);
+        return false;
+    }
+
+    // Position at the footer start
+    if (!bra_io_seek(f, -1L * (int64_t) sizeof(bra_io_footer_t), SEEK_END))
+    {
+        bra_io_file_seek_error(f);
+        return false;
+    }
+
+    return true;
+}
+
 bool bra_io_seek(bra_io_file_t* f, const int64_t offs, const int origin)
 {
     assert_bra_io_file_t(f);
@@ -306,7 +334,7 @@ bool bra_io_read_footer(bra_io_file_t* f, bra_io_footer_t* bf_out)
     }
 
     // check footer magic
-    if (bf_out->magic != BRA_FOOTER_MAGIC)
+    if (bf_out->magic != BRA_FOOTER_MAGIC || bf_out->header_offset <= 0)
     {
         bra_log_error("corrupted or not valid %s-SFX file: %s", BRA_NAME, f->fn);
         bra_io_close(f);
@@ -331,6 +359,35 @@ bool bra_io_write_footer(bra_io_file_t* f, const int64_t header_offset)
         bra_io_file_write_error(f);
         return false;
     }
+
+    return true;
+}
+
+bool bra_io_sfx_open_and_read_footer_header(const char* fn, bra_io_header_t* out_bh, bra_io_file_t* f)
+{
+    assert(fn != NULL);
+    assert(out_bh != NULL);
+    assert(f != NULL);
+
+    if (!bra_io_sfx_open(f, fn, "rb"))
+        return false;
+
+    bra_io_footer_t bf;
+    bf.header_offset = 0;
+    bf.magic         = 0;
+
+    if (!bra_io_read_footer(f, &bf))
+        return false;
+
+    // read header and check
+    if (!bra_io_seek(f, bf.header_offset, SEEK_SET))
+    {
+        bra_io_file_seek_error(f);
+        return false;
+    }
+
+    if (!bra_io_read_header(f, out_bh))
+        return false;
 
     return true;
 }

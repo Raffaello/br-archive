@@ -102,8 +102,6 @@ void bra_format_bytes(const size_t bytes, char buf[BRA_PRINTF_FMT_BYTES_BUF_SIZE
 /**
  * @brief Print a meta file @p f using @ref bra_log_printf to display attributes, size and filename.
  *
- * @see bra_io_print_list
- *
  * @param f
  * @param bh
  * @return true

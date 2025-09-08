@@ -38,14 +38,15 @@ private:
 protected:
     virtual void help_usage() const override
     {
-        bra_log_printf("  %s <input_file>%s\n", fs::path(m_argv0).filename().string().c_str(), BRA_FILE_EXT);
+        bra_log_printf("  %s <input_file>%s[%s|%s]\n", fs::path(m_argv0).filename().string().c_str(), BRA_FILE_EXT, BRA_SFX_FILE_EXT_LIN, BRA_SFX_FILE_EXT_WIN);
     };
 
     virtual void help_example() const override
     {
         bra_log_printf("  unbra test.BRa\n");
         bra_log_printf("\n");
-        bra_log_printf("<input_file%s> : %s archive to extract.\n", BRA_FILE_EXT, BRA_NAME);
+        bra_log_printf("<input_file>[%s]          : %s archive to extract.\n", BRA_FILE_EXT, BRA_NAME);
+        bra_log_printf("<input_file>%s[%s|%s] : %s self-extracting archive to extract.\n", BRA_FILE_EXT, BRA_SFX_FILE_EXT_LIN, BRA_SFX_FILE_EXT_WIN, BRA_NAME);
     };
 
     virtual void help_options() const override
@@ -68,12 +69,37 @@ protected:
         return true;
     }
 
+    void parseArgs_adjustFilename(std::filesystem::path& p) override
+    {
+        // current file
+        const auto path = p;
+        if (bra::fs::file_exists(p))
+            return;
+
+        // file .BRa
+        p = bra::fs::filename_archive_adjust(p);
+        if (bra::fs::file_exists(p))
+            return;
+
+        const fs::path p_  = p;
+        p                 += BRA_SFX_FILE_EXT_LIN;
+        if (bra::fs::file_exists(p))
+            return;
+
+        p  = p_;
+        p += BRA_SFX_FILE_EXT_WIN;
+        if (bra::fs::file_exists(p))
+            return;
+
+        p = path;
+    };
+
     bool parseArgs_file(const std::filesystem::path& p) override
     {
         if (p.extension() == BRA_SFX_FILE_EXT_LIN || p.extension() == BRA_SFX_FILE_EXT_WIN)
-            m_bra_file = p;
-        else
-            m_bra_file = bra::fs::filename_archive_adjust(p);
+            m_sfx = true;
+
+        m_bra_file = p;
 
         return true;
     }
@@ -103,18 +129,6 @@ protected:
 
     int run_prog() override
     {
-        // forcing to work only on BRA_FILE_EXT
-        if (m_bra_file.extension() == BRA_SFX_FILE_EXT_LIN || m_bra_file.extension() == BRA_SFX_FILE_EXT_WIN)
-        {
-            // possibly an SFX file
-            m_sfx = true;
-        }
-        else if (m_bra_file.extension() != BRA_FILE_EXT)
-        {
-            bra_log_critical("unexpected %s", m_bra_file.string().c_str());
-            return 99;
-        }
-
         // header
         bra_io_header_t bh{};
 
@@ -132,7 +146,7 @@ protected:
                 return 1;
         }
 
-        bra_log_printf("%s contains num files: %u\n", BRA_NAME, bh.num_files);
+        bra_log_printf("%s contains num files: %u\n", m_f.fn, bh.num_files);
         if (m_listContent)
         {
             bra_log_printf("| ATTR |   SIZE    | " BRA_PRINTF_FMT_FILENAME "|\n", "FILENAME");

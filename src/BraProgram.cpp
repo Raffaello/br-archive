@@ -122,6 +122,8 @@ std::optional<bool> BraProgram::parseArgs(const int argc, const char* const argv
                 return false;
             }
 
+            parseArgs_adjustFilename(p);
+
             // check if it is file or a dir
             if (bra::fs::file_exists(p))
             {

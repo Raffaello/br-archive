@@ -79,7 +79,7 @@ protected:
 
     int run_prog() override
     {
-        bra_io_header_t bh;
+        bra_io_header_t bh{};
 
         // this is the only difference from unbra (read the footer)
         // and do not force extension checking to unbra

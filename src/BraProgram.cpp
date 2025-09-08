@@ -133,20 +133,14 @@ std::optional<bool> BraProgram::parseArgs(const int argc, const char* const argv
             else if (bra::fs::dir_exists(p))
             {
                 auto d = parseArgs_dir(p);
-                if (d)
-                {
-                    if (!*d)
-                        return false;
-                }
+                if (d && !*d)
+                    return false;
             }
             else if (bra::wildcards::is_wildcard(p))
             {
                 auto w = parseArgs_wildcards(p);
-                if (w)
-                {
-                    if (!*w)
-                        return false;
-                }
+                if (w && !*w)
+                    return false;
             }
             else
             {

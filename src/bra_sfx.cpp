@@ -176,7 +176,7 @@ protected:
             return 1;
 
         // extract payload, encoded data
-        // TODO: same as un bra, move to lib_bra as bra_io_printf_list_files or somethings
+        // TODO: same as unbra, move to lib_bra as bra_io_printf_list_files or somethings
         bra_log_printf("%s contains num files: %u\n", BRA_NAME, bh.num_files);
         if (m_listContent)
         {

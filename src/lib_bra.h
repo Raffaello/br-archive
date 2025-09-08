@@ -155,7 +155,6 @@ void bra_io_file_write_error(bra_io_file_t* bf);
 /**
  * @brief Open the file @p fn in the @p mode.
  *        On failure there is no need to call @ref bra_io_close
- *        Callers must not call @ref bra_io_close on failure.
  *
  * @param bf
  * @param fn

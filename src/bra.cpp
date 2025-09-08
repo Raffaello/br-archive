@@ -105,7 +105,7 @@ protected:
         return true;
     };
 
-    bool parseArgs_dir(const std::filesystem::path& p) override
+    std::optional<bool> parseArgs_dir(const std::filesystem::path& p) override
     {
         if (m_recursive)
         {
@@ -122,7 +122,7 @@ protected:
         return true;
     };
 
-    bool parseArgs_wildcards(const std::filesystem::path& p) override
+    std::optional<bool> parseArgs_wildcards(const std::filesystem::path& p) override
     {
         return bra::fs::search_wildcard(p, m_files, m_recursive);
     }

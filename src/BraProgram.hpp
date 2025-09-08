@@ -45,9 +45,11 @@ protected:
     virtual std::optional<bool> parseArgs_option(const int argc, const char* const argv[], int& i, const std::string& s) = 0;
 
     virtual void parseArgs_adjustFilename([[maybe_unused]] std::filesystem::path& p) {};
-    virtual bool parseArgs_file(const std::filesystem::path& p)      = 0;
-    virtual bool parseArgs_dir(const std::filesystem::path& p)       = 0;
-    virtual bool parseArgs_wildcards(const std::filesystem::path& p) = 0;
+    virtual bool parseArgs_file(const std::filesystem::path& p) = 0;
+
+    virtual std::optional<bool> parseArgs_dir([[maybe_unused]] const std::filesystem::path& p) { return std::nullopt; };
+
+    virtual std::optional<bool> parseArgs_wildcards([[maybe_unused]] const std::filesystem::path& p) { return std::nullopt; };
 
     virtual bool validateArgs() = 0;
 

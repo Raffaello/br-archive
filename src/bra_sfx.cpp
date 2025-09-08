@@ -53,22 +53,6 @@ protected:
         return false;
     }
 
-    // same as unbra
-    // std::optional<bool> parseArgs_dir([[maybe_unused]] const std::filesystem::path& p) override
-    // {
-    //     // TODO not implemented yet
-    //     // it should create the dir and extract in that dir
-    //     // bra_log_error("directory is not valid for input: %s", p.string().c_str());
-    //     // return false;
-    //     return nullopt;
-    // }
-
-    // std::optional<bool> parseArgs_wildcards([[maybe_unused]] const std::filesystem::path& p) override
-    // {
-    //     // return false;
-    //     return nullopt;
-    // }
-
     bool validateArgs() override
     {
         if (!bra_io_is_sfx(m_argv0.c_str()))

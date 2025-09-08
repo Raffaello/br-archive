@@ -47,10 +47,13 @@
 #define BRA_PRINTF_FMT_FILENAME_MAX_LENGTH 50            //!< max filename length before being truncated
 #define BRA_PRINTF_FMT_FILENAME            "%-50.50s"    //!< printf-like format to print a filename.
 
+#define BRA_SFX_FILE_EXT_LIN ".brx"
+#define BRA_SFX_FILE_EXT_WIN ".exe"
+
 #if defined(__APPLE__) || defined(__linux__) || defined(__unix__)
-#define BRA_SFX_FILE_EXT ".brx"
+#define BRA_SFX_FILE_EXT BRA_SFX_FILE_EXT_LIN
 #elif defined(_WIN32) || defined(_WIN64)
-#define BRA_SFX_FILE_EXT ".exe"
+#define BRA_SFX_FILE_EXT BRA_SFX_FILE_EXT_WIN
 #else
 #error "unsupported platform" // maybe it could work anyway, but I did't test it.
 #endif

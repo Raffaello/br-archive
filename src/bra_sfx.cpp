@@ -14,71 +14,6 @@ using namespace std;
 
 namespace fs = std::filesystem;
 
-bool bra_isElf(const char* fn)
-{
-    bra_io_file_t f;
-    if (!bra_io_open(&f, fn, "rb"))
-        return false;
-
-    // 0x7F,'E','L','F'
-    constexpr int MAGIC_SIZE = 4;
-    char          magic[MAGIC_SIZE];
-    if (fread(magic, sizeof(char), MAGIC_SIZE, f.f) != MAGIC_SIZE)
-    {
-        bra_io_file_read_error(&f);
-        return false;
-    }
-
-    bra_io_close(&f);
-    return magic[0] == 0x7F && magic[1] == 'E' && magic[2] == 'L' && magic[3] == 'F';
-}
-
-bool bra_isPE(const char* fn)
-{
-    bra_io_file_t f;
-    if (!bra_io_open(&f, fn, "rb"))
-        return false;
-
-    // 'M' 'Z'
-    constexpr int MAGIC_SIZE = 2;
-    char          magic[MAGIC_SIZE];
-    if (fread(magic, sizeof(char), MAGIC_SIZE, f.f) != MAGIC_SIZE)
-    {
-    BRA_IS_EXE_ERROR:
-        bra_io_file_read_error(&f);
-        return false;
-    }
-
-    if (magic[0] != 'M' || magic[1] != 'Z')
-    {
-        bra_io_close(&f);
-        return false;
-    }
-
-    // Read the PE header offset from the DOS header
-    if (!bra_io_seek(&f, 0x3C, SEEK_SET))
-    {
-    BRA_IS_EXE_SEEK_ERROR:
-        bra_io_file_seek_error(&f);
-        return false;
-    }
-
-    uint32_t pe_offset;
-    if (fread(&pe_offset, sizeof(uint32_t), 1, f.f) != 1)
-        goto BRA_IS_EXE_ERROR;
-
-    if (!bra_io_seek(&f, pe_offset, SEEK_SET))
-        goto BRA_IS_EXE_SEEK_ERROR;
-
-    constexpr int PE_MAGIC_SIZE = 4;
-    char          pe_magic[PE_MAGIC_SIZE];
-    if (fread(pe_magic, sizeof(char), PE_MAGIC_SIZE, f.f) != PE_MAGIC_SIZE)
-        goto BRA_IS_EXE_ERROR;
-
-    bra_io_close(&f);
-    return pe_magic[0] == 'P' && pe_magic[1] == 'E' && pe_magic[2] == '\0' && pe_magic[3] == '\0';
-}
-
 /////////////////////////////////////////////////////////////////////////
 
 class BraSfx : public BraProgram
@@ -89,43 +24,28 @@ private:
     BraSfx(BraSfx&&)                 = delete;
     BraSfx& operator=(BraSfx&&)      = delete;
 
-    bool m_listContent = false;
-
 protected:
     virtual void help_usage() const override
     {
         const fs::path p(m_argv0);
 
-        bra_log_printf("  %s [-l]     : to start un-archiving or listing.\n", p.filename().string().c_str());
+        bra_log_printf("  %s       : self-extract thes embedded archive.\n", p.filename().string().c_str());
     };
 
-    virtual void help_example() const override {
+    virtual void help_example() const override
+    {
+        bra_log_printf("  %s\n", fs::path(m_argv0).filename().string().c_str());
     };
 
     // same as unbra
-    virtual void help_options() const override
-    {
-        bra_log_printf("--list       | -l : view archive content.\n");
-    };
+    virtual void help_options() const override {};
 
     int parseArgs_minArgc() const override { return 1; }
 
     // same as unbra
-    std::optional<bool> parseArgs_option([[maybe_unused]] const int argc, [[maybe_unused]] const char* const argv[], [[maybe_unused]] int& i, const std::string& s) override
+    std::optional<bool> parseArgs_option([[maybe_unused]] const int argc, [[maybe_unused]] const char* const argv[], [[maybe_unused]] int& i, [[maybe_unused]] const std::string& s) override
     {
-        if (s == "--list" || s == "-l")
-        {
-            // list content
-            m_listContent = true;
-        }
-        else
-            return nullopt;
-
-        return true;
-    }
-
-    void parseArgs_adjustFilename([[maybe_unused]] std::filesystem::path& p) override
-    {
+        return nullopt;
     }
 
     bool parseArgs_file([[maybe_unused]] const std::filesystem::path& p) override
@@ -148,16 +68,7 @@ protected:
 
     bool validateArgs() override
     {
-        // Supporting only EXE and ELF file type for now
-        if (bra_isElf(m_argv0.c_str()))
-        {
-            bra_log_info("ELF file detected");
-        }
-        else if (bra_isPE(m_argv0.c_str()))
-        {
-            bra_log_info("PE file detected");
-        }
-        else
+        if (!bra_io_is_sfx(m_argv0.c_str()))
         {
             bra_log_error("unsupported file detected: %s", m_argv0.c_str());
             return false;
@@ -168,36 +79,21 @@ protected:
 
     int run_prog() override
     {
-        bra_io_header_t bh;
+        bra_io_header_t bh{};
 
         // this is the only difference from unbra (read the footer)
         // and do not force extension checking to unbra
+        // plus file detection, as it would be required to open the SFX
+        // just for the supported exe/elf formats avoid for all the rest.
         if (!bra_io_sfx_open_and_read_footer_header(m_argv0.c_str(), &bh, &m_f))
             return 1;
 
         // extract payload, encoded data
-        // TODO: same as unbra, move to lib_bra as bra_io_printf_list_files or somethings
         bra_log_printf("%s contains num files: %u\n", BRA_NAME, bh.num_files);
-        if (m_listContent)
+        for (uint32_t i = 0; i < bh.num_files; i++)
         {
-            bra_log_printf("| ATTR |   SIZE    | " BRA_PRINTF_FMT_FILENAME "|\n", "FILENAME");
-            bra_log_printf("|------|-----------|-");
-            for (int i = 0; i < BRA_PRINTF_FMT_FILENAME_MAX_LENGTH; i++)
-                bra_log_printf("-");
-            bra_log_printf("|\n");
-            for (uint32_t i = 0; i < bh.num_files; i++)
-            {
-                if (!bra_print_meta_file(&m_f))
-                    return 2;
-            }
-        }
-        else
-        {
-            for (uint32_t i = 0; i < bh.num_files; i++)
-            {
-                if (!bra_io_decode_and_write_to_disk(&m_f, &m_overwrite_policy))
-                    return 1;
-            }
+            if (!bra_io_decode_and_write_to_disk(&m_f, &m_overwrite_policy))
+                return 1;
         }
 
         bra_io_close(&m_f);

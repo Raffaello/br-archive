@@ -48,6 +48,7 @@ void BraProgram::help() const
     banner();
     bra_log_printf("Usage:\n");
     help_usage();
+    bra_log_printf("\n");
     bra_log_printf("Examples:\n");
     help_example();
     bra_log_printf("\n");
@@ -113,6 +114,7 @@ std::optional<bool> BraProgram::parseArgs(const int argc, const char* const argv
         {
             // FS sub-section
             fs::path p = s;
+
             parseArgs_adjustFilename(p);
 
             // check file path

@@ -128,6 +128,21 @@ namespace bra::fs
 [[nodiscard]] bool file_remove(const std::filesystem::path& path) noexcept;
 
 /**
+ * @brief  Rename/move a regular file from @p from to @p to, overwriting an existing regular file at @p to.
+ *
+ * @note No-op if @p from and @p to refer to the same file (returns true).
+ *       Only regular files are supported; if @p to is a directory, the operation fails.
+ *       May fall back to copy-then-remove across devices; this is not atomic and, on cleanup failure,
+ *       the source may remain (a warning is logged).
+ *
+ * @param from Source file path.
+ * @param to Destination file path.
+ * @return true on success.
+ * @return false on error
+ */
+[[nodiscard]] bool file_rename(const std::filesystem::path& from, const std::filesystem::path& to) noexcept;
+
+/**
  * @brief set the @p permissions with options @p perm_options on the file @p path.
  *
  * @param path

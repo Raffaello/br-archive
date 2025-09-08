@@ -76,32 +76,6 @@ bool bra_isPE(const char* fn)
     return pe_magic[0] == 'P' && pe_magic[1] == 'E' && pe_magic[2] == '\0' && pe_magic[3] == '\0';
 }
 
-bool bra_file_open_and_read_footer_header(const char* fn, bra_io_header_t* out_bh, bra_io_file_t* f)
-{
-    if (!bra_io_open(f, fn, "rb"))
-        return false;
-
-    if (!bra_io_seek(f, -1L * static_cast<int64_t>(sizeof(bra_io_footer_t)), SEEK_END))
-    {
-    BRA_FILE_SEEK_ERROR:
-        bra_io_file_seek_error(f);
-        return false;
-    }
-
-    bra_io_footer_t bf{};
-    if (!bra_io_read_footer(f, &bf))
-        return false;
-
-    // read header and check
-    if (!bra_io_seek(f, bf.header_offset, SEEK_SET))
-        goto BRA_FILE_SEEK_ERROR;
-
-    if (!bra_io_read_header(f, out_bh))
-        return false;
-
-    return true;
-}
-
 /////////////////////////////////////////////////////////////////////////
 
 class BraSfx : public BraProgram
@@ -193,13 +167,13 @@ protected:
     {
         bra_io_header_t bh;
 
-        // this is the only difference from unbra (read the  footer)
+        // this is the only difference from unbra (read the footer)
         // and do not force extension checking to unbra
-        if (!bra_file_open_and_read_footer_header(m_argv0.c_str(), &bh, &m_f))
+        if (!bra_io_sfx_open_and_read_footer_header(m_argv0.c_str(), &bh, &m_f))
             return 1;
 
         // extract payload, encoded data
-        // TODO: same as un bra
+        // TODO: same as un bra, move to lib_bra as bra_io_printf_list_files or somethings
         bra_log_printf("%s contains num files: %u\n", BRA_NAME, bh.num_files);
         if (m_listContent)
         {

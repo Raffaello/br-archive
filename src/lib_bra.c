@@ -218,6 +218,20 @@ void bra_io_close(bra_io_file_t* bf)
     }
 }
 
+bool bra_io_sfx_open(bra_io_file_t* f, const char* fn, const char* mode)
+{
+    if (!bra_io_open(f, fn, mode))
+        return false;
+
+    if (!bra_io_seek(f, -1L * (int64_t) sizeof(bra_io_footer_t), SEEK_END))
+    {
+        bra_io_file_seek_error(f);
+        return false;
+    }
+
+    return true;
+}
+
 bool bra_io_seek(bra_io_file_t* f, const int64_t offs, const int origin)
 {
     assert_bra_io_file_t(f);
@@ -331,6 +345,35 @@ bool bra_io_write_footer(bra_io_file_t* f, const int64_t header_offset)
         bra_io_file_write_error(f);
         return false;
     }
+
+    return true;
+}
+
+bool bra_io_sfx_open_and_read_footer_header(const char* fn, bra_io_header_t* out_bh, bra_io_file_t* f)
+{
+    assert(fn != NULL);
+    assert(out_bh != NULL);
+    assert(f != NULL);
+
+    if (!bra_io_sfx_open(f, fn, "rb"))
+        return false;
+
+    bra_io_footer_t bf;
+    bf.header_offset = 0;
+    bf.magic         = 0;
+
+    if (!bra_io_read_footer(f, &bf))
+        return false;
+
+    // read header and check
+    if (!bra_io_seek(f, bf.header_offset, SEEK_SET))
+    {
+        bra_io_file_seek_error(f);
+        return false;
+    }
+
+    if (!bra_io_read_header(f, out_bh))
+        return false;
 
     return true;
 }

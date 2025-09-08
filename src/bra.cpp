@@ -291,14 +291,8 @@ protected:
             }
 
             // header
-            if (!bra_io_open(&m_f, out_fn.c_str(), "rb+"))
+            if (!bra_io_sfx_open(&m_f, out_fn.c_str(), "rb+"))
                 goto BRA_SFX_IO_ERROR;
-
-            if (!bra_io_seek(&m_f, 0, SEEK_END))
-            {
-                bra_io_file_seek_error(&m_f);
-                return 2;
-            }
 
             // save the start of the payload for later...
             m_header_offset = bra_io_tell(&m_f);
@@ -349,7 +343,6 @@ protected:
             bra_log_warn("written entries (%u) != header count (%u)", m_written_num_files, m_tot_files);
 #endif
 
-        // TODO: doing an SFX should be in the lib_bra
         if (m_sfx)
         {
             if (!bra_io_write_footer(&m_f, m_header_offset))

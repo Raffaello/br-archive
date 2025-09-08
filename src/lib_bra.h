@@ -153,13 +153,12 @@ void bra_io_file_seek_error(bra_io_file_t* bf);
 void bra_io_file_write_error(bra_io_file_t* bf);
 
 /**
- * @brief open the file @p fn in the @p mode.
- *        The file @p bf will be overwritten if it exists.
+ * @brief Open the file @p fn in the @p mode.
  *        On failure there is no need to call @ref bra_io_close
  *
  * @param bf
  * @param fn
- * @param mode
+ * @param mode @c fopen modes
  * @return true on success
  * @return false on error and close @p bf via @ref bra_io_close.
  */
@@ -171,6 +170,18 @@ bool bra_io_open(bra_io_file_t* bf, const char* fn, const char* mode);
  * @param bf
  */
 void bra_io_close(bra_io_file_t* bf);
+
+/**
+ * @brief Open the file @p fn in the mode @p mode and @ref bra_io_seek to the end
+ *        On failure there is no need to call @ref bra_io_close.
+ *
+ * @param f
+ * @param fn
+ * @param mode @c fopen modes
+ * @return true
+ * @return false
+ */
+bool bra_io_sfx_open(bra_io_file_t* f, const char* fn, const char* mode);
 
 /**
  * @brief Seek file at position @p offs.
@@ -236,6 +247,17 @@ bool bra_io_read_footer(bra_io_file_t* f, bra_io_footer_t* bf_out);
  * @return false
  */
 bool bra_io_write_footer(bra_io_file_t* f, const int64_t header_offset);
+
+/**
+ * @brief Open the file @p fn in read-binary mode. Read the footer and then the header.
+ *
+ * @param fn
+ * @param out_bh
+ * @param f
+ * @return true
+ * @return false
+ */
+bool bra_io_sfx_open_and_read_footer_header(const char* fn, bra_io_header_t* out_bh, bra_io_file_t* f);
 
 /**
  * @brief Read the filename meta data information that is pointing in @p f and store it on @p mf.

@@ -223,12 +223,19 @@ bool bra_io_sfx_open(bra_io_file_t* f, const char* fn, const char* mode)
     if (!bra_io_open(f, fn, mode))
         return false;
 
+    // check if it can have the footer
+    if (!bra_io_seek(f, 0, SEEK_END))
+    {
+        bra_io_file_seek_error(f);
+        return false;
+    }
     if (bra_io_tell(f) < (int64_t) sizeof(bra_io_footer_t))
     {
         bra_log_error("%s-SFX module too small (missing footer placeholder): %s", BRA_NAME, f->fn);
         bra_io_close(f);
         return false;
     }
+
     // Position at the footer start
     if (!bra_io_seek(f, -1L * (int64_t) sizeof(bra_io_footer_t), SEEK_END))
     {

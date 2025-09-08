@@ -14,71 +14,6 @@ using namespace std;
 
 namespace fs = std::filesystem;
 
-bool bra_isElf(const char* fn)
-{
-    bra_io_file_t f;
-    if (!bra_io_open(&f, fn, "rb"))
-        return false;
-
-    // 0x7F,'E','L','F'
-    constexpr int MAGIC_SIZE = 4;
-    char          magic[MAGIC_SIZE];
-    if (fread(magic, sizeof(char), MAGIC_SIZE, f.f) != MAGIC_SIZE)
-    {
-        bra_io_file_read_error(&f);
-        return false;
-    }
-
-    bra_io_close(&f);
-    return magic[0] == 0x7F && magic[1] == 'E' && magic[2] == 'L' && magic[3] == 'F';
-}
-
-bool bra_isPE(const char* fn)
-{
-    bra_io_file_t f;
-    if (!bra_io_open(&f, fn, "rb"))
-        return false;
-
-    // 'M' 'Z'
-    constexpr int MAGIC_SIZE = 2;
-    char          magic[MAGIC_SIZE];
-    if (fread(magic, sizeof(char), MAGIC_SIZE, f.f) != MAGIC_SIZE)
-    {
-    BRA_IS_EXE_ERROR:
-        bra_io_file_read_error(&f);
-        return false;
-    }
-
-    if (magic[0] != 'M' || magic[1] != 'Z')
-    {
-        bra_io_close(&f);
-        return false;
-    }
-
-    // Read the PE header offset from the DOS header
-    if (!bra_io_seek(&f, 0x3C, SEEK_SET))
-    {
-    BRA_IS_EXE_SEEK_ERROR:
-        bra_io_file_seek_error(&f);
-        return false;
-    }
-
-    uint32_t pe_offset;
-    if (fread(&pe_offset, sizeof(uint32_t), 1, f.f) != 1)
-        goto BRA_IS_EXE_ERROR;
-
-    if (!bra_io_seek(&f, pe_offset, SEEK_SET))
-        goto BRA_IS_EXE_SEEK_ERROR;
-
-    constexpr int PE_MAGIC_SIZE = 4;
-    char          pe_magic[PE_MAGIC_SIZE];
-    if (fread(pe_magic, sizeof(char), PE_MAGIC_SIZE, f.f) != PE_MAGIC_SIZE)
-        goto BRA_IS_EXE_ERROR;
-
-    bra_io_close(&f);
-    return pe_magic[0] == 'P' && pe_magic[1] == 'E' && pe_magic[2] == '\0' && pe_magic[3] == '\0';
-}
-
 /////////////////////////////////////////////////////////////////////////
 
 class BraSfx : public BraProgram
@@ -136,17 +71,7 @@ protected:
 
     bool validateArgs() override
     {
-        // Supporting only EXE and ELF file type for now
-        // TODO: should be moved into lib_bra?
-        if (bra_isElf(m_argv0.c_str()))
-        {
-            bra_log_info("ELF file detected");
-        }
-        else if (bra_isPE(m_argv0.c_str()))
-        {
-            bra_log_info("PE file detected");
-        }
-        else
+        if (!bra_io_is_sfx(m_argv0.c_str()))
         {
             bra_log_error("unsupported file detected: %s", m_argv0.c_str());
             return false;

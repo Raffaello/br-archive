@@ -153,6 +153,12 @@ void bra_io_file_seek_error(bra_io_file_t* bf);
  */
 void bra_io_file_write_error(bra_io_file_t* bf);
 
+bool bra_io_is_elf(const char* fn);
+
+bool bra_io_is_pe_exe(const char* fn);
+
+bool bra_io_is_sfx(const char* fn);
+
 /**
  * @brief Open the file @p fn in the @p mode.
  *        On failure there is no need to call @ref bra_io_close

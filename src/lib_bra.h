@@ -156,12 +156,12 @@ void bra_io_file_write_error(bra_io_file_t* bf);
 /**
  * @brief Detect if the given filename @p fn is an ELF.
  *
- * @see bra_io_pe_exe
+ * @see bra_io_is_pe_exe
  * @see bra_io_is_sfx
  *
  * @param fn
- * @return true
- * @return false
+ * @return true if ELF magic is detected.
+ * @return false otherwise.
  */
 bool bra_io_is_elf(const char* fn);
 
@@ -172,20 +172,22 @@ bool bra_io_is_elf(const char* fn);
  * @see bra_io_is_sfx
  *
  * @param fn
- * @return true
- * @return false
+ * @return true if a valid PE signature is detected.
+ * @return false otherwise.
  */
 bool bra_io_is_pe_exe(const char* fn);
 
 /**
  * @brief Detect if the given filename @p fn is a possible SFX archive.
  *
+ * @todo consider to open the file once instead of 2 times.
+ *
  * @see bra_io_is_elf
  * @see bra_io_is_pe_exe
  *
  * @param fn
- * @return true
- * @return false
+ * @return true if a file appear to be an ELF or PE/EXE (SFX wrapper).
+ * @return false otherwise.
  */
 bool bra_io_is_sfx(const char* fn);
 

@@ -29,7 +29,7 @@ protected:
     {
         const fs::path p(m_argv0);
 
-        bra_log_printf("  %s       : to start un-archiving.\n", p.filename().string().c_str());
+        bra_log_printf("  %s       : extract embedded archive.\n", p.filename().string().c_str());
     };
 
     virtual void help_example() const override

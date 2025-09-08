@@ -137,6 +137,7 @@ protected:
     bool validateArgs() override
     {
         // Supporting only EXE and ELF file type for now
+        // TODO: should be moved into lib_bra?
         if (bra_isElf(m_argv0.c_str()))
         {
             bra_log_info("ELF file detected");
@@ -160,6 +161,8 @@ protected:
 
         // this is the only difference from unbra (read the footer)
         // and do not force extension checking to unbra
+        // plus file detection, as it would be required to open the SFX
+        // just for the supported exe/elf formats avoid for all the rest.
         if (!bra_io_sfx_open_and_read_footer_header(m_argv0.c_str(), &bh, &m_f))
             return 1;
 

@@ -43,12 +43,7 @@ protected:
 
     virtual int                 parseArgs_minArgc() const                                                                = 0;
     virtual std::optional<bool> parseArgs_option(const int argc, const char* const argv[], int& i, const std::string& s) = 0;
-    /**
-     * @brief
-     * @todo review it as is really used only in unbra the other are void.
-     * @param p
-     */
-    virtual void parseArgs_adjustFilename(std::filesystem::path& p)  = 0;
+
     virtual bool parseArgs_file(const std::filesystem::path& p)      = 0;
     virtual bool parseArgs_dir(const std::filesystem::path& p)       = 0;
     virtual bool parseArgs_wildcards(const std::filesystem::path& p) = 0;

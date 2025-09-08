@@ -29,7 +29,7 @@ protected:
     {
         const fs::path p(m_argv0);
 
-        bra_log_printf("  %s       : extract embedded archive.\n", p.filename().string().c_str());
+        bra_log_printf("  %s       : self-extract embedded archive.\n", p.filename().string().c_str());
     };
 
     virtual void help_example() const override
@@ -46,10 +46,6 @@ protected:
     std::optional<bool> parseArgs_option([[maybe_unused]] const int argc, [[maybe_unused]] const char* const argv[], [[maybe_unused]] int& i, [[maybe_unused]] const std::string& s) override
     {
         return nullopt;
-    }
-
-    void parseArgs_adjustFilename([[maybe_unused]] std::filesystem::path& p) override
-    {
     }
 
     bool parseArgs_file([[maybe_unused]] const std::filesystem::path& p) override

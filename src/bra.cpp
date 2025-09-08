@@ -94,8 +94,6 @@ protected:
         return true;
     }
 
-    void parseArgs_adjustFilename([[maybe_unused]] std::filesystem::path& p) override {};
-
     bool parseArgs_file(const std::filesystem::path& p) override
     {
         if (!m_files.insert(p).second)

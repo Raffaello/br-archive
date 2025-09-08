@@ -33,6 +33,7 @@ private:
 
     fs::path m_bra_file;
     bool     m_listContent = false;
+    bool     m_sfx         = false;
 
 protected:
     virtual void help_usage() const override
@@ -67,14 +68,13 @@ protected:
         return true;
     }
 
-    void parseArgs_adjustFilename(std::filesystem::path& p) override
-    {
-        p = bra::fs::filename_archive_adjust(p);
-    }
-
     bool parseArgs_file(const std::filesystem::path& p) override
     {
-        m_bra_file = p;
+        if (p.extension() == BRA_SFX_FILE_EXT_LIN || p.extension() == BRA_SFX_FILE_EXT_WIN)
+            m_bra_file = p;
+        else
+            m_bra_file = bra::fs::filename_archive_adjust(p);
+
         return true;
     }
 
@@ -104,7 +104,12 @@ protected:
     int run_prog() override
     {
         // forcing to work only on BRA_FILE_EXT
-        if (m_bra_file.extension() != BRA_FILE_EXT)
+        if (m_bra_file.extension() == BRA_SFX_FILE_EXT_LIN || m_bra_file.extension() == BRA_SFX_FILE_EXT_WIN)
+        {
+            // possibly an SFX file
+            m_sfx = true;
+        }
+        else if (m_bra_file.extension() != BRA_FILE_EXT)
         {
             bra_log_critical("unexpected %s", m_bra_file.string().c_str());
             return 99;
@@ -112,11 +117,20 @@ protected:
 
         // header
         bra_io_header_t bh{};
-        if (!bra_io_open(&m_f, m_bra_file.string().c_str(), "rb"))
-            return 1;
 
-        if (!bra_io_read_header(&m_f, &bh))
-            return 1;
+        if (m_sfx)
+        {
+            if (!bra_io_sfx_open_and_read_footer_header(m_bra_file.string().c_str(), &bh, &m_f))
+                return 1;
+        }
+        else
+        {
+            if (!bra_io_open(&m_f, m_bra_file.string().c_str(), "rb"))
+                return 1;
+
+            if (!bra_io_read_header(&m_f, &bh))
+                return 1;
+        }
 
         bra_log_printf("%s contains num files: %u\n", BRA_NAME, bh.num_files);
         if (m_listContent)

@@ -114,7 +114,6 @@ std::optional<bool> BraProgram::parseArgs(const int argc, const char* const argv
         {
             // FS sub-section
             fs::path p = s;
-            parseArgs_adjustFilename(p);
 
             // check file path
             if (!bra::fs::try_sanitize(p))

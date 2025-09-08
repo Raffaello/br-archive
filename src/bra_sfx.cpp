@@ -3,6 +3,9 @@
 #include <version.h>
 #include <BraProgram.hpp>
 
+#include <filesystem>
+#include <string>
+
 #include <cstdio>
 #include <cstdint>
 

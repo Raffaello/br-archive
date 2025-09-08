@@ -155,6 +155,7 @@ void bra_io_file_write_error(bra_io_file_t* bf);
 /**
  * @brief Open the file @p fn in the @p mode.
  *        On failure there is no need to call @ref bra_io_close
+ *        Callers must not call @ref bra_io_close on failure.
  *
  * @param bf
  * @param fn
@@ -172,14 +173,14 @@ bool bra_io_open(bra_io_file_t* bf, const char* fn, const char* mode);
 void bra_io_close(bra_io_file_t* bf);
 
 /**
- * @brief Open the file @p fn in the mode @p mode and @ref bra_io_seek to the end
+ * @brief Open the file @p fn in @p mode and seek to the beginning of the SFX footer (EOF - sizeof(bra_io_footer_t)).
  *        On failure there is no need to call @ref bra_io_close.
  *
  * @param f
  * @param fn
  * @param mode @c fopen modes
- * @return true
- * @return false
+ * @return true on success (file positioned at start of footer; ready for bra_io_read_footer)
+ * @return false on error (seek errors close @p f via @ref bra_io_close)
  */
 bool bra_io_sfx_open(bra_io_file_t* f, const char* fn, const char* mode);
 
@@ -249,13 +250,14 @@ bool bra_io_read_footer(bra_io_file_t* f, bra_io_footer_t* bf_out);
 bool bra_io_write_footer(bra_io_file_t* f, const int64_t header_offset);
 
 /**
- * @brief Open the file @p fn in read-binary mode. Read the footer and then the header.
+ * @brief Open @p fn in read-binary mode, read the SFX footer to obtain the header offset,
+ *        seek to it, and read the header.
  *
  * @param fn
  * @param out_bh
  * @param f
- * @return true
- * @return false
+ * @return true on success (file positioned immediately after the header, at first entry)
+ * @return false on error (errors during read/seek close @p f via @ref bra_io_close)
  */
 bool bra_io_sfx_open_and_read_footer_header(const char* fn, bra_io_header_t* out_bh, bra_io_file_t* f);
 

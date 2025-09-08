@@ -223,6 +223,13 @@ bool bra_io_sfx_open(bra_io_file_t* f, const char* fn, const char* mode)
     if (!bra_io_open(f, fn, mode))
         return false;
 
+    if (bra_io_tell(f) < (int64_t) sizeof(bra_io_footer_t))
+    {
+        bra_log_error("%s-SFX module too small (missing footer placeholder): %s", BRA_NAME, f->fn);
+        bra_io_close(f);
+        return false;
+    }
+    // Position at the footer start
     if (!bra_io_seek(f, -1L * (int64_t) sizeof(bra_io_footer_t), SEEK_END))
     {
         bra_io_file_seek_error(f);
@@ -320,7 +327,7 @@ bool bra_io_read_footer(bra_io_file_t* f, bra_io_footer_t* bf_out)
     }
 
     // check footer magic
-    if (bf_out->magic != BRA_FOOTER_MAGIC)
+    if (bf_out->magic != BRA_FOOTER_MAGIC || bf_out->header_offset <= 0)
     {
         bra_log_error("corrupted or not valid %s-SFX file: %s", BRA_NAME, f->fn);
         bra_io_close(f);

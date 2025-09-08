@@ -153,7 +153,7 @@ int BraProgram::run(const int argc, const char* const argv[])
 {
 #ifndef NDEBUG
     for (int i = 1; i < argc; ++i)
-        bra_log_debug("- %d. %s\n", i, argv[i]);
+        bra_log_verbose("- %d. %s\n", i, argv[i]);
 #endif
 
     m_argv0 = argv[0];

@@ -280,10 +280,17 @@ bool file_rename(const std::filesystem::path& from, const std::filesystem::path&
 {
     error_code ec;
 
+    // No-op when source and destination are the same file/path
+    if (from == to || fs::equivalent(from, to, ec))
+        return true;
+
+    ec.clear();
     // if erroring is most likely not present,
     // if it is for something else, will fail again later.
     // so no need to check ec.
-    fs::remove(to, ec);
+    if (file_exists(from))
+        fs::remove(to, ec);
+
     fs::rename(from, to, ec);
     if (ec)
     {

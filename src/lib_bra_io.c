@@ -12,6 +12,8 @@
 
 _Static_assert(BRA_MAX_PATH_LENGTH > UINT8_MAX, "BRA_MAX_PATH_LENGTH must be greater than bra_meta_file_t.name_size max value");
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 static inline void bra_print_string_max_length(const char* buf, const int buf_length, const int max_length)
 {
     if (buf_length > max_length)
@@ -19,6 +21,8 @@ static inline void bra_print_string_max_length(const char* buf, const int buf_le
     else
         bra_log_printf("%*.*s", -max_length, buf_length, buf);
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
  * @brief the last encoded or decoded directory.

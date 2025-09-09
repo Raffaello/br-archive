@@ -410,8 +410,10 @@ bool bra_io_decode_and_write_to_disk(bra_io_file_t* f, bra_fs_overwrite_policy_e
  * @return true
  * @return false
  */
-bool bra_encode_rle(char* buf, const size_t buf_size, size_t* num_rle_chunks, bra_rle_chunk_t* out_rle_data[]);
+bool bra_encode_rle(const char* buf, const size_t buf_size, size_t* num_rle_chunks, bra_rle_chunk_t* out_rle_data[]);
 
+
+bool bra_decode_rle(const size_t num_rle_chunks, const bra_rle_chunk_t rle_data[], char* buf, const size_t buf_size);
 
 #ifdef __cplusplus
 }

@@ -58,7 +58,7 @@ static bool bra_encode_rle_next(size_t* j_, size_t* num_rle_chunks, bra_rle_chun
     return true;
 }
 
-bool bra_encode_rle(char* buf, const size_t buf_size, size_t* num_rle_chunks, bra_rle_chunk_t* out_rle_data[])
+bool bra_encode_rle(const char* buf, const size_t buf_size, size_t* num_rle_chunks, bra_rle_chunk_t* out_rle_data[])
 {
     assert(buf != NULL);
     assert(num_rle_chunks != NULL);
@@ -121,5 +121,11 @@ BRA_RLE_ENCODING_ERROR:
         *out_rle_data = NULL;
     }
     *num_rle_chunks = 0;
+    return false;
+}
+
+bool bra_decode_rle(const size_t num_rle_chunks, const bra_rle_chunk_t rle_data[], char* buf, const size_t buf_size)
+{
+    // TODO
     return false;
 }

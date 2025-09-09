@@ -1,14 +1,12 @@
-#include <lib_bra.h>
+#include "lib_bra.h"
+
 #include <bra_fs_c.h>
 #include <bra_log.h>
 
 #include <assert.h>
 #include <string.h>
 #include <stdlib.h>
-#include <errno.h>
 #include <limits.h>
-
-#define assert_bra_io_file_t(x) assert((x) != NULL && (x)->f != NULL && (x)->fn != NULL)
 
 _Static_assert(BRA_MAX_PATH_LENGTH > UINT8_MAX, "BRA_MAX_PATH_LENGTH must be greater than bra_meta_file_t.name_size max value");
 

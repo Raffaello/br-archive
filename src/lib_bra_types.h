@@ -16,6 +16,9 @@ typedef enum bra_fs_overwrite_policy_e
     BRA_OVERWRITE_ALWAYS_NO  = 2,
 } bra_fs_overwrite_policy_e;
 
+/**
+ * @brief
+ */
 typedef struct bra_rle_chunk_t
 {
     bra_rle_counts_t counts;    //!< counts is stored as -1, i.e. 0 means 1 and 255 means 256

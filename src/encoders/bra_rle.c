@@ -92,17 +92,6 @@ bool bra_encode_rle(char* buf, const size_t buf_size, size_t* num_rle_chunks, br
             if (rle[j].counts == BRA_MAX_RLE_COUNTS)
             {
                 // need another chunk
-                // ++j;
-                // if (j == num_chunks)
-                // {
-                //     if (!bra_encode_rle_realloc(&num_chunks, &rle))
-                //         goto BRA_RLE_ENCODING_ERROR;
-                // }
-
-                // assert(j < num_chunks);
-                // rle[j].counts = 0;    // this is just counting as 1
-                // rle[j].value  = rle[j - 1].value;
-
                 if (!bra_encode_rle_next(&j, &num_chunks, &rle))
                     goto BRA_RLE_ENCODING_ERROR;
 
@@ -114,20 +103,6 @@ bool bra_encode_rle(char* buf, const size_t buf_size, size_t* num_rle_chunks, br
         else
         {
             // it is a different char, going to the next chunk
-            // ++j;
-            // // TODO: this block has been duplicated
-            // // need another chunk
-            // if (j == num_chunks)
-            // {
-            //     if (!bra_encode_rle_realloc(&num_chunks, &rle))
-            //         goto BRA_RLE_ENCODING_ERROR;
-            // }
-
-            // assert(j < num_chunks);
-            // rle[j].counts = 0;    // this is just counting as 1
-            // rle[j].value  = buf[i];
-
-            // todo this is not working.
             if (!bra_encode_rle_next(&j, &num_chunks, &rle))
                 goto BRA_RLE_ENCODING_ERROR;
 
@@ -138,7 +113,6 @@ bool bra_encode_rle(char* buf, const size_t buf_size, size_t* num_rle_chunks, br
     *out_rle_data   = rle;
     *num_rle_chunks = num_chunks;
     return true;
-
 
 BRA_RLE_ENCODING_ERROR:
     if (*out_rle_data != NULL)

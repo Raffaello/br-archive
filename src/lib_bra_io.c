@@ -1,12 +1,9 @@
-#include <lib_bra.h>
-#include <bra_fs_c.h>
+#include "lib_bra_io.h"
+#include "lib_bra_defs.h"
+
 #include <bra_log.h>
 
 #include <assert.h>
-#include <string.h>
-#include <stdlib.h>
-#include <errno.h>
-#include <limits.h>
 
 #define assert_bra_io_file_t(x) assert((x) != NULL && (x)->f != NULL && (x)->fn != NULL)
 
@@ -26,105 +23,6 @@ _Static_assert(BRA_MAX_PATH_LENGTH > UINT8_MAX, "BRA_MAX_PATH_LENGTH must be gre
 static char         g_last_dir[BRA_MAX_PATH_LENGTH];
 static unsigned int g_last_dir_size;
 static const char   g_end_messages[][5] = {" OK ", "SKIP"};
-
-static inline uint64_t bra_min(const uint64_t a, const uint64_t b)
-{
-    return a < b ? a : b;
-}
-
-static inline void bra_print_string_max_length(const char* buf, const int buf_length, const int max_length)
-{
-    if (buf_length > max_length)
-        bra_log_printf("%.*s...", max_length - 3, buf);
-    else
-        bra_log_printf("%*.*s", -max_length, buf_length, buf);
-}
-
-static inline bool bra_validate_meta_filename(const bra_meta_file_t* mf)
-{
-    // sanitize output path: reject absolute or parent traversal
-    // POSIX absolute, Windows drive letter, and leading backslash
-    if (mf->name[0] == '/' || mf->name[0] == '\\' ||
-        (mf->name_size >= 2 &&
-         ((mf->name[1] == ':' &&
-           ((mf->name[0] >= 'A' && mf->name[0] <= 'Z') ||
-            (mf->name[0] >= 'a' && mf->name[0] <= 'z'))))))
-    {
-        bra_log_error("absolute output path: %s", mf->name);
-        return false;
-    }
-    // Reject common traversal patterns
-    if (strstr(mf->name, "/../") != NULL || strstr(mf->name, "\\..\\") != NULL ||
-        strncmp(mf->name, "../", 3) == 0 || strncmp(mf->name, "..\\", 3) == 0)
-    {
-        bra_log_error("invalid output path (contains '..'): %s", mf->name);
-        return false;
-    }
-
-    return true;
-}
-
-/////////////////////////////////////////////////////////////////////////////
-
-char* bra_strdup(const char* str)
-{
-    if (str == NULL)
-        return NULL;
-
-    const size_t sz = strlen(str) + 1;
-    char*        c  = malloc(sz);
-
-    if (c == NULL)
-        return NULL;
-
-    memcpy(c, str, sizeof(char) * sz);
-    return c;
-}
-
-char bra_format_meta_attributes(const bra_attr_t attributes)
-{
-    switch (attributes)
-    {
-    case BRA_ATTR_FILE:
-        return 'f';
-    case BRA_ATTR_DIR:
-        return 'd';
-    default:
-        return '?';
-    }
-}
-
-void bra_format_bytes(const size_t bytes, char buf[BRA_PRINTF_FMT_BYTES_BUF_SIZE])
-{
-    static const size_t KB = 1024;
-    static const size_t MB = KB * 1024;
-    static const size_t GB = MB * 1024;
-    static const size_t TB = GB * 1024;
-    static const size_t PB = TB * 1024;
-    static const size_t EB = PB * 1024;    // fits in uint64_t up to ~16 EB (platform dependent)
-
-#if defined(__GNUC__)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wformat-truncation"
-#endif
-    if (bytes >= EB)
-        snprintf(buf, BRA_PRINTF_FMT_BYTES_BUF_SIZE, "%6.1f EB", (double) bytes / EB);
-    else if (bytes >= PB)
-        snprintf(buf, BRA_PRINTF_FMT_BYTES_BUF_SIZE, "%6.1f PB", (double) bytes / PB);
-    else if (bytes >= TB)
-        snprintf(buf, BRA_PRINTF_FMT_BYTES_BUF_SIZE, "%6.1f TB", (double) bytes / TB);
-    else if (bytes >= GB)
-        snprintf(buf, BRA_PRINTF_FMT_BYTES_BUF_SIZE, "%6.1f GB", (double) bytes / GB);
-    else if (bytes >= MB)
-        snprintf(buf, BRA_PRINTF_FMT_BYTES_BUF_SIZE, "%6.1f MB", (double) bytes / MB);
-    else if (bytes >= KB)
-        snprintf(buf, BRA_PRINTF_FMT_BYTES_BUF_SIZE, "%6.1f KB", (double) bytes / KB);
-    else
-        snprintf(buf, BRA_PRINTF_FMT_BYTES_BUF_SIZE, "%6zu  B", bytes);
-#if defined(__GNUC__)
-#pragma GCC diagnostic pop
-#endif
-}
 
 bool bra_io_print_meta_file(bra_io_file_t* f)
 {
@@ -668,30 +566,16 @@ bool bra_io_write_meta_file(bra_io_file_t* f, const bra_meta_file_t* mf)
     return true;
 }
 
-void bra_meta_file_free(bra_meta_file_t* mf)
-{
-    assert(mf != NULL);
-
-    mf->data_size  = 0;
-    mf->name_size  = 0;
-    mf->attributes = 0;
-    if (mf->name != NULL)
-    {
-        free(mf->name);
-        mf->name = NULL;
-    }
-}
-
 bool bra_io_copy_file_chunks(bra_io_file_t* dst, bra_io_file_t* src, const uint64_t data_size)
 {
     assert_bra_io_file_t(dst);
     assert_bra_io_file_t(src);
 
-    char buf[BRA_MAX_CHUNK_SIZE];
+    char buf[MAX_CHUNK_SIZE];
 
     for (uint64_t i = 0; i < data_size;)
     {
-        uint32_t s = bra_min(BRA_MAX_CHUNK_SIZE, data_size - i);
+        uint32_t s = bra_min(MAX_CHUNK_SIZE, data_size - i);
 
         // read source chunk
         if (fread(buf, sizeof(char), s, src->f) != s)
@@ -903,143 +787,4 @@ bool bra_io_decode_and_write_to_disk(bra_io_file_t* f, bra_fs_overwrite_policy_e
 
     bra_log_printf(" [  %-4.4s  ]\n", end_msg);
     return true;
-}
-
-static bool bra_encode_rle_realloc(size_t* num_rle_chunks, bra_rle_chunk_t* out_rle_data[])
-{
-    assert(num_rle_chunks != NULL);
-    assert(out_rle_data != NULL);
-
-    size_t           num_chunks = *num_rle_chunks;
-    bra_rle_chunk_t* new_rle    = NULL;
-
-    if (num_chunks == SIZE_MAX)
-    {
-        bra_log_critical("unable to encode RLA, out of chunks");
-        return false;
-    }
-
-    ++num_chunks;
-    new_rle = realloc(*out_rle_data, sizeof(bra_rle_chunk_t) * num_chunks);
-    if (new_rle == NULL)
-    {
-        bra_log_critical("RLE encoding out of memory");
-        return false;
-    }
-
-    *out_rle_data   = new_rle;
-    *num_rle_chunks = num_chunks;
-    return true;
-}
-
-static bool bra_encode_rle_next(size_t* j_, size_t* num_rle_chunks, bra_rle_chunk_t* out_rle_data[])
-{
-    assert(j_ != NULL);
-    assert(num_rle_chunks != NULL);
-    assert(out_rle_data != NULL);
-
-    size_t           num_chunks = *num_rle_chunks;
-    bra_rle_chunk_t* rle        = *out_rle_data;
-    size_t           j          = *j_;
-
-    // need another chunk
-    ++j;
-    if (j == num_chunks)
-    {
-        if (!bra_encode_rle_realloc(&num_chunks, &rle))
-            return false;
-    }
-
-    assert(j < num_chunks);
-    rle[j].counts = 0;    // this is just counting as 1
-    rle[j].value  = rle[j - 1].value;
-    *j_           = j;
-    return true;
-}
-
-bool bra_encode_rle(char* buf, const size_t buf_size, size_t* num_rle_chunks, bra_rle_chunk_t* out_rle_data[])
-{
-    assert(buf != NULL);
-    assert(num_rle_chunks != NULL);
-    assert(out_rle_data != NULL);
-
-    size_t           num_chunks = *num_rle_chunks;
-    bra_rle_chunk_t* rle        = *out_rle_data;
-    size_t           i;
-    size_t           j;
-
-    if (num_chunks > 0)
-    {
-        // starting from the first in the buffer, and the last of the chunks.
-        i = 0;
-        j = num_chunks - 1;
-    }
-    else
-    {
-        if (!bra_encode_rle_realloc(&num_chunks, &rle))
-            goto BRA_RLE_ENCODING_ERROR;
-
-        rle[0] = (bra_rle_chunk_t) {.counts = 0, .value = buf[0]};
-        i      = 1;
-        j      = 0;
-    }
-
-    for (; i < buf_size; ++i)
-    {
-        if (buf[i] == rle[j].value)
-        {
-            if (rle[j].counts == BRA_MAX_RLE_COUNTS)
-            {
-                // need another chunk
-                // ++j;
-                // if (j == num_chunks)
-                // {
-                //     if (!bra_encode_rle_realloc(&num_chunks, &rle))
-                //         goto BRA_RLE_ENCODING_ERROR;
-                // }
-
-                // assert(j < num_chunks);
-                // rle[j].counts = 0;    // this is just counting as 1
-                // rle[j].value  = rle[j - 1].value;
-
-                if (!bra_encode_rle_next(&j, &num_chunks, &rle))
-                    goto BRA_RLE_ENCODING_ERROR;
-            }
-            else
-                rle[j].counts++;
-        }
-        else
-        {
-            // it is a different char, going to the next chunk
-            // ++j;
-            // // TODO: this block has been duplicated
-            // // need another chunk
-            // if (j == num_chunks)
-            // {
-            //     if (!bra_encode_rle_realloc(&num_chunks, &rle))
-            //         goto BRA_RLE_ENCODING_ERROR;
-            // }
-
-            // assert(j < num_chunks);
-            // rle[j].counts = 0;    // this is just counting as 1
-            // rle[j].value  = buf[i];
-
-            if (!bra_encode_rle_next(&j, &num_chunks, &rle))
-                goto BRA_RLE_ENCODING_ERROR;
-        }
-    }
-
-    *out_rle_data   = rle;
-    *num_rle_chunks = num_chunks;
-    return true;
-
-
-BRA_RLE_ENCODING_ERROR:
-    if (*out_rle_data != NULL)
-    {
-        free(*out_rle_data);
-        *out_rle_data = NULL;
-    }
-    *num_rle_chunks = 0;
-    return false;
 }

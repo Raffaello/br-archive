@@ -3,7 +3,8 @@
 #include <stdint.h>
 
 
-typedef uint8_t bra_attr_t;    //!< file attribute type
+typedef uint8_t bra_attr_t;          //!< file attribute type
+typedef uint8_t bra_rle_counts_t;    //!< rle counts type
 
 /**
  * @brief Define a file overwrite policy.

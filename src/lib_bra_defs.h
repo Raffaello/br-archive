@@ -59,5 +59,5 @@
 #endif
 
 #define BRA_MAX_PATH_LENGTH (UINT8_MAX + 1)    //!< capacity including trailing NUL; max on-disk name_size = UINT8_MAX (255)
-
-#define MAX_CHUNK_SIZE (256 * 1024)            //!< Use MAX_CHUNK_SIZE for optimal I/O performance during file transfers (256KB)
+#define BRA_MAX_CHUNK_SIZE  (256 * 1024)       //!< Use MAX_CHUNK_SIZE for optimal I/O performance during file transfers (256KB)
+#define BRA_MAX_RLE_COUNTS  UINT8_MAX          //!< MAX value - 1 of an RLE char repetitions.

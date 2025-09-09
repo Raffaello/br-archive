@@ -1,18 +1,11 @@
 #pragma once
 
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-#include <lib_bra_defs.h>
-#include <lib_bra_types.h>
+#include "lib_bra_types.h"
 
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdio.h>
-#include <stdarg.h>
-
 
 #pragma pack(push, 1)
 
@@ -51,53 +44,6 @@ typedef struct bra_io_file_t
     FILE* f;     //!< File Pointer representing a file on the disk.
     char* fn;    //!< the filename of the file on disk.
 } bra_io_file_t;
-
-/**
- * @brief This is the metadata of each file stored in a BR-archive.
- *        The file data is just after for @p data_size bytes.
- */
-typedef struct bra_meta_file_t
-{
-    // TODO: add CRC ... file permissions, etc... ?
-    bra_attr_t attributes;    //!< file attributes: #BRA_ATTR_FILE (regular) or #BRA_ATTR_DIR (directory)
-    uint8_t    name_size;     //!< length in bytes excluding the trailing NUL; [1..UINT8_MAX]
-    char*      name;          //!< filename/dirname (owned; free via @ref bra_meta_file_free)
-    uint64_t   data_size;     //!< file contents size in bytes. Not saved for dir.
-} bra_meta_file_t;
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-/**
- * @brief strdup()
- *
- * @details Returns @c NULL if @p str is @c NULL or on allocation failure.
- *          The caller owns the returned buffer and must free() it.
- *
- * @todo remove when switching to C23
- *
- * @param str
- * @return char*
- */
-char* bra_strdup(const char* str);
-
-/**
- * @brief Convert meta file @p attributes into a char.
- *
- * @param attributes
- * @return char
- */
-char bra_format_meta_attributes(const bra_attr_t attributes);
-
-/**
- * @brief Convert @p bytes into a human readable string stored in @p buf.
- *        @p buf must provide at least #BRA_PRINTF_FMT_BYTES_BUF_SIZE bytes.
- *
- * @param bytes
- * @param buf
- */
-void bra_format_bytes(const size_t bytes, char buf[BRA_PRINTF_FMT_BYTES_BUF_SIZE]);
 
 /**
  * @brief Print a meta file @p f using @ref bra_log_printf to display attributes, size and filename.
@@ -320,13 +266,6 @@ bool bra_io_read_meta_file(bra_io_file_t* f, bra_meta_file_t* mf);
 bool bra_io_write_meta_file(bra_io_file_t* f, const bra_meta_file_t* mf);
 
 /**
- * @brief Free any eventual content on @p mf.
- *
- * @param mf
- */
-void bra_meta_file_free(bra_meta_file_t* mf);
-
-/**
  * @brief Copy from @p src to @p dst in chunks size of #BRA_MAX_CHUNK_SIZE for @p data_size bytes
  *        the files must be positioned at the correct read/write offsets.
  *        On failure closes both @p dst and @p src via @ref bra_io_close
@@ -377,15 +316,3 @@ bool bra_io_encode_and_write_to_disk(bra_io_file_t* f, const char* fn);
  * @return false on error
  */
 bool bra_io_decode_and_write_to_disk(bra_io_file_t* f, bra_fs_overwrite_policy_e* overwrite_policy);
-
-typedef struct bra_rle_chunk_t
-{
-    bra_rle_counts_t counts;    //!< counts is stored as -1, i.e. 0 means 1 and 255 means 256
-    char             value;     //!< the repeated char.
-} bra_rle_chunk_t;
-
-bool bra_encode_rle(char* buf, const size_t buf_size, size_t* num_rle_chunks, bra_rle_chunk_t* out_rle_data[]);
-
-#ifdef __cplusplus
-}
-#endif

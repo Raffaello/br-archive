@@ -161,9 +161,9 @@ int BraProgram::run(const int argc, const char* const argv[])
         bra_log_verbose("- %d. %s\n", i, argv[i]);
 #endif
 
-    banner();
+    m_argv0 = argv[0];    // used in banner
 
-    m_argv0 = argv[0];
+    banner();
     if (auto pa = parseArgs(argc, argv))
     {
         if (!*pa)

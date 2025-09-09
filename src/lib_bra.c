@@ -951,9 +951,10 @@ static bool bra_encode_rle_next(size_t* j_, size_t* num_rle_chunks, bra_rle_chun
     }
 
     assert(j < num_chunks);
-    rle[j].counts = 0;    // this is just counting as 1
-    rle[j].value  = rle[j - 1].value;
-    *j_           = j;
+    // rle[j].value  = rle[j - 1].value;
+    rle[j].counts   = 0;    // this is just counting as 1
+    *j_             = j;
+    *num_rle_chunks = num_chunks;
     return true;
 }
 
@@ -1004,6 +1005,8 @@ bool bra_encode_rle(char* buf, const size_t buf_size, size_t* num_rle_chunks, br
 
                 if (!bra_encode_rle_next(&j, &num_chunks, &rle))
                     goto BRA_RLE_ENCODING_ERROR;
+
+                rle[j].value = rle[j - 1].value;
             }
             else
                 rle[j].counts++;
@@ -1024,8 +1027,11 @@ bool bra_encode_rle(char* buf, const size_t buf_size, size_t* num_rle_chunks, br
             // rle[j].counts = 0;    // this is just counting as 1
             // rle[j].value  = buf[i];
 
+            // todo this is not working.
             if (!bra_encode_rle_next(&j, &num_chunks, &rle))
                 goto BRA_RLE_ENCODING_ERROR;
+
+            rle[j].value = buf[i];
         }
     }
 

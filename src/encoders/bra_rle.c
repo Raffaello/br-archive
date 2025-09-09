@@ -124,8 +124,8 @@ BRA_RLE_ENCODING_ERROR:
     return false;
 }
 
-bool bra_decode_rle(const size_t num_rle_chunks, const bra_rle_chunk_t rle_data[], char* buf, const size_t buf_size)
-{
-    // TODO
-    return false;
-}
+// bool bra_decode_rle(const size_t num_rle_chunks, const bra_rle_chunk_t rle_data[], char* buf, const size_t buf_size)
+// {
+//     // TODO
+//     return false;
+// }

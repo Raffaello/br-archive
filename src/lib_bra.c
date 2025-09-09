@@ -458,6 +458,19 @@ bool bra_io_sfx_open_and_read_footer_header(const char* fn, bra_io_header_t* out
     if (!bra_io_read_footer(f, &bf))
         return false;
 
+    // Ensure header_offset is before the footer and that the header fits.
+    const int64_t footer_start = bra_io_tell(f) - (int64_t) sizeof(bra_io_footer_t);
+    if (footer_start <= 0 ||
+        bf.header_offset <= 0 ||
+        bf.header_offset >= footer_start - (int64_t) sizeof(bra_io_header_t))
+    {
+        bra_log_error("corrupted or not valid %s-SFX file (header_offset out of bounds): %s",
+                      BRA_NAME,
+                      f->fn);
+        bra_io_close(f);
+        return false;
+    }
+
     // read header and check
     if (!bra_io_seek(f, bf.header_offset, SEEK_SET))
     {

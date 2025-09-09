@@ -5,7 +5,7 @@ project(BRa VERSION 0.3.0 DESCRIPTION "BR-Archive")
 include (CTest)
 enable_testing()
 
-set(CMAKE_C_STANDARD 17)
+set(CMAKE_C_STANDARD 17)   # C23 not supported in VSCode
 set(CMAKE_CXX_STANDARD 20) # C++23 not-supported in CI-Linux (Ubuntu 24) yet
 set(CMAKE_DEBUG_POSTFIX d)
 set(CMAKE_COMPILE_WARNING_AS_ERROR ON)

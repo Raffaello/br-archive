@@ -1,14 +1,24 @@
-#include "lib_bra_io.h"
-#include "lib_bra_defs.h"
+#include "lib_bra.h"
 
+#include <bra_fs_c.h>
 #include <bra_log.h>
 
 #include <assert.h>
+#include <errno.h>
+#include <string.h>
+#include <stdlib.h>
 
 #define assert_bra_io_file_t(x) assert((x) != NULL && (x)->f != NULL && (x)->fn != NULL)
 
 _Static_assert(BRA_MAX_PATH_LENGTH > UINT8_MAX, "BRA_MAX_PATH_LENGTH must be greater than bra_meta_file_t.name_size max value");
 
+static inline void bra_print_string_max_length(const char* buf, const int buf_length, const int max_length)
+{
+    if (buf_length > max_length)
+        bra_log_printf("%.*s...", max_length - 3, buf);
+    else
+        bra_log_printf("%*.*s", -max_length, buf_length, buf);
+}
 
 /**
  * @brief the last encoded or decoded directory.
@@ -571,11 +581,11 @@ bool bra_io_copy_file_chunks(bra_io_file_t* dst, bra_io_file_t* src, const uint6
     assert_bra_io_file_t(dst);
     assert_bra_io_file_t(src);
 
-    char buf[MAX_CHUNK_SIZE];
+    char buf[BRA_MAX_CHUNK_SIZE];
 
     for (uint64_t i = 0; i < data_size;)
     {
-        uint32_t s = bra_min(MAX_CHUNK_SIZE, data_size - i);
+        uint32_t s = bra_min(BRA_MAX_CHUNK_SIZE, data_size - i);
 
         // read source chunk
         if (fread(buf, sizeof(char), s, src->f) != s)

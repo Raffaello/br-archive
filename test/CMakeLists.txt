@@ -58,7 +58,7 @@ add_test(NAME test_bra.not_more_than_1_same_file     COMMAND test_bra test_bra_n
 
 add_executable(test_bra_encoders test_bra_encoders.cpp)
 target_include_directories(test_bra_encoders PRIVATE ${CMAKE_SOURCE_DIR}/src)
-target_link_libraries(test_bra_encoders PRIVATE lib_bra)
+target_link_libraries(test_bra_encoders PUBLIC lib_bra)
 # add_dependencies(test_bra bra unbra bra_sfx)
 
 add_test(NAME test_bra_encoders.encode_rle_1  COMMAND test_bra_encoders test_bra_encoders_encode_rle_1)
@@ -98,12 +98,12 @@ endforeach()
 
 add_custom_command(TARGET test_bra POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different
-                    ${CMAKE_CURRENT_SOURCE_DIR}/dir1
+                    ${CMAKE_CURRENT_SOURCE_DIR}/fixtures/dir1
                     ${CMAKE_CURRENT_BINARY_DIR}/dir1
 )
 
 add_custom_command(TARGET test_bra_fs POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different
-        ${CMAKE_CURRENT_SOURCE_DIR}/dir1
+        ${CMAKE_CURRENT_SOURCE_DIR}/fixtures/dir1
         ${CMAKE_CURRENT_BINARY_DIR}/dir1
 )

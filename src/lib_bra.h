@@ -5,8 +5,9 @@
 extern "C" {
 #endif
 
-#include <lib_bra_defs.h>
-#include <lib_bra_types.h>
+#include "lib_bra_defs.h"
+#include "lib_bra_types.h"
+
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -70,6 +71,15 @@ typedef struct bra_meta_file_t
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
+ * @brief
+ *
+ * @param a
+ * @param b
+ * @return uint64_t
+ */
+uint64_t bra_min(const uint64_t a, const uint64_t b);
+
+/**
  * @brief strdup()
  *
  * @details Returns @c NULL if @p str is @c NULL or on allocation failure.
@@ -81,6 +91,15 @@ typedef struct bra_meta_file_t
  * @return char*
  */
 char* bra_strdup(const char* str);
+
+/**
+ * @brief
+ *
+ * @param mf
+ * @return true
+ * @return false
+ */
+bool bra_validate_meta_filename(const bra_meta_file_t* mf);
 
 /**
  * @brief Convert meta file @p attributes into a char.
@@ -378,13 +397,21 @@ bool bra_io_encode_and_write_to_disk(bra_io_file_t* f, const char* fn);
  */
 bool bra_io_decode_and_write_to_disk(bra_io_file_t* f, bra_fs_overwrite_policy_e* overwrite_policy);
 
-typedef struct bra_rle_chunk_t
-{
-    bra_rle_counts_t counts;    //!< counts is stored as -1, i.e. 0 means 1 and 255 means 256
-    char             value;     //!< the repeated char.
-} bra_rle_chunk_t;
 
+/////////////////////////////////////////////////////////////////////////////////
+
+/**
+ * @brief
+ *
+ * @param buf
+ * @param buf_size
+ * @param num_rle_chunks
+ * @param out_rle_data
+ * @return true
+ * @return false
+ */
 bool bra_encode_rle(char* buf, const size_t buf_size, size_t* num_rle_chunks, bra_rle_chunk_t* out_rle_data[]);
+
 
 #ifdef __cplusplus
 }

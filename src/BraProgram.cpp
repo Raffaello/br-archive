@@ -45,7 +45,6 @@ void BraProgram::banner() const
 
 void BraProgram::help() const
 {
-    banner();
     bra_log_printf("Usage:\n");
     help_usage();
     bra_log_printf("\n");
@@ -162,7 +161,9 @@ int BraProgram::run(const int argc, const char* const argv[])
         bra_log_verbose("- %d. %s\n", i, argv[i]);
 #endif
 
-    m_argv0 = argv[0];
+    m_argv0 = argv[0];    // used in banner
+
+    banner();
     if (auto pa = parseArgs(argc, argv))
     {
         if (!*pa)

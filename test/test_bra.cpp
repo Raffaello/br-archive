@@ -291,17 +291,22 @@ TEST(test_bra_not_more_than_1_same_file)
         return 4;
 
     char        buf[1024];
-    char*       line = fgets(buf, sizeof(buf), output);
-    std::string str  = line;
-    if (!str.ends_with("num files: 1\n"))
+    char*       line;
+    std::string str;
+
+    while ((line = fgets(buf, sizeof(buf), output)) != nullptr)
     {
-        std::cerr << std::format("expected ends with num files: 1\n actual: {}", str) << std::endl;
-        return 5;
+        str = line;
+        if (str.ends_with("num files: 1\n"))
+        {
+            pclose(output);
+            return 0;
+        }
     }
 
     pclose(output);
-
-    return 0;
+    std::cerr << std::format("expected to contains 'with num files: 1\\n'\n") << std::endl;
+    return 5;
 }
 
 int main(int argc, char* argv[])

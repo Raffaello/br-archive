@@ -413,7 +413,7 @@ bool bra_io_decode_and_write_to_disk(bra_io_file_t* f, bra_fs_overwrite_policy_e
  * @return true
  * @return false
  */
-bool bra_encode_rle(const char* buf, const size_t buf_size, size_t* num_rle_chunks, bra_rle_chunk_t* out_rle_data[]);
+bool bra_encode_rle_array(const char* buf, const size_t buf_size, size_t* num_rle_chunks, bra_rle_chunk_t* out_rle_data[]);
 
 /**
  * @brief
@@ -427,7 +427,21 @@ bool bra_encode_rle(const char* buf, const size_t buf_size, size_t* num_rle_chun
  * @return true
  * @return false
  */
-bool bra_decode_rle(const size_t num_rle_chunks, size_t* cur_rle_chunk, bra_rle_chunk_t rle_data[], char* buf, const size_t buf_size, size_t* buf_i);
+bool bra_decode_rle_array(const size_t num_rle_chunks, size_t* cur_rle_chunk, bra_rle_chunk_t rle_data[], char* buf, const size_t buf_size, size_t* buf_i);
+
+/**
+ * @brief
+ *
+ * @param buf
+ * @param buf_size
+ * @param num_rle_chunks this is not really required.. but *2 give the total size in bytes
+ * @param chunk_head
+ * @return true
+ * @return false
+ */
+bool bra_encode_rle(const char* buf, const size_t buf_size, size_t* num_rle_chunks, bra_rle_chunk_t** chunk_head);
+bool bra_encode_rle_free_list(bra_rle_chunk_t** rle);
+bool bra_decode_rle(bra_rle_chunk_t** cur, char* buf, const size_t buf_size, size_t* buf_i);
 
 #ifdef __cplusplus
 }

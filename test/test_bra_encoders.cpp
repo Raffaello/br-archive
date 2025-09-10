@@ -208,7 +208,7 @@ TEST(test_bra_encoders_encode_decode_rle_3b)
     uint64_t num_rle_chunks = 0;
     // bra_rle_chunk_t* rle_data       = nullptr;
 
-    for (int i = 0; i < buf_size + 1; ++i)
+    for (int i = 0; i < buf_size; ++i)
         buf[i] = 'A';
 
     // ASSERT_TRUE(bra_encode_rle_array(buf, buf_size, &num_rle_chunks, &rle_data));

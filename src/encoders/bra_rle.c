@@ -19,7 +19,7 @@ static bra_rle_chunk_t* bra_encode_rle_alloc_node(size_t* num_rle_chunks, bra_rl
     return e;
 }
 
-bool bra_encode_rle(const char* buf, const size_t buf_size, size_t* num_rle_chunks, bra_rle_chunk_t** chunk_head)
+bool bra_encode_rle(const char* buf, const size_t buf_size, uint64_t* num_rle_chunks, bra_rle_chunk_t** chunk_head)
 {
     assert(buf != NULL);
     assert(num_rle_chunks != NULL);
@@ -29,12 +29,9 @@ bool bra_encode_rle(const char* buf, const size_t buf_size, size_t* num_rle_chun
     bra_rle_chunk_t* prev;
     size_t           i;
 
-
     if (rle == NULL)
     {
-        prev = NULL;
-        rle  = bra_encode_rle_alloc_node(&num_chunks, prev);
-        assert(prev == NULL);
+        rle = bra_encode_rle_alloc_node(&num_chunks, NULL);
         if (rle == NULL)
             return false;
 
@@ -45,13 +42,12 @@ bool bra_encode_rle(const char* buf, const size_t buf_size, size_t* num_rle_chun
     }
     else
     {
+        // find last element
         i = 0;
-        do
+        while (rle->pNext != NULL)
         {
-            prev = rle;
-            rle  = rle->pNext;
+            rle = rle->pNext;
         }
-        while (rle != NULL);
     }
 
     for (; i < buf_size; ++i)
@@ -92,7 +88,6 @@ bool bra_decode_rle(bra_rle_chunk_t** cur, char* buf, const size_t buf_size, siz
     assert(cur != NULL);
     assert(buf != NULL);
     assert(buf_i != NULL);
-
 
     if (*buf_i >= buf_size)
         return false;

@@ -5,6 +5,8 @@
 #include <assert.h>
 #include <stdlib.h>
 
+// TODO: using a list instead of an array.
+
 static bool bra_encode_rle_realloc(size_t* num_rle_chunks, bra_rle_chunk_t* out_rle_data[])
 {
     assert(num_rle_chunks != NULL);
@@ -124,8 +126,37 @@ BRA_RLE_ENCODING_ERROR:
     return false;
 }
 
-// bool bra_decode_rle(const size_t num_rle_chunks, const bra_rle_chunk_t rle_data[], char* buf, const size_t buf_size)
-// {
-//     // TODO
-//     return false;
-// }
+bool bra_decode_rle(const size_t num_rle_chunks, size_t* cur_rle_chunk, bra_rle_chunk_t rle_data[], char* buf, const size_t buf_size, size_t* buf_i)
+{
+    assert(rle_data != NULL);
+    assert(buf != NULL);
+    assert(cur_rle_chunk != NULL);
+    assert(buf_i != NULL);
+
+    if (num_rle_chunks == 0 || *cur_rle_chunk >= num_rle_chunks || *buf_i >= buf_size)
+        return false;
+
+    size_t j = *cur_rle_chunk;
+    size_t i = *buf_i;
+
+    for (; j < num_rle_chunks; ++j)
+    {
+        // NOTE: rle_data.counts==0 means 1 time
+        for (int k = 0; k <= rle_data[j].counts; ++k)
+        {
+            if (i < buf_size)
+                buf[i++] = rle_data[j].value;
+            else
+            {
+                rle_data[j].counts -= k;
+                goto BRA_DECODE_RLE_END;
+            }
+        }
+    }
+
+
+BRA_DECODE_RLE_END:
+    *cur_rle_chunk = j;
+    *buf_i         = i;
+    return true;
+}

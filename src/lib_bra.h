@@ -404,6 +404,7 @@ bool bra_io_decode_and_write_to_disk(bra_io_file_t* f, bra_fs_overwrite_policy_e
  * @brief
  *
  * @todo refactor to its own include
+ * @todo use a list instead of a dynamic array with realloc
  *
  * @param buf
  * @param buf_size
@@ -412,21 +413,21 @@ bool bra_io_decode_and_write_to_disk(bra_io_file_t* f, bra_fs_overwrite_policy_e
  * @return true
  * @return false
  */
-/*[[deprecated]] */ bool bra_encode_rle_array(const char* buf, const size_t buf_size, size_t* num_rle_chunks, bra_rle_chunk_t* out_rle_data[]);
+__attribute__((deprecated)) bool bra_encode_rle_array(const char* buf, const size_t buf_size, size_t* num_rle_chunks, bra_rle_chunk_t* out_rle_data[]);
 
 /**
  * @brief
  *
  * @param num_rle_chunks
  * @param cur_rle_chunk
- * @param rle_data the encoded data, it might be changed.
+ * @param rle_data the encoded data.
  * @param buf
  * @param buf_size
  * @param buf_i
  * @return true
  * @return false
  */
-/*[[deprecated]] */ bool bra_decode_rle_array(const size_t num_rle_chunks, size_t* cur_rle_chunk, bra_rle_chunk_t rle_data[], char* buf, const size_t buf_size, size_t* buf_i);
+__attribute__((deprecated)) bool bra_decode_rle_array(const size_t num_rle_chunks, size_t* cur_rle_chunk, bra_rle_chunk_t rle_data[], char* buf, const size_t buf_size, size_t* buf_i);
 
 /**
  * @brief

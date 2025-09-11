@@ -4,7 +4,7 @@
 extern "C" {
 #endif
 
-#include "../lib_bra_types.h"
+#include <lib_bra_types.h>
 
 
 /**

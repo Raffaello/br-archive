@@ -1,10 +1,10 @@
-#include "lib_bra_io_file.h"
+#include <io/lib_bra_io_file.h>
 
-#include "../lib_bra.h"
-#include "../lib_bra_private.h"
+#include <lib_bra.h>
+#include <lib_bra_private.h>
 
-#include <bra_fs_c.h>
-#include <bra_log.h>
+#include <fs/bra_fs_c.h>
+#include <log/bra_log.h>
 
 #include <assert.h>
 #include <errno.h>

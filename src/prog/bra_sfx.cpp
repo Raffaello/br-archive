@@ -1,7 +1,7 @@
 #include <lib_bra.h>
 #include <io/lib_bra_io_file.h>
 
-#include <bra_log.h>
+#include <log/bra_log.h>
 #include <version.h>
 #include <BraProgram.hpp>
 

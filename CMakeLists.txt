@@ -34,25 +34,23 @@ function(win32_wildcard target)
 
 endfunction()
 
+###########################################################
+
 configure_file(src/version.h.in src/version.h)
-
-add_library(bra_log STATIC src/log/bra_log.c)
-target_include_directories(bra_log PUBLIC src/log)
-
-add_library(bra_fs STATIC src/fs/bra_fs.cpp)
-target_sources(bra_fs
-    PRIVATE
-        src/fs/bra_wildcards.cpp
-        src/fs/bra_fs_c.cpp
-)
-target_include_directories(bra_fs PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/fs)
-target_link_libraries(bra_fs PUBLIC bra_log)
 
 add_library(lib_bra STATIC src/lib_bra.c)
 target_sources(lib_bra
     PRIVATE
         src/lib_bra_private.c
+
+        src/log/bra_log.c
+
+        src/fs/bra_fs.cpp
+        src/fs/bra_wildcards.cpp
+        src/fs/bra_fs_c.cpp
+
         src/io/lib_bra_io_file.c
+
         src/encoders/bra_rle.c
 )
 target_include_directories(lib_bra
@@ -61,14 +59,13 @@ target_include_directories(lib_bra
         ${CMAKE_CURRENT_SOURCE_DIR}/src
         $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/src> # for configure_file (version.h)
 )
-target_link_libraries(lib_bra PUBLIC bra_log bra_fs)
 set_target_properties(lib_bra PROPERTIES
     PREFIX ""
 )
 
 add_library(bra_prog STATIC src/prog/BraProgram.cpp)
 target_include_directories(bra_prog PUBLIC src/prog)
-target_link_libraries(bra_prog PUBLIC lib_bra bra_fs)
+target_link_libraries(bra_prog PUBLIC lib_bra)
 
 add_executable(bra src/prog/bra.cpp)
 target_link_libraries(bra PRIVATE bra_prog)

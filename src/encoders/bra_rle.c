@@ -1,7 +1,6 @@
-// #include "../lib_bra.h"
-#include "bra_rle.h"
+#include <encoders/bra_rle.h>
 
-#include <bra_log.h>
+#include <log/bra_log.h>
 
 #include <assert.h>
 #include <stdlib.h>

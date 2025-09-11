@@ -1,4 +1,7 @@
 #include "lib_bra.h"
+#include "io/lib_bra_io_file.h"
+
+#include "lib_bra_private.h"
 
 #include <bra_fs_c.h>
 #include <bra_log.h>
@@ -113,4 +116,33 @@ void bra_meta_file_free(bra_meta_file_t* mf)
         free(mf->name);
         mf->name = NULL;
     }
+}
+
+bool bra_io_print_meta_file(bra_io_file_t* f)
+{
+    assert_bra_io_file_t(f);
+
+    bra_meta_file_t mf;
+    char            bytes[BRA_PRINTF_FMT_BYTES_BUF_SIZE];
+
+    if (!bra_io_file_read_meta_file(f, &mf))
+        return false;
+
+    const uint64_t ds   = mf.data_size;
+    const char     attr = bra_format_meta_attributes(mf.attributes);
+    bra_format_bytes(mf.data_size, bytes);
+
+    bra_log_printf("|   %c  | %s | ", attr, bytes);
+    _bra_print_string_max_length(mf.name, mf.name_size, BRA_PRINTF_FMT_FILENAME_MAX_LENGTH);
+    bra_log_printf("|\n");
+
+    bra_meta_file_free(&mf);
+    // skip data content
+    if (!bra_io_file_skip_data(f, ds))
+    {
+        bra_io_file_read_error(f);
+        return false;
+    }
+
+    return true;
 }

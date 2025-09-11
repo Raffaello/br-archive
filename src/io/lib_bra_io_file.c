@@ -1,4 +1,7 @@
-#include "lib_bra.h"
+#include "lib_bra_io_file.h"
+
+#include "../lib_bra.h"
+#include "../lib_bra_private.h"
 
 #include <bra_fs_c.h>
 #include <bra_log.h>
@@ -8,19 +11,9 @@
 #include <string.h>
 #include <stdlib.h>
 
-#define assert_bra_io_file_t(x) assert((x) != NULL && (x)->f != NULL && (x)->fn != NULL)
-
-_Static_assert(BRA_MAX_PATH_LENGTH > UINT8_MAX, "BRA_MAX_PATH_LENGTH must be greater than bra_meta_file_t.name_size max value");
-
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-static inline void bra_print_string_max_length(const char* buf, const int buf_length, const int max_length)
-{
-    if (buf_length > max_length)
-        bra_log_printf("%.*s...", max_length - 3, buf);
-    else
-        bra_log_printf("%*.*s", -max_length, buf_length, buf);
-}
+_Static_assert(BRA_MAX_PATH_LENGTH > UINT8_MAX, "BRA_MAX_PATH_LENGTH must be greater than bra_meta_file_t.name_size max value");
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -38,35 +31,6 @@ static char         g_last_dir[BRA_MAX_PATH_LENGTH];
 static unsigned int g_last_dir_size;
 static const char   g_end_messages[][5] = {" OK ", "SKIP"};
 
-bool bra_io_print_meta_file(bra_io_file_t* f)
-{
-    assert_bra_io_file_t(f);
-
-    bra_meta_file_t mf;
-    char            bytes[BRA_PRINTF_FMT_BYTES_BUF_SIZE];
-
-    if (!bra_io_read_meta_file(f, &mf))
-        return false;
-
-    const uint64_t ds   = mf.data_size;
-    const char     attr = bra_format_meta_attributes(mf.attributes);
-    bra_format_bytes(mf.data_size, bytes);
-
-    bra_log_printf("|   %c  | %s | ", attr, bytes);
-    bra_print_string_max_length(mf.name, mf.name_size, BRA_PRINTF_FMT_FILENAME_MAX_LENGTH);
-    bra_log_printf("|\n");
-
-    bra_meta_file_free(&mf);
-    // skip data content
-    if (!bra_io_skip_data(f, ds))
-    {
-        bra_io_file_read_error(f);
-        return false;
-    }
-
-    return true;
-}
-
 void bra_io_file_error(bra_io_file_t* bf, const char* verb)
 {
     assert(bf != NULL);
@@ -74,7 +38,7 @@ void bra_io_file_error(bra_io_file_t* bf, const char* verb)
 
     const char* fn = (bf->fn != NULL) ? bf->fn : "N/A";
     bra_log_error("unable to %s %s file (errno %d: %s)", verb, fn, errno, strerror(errno));
-    bra_io_close(bf);
+    bra_io_file_close(bf);
 }
 
 inline void bra_io_file_open_error(bra_io_file_t* bf)
@@ -97,11 +61,11 @@ inline void bra_io_file_write_error(bra_io_file_t* bf)
     bra_io_file_error(bf, "write");
 }
 
-bool bra_io_is_elf(const char* fn)
+bool bra_io_file_is_elf(const char* fn)
 {
     bra_io_file_t f;
 
-    if (!bra_io_open(&f, fn, "rb"))
+    if (!bra_io_file_open(&f, fn, "rb"))
         return false;
 
     // 0x7F,'E','L','F'
@@ -113,7 +77,7 @@ bool bra_io_is_elf(const char* fn)
         return false;
     }
 
-    bra_io_close(&f);
+    bra_io_file_close(&f);
     const bool ret = magic[0] == 0x7F && magic[1] == 'E' && magic[2] == 'L' && magic[3] == 'F';
     if (ret)
         bra_log_info("ELF file detected");
@@ -121,10 +85,10 @@ bool bra_io_is_elf(const char* fn)
     return ret;
 }
 
-bool bra_io_is_pe_exe(const char* fn)
+bool bra_io_file_is_pe_exe(const char* fn)
 {
     bra_io_file_t f;
-    if (!bra_io_open(&f, fn, "rb"))
+    if (!bra_io_file_open(&f, fn, "rb"))
         return false;
 
     // 'M' 'Z'
@@ -139,12 +103,12 @@ bool bra_io_is_pe_exe(const char* fn)
 
     if (magic[0] != 'M' || magic[1] != 'Z')
     {
-        bra_io_close(&f);
+        bra_io_file_close(&f);
         return false;
     }
 
     // Read the PE header offset from the DOS header
-    if (!bra_io_seek(&f, 0x3C, SEEK_SET))
+    if (!bra_io_file_seek(&f, 0x3C, SEEK_SET))
     {
     BRA_IS_EXE_SEEK_ERROR:
         bra_io_file_seek_error(&f);
@@ -155,7 +119,7 @@ bool bra_io_is_pe_exe(const char* fn)
     if (fread(&pe_offset, sizeof(uint32_t), 1, f.f) != 1)
         goto BRA_IS_EXE_ERROR;
 
-    if (!bra_io_seek(&f, pe_offset, SEEK_SET))
+    if (!bra_io_file_seek(&f, pe_offset, SEEK_SET))
         goto BRA_IS_EXE_SEEK_ERROR;
 
     const size_t PE_MAGIC_SIZE = 4;
@@ -163,7 +127,7 @@ bool bra_io_is_pe_exe(const char* fn)
     if (fread(pe_magic, sizeof(char), PE_MAGIC_SIZE, f.f) != PE_MAGIC_SIZE)
         goto BRA_IS_EXE_ERROR;
 
-    bra_io_close(&f);
+    bra_io_file_close(&f);
     const bool ret = pe_magic[0] == 'P' && pe_magic[1] == 'E' && pe_magic[2] == '\0' && pe_magic[3] == '\0';
     if (ret)
         bra_log_info("PE/EXE file detected");
@@ -171,12 +135,12 @@ bool bra_io_is_pe_exe(const char* fn)
     return ret;
 }
 
-bool bra_io_is_sfx(const char* fn)
+bool bra_io_file_is_sfx(const char* fn)
 {
-    return bra_io_is_elf(fn) || bra_io_is_pe_exe(fn);
+    return bra_io_file_is_elf(fn) || bra_io_file_is_pe_exe(fn);
 }
 
-bool bra_io_open(bra_io_file_t* bf, const char* fn, const char* mode)
+bool bra_io_file_open(bra_io_file_t* bf, const char* fn, const char* mode)
 {
     if (fn == NULL || bf == NULL || mode == NULL)
         return false;
@@ -192,7 +156,7 @@ bool bra_io_open(bra_io_file_t* bf, const char* fn, const char* mode)
     return true;
 }
 
-void bra_io_close(bra_io_file_t* bf)
+void bra_io_file_close(bra_io_file_t* bf)
 {
     assert(bf != NULL);
 
@@ -209,26 +173,26 @@ void bra_io_close(bra_io_file_t* bf)
     }
 }
 
-bool bra_io_sfx_open(bra_io_file_t* f, const char* fn, const char* mode)
+bool bra_io_file_sfx_open(bra_io_file_t* f, const char* fn, const char* mode)
 {
-    if (!bra_io_open(f, fn, mode))
+    if (!bra_io_file_open(f, fn, mode))
         return false;
 
     // check if it can have the footer
-    if (!bra_io_seek(f, 0, SEEK_END))
+    if (!bra_io_file_seek(f, 0, SEEK_END))
     {
         bra_io_file_seek_error(f);
         return false;
     }
-    if (bra_io_tell(f) < (int64_t) sizeof(bra_io_footer_t))
+    if (bra_io_file_tell(f) < (int64_t) sizeof(bra_io_footer_t))
     {
         bra_log_error("%s-SFX module too small (missing footer placeholder): %s", BRA_NAME, f->fn);
-        bra_io_close(f);
+        bra_io_file_close(f);
         return false;
     }
 
     // Position at the footer start
-    if (!bra_io_seek(f, -1L * (int64_t) sizeof(bra_io_footer_t), SEEK_END))
+    if (!bra_io_file_seek(f, -1L * (int64_t) sizeof(bra_io_footer_t), SEEK_END))
     {
         bra_io_file_seek_error(f);
         return false;
@@ -237,7 +201,7 @@ bool bra_io_sfx_open(bra_io_file_t* f, const char* fn, const char* mode)
     return true;
 }
 
-bool bra_io_seek(bra_io_file_t* f, const int64_t offs, const int origin)
+bool bra_io_file_seek(bra_io_file_t* f, const int64_t offs, const int origin)
 {
     assert_bra_io_file_t(f);
 
@@ -252,7 +216,7 @@ bool bra_io_seek(bra_io_file_t* f, const int64_t offs, const int origin)
 #endif
 }
 
-int64_t bra_io_tell(bra_io_file_t* f)
+int64_t bra_io_file_tell(bra_io_file_t* f)
 {
     assert_bra_io_file_t(f);
 
@@ -267,7 +231,7 @@ int64_t bra_io_tell(bra_io_file_t* f)
 #endif
 }
 
-bool bra_io_read_header(bra_io_file_t* bf, bra_io_header_t* out_bh)
+bool bra_io_file_read_header(bra_io_file_t* bf, bra_io_header_t* out_bh)
 {
     assert_bra_io_file_t(bf);
     assert(out_bh != NULL);
@@ -286,14 +250,14 @@ bool bra_io_read_header(bra_io_file_t* bf, bra_io_header_t* out_bh)
     if (out_bh->magic != BRA_MAGIC)
     {
         bra_log_error("Not valid %s file: %s", BRA_NAME, bf->fn);
-        bra_io_close(bf);
+        bra_io_file_close(bf);
         return false;
     }
 
     return true;
 }
 
-bool bra_io_write_header(bra_io_file_t* f, const uint32_t num_files)
+bool bra_io_file_write_header(bra_io_file_t* f, const uint32_t num_files)
 {
     assert_bra_io_file_t(f);
 
@@ -312,7 +276,7 @@ bool bra_io_write_header(bra_io_file_t* f, const uint32_t num_files)
     return true;
 }
 
-bool bra_io_read_footer(bra_io_file_t* f, bra_io_footer_t* bf_out)
+bool bra_io_file_read_footer(bra_io_file_t* f, bra_io_footer_t* bf_out)
 {
     assert_bra_io_file_t(f);
     assert(bf_out != NULL);
@@ -328,14 +292,14 @@ bool bra_io_read_footer(bra_io_file_t* f, bra_io_footer_t* bf_out)
     if (bf_out->magic != BRA_FOOTER_MAGIC || bf_out->header_offset <= 0)
     {
         bra_log_error("corrupted or not valid %s-SFX file: %s", BRA_NAME, f->fn);
-        bra_io_close(f);
+        bra_io_file_close(f);
         return false;
     }
 
     return true;
 }
 
-bool bra_io_write_footer(bra_io_file_t* f, const int64_t header_offset)
+bool bra_io_file_write_footer(bra_io_file_t* f, const int64_t header_offset)
 {
     assert_bra_io_file_t(f);
     assert(header_offset > 0);
@@ -354,24 +318,24 @@ bool bra_io_write_footer(bra_io_file_t* f, const int64_t header_offset)
     return true;
 }
 
-bool bra_io_sfx_open_and_read_footer_header(const char* fn, bra_io_header_t* out_bh, bra_io_file_t* f)
+bool bra_io_file_sfx_open_and_read_footer_header(const char* fn, bra_io_header_t* out_bh, bra_io_file_t* f)
 {
     assert(fn != NULL);
     assert(out_bh != NULL);
     assert(f != NULL);
 
-    if (!bra_io_sfx_open(f, fn, "rb"))
+    if (!bra_io_file_sfx_open(f, fn, "rb"))
         return false;
 
     bra_io_footer_t bf;
     bf.header_offset = 0;
     bf.magic         = 0;
 
-    if (!bra_io_read_footer(f, &bf))
+    if (!bra_io_file_read_footer(f, &bf))
         return false;
 
     // Ensure header_offset is before the footer and that the header fits.
-    const int64_t footer_start = bra_io_tell(f) - (int64_t) sizeof(bra_io_footer_t);
+    const int64_t footer_start = bra_io_file_tell(f) - (int64_t) sizeof(bra_io_footer_t);
     if (footer_start <= 0 ||
         bf.header_offset <= 0 ||
         bf.header_offset >= footer_start - (int64_t) sizeof(bra_io_header_t))
@@ -379,24 +343,24 @@ bool bra_io_sfx_open_and_read_footer_header(const char* fn, bra_io_header_t* out
         bra_log_error("corrupted or not valid %s-SFX file (header_offset out of bounds): %s",
                       BRA_NAME,
                       f->fn);
-        bra_io_close(f);
+        bra_io_file_close(f);
         return false;
     }
 
     // read header and check
-    if (!bra_io_seek(f, bf.header_offset, SEEK_SET))
+    if (!bra_io_file_seek(f, bf.header_offset, SEEK_SET))
     {
         bra_io_file_seek_error(f);
         return false;
     }
 
-    if (!bra_io_read_header(f, out_bh))
+    if (!bra_io_file_read_header(f, out_bh))
         return false;
 
     return true;
 }
 
-bool bra_io_read_meta_file(bra_io_file_t* f, bra_meta_file_t* mf)
+bool bra_io_file_read_meta_file(bra_io_file_t* f, bra_meta_file_t* mf)
 {
     assert_bra_io_file_t(f);
     assert(mf != NULL);
@@ -496,7 +460,7 @@ bool bra_io_read_meta_file(bra_io_file_t* f, bra_meta_file_t* mf)
     return true;
 }
 
-bool bra_io_write_meta_file(bra_io_file_t* f, const bra_meta_file_t* mf)
+bool bra_io_file_write_meta_file(bra_io_file_t* f, const bra_meta_file_t* mf)
 {
     assert_bra_io_file_t(f);
     assert(mf != NULL);
@@ -580,7 +544,7 @@ bool bra_io_write_meta_file(bra_io_file_t* f, const bra_meta_file_t* mf)
     return true;
 }
 
-bool bra_io_copy_file_chunks(bra_io_file_t* dst, bra_io_file_t* src, const uint64_t data_size)
+bool bra_io_file_copy_file_chunks(bra_io_file_t* dst, bra_io_file_t* src, const uint64_t data_size)
 {
     assert_bra_io_file_t(dst);
     assert_bra_io_file_t(src);
@@ -595,7 +559,7 @@ bool bra_io_copy_file_chunks(bra_io_file_t* dst, bra_io_file_t* src, const uint6
         if (fread(buf, sizeof(char), s, src->f) != s)
         {
             bra_io_file_read_error(src);
-            bra_io_close(dst);
+            bra_io_file_close(dst);
             return false;
         }
 
@@ -603,7 +567,7 @@ bool bra_io_copy_file_chunks(bra_io_file_t* dst, bra_io_file_t* src, const uint6
         if (fwrite(buf, sizeof(char), s, dst->f) != s)
         {
             bra_io_file_write_error(dst);
-            bra_io_close(src);
+            bra_io_file_close(src);
             return false;
         }
 
@@ -613,14 +577,14 @@ bool bra_io_copy_file_chunks(bra_io_file_t* dst, bra_io_file_t* src, const uint6
     return true;
 }
 
-bool bra_io_skip_data(bra_io_file_t* f, const uint64_t data_size)
+bool bra_io_file_skip_data(bra_io_file_t* f, const uint64_t data_size)
 {
     assert_bra_io_file_t(f);
 
-    return bra_io_seek(f, data_size, SEEK_CUR);
+    return bra_io_file_seek(f, data_size, SEEK_CUR);
 }
 
-bool bra_io_encode_and_write_to_disk(bra_io_file_t* f, const char* fn)
+bool bra_io_file_encode_and_write_to_disk(bra_io_file_t* f, const char* fn)
 {
     assert_bra_io_file_t(f);
     assert(fn != NULL);
@@ -631,7 +595,7 @@ bool bra_io_encode_and_write_to_disk(bra_io_file_t* f, const char* fn)
     {
         bra_log_error("%s has unknown attribute", fn);
     BRA_IO_WRITE_CLOSE_ERROR:
-        bra_io_close(f);
+        bra_io_file_close(f);
         return false;
     }
 
@@ -652,7 +616,7 @@ bool bra_io_encode_and_write_to_disk(bra_io_file_t* f, const char* fn)
         goto BRA_IO_WRITE_CLOSE_ERROR;
     }
 
-    bra_print_string_max_length(fn, strlen(fn), BRA_PRINTF_FMT_FILENAME_MAX_LENGTH);
+    _bra_print_string_max_length(fn, strlen(fn), BRA_PRINTF_FMT_FILENAME_MAX_LENGTH);
 
     // 2. file name length
     const size_t fn_len = strnlen(fn, BRA_MAX_PATH_LENGTH);
@@ -684,7 +648,7 @@ bool bra_io_encode_and_write_to_disk(bra_io_file_t* f, const char* fn)
     if (mf.name == NULL)
         goto BRA_IO_WRITE_CLOSE_ERROR;
 
-    const bool res = bra_io_write_meta_file(f, &mf);
+    const bool res = bra_io_file_write_meta_file(f, &mf);
     bra_meta_file_free(&mf);
     if (!res)
         return false;    // f closed already
@@ -702,13 +666,13 @@ bool bra_io_encode_and_write_to_disk(bra_io_file_t* f, const char* fn)
         bra_io_file_t f2;
 
         memset(&f2, 0, sizeof(bra_io_file_t));
-        if (!bra_io_open(&f2, fn, "rb"))
+        if (!bra_io_file_open(&f2, fn, "rb"))
             goto BRA_IO_WRITE_CLOSE_ERROR;
 
-        if (!bra_io_copy_file_chunks(f, &f2, ds))
+        if (!bra_io_file_copy_file_chunks(f, &f2, ds))
             return false;    // f, f2 closed already
 
-        bra_io_close(&f2);
+        bra_io_file_close(&f2);
     }
     break;
     }
@@ -717,14 +681,14 @@ bool bra_io_encode_and_write_to_disk(bra_io_file_t* f, const char* fn)
     return true;
 }
 
-bool bra_io_decode_and_write_to_disk(bra_io_file_t* f, bra_fs_overwrite_policy_e* overwrite_policy)
+bool bra_io_file_decode_and_write_to_disk(bra_io_file_t* f, bra_fs_overwrite_policy_e* overwrite_policy)
 {
     assert_bra_io_file_t(f);
     assert(overwrite_policy != NULL);
 
     const char*     end_msg;    // 'OK  ' | 'SKIP'
     bra_meta_file_t mf;
-    if (!bra_io_read_meta_file(f, &mf))
+    if (!bra_io_file_read_meta_file(f, &mf))
         return false;
 
     if (!bra_validate_meta_filename(&mf))
@@ -747,7 +711,7 @@ bool bra_io_decode_and_write_to_disk(bra_io_file_t* f, bra_fs_overwrite_policy_e
             end_msg = g_end_messages[1];
             bra_log_printf("Skipping file:   " BRA_PRINTF_FMT_FILENAME, mf.name);
             bra_meta_file_free(&mf);
-            if (!bra_io_skip_data(f, ds))
+            if (!bra_io_file_skip_data(f, ds))
             {
                 bra_io_file_read_error(f);
                 return false;
@@ -764,14 +728,14 @@ bool bra_io_decode_and_write_to_disk(bra_io_file_t* f, bra_fs_overwrite_policy_e
             //       The archive ensures the last used directory is created first,
             //       and then its files follow.
             //       So, no need to create the parent directory for each file each time.
-            if (!bra_io_open(&f2, mf.name, "wb"))
+            if (!bra_io_file_open(&f2, mf.name, "wb"))
                 goto BRA_IO_DECODE_ERR;
 
             bra_meta_file_free(&mf);
-            if (!bra_io_copy_file_chunks(&f2, f, ds))
+            if (!bra_io_file_copy_file_chunks(&f2, f, ds))
                 return false;
 
-            bra_io_close(&f2);
+            bra_io_file_close(&f2);
         }
     }
     break;

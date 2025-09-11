@@ -51,7 +51,8 @@ target_link_libraries(bra_fs PUBLIC bra_log)
 add_library(lib_bra STATIC src/lib_bra.c)
 target_sources(lib_bra
     PRIVATE
-        src/lib_bra_io.c
+        src/lib_bra_private.c
+        src/io/lib_bra_io_file.c
         src/encoders/bra_rle.c
 )
 target_include_directories(lib_bra

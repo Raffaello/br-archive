@@ -1,4 +1,6 @@
 #include <lib_bra.h>
+#include <io/lib_bra_io_file.h>
+
 #include <bra_log.h>
 #include <bra_fs.hpp>
 #include <version.h>
@@ -120,15 +122,15 @@ protected:
 
         if (m_sfx)
         {
-            if (!bra_io_sfx_open_and_read_footer_header(m_bra_file.string().c_str(), &bh, &m_f))
+            if (!bra_io_file_sfx_open_and_read_footer_header(m_bra_file.string().c_str(), &bh, &m_f))
                 return 1;
         }
         else
         {
-            if (!bra_io_open(&m_f, m_bra_file.string().c_str(), "rb"))
+            if (!bra_io_file_open(&m_f, m_bra_file.string().c_str(), "rb"))
                 return 1;
 
-            if (!bra_io_read_header(&m_f, &bh))
+            if (!bra_io_file_read_header(&m_f, &bh))
                 return 1;
         }
 
@@ -150,12 +152,12 @@ protected:
         {
             for (uint32_t i = 0; i < bh.num_files; i++)
             {
-                if (!bra_io_decode_and_write_to_disk(&m_f, &m_overwrite_policy))
+                if (!bra_io_file_decode_and_write_to_disk(&m_f, &m_overwrite_policy))
                     return 1;
             }
         }
 
-        bra_io_close(&m_f);
+        bra_io_file_close(&m_f);
         return 0;
     }
 

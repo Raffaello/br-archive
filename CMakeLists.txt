@@ -36,18 +36,21 @@ endfunction()
 
 configure_file(src/version.h.in src/version.h)
 
-add_library(bra_log STATIC src/bra_log.c)
+add_library(bra_log STATIC src/log/bra_log.c)
+target_include_directories(bra_log PUBLIC src/log)
 
-add_library(bra_wildcards STATIC src/bra_wildcards.cpp)
-target_include_directories(bra_wildcards PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)
-target_link_libraries(bra_wildcards PUBLIC bra_log)
+# add_library(bra_wildcards STATIC src/bra_wildcards.cpp)
+# target_include_directories(bra_wildcards PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)
+# target_link_libraries(bra_wildcards PUBLIC bra_log)
 
-add_library(bra_fs STATIC src/bra_fs.cpp)
-target_include_directories(bra_fs PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)
-target_link_libraries(bra_fs PUBLIC bra_log bra_wildcards)
-
-add_library(bra_fs_c STATIC src/bra_fs_c.cpp)
-target_link_libraries(bra_fs_c PRIVATE bra_fs)
+add_library(bra_fs STATIC src/fs/bra_fs.cpp)
+target_sources(bra_fs
+    PRIVATE
+        src/fs/bra_wildcards.cpp
+        src/fs/bra_fs_c.cpp
+)
+target_include_directories(bra_fs PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/fs)
+target_link_libraries(bra_fs PUBLIC bra_log)
 
 add_library(lib_bra STATIC src/lib_bra.c)
 target_sources(lib_bra
@@ -57,12 +60,11 @@ target_sources(lib_bra
 )
 target_include_directories(lib_bra
     PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR}/src
     PUBLIC
+        ${CMAKE_CURRENT_SOURCE_DIR}/src
         $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/src> # for configure_file (version.h)
-        ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
-target_link_libraries(lib_bra PUBLIC bra_log bra_fs_c)
+target_link_libraries(lib_bra PUBLIC bra_log bra_fs)
 set_target_properties(lib_bra PROPERTIES
     PREFIX ""
 )

@@ -3,8 +3,8 @@ enable_testing()
 
 
 add_executable(test_bra_wildcards test_bra_wildcards.cpp)
-target_link_libraries(test_bra_wildcards PRIVATE bra_wildcards)
-add_dependencies(test_bra_wildcards bra_wildcards)
+target_link_libraries(test_bra_wildcards PRIVATE bra_fs)
+add_dependencies(test_bra_wildcards bra_fs)
 
 add_test(NAME test_bra_wildcards.is_wildcard           COMMAND test_bra_wildcards test_bra_wildcards_is_wildcard)
 add_test(NAME test_bra_wildcards.wildcard_extract_dir  COMMAND test_bra_wildcards test_bra_wildcards_extract_dir)

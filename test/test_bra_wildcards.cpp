@@ -1,5 +1,5 @@
 #include "bra_test.hpp"
-#include "lib_bra_defs.h"
+#include <../lib_bra_defs.h>
 
 #include <bra_wildcards.hpp>
 

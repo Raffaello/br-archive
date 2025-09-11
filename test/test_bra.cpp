@@ -7,7 +7,6 @@
 #include <fstream>
 #include <cstdio>
 
-#include <lib_bra.h>
 
 namespace fs = std::filesystem;
 

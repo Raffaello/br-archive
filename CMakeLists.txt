@@ -51,14 +51,16 @@ target_link_libraries(bra_fs_c PRIVATE bra_fs)
 
 add_library(lib_bra STATIC src/lib_bra.c)
 target_sources(lib_bra
-    PUBLIC
+    PRIVATE
         src/lib_bra_io.c
         src/encoders/bra_rle.c
 )
 target_include_directories(lib_bra
+    PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/src
     PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/src> # for configure_file (version.h)
-        ${CMAKE_CURRENT_SOURCE_DIR}/src
+        ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 target_link_libraries(lib_bra PUBLIC bra_log bra_fs_c)
 set_target_properties(lib_bra PROPERTIES

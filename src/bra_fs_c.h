@@ -9,6 +9,9 @@ extern "C" {
 #include <stdbool.h>
 #include <stdint.h>
 
+// TODO:  later on as exercise discard the c++ filesystem and do it in native OS APIs with C (bra_fs.c)
+//        no wrapper in the c++ filesystem. [not important for now]
+
 /**
  * @brief Return if the given @p path is a directory.
  *

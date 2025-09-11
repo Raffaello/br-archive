@@ -3,7 +3,6 @@ enable_testing()
 
 
 add_executable(test_bra_wildcards test_bra_wildcards.cpp)
-target_include_directories(test_bra_wildcards PRIVATE ${CMAKE_SOURCE_DIR}/src)
 target_link_libraries(test_bra_wildcards PRIVATE bra_wildcards)
 add_dependencies(test_bra_wildcards bra_wildcards)
 
@@ -15,7 +14,6 @@ add_test(NAME test_bra_wildcards.wildcard_to_regexp    COMMAND test_bra_wildcard
 
 
 add_executable(test_bra_fs test_bra_fs.cpp)
-target_include_directories(test_bra_fs PRIVATE ${CMAKE_SOURCE_DIR}/src)
 target_link_libraries(test_bra_fs PRIVATE bra_fs)
 add_dependencies(test_bra_fs bra_fs)
 
@@ -35,7 +33,6 @@ add_test(NAME test_bra_fs.search_wildcard_recursive_in_dir1 COMMAND test_bra_fs 
 #####################################################################################################
 
 add_executable(test_bra test_bra.cpp)
-target_include_directories(test_bra PRIVATE ${CMAKE_SOURCE_DIR}/src)
 target_link_libraries(test_bra PRIVATE bra_fs)
 add_dependencies(test_bra bra unbra bra_sfx)
 
@@ -57,9 +54,9 @@ add_test(NAME test_bra.not_more_than_1_same_file     COMMAND test_bra test_bra_n
 #####################################################################################################
 
 add_executable(test_bra_encoders test_bra_encoders.cpp)
-target_include_directories(test_bra_encoders PRIVATE ${CMAKE_SOURCE_DIR}/src)
 target_link_libraries(test_bra_encoders PUBLIC lib_bra)
-# add_dependencies(test_bra bra unbra bra_sfx)
+target_include_directories(test_bra_encoders PRIVATE ${CMAKE_SOURCE_DIR}/src)
+
 
 add_test(NAME test_bra_encoders.encode_decode_rle_1  COMMAND test_bra_encoders test_bra_encoders_encode_decode_rle_1)
 add_test(NAME test_bra_encoders.encode_decode_rle_2  COMMAND test_bra_encoders test_bra_encoders_encode_decode_rle_2)

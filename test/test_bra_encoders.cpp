@@ -1,7 +1,7 @@
 #include "bra_test.hpp"
 
-// #include <encoders/bra_rle.h>
-#include <lib_bra.h>
+#include <encoders/bra_rle.h>
+// #include <lib_bra.h>
 
 #include <bra_fs.hpp>
 

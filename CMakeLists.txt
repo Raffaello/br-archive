@@ -39,10 +39,6 @@ configure_file(src/version.h.in src/version.h)
 add_library(bra_log STATIC src/log/bra_log.c)
 target_include_directories(bra_log PUBLIC src/log)
 
-# add_library(bra_wildcards STATIC src/bra_wildcards.cpp)
-# target_include_directories(bra_wildcards PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)
-# target_link_libraries(bra_wildcards PUBLIC bra_log)
-
 add_library(bra_fs STATIC src/fs/bra_fs.cpp)
 target_sources(bra_fs
     PRIVATE
@@ -69,18 +65,19 @@ set_target_properties(lib_bra PROPERTIES
     PREFIX ""
 )
 
-add_library(bra_prog STATIC src/BraProgram.cpp)
+add_library(bra_prog STATIC src/prog/BraProgram.cpp)
+target_include_directories(bra_prog PUBLIC src/prog)
 target_link_libraries(bra_prog PUBLIC lib_bra bra_fs)
 
-add_executable(bra src/bra.cpp)
+add_executable(bra src/prog/bra.cpp)
 target_link_libraries(bra PRIVATE bra_prog)
 win32_wildcard(bra)
 
-add_executable(unbra src/unbra.cpp)
+add_executable(unbra src/prog/unbra.cpp)
 target_link_libraries(unbra PRIVATE bra_prog)
 win32_wildcard(unbra)
 
-add_executable(bra_sfx src/bra_sfx.cpp)
+add_executable(bra_sfx src/prog/bra_sfx.cpp)
 target_link_libraries(bra_sfx PRIVATE bra_prog)
 win32_wildcard(bra_sfx)
 

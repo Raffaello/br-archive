@@ -33,7 +33,7 @@ TEST(test_bra_encoders_encode_decode_rle_1)
     for (size_t i = 0; i < buf_i; i++)
         ASSERT_EQ(buf2[i], 'A');
     ASSERT_TRUE(rle_list == nullptr);
-    ASSERT_FALSE(bra_decode_rle(&rle_list, buf2, buf_size, &buf_i))
+    ASSERT_FALSE(bra_decode_rle(&rle_list, buf2, buf_size, &buf_i));
 
     ASSERT_TRUE(bra_encode_rle_free_list(&rle_head));
     return 0;
@@ -178,7 +178,7 @@ TEST(test_bra_encoders_encode_decode_rle_3b)
     buf_i = 0;
     ASSERT_FALSE(bra_decode_rle(&rle_list, buf2, buf_size, &buf_i));
 
-    ASSERT_TRUE(bra_encode_rle_free_list(&rle_head))
+    ASSERT_TRUE(bra_encode_rle_free_list(&rle_head));
     return 0;
 }
 

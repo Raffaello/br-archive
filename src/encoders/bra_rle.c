@@ -5,6 +5,8 @@
 #include <assert.h>
 #include <stdlib.h>
 
+_Static_assert(sizeof(int) >= sizeof(bra_rle_counts_t), "review for loop with int k");
+
 static bra_rle_chunk_t* bra_encode_rle_alloc_node(uint64_t* num_rle_chunks, bra_rle_chunk_t* cur_rle)
 {
     assert(num_rle_chunks != NULL);
@@ -104,7 +106,7 @@ bool bra_decode_rle(bra_rle_chunk_t** cur_rle, char* buf, const size_t buf_size,
     while (rle != NULL)
     {
         // NOTE: rle_data.counts==0 means 1 time
-        for (int k = 0; k <= rle->counts; ++k)
+        for (int k = 0; k <= (int) rle->counts; ++k)
         {
             if (i < buf_size)
                 buf[i++] = rle->value;
@@ -119,8 +121,8 @@ bool bra_decode_rle(bra_rle_chunk_t** cur_rle, char* buf, const size_t buf_size,
     }
 
 BRA_DECODE_RLE_END:
-    *buf_i = i;
-    *cur_rle   = rle;
+    *buf_i   = i;
+    *cur_rle = rle;
     return true;
 }
 

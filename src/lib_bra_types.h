@@ -9,7 +9,7 @@
 
 
 typedef uint8_t bra_attr_t;          //!< file attribute type
-typedef uint8_t bra_rle_counts_t;    //!< rle counts type
+typedef uint8_t bra_rle_counts_t;    //!< RLE count (stores run_length - 1; 0 => 1, 255 => 256)
 
 /**
  * @brief Define a file overwrite policy.

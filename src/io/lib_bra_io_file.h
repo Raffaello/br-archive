@@ -10,46 +10,46 @@ extern "C" {
 /**
  * @brief Print an error message and close the file.
  *
- * @param bf
+ * @param f
  * @param verb a string to complete the error message: "unable to %s".
  */
-void bra_io_file_error(bra_io_file_t* bf, const char* verb);
+void bra_io_file_error(bra_io_file_t* f, const char* verb);
 
 /**
  * @brief Print an error message and eventually close the file
  *
  * @see bra_io_file_error
  *
- * @param bf
+ * @param f
  */
-void bra_io_file_open_error(bra_io_file_t* bf);
+void bra_io_file_open_error(bra_io_file_t* f);
 
 /**
  * @brief Print an error message and close the file.
  *
  * @see bra_io_file_error
  *
- * @param bf
+ * @param f
  */
-void bra_io_file_read_error(bra_io_file_t* bf);
+void bra_io_file_read_error(bra_io_file_t* f);
 
 /**
  * @brief Print an error message and close the file.
  *
  * @see bra_io_file_error
  *
- * @param bf
+ * @param f
  */
-void bra_io_file_seek_error(bra_io_file_t* bf);
+void bra_io_file_seek_error(bra_io_file_t* f);
 
 /**
  * @brief Print an error message and close the file.
  *
  * @see bra_io_file_error
  *
- * @param bf
+ * @param f
  */
-void bra_io_file_write_error(bra_io_file_t* bf);
+void bra_io_file_write_error(bra_io_file_t* f);
 
 /**
  * @brief Detect if the given filename @p fn is an ELF.
@@ -93,20 +93,20 @@ bool bra_io_file_is_sfx(const char* fn);
  * @brief Open the file @p fn in the @p mode.
  *        On failure there is no need to call @ref bra_io_file_close
  *
- * @param bf
+ * @param f
  * @param fn
  * @param mode @c fopen modes
  * @return true on success
- * @return false on error and close @p bf via @ref bra_io_file_close.
+ * @return false on error and close @p f via @ref bra_io_file_close.
  */
-bool bra_io_file_open(bra_io_file_t* bf, const char* fn, const char* mode);
+bool bra_io_file_open(bra_io_file_t* f, const char* fn, const char* mode);
 
 /**
  * @brief Close the file, free the internal memory and set the fields to NULL.
  *
- * @param bf
+ * @param f
  */
-void bra_io_file_close(bra_io_file_t* bf);
+void bra_io_file_close(bra_io_file_t* f);
 
 /**
  * @brief Open the file @p fn in @p mode and seek to the beginning of the SFX footer (EOF - sizeof(bra_io_footer_t)).
@@ -141,19 +141,19 @@ bool bra_io_file_seek(bra_io_file_t* f, const int64_t offs, const int origin);
 int64_t bra_io_file_tell(bra_io_file_t* f);
 
 /**
- * @brief Read the header from the give @p bf file.
+ * @brief Read the header from the give @p f file.
  *        The file must be positioned at the beginning of the header.
  *        On error returns false and closes the file via @ref bra_io_file_close.
  *
- * @param bf
+ * @param f
  * @param out_bh
  * @return true on success
  * @return false on error
  */
-bool bra_io_file_read_header(bra_io_file_t* bf, bra_io_header_t* out_bh);
+bool bra_io_file_read_header(bra_io_file_t* f, bra_io_header_t* out_bh);
 
 /**
- * @brief Write the bra header into @p bf with @p num_files.
+ * @brief Write the bra header into @p f with @p num_files.
  *        On error closes @p f via @ref bra_io_file_close.
  *
  * @param f

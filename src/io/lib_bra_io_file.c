@@ -31,34 +31,34 @@ static char         g_last_dir[BRA_MAX_PATH_LENGTH];
 static unsigned int g_last_dir_size;
 static const char   g_end_messages[][5] = {" OK ", "SKIP"};
 
-void bra_io_file_error(bra_io_file_t* bf, const char* verb)
+void bra_io_file_error(bra_io_file_t* f, const char* verb)
 {
-    assert(bf != NULL);
+    assert(f != NULL);
     assert(verb != NULL);
 
-    const char* fn = (bf->fn != NULL) ? bf->fn : "N/A";
+    const char* fn = (f->fn != NULL) ? f->fn : "N/A";
     bra_log_error("unable to %s %s file (errno %d: %s)", verb, fn, errno, strerror(errno));
-    bra_io_file_close(bf);
+    bra_io_file_close(f);
 }
 
-inline void bra_io_file_open_error(bra_io_file_t* bf)
+inline void bra_io_file_open_error(bra_io_file_t* f)
 {
-    bra_io_file_error(bf, "open");
+    bra_io_file_error(f, "open");
 }
 
-inline void bra_io_file_read_error(bra_io_file_t* bf)
+inline void bra_io_file_read_error(bra_io_file_t* f)
 {
-    bra_io_file_error(bf, "read");
+    bra_io_file_error(f, "read");
 }
 
-inline void bra_io_file_seek_error(bra_io_file_t* bf)
+inline void bra_io_file_seek_error(bra_io_file_t* f)
 {
-    bra_io_file_error(bf, "seek");
+    bra_io_file_error(f, "seek");
 }
 
-inline void bra_io_file_write_error(bra_io_file_t* bf)
+inline void bra_io_file_write_error(bra_io_file_t* f)
 {
-    bra_io_file_error(bf, "write");
+    bra_io_file_error(f, "write");
 }
 
 bool bra_io_file_is_elf(const char* fn)
@@ -140,36 +140,36 @@ bool bra_io_file_is_sfx(const char* fn)
     return bra_io_file_is_elf(fn) || bra_io_file_is_pe_exe(fn);
 }
 
-bool bra_io_file_open(bra_io_file_t* bf, const char* fn, const char* mode)
+bool bra_io_file_open(bra_io_file_t* f, const char* fn, const char* mode)
 {
-    if (fn == NULL || bf == NULL || mode == NULL)
+    if (fn == NULL || f == NULL || mode == NULL)
         return false;
 
-    bf->f  = fopen(fn, mode);    // open file
-    bf->fn = bra_strdup(fn);     // copy filename
-    if (bf->f == NULL || bf->fn == NULL)
+    f->f  = fopen(fn, mode);    // open file
+    f->fn = bra_strdup(fn);     // copy filename
+    if (f->f == NULL || f->fn == NULL)
     {
-        bra_io_file_open_error(bf);
+        bra_io_file_open_error(f);
         return false;
     }
 
     return true;
 }
 
-void bra_io_file_close(bra_io_file_t* bf)
+void bra_io_file_close(bra_io_file_t* f)
 {
-    assert(bf != NULL);
+    assert(f != NULL);
 
-    if (bf->fn != NULL)
+    if (f->fn != NULL)
     {
-        free(bf->fn);
-        bf->fn = NULL;
+        free(f->fn);
+        f->fn = NULL;
     }
 
-    if (bf->f != NULL)
+    if (f->f != NULL)
     {
-        fclose(bf->f);
-        bf->f = NULL;
+        fclose(f->f);
+        f->f = NULL;
     }
 }
 
@@ -231,26 +231,26 @@ int64_t bra_io_file_tell(bra_io_file_t* f)
 #endif
 }
 
-bool bra_io_file_read_header(bra_io_file_t* bf, bra_io_header_t* out_bh)
+bool bra_io_file_read_header(bra_io_file_t* f, bra_io_header_t* out_bh)
 {
-    assert_bra_io_file_t(bf);
+    assert_bra_io_file_t(f);
     assert(out_bh != NULL);
 
     // Good point to clean the variable, even if it is not needed.
     memset(g_last_dir, 0, sizeof(g_last_dir));
     g_last_dir_size = 0;
 
-    if (fread(out_bh, sizeof(bra_io_header_t), 1, bf->f) != 1)
+    if (fread(out_bh, sizeof(bra_io_header_t), 1, f->f) != 1)
     {
-        bra_io_file_read_error(bf);
+        bra_io_file_read_error(f);
         return false;
     }
 
     // check header magic
     if (out_bh->magic != BRA_MAGIC)
     {
-        bra_log_error("Not valid %s file: %s", BRA_NAME, bf->fn);
-        bra_io_file_close(bf);
+        bra_log_error("Not valid %s file: %s", BRA_NAME, f->fn);
+        bra_io_file_close(f);
         return false;
     }
 
@@ -553,7 +553,7 @@ bool bra_io_file_copy_file_chunks(bra_io_file_t* dst, bra_io_file_t* src, const 
 
     for (uint64_t i = 0; i < data_size;)
     {
-        uint32_t s = bra_min(BRA_MAX_CHUNK_SIZE, data_size - i);
+        const uint64_t s = bra_min(BRA_MAX_CHUNK_SIZE, data_size - i);
 
         // read source chunk
         if (fread(buf, sizeof(char), s, src->f) != s)

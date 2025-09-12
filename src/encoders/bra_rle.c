@@ -5,7 +5,7 @@
 #include <assert.h>
 #include <stdlib.h>
 
-static bra_rle_chunk_t* bra_encode_rle_alloc_node(size_t* num_rle_chunks, bra_rle_chunk_t* cur)
+static bra_rle_chunk_t* bra_encode_rle_alloc_node(uint64_t* num_rle_chunks, bra_rle_chunk_t* cur)
 {
     assert(num_rle_chunks != NULL);
 
@@ -23,6 +23,9 @@ bool bra_encode_rle(const char* buf, const size_t buf_size, uint64_t* num_rle_ch
 {
     assert(buf != NULL);
     assert(num_rle_chunks != NULL);
+
+    if (buf_size == 0)
+        return false;
 
     size_t           num_chunks = *num_rle_chunks;
     bra_rle_chunk_t* rle        = *chunk_head;

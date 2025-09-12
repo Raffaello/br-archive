@@ -146,7 +146,7 @@ bool bra_io_file_open(bra_io_file_t* f, const char* fn, const char* mode)
         return false;
 
     f->f  = fopen(fn, mode);    // open file
-    f->fn = bra_strdup(fn);     // copy filename
+    f->fn = _bra_strdup(fn);    // copy filename
     if (f->f == NULL || f->fn == NULL)
     {
         bra_io_file_open_error(f);
@@ -260,6 +260,10 @@ bool bra_io_file_read_header(bra_io_file_t* f, bra_io_header_t* out_bh)
 bool bra_io_file_write_header(bra_io_file_t* f, const uint32_t num_files)
 {
     assert_bra_io_file_t(f);
+
+    // Good point to clean the variable, even if it is not needed.
+    memset(g_last_dir, 0, sizeof(g_last_dir));
+    g_last_dir_size = 0;
 
     const bra_io_header_t header = {
         .magic = BRA_MAGIC,
@@ -553,7 +557,7 @@ bool bra_io_file_copy_file_chunks(bra_io_file_t* dst, bra_io_file_t* src, const 
 
     for (uint64_t i = 0; i < data_size;)
     {
-        const uint64_t s = bra_min(BRA_MAX_CHUNK_SIZE, data_size - i);
+        const uint64_t s = _bra_min(BRA_MAX_CHUNK_SIZE, data_size - i);
 
         // read source chunk
         if (fread(buf, sizeof(char), s, src->f) != s)
@@ -644,7 +648,7 @@ bool bra_io_file_encode_and_write_to_disk(bra_io_file_t* f, const char* fn)
     mf.attributes = attributes;
     mf.name_size  = fn_size;
     mf.data_size  = ds;
-    mf.name       = bra_strdup(fn);
+    mf.name       = _bra_strdup(fn);
     if (mf.name == NULL)
         goto BRA_IO_WRITE_CLOSE_ERROR;
 
@@ -691,7 +695,7 @@ bool bra_io_file_decode_and_write_to_disk(bra_io_file_t* f, bra_fs_overwrite_pol
     if (!bra_io_file_read_meta_file(f, &mf))
         return false;
 
-    if (!bra_validate_meta_filename(&mf))
+    if (!_bra_validate_meta_filename(&mf))
     {
     BRA_IO_DECODE_ERR:
         bra_meta_file_free(&mf);

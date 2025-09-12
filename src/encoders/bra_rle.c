@@ -5,7 +5,7 @@
 #include <assert.h>
 #include <stdlib.h>
 
-static bra_rle_chunk_t* bra_encode_rle_alloc_node(uint64_t* num_rle_chunks, bra_rle_chunk_t* cur)
+static bra_rle_chunk_t* bra_encode_rle_alloc_node(uint64_t* num_rle_chunks, bra_rle_chunk_t* cur_rle)
 {
     assert(num_rle_chunks != NULL);
 
@@ -13,8 +13,8 @@ static bra_rle_chunk_t* bra_encode_rle_alloc_node(uint64_t* num_rle_chunks, bra_
     if (e == NULL)
         return NULL;
 
-    if (cur != NULL)
-        cur->pNext = e;
+    if (cur_rle != NULL)
+        cur_rle->pNext = e;
     ++(*num_rle_chunks);
     return e;
 }
@@ -86,17 +86,17 @@ bool bra_encode_rle(const char* buf, const size_t buf_size, uint64_t* num_rle_ch
     return true;
 }
 
-bool bra_decode_rle(bra_rle_chunk_t** cur, char* buf, const size_t buf_size, size_t* buf_i)
+bool bra_decode_rle(bra_rle_chunk_t** cur_rle, char* buf, const size_t buf_size, size_t* buf_i)
 {
-    assert(cur != NULL);
+    assert(cur_rle != NULL);
     assert(buf != NULL);
     assert(buf_i != NULL);
 
     if (*buf_i >= buf_size)
-        return false;
+        return false;    // this is an error and it might be hidden
 
     size_t           i   = *buf_i;
-    bra_rle_chunk_t* rle = *cur;
+    bra_rle_chunk_t* rle = *cur_rle;
 
     if (rle == NULL)
         return false;
@@ -120,7 +120,7 @@ bool bra_decode_rle(bra_rle_chunk_t** cur, char* buf, const size_t buf_size, siz
 
 BRA_DECODE_RLE_END:
     *buf_i = i;
-    *cur   = rle;
+    *cur_rle   = rle;
     return true;
 }
 

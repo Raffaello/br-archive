@@ -17,37 +17,6 @@ extern "C" {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
- * @brief
- *
- * @param a
- * @param b
- * @return uint64_t
- */
-uint64_t bra_min(const uint64_t a, const uint64_t b);
-
-/**
- * @brief strdup()
- *
- * @details Returns @c NULL if @p str is @c NULL or on allocation failure.
- *          The caller owns the returned buffer and must free() it.
- *
- * @todo remove when switching to C23
- *
- * @param str
- * @return char*
- */
-char* bra_strdup(const char* str);
-
-/**
- * @brief
- *
- * @param mf
- * @return true
- * @return false
- */
-bool bra_validate_meta_filename(const bra_meta_file_t* mf);
-
-/**
  * @brief Convert meta file @p attributes into a char.
  *
  * @param attributes

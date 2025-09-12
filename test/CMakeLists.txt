@@ -3,9 +3,7 @@ enable_testing()
 
 
 add_executable(test_bra_wildcards test_bra_wildcards.cpp)
-target_include_directories(test_bra_wildcards PRIVATE ${CMAKE_SOURCE_DIR}/src)
-target_link_libraries(test_bra_wildcards PRIVATE bra_wildcards)
-add_dependencies(test_bra_wildcards bra_wildcards)
+target_link_libraries(test_bra_wildcards PRIVATE lib_bra)
 
 add_test(NAME test_bra_wildcards.is_wildcard           COMMAND test_bra_wildcards test_bra_wildcards_is_wildcard)
 add_test(NAME test_bra_wildcards.wildcard_extract_dir  COMMAND test_bra_wildcards test_bra_wildcards_extract_dir)
@@ -15,9 +13,7 @@ add_test(NAME test_bra_wildcards.wildcard_to_regexp    COMMAND test_bra_wildcard
 
 
 add_executable(test_bra_fs test_bra_fs.cpp)
-target_include_directories(test_bra_fs PRIVATE ${CMAKE_SOURCE_DIR}/src)
-target_link_libraries(test_bra_fs PRIVATE bra_fs)
-add_dependencies(test_bra_fs bra_fs)
+target_link_libraries(test_bra_fs PRIVATE lib_bra)
 
 
 add_test(NAME test_bra_fs.file_exists           COMMAND test_bra_fs test_bra_fs_file_exists)
@@ -35,8 +31,7 @@ add_test(NAME test_bra_fs.search_wildcard_recursive_in_dir1 COMMAND test_bra_fs 
 #####################################################################################################
 
 add_executable(test_bra test_bra.cpp)
-target_include_directories(test_bra PRIVATE ${CMAKE_SOURCE_DIR}/src)
-target_link_libraries(test_bra PRIVATE bra_fs)
+target_link_libraries(test_bra PRIVATE lib_bra)
 add_dependencies(test_bra bra unbra bra_sfx)
 
 add_test(NAME test_bra.help_ret_code                 COMMAND test_bra test_bra_help_ret_code)
@@ -53,6 +48,17 @@ add_test(NAME test_bra.sfx_1                         COMMAND test_bra test_bra_s
 add_test(NAME test_bra.sfx_2                         COMMAND test_bra test_bra_sfx_2)
 
 add_test(NAME test_bra.not_more_than_1_same_file     COMMAND test_bra test_bra_not_more_than_1_same_file)
+
+#####################################################################################################
+
+add_executable(test_bra_encoders test_bra_encoders.cpp)
+target_link_libraries(test_bra_encoders PUBLIC lib_bra)
+
+
+add_test(NAME test_bra_encoders.encode_decode_rle_1  COMMAND test_bra_encoders test_bra_encoders_encode_decode_rle_1)
+add_test(NAME test_bra_encoders.encode_decode_rle_2  COMMAND test_bra_encoders test_bra_encoders_encode_decode_rle_2)
+add_test(NAME test_bra_encoders.encode_decode_rle_3  COMMAND test_bra_encoders test_bra_encoders_encode_decode_rle_3)
+add_test(NAME test_bra_encoders.encode_decode_rle_3b COMMAND test_bra_encoders test_bra_encoders_encode_decode_rle_3b)
 
 #####################################################################################################
 
@@ -86,12 +92,12 @@ endforeach()
 
 add_custom_command(TARGET test_bra POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different
-                    ${CMAKE_CURRENT_SOURCE_DIR}/dir1
+                    ${CMAKE_CURRENT_SOURCE_DIR}/fixtures/dir1
                     ${CMAKE_CURRENT_BINARY_DIR}/dir1
 )
 
 add_custom_command(TARGET test_bra_fs POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different
-        ${CMAKE_CURRENT_SOURCE_DIR}/dir1
+        ${CMAKE_CURRENT_SOURCE_DIR}/fixtures/dir1
         ${CMAKE_CURRENT_BINARY_DIR}/dir1
 )

@@ -12,6 +12,14 @@ This lays the foundation for encoding, decoding, and self-extracting archives.
 > This project aims to avoid using third-party libraries.
 
 
+## Library
+
+The `lib-bra` is wanted to be in pure C.
+
+The only exception is for the `filesystem` module aspect that is using C++ `filesystem` module to have a simpler cross-os filesystem APIs.
+ (do not want to implement for each specific OS).
+ Te `bra_fs` can be used directly in C++, but `lib-bra` is using the C wrapper `bra-fs_c`.
+
 ## Self-Extracting Archive
 
 The self extracting archive will be done in the following formats:

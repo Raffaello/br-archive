@@ -1,7 +1,9 @@
 #include "BraProgram.hpp"
-#include <bra_log.h>
-#include <bra_fs.hpp>
-#include <bra_wildcards.hpp>
+
+#include <io/lib_bra_io_file.h>
+#include <log/bra_log.h>
+#include <fs/bra_fs.hpp>
+#include <fs/bra_wildcards.hpp>
 #include <version.h>
 
 #include <string>
@@ -22,7 +24,7 @@ namespace fs = std::filesystem;
 
 BraProgram::~BraProgram()
 {
-    bra_io_close(&m_f);
+    bra_io_file_close(&m_f);
 }
 
 bool BraProgram::set_overwrite_policy(const bra_fs_overwrite_policy_e op, const string& s)

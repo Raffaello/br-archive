@@ -1,8 +1,7 @@
-#include "bra_fs.hpp"
-#include "lib_bra_defs.h"
+#include <fs/bra_fs.hpp>
 
-#include <bra_log.h>
-#include <bra_wildcards.hpp>
+#include <log/bra_log.h>
+#include <fs/bra_wildcards.hpp>
 
 #include <iostream>
 #include <string>

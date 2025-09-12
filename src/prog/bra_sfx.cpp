@@ -1,5 +1,7 @@
 #include <lib_bra.h>
-#include <bra_log.h>
+#include <io/lib_bra_io_file.h>
+
+#include <log/bra_log.h>
 #include <version.h>
 #include <BraProgram.hpp>
 
@@ -29,7 +31,7 @@ protected:
     {
         const fs::path p(m_argv0);
 
-        bra_log_printf("  %s       : self-extract thes embedded archive.\n", p.filename().string().c_str());
+        bra_log_printf("  %s       : self-extract the embedded archive.\n", p.filename().string().c_str());
     };
 
     virtual void help_example() const override
@@ -55,7 +57,7 @@ protected:
 
     bool validateArgs() override
     {
-        if (!bra_io_is_sfx(m_argv0.c_str()))
+        if (!bra_io_file_is_sfx(m_argv0.c_str()))
         {
             bra_log_error("unsupported file detected: %s", m_argv0.c_str());
             return false;
@@ -72,18 +74,18 @@ protected:
         // and do not force extension checking to unbra
         // plus file detection, as it would be required to open the SFX
         // just for the supported exe/elf formats avoid for all the rest.
-        if (!bra_io_sfx_open_and_read_footer_header(m_argv0.c_str(), &bh, &m_f))
+        if (!bra_io_file_sfx_open_and_read_footer_header(m_argv0.c_str(), &bh, &m_f))
             return 1;
 
         // extract payload, encoded data
         bra_log_printf("%s contains num files: %u\n", BRA_NAME, bh.num_files);
         for (uint32_t i = 0; i < bh.num_files; i++)
         {
-            if (!bra_io_decode_and_write_to_disk(&m_f, &m_overwrite_policy))
+            if (!bra_io_file_decode_and_write_to_disk(&m_f, &m_overwrite_policy))
                 return 1;
         }
 
-        bra_io_close(&m_f);
+        bra_io_file_close(&m_f);
         return 0;
     }
 

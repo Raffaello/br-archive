@@ -10,7 +10,7 @@ TEST(test_bra_encoders_encode_decode_rle_1)
 {
     constexpr const int buf_size = 10;
 
-    char             buf[buf_size];
+    uint8_t          buf[buf_size];
     uint64_t         num_rle_chunks = 0;
     bra_rle_chunk_t* rle_list       = nullptr;
 
@@ -24,7 +24,7 @@ TEST(test_bra_encoders_encode_decode_rle_1)
     ASSERT_TRUE(rle_list->pNext == nullptr);
 
     ////// decode //////
-    char             buf2[buf_size];
+    uint8_t          buf2[buf_size];
     size_t           buf_i    = 0;
     bra_rle_chunk_t* rle_head = rle_list;
 
@@ -32,6 +32,7 @@ TEST(test_bra_encoders_encode_decode_rle_1)
     ASSERT_EQ(buf_i, 10U);
     for (size_t i = 0; i < buf_i; i++)
         ASSERT_EQ(buf2[i], 'A');
+
     ASSERT_TRUE(rle_list == nullptr);
     ASSERT_FALSE(bra_decode_rle(&rle_list, buf2, buf_size, &buf_i));
 
@@ -43,7 +44,7 @@ TEST(test_bra_encoders_encode_decode_rle_2)
 {
     constexpr const int buf_size = 10;
 
-    char             buf[buf_size];
+    uint8_t          buf[buf_size];
     uint64_t         num_rle_chunks = 0;
     bra_rle_chunk_t* rle_list       = nullptr;
 
@@ -62,7 +63,7 @@ TEST(test_bra_encoders_encode_decode_rle_2)
     ASSERT_TRUE(rle_list->pNext->pNext == nullptr);
 
     ////// decode //////
-    char             buf2[buf_size];
+    uint8_t          buf2[buf_size];
     size_t           buf_i    = 0;
     bra_rle_chunk_t* rle_head = rle_list;
 
@@ -70,6 +71,8 @@ TEST(test_bra_encoders_encode_decode_rle_2)
     ASSERT_EQ(buf_i, 10U);
     for (size_t i = 0; i < buf_i; i++)
         ASSERT_EQ(buf2[i], buf[i]);
+
+    ASSERT_TRUE(rle_list == nullptr);
     ASSERT_FALSE(bra_decode_rle(&rle_list, buf2, buf_size, &buf_i));
 
     ASSERT_TRUE(bra_encode_rle_free_list(&rle_head));
@@ -80,7 +83,7 @@ TEST(test_bra_encoders_encode_decode_rle_3)
 {
     constexpr const int buf_size = 5;
 
-    char             buf[buf_size];
+    uint8_t          buf[buf_size];
     uint64_t         num_rle_chunks = 0;
     bra_rle_chunk_t* rle_list       = nullptr;
 
@@ -106,7 +109,7 @@ TEST(test_bra_encoders_encode_decode_rle_3)
     ASSERT_TRUE(rle_list->pNext->pNext == nullptr);
 
     ////// decode //////
-    char             buf2[buf_size];
+    uint8_t          buf2[buf_size];
     size_t           buf_i    = 0;
     bra_rle_chunk_t* rle_head = rle_list;
 
@@ -124,6 +127,7 @@ TEST(test_bra_encoders_encode_decode_rle_3)
         ASSERT_EQ(buf2[i], 'B');
 
     buf_i = 0;
+    ASSERT_TRUE(rle_list == nullptr);
     ASSERT_FALSE(bra_decode_rle(&rle_list, buf2, buf_size, &buf_i));
 
     ASSERT_TRUE(bra_encode_rle_free_list(&rle_head));
@@ -134,7 +138,7 @@ TEST(test_bra_encoders_encode_decode_rle_3b)
 {
     constexpr const int buf_size = 5;
 
-    char             buf[buf_size];
+    uint8_t          buf[buf_size];
     uint64_t         num_rle_chunks = 0;
     bra_rle_chunk_t* rle_list       = nullptr;
 
@@ -159,7 +163,7 @@ TEST(test_bra_encoders_encode_decode_rle_3b)
     ASSERT_TRUE(rle_list->pNext->pNext == nullptr);
 
     ////// decode //////
-    char             buf2[buf_size];
+    uint8_t          buf2[buf_size];
     size_t           buf_i    = 0;
     bra_rle_chunk_t* rle_head = rle_list;
 
@@ -176,6 +180,7 @@ TEST(test_bra_encoders_encode_decode_rle_3b)
         ASSERT_EQ(buf2[i], 'B');
 
     buf_i = 0;
+    ASSERT_TRUE(rle_list == nullptr);
     ASSERT_FALSE(bra_decode_rle(&rle_list, buf2, buf_size, &buf_i));
 
     ASSERT_TRUE(bra_encode_rle_free_list(&rle_head));

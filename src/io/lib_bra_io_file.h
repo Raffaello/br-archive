@@ -54,6 +54,10 @@ void bra_io_file_write_error(bra_io_file_t* f);
 /**
  * @brief Detect if the given filename @p fn is an ELF.
  *
+ * @todo merge with PE_EXE to check at once if it is one or the other.
+ *       or just open the file with bra_io_file_open and then do the checks instead.
+ *       but once read it can do both checks at the same time.
+ *
  * @see bra_io_file_is_pe_exe
  * @see bra_io_file_is_sfx
  *
@@ -199,6 +203,7 @@ bool bra_io_file_sfx_open_and_read_footer_header(const char* fn, bra_io_header_t
 
 /**
  * @brief Read the filename meta data information that is pointing in @p f and store it on @p mf.
+ *        @p mf must be free via @ref bra_meta_file_free.
  *
  * @param f
  * @param mf

@@ -96,7 +96,7 @@ bool bra_io_print_meta_file(bra_io_file_t* f)
     // skip data content
     if (!bra_io_file_skip_data(f, ds))
     {
-        bra_io_file_read_error(f);
+        bra_io_file_seek_error(f);
         return false;
     }
 

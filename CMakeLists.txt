@@ -54,6 +54,7 @@ target_sources(lib_bra
         src/encoders/bra_rle.c
 )
 target_include_directories(lib_bra
+    ### TODO: select what is public (at the moment looks everything except lib_bra_private.h)
     PRIVATE
     PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/src

@@ -10,6 +10,8 @@
 #include <errno.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stdint.h>    // UINT8_MAX, uint{8,32,64}_t
+#include <stdio.h>     // FILE, fopen/fread/fwrite
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -717,7 +719,7 @@ bool bra_io_file_decode_and_write_to_disk(bra_io_file_t* f, bra_fs_overwrite_pol
             bra_meta_file_free(&mf);
             if (!bra_io_file_skip_data(f, ds))
             {
-                bra_io_file_read_error(f);
+                bra_io_file_seek_error(f);
                 return false;
             }
         }

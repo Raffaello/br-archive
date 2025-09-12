@@ -31,7 +31,7 @@ protected:
     {
         const fs::path p(m_argv0);
 
-        bra_log_printf("  %s       : self-extract thes embedded archive.\n", p.filename().string().c_str());
+        bra_log_printf("  %s       : self-extract the embedded archive.\n", p.filename().string().c_str());
     };
 
     virtual void help_example() const override

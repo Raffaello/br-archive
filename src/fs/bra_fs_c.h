@@ -42,7 +42,7 @@ bool bra_fs_dir_make(const char* path);
  *
  * @param path
  * @return true exists
- * @return  false if it does not exist or on error (I/O errors are not distinguished).
+ * @return false if it does not exist or on error (I/O errors are not distinguished).
  */
 bool bra_fs_file_exists(const char* path);
 

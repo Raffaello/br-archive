@@ -21,7 +21,7 @@ static bra_rle_chunk_t* bra_encode_rle_alloc_node(uint64_t* num_rle_chunks, bra_
     return e;
 }
 
-bool bra_encode_rle(const char* buf, const size_t buf_size, uint64_t* num_rle_chunks, bra_rle_chunk_t** chunk_head)
+bool bra_encode_rle(const uint8_t* buf, const size_t buf_size, uint64_t* num_rle_chunks, bra_rle_chunk_t** chunk_head)
 {
     assert(buf != NULL);
     assert(num_rle_chunks != NULL);
@@ -29,7 +29,7 @@ bool bra_encode_rle(const char* buf, const size_t buf_size, uint64_t* num_rle_ch
     if (buf_size == 0)
         return false;
 
-    size_t           num_chunks = *num_rle_chunks;
+    uint64_t         num_chunks = *num_rle_chunks;
     bra_rle_chunk_t* rle        = *chunk_head;
     bra_rle_chunk_t* prev;
     size_t           i;
@@ -88,7 +88,7 @@ bool bra_encode_rle(const char* buf, const size_t buf_size, uint64_t* num_rle_ch
     return true;
 }
 
-bool bra_decode_rle(bra_rle_chunk_t** cur_rle, char* buf, const size_t buf_size, size_t* buf_i)
+bool bra_decode_rle(bra_rle_chunk_t** cur_rle, uint8_t* buf, const size_t buf_size, size_t* buf_i)
 {
     assert(cur_rle != NULL);
     assert(buf != NULL);

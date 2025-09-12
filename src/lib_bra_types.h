@@ -5,7 +5,6 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdio.h>
-#include <stdarg.h>
 
 
 typedef uint8_t bra_attr_t;          //!< file attribute type
@@ -78,6 +77,6 @@ typedef struct bra_meta_file_t
 typedef struct bra_rle_chunk_t
 {
     bra_rle_counts_t        counts;    //!< counts is stored as -1, i.e. 0 means 1 and 255 means 256
-    char                    value;     //!< the repeated char.
+    uint8_t                 value;     //!< the repeated char.
     struct bra_rle_chunk_t* pNext;     //!< to the next chunk, NULL if it is the last one.
 } bra_rle_chunk_t;

@@ -8,7 +8,7 @@
 
 
 typedef uint8_t bra_attr_t;          //!< file attribute type
-typedef uint8_t bra_rle_counts_t;    //!< RLE count (stores run_length - 1; 0 => 1, 255 => 256)
+typedef uint8_t bra_rle_counts_t;    //!< stored as run_length - 1 (0 => 1, 255 => 256)
 
 /**
  * @brief Define a file overwrite policy.
@@ -78,5 +78,5 @@ typedef struct bra_rle_chunk_t
 {
     bra_rle_counts_t        counts;    //!< counts is stored as -1, i.e. 0 means 1 and 255 means 256
     uint8_t                 value;     //!< the repeated char.
-    struct bra_rle_chunk_t* pNext;     //!< to the next chunk, NULL if it is the last one.
+    struct bra_rle_chunk_t* pNext;     //!< pointer to next chunk; NULL if last.
 } bra_rle_chunk_t;

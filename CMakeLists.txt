@@ -34,44 +34,48 @@ function(win32_wildcard target)
 
 endfunction()
 
+###########################################################
+
 configure_file(src/version.h.in src/version.h)
 
-add_library(bra_log STATIC src/bra_log.c)
-
-add_library(bra_wildcards STATIC src/bra_wildcards.cpp)
-target_include_directories(bra_wildcards PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)
-target_link_libraries(bra_wildcards PUBLIC bra_log)
-
-add_library(bra_fs STATIC src/bra_fs.cpp)
-target_include_directories(bra_fs PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)
-target_link_libraries(bra_fs PUBLIC bra_log bra_wildcards)
-
-add_library(bra_fs_c STATIC src/bra_fs_c.cpp)
-target_link_libraries(bra_fs_c PRIVATE bra_fs)
-
 add_library(lib_bra STATIC src/lib_bra.c)
-target_include_directories(lib_bra
-    PUBLIC
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/src> # for configure_file (version.h)
-        ${CMAKE_CURRENT_SOURCE_DIR}/src
+target_sources(lib_bra
+    PRIVATE
+        src/lib_bra_private.c
+
+        src/log/bra_log.c
+
+        src/fs/bra_fs.cpp
+        src/fs/bra_wildcards.cpp
+        src/fs/bra_fs_c.cpp
+
+        src/io/lib_bra_io_file.c
+
+        src/encoders/bra_rle.c
 )
-target_link_libraries(lib_bra PRIVATE bra_log bra_fs_c)
+target_include_directories(lib_bra
+    ### TODO: select what is public (at the moment looks everything except lib_bra_private.h)
+    PUBLIC
+        ${CMAKE_CURRENT_SOURCE_DIR}/src
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/src> # for configure_file (version.h)
+)
 set_target_properties(lib_bra PROPERTIES
     PREFIX ""
 )
 
-add_library(bra_prog STATIC src/BraProgram.cpp)
-target_link_libraries(bra_prog PUBLIC lib_bra bra_fs)
+add_library(bra_prog STATIC src/prog/BraProgram.cpp)
+target_include_directories(bra_prog PUBLIC src/prog)
+target_link_libraries(bra_prog PUBLIC lib_bra)
 
-add_executable(bra src/bra.cpp)
+add_executable(bra src/prog/bra.cpp)
 target_link_libraries(bra PRIVATE bra_prog)
 win32_wildcard(bra)
 
-add_executable(unbra src/unbra.cpp)
+add_executable(unbra src/prog/unbra.cpp)
 target_link_libraries(unbra PRIVATE bra_prog)
 win32_wildcard(unbra)
 
-add_executable(bra_sfx src/bra_sfx.cpp)
+add_executable(bra_sfx src/prog/bra_sfx.cpp)
 target_link_libraries(bra_sfx PRIVATE bra_prog)
 win32_wildcard(bra_sfx)
 

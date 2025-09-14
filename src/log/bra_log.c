@@ -1,5 +1,4 @@
-#include "bra_log.h"
-#include "lib_bra_defs.h"
+#include <log/bra_log.h>
 
 #include <stdbool.h>
 #include <stdint.h>

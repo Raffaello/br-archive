@@ -1,7 +1,7 @@
 #include "bra_test.hpp"
-#include "lib_bra_defs.h"
 
-#include <bra_fs.hpp>
+#include <lib_bra_defs.h>
+#include <fs/bra_fs.hpp>
 
 
 using namespace std;

@@ -4,10 +4,13 @@
 extern "C" {
 #endif
 
-#include "lib_bra_types.h"
+#include <lib_bra_types.h>
 
 #include <stdbool.h>
 #include <stdint.h>
+
+// TODO:  later on as exercise discard the c++ filesystem and do it in native OS APIs with C (bra_fs.c)
+//        no wrapper in the c++ filesystem. [not important for now]
 
 /**
  * @brief Return if the given @p path is a directory.
@@ -39,7 +42,7 @@ bool bra_fs_dir_make(const char* path);
  *
  * @param path
  * @return true exists
- * @return  false if it does not exist or on error (I/O errors are not distinguished).
+ * @return false if it does not exist or on error (I/O errors are not distinguished).
  */
 bool bra_fs_file_exists(const char* path);
 

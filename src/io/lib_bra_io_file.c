@@ -33,6 +33,7 @@ _Static_assert(sizeof(bra_io_footer_t) == 12, "bra_io_footer_t must be 12 bytes"
  */
 static char         g_last_dir[BRA_MAX_PATH_LENGTH];
 static unsigned int g_last_dir_size;
+static bool         g_last_dir_empty    = true;    //!< only used when encoding
 static const char   g_end_messages[][5] = {" OK ", "SKIP"};
 
 void bra_io_file_error(bra_io_file_t* f, const char* verb)
@@ -281,6 +282,7 @@ bool bra_io_file_write_header(bra_io_file_t* f, const uint32_t num_files)
         return false;
     }
 
+    g_last_dir_empty = false;    // !< avoid to check on current dir.
     return true;
 }
 
@@ -504,6 +506,8 @@ bool bra_io_file_write_meta_file(bra_io_file_t* f, const bra_meta_file_t* mf)
 
         buf_size = mf->name_size - l;
         strncpy(buf, &mf->name[l], buf_size);
+        g_last_dir_empty = false;
+
         break;
     }
     case BRA_ATTR_DIR:
@@ -515,9 +519,38 @@ bool bra_io_file_write_meta_file(bra_io_file_t* f, const bra_meta_file_t* mf)
         buf_size = mf->name_size;
         strncpy(buf, mf->name, buf_size);
         buf[buf_size] = '\0';
+
+        if (g_last_dir_empty)
+        {
+            bra_log_debug("last dir %s is empty, replacing it with %s", g_last_dir, buf);
+
+            // this must also reduce the total num_files in the header
+            // TODO: num_files should be written at the end.
+            // NOTE: i can't read the file as it hasn't open for also reading.
+            const int64_t tell = bra_io_file_tell(f);
+            if (tell < 0)
+                goto BRA_IO_WRITE_ERR;
+
+            if (!bra_io_file_seek(f, 0, SEEK_SET))
+                goto BRA_IO_WRITE_ERR;
+
+            bra_io_header_t h;
+            if (!bra_io_file_read_header(f, &h))
+                goto BRA_IO_WRITE_ERR;
+
+            if (!bra_io_file_write_header(f, h.num_files - 1))
+                goto BRA_IO_WRITE_ERR;
+
+            // need to move back to: [g_last_size + 2] bytes
+            // TODO dir can be cached and flush at the first file (or at the end of archiving)
+            if (!bra_io_file_seek(f, tell - (sizeof(uint8_t) + sizeof(bra_attr_t) + g_last_dir_size), SEEK_SET))
+                goto BRA_IO_WRITE_ERR;
+        }
+
         strncpy(g_last_dir, buf, buf_size);
         g_last_dir[buf_size] = '\0';
         g_last_dir_size      = buf_size;
+        g_last_dir_empty     = true;
     }
     break;
     default:
@@ -525,7 +558,7 @@ bool bra_io_file_write_meta_file(bra_io_file_t* f, const bra_meta_file_t* mf)
     }
 
     // 1. attributes
-    if (fwrite(&mf->attributes, sizeof(uint8_t), 1, f->f) != 1)
+    if (fwrite(&mf->attributes, sizeof(bra_attr_t), 1, f->f) != 1)
     {
     BRA_IO_WRITE_ERR:
         bra_io_file_write_error(f);

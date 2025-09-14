@@ -8,7 +8,8 @@ extern "C" {
 #include <stdbool.h>
 
 /**
- * @brief
+ * @brief Open the file @p fn in @p mode. Clear the @p ctx state.
+ *        On failure there is no need to call @ref bra_io_file_ctx_close.
  *
  * @param ctx[out]
  * @param fn
@@ -20,7 +21,7 @@ bool bra_io_file_ctx_open(bra_io_file_ctx_t* ctx, const char* fn, const char* mo
 
 /**
  * @brief Open the file @p fn in @p mode and seek to the beginning of the SFX footer (EOF - sizeof(bra_io_footer_t)).
- *        On failure there is no need to call @ref bra_io_file_close.
+ *        On failure there is no need to call @ref bra_io_file_ctx_close.
  *
  * @param ctx
  * @param fn

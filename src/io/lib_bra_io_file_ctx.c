@@ -18,6 +18,7 @@ static const char g_end_messages[][5] = {" OK ", "SKIP"};
 bool bra_io_file_ctx_open(bra_io_file_ctx_t* ctx, const char* fn, const char* mode)
 {
     assert(ctx != NULL);
+    assert(fn != NULL);
     assert(mode != NULL);
 
     memset(ctx, 0, sizeof(bra_io_file_ctx_t));
@@ -261,7 +262,7 @@ bool bra_io_file_ctx_write_meta_file(bra_io_file_ctx_t* ctx, const bra_meta_file
     uint8_t buf_size;
 
     const size_t len = strnlen(mf->name, BRA_MAX_PATH_LENGTH + 1);
-    if (len != mf->name_size || len == 0 || len > BRA_MAX_PATH_LENGTH)
+    if (len != mf->name_size || len == 0 || len >= BRA_MAX_PATH_LENGTH)
         goto BRA_IO_WRITE_ERR;
 
     // Processing data

@@ -291,16 +291,27 @@ TEST(test_bra_fs_sfx_filename_adjust)
     return 0;
 }
 
+// int test_bra_fs_symlink()
+// {
+//     constexpr const char* symlink = "readme.sym";    //"test.sym";
+//     // constexpr const char* filename = "test.txt";
+
+// ASSERT_TRUE(fs::exists(symlink));
+// ASSERT_TRUE(fs::is_regular_file(symlink));
+// ASSERT_FALSE(fs::is_symlink(symlink));
+
+// auto p = fs::relative(symlink, fs::current_path());
+
+// ASSERT_TRUE(bra::fs::try_sanitize(p));
+// ASSERT_TRUE(p.empty());
+
+// return 0;
+// }
+
 int main(int argc, char* argv[])
 {
     return test_main(argc, argv, {
-                                     {TEST_FUNC(test_bra_fs_search_wildcard)},
-                                     {TEST_FUNC(test_bra_fs_search_wildcard_recursive_on_dir1)},
-                                     {TEST_FUNC(test_bra_fs_search_wildcard_recursive_in_dir1)},
-                                     {TEST_FUNC(test_bra_fs_file_exists)},
-                                     {TEST_FUNC(test_bra_fs_dir_exists)},
-                                     {TEST_FUNC(test_bra_fs_dir_make)},
-                                     {TEST_FUNC(test_bra_fs_try_sanitize_path)},
-                                     {TEST_FUNC(test_bra_fs_sfx_filename_adjust)},
+                                     {TEST_FUNC(test_bra_fs_search_wildcard)}, {TEST_FUNC(test_bra_fs_search_wildcard_recursive_on_dir1)}, {TEST_FUNC(test_bra_fs_search_wildcard_recursive_in_dir1)}, {TEST_FUNC(test_bra_fs_file_exists)}, {TEST_FUNC(test_bra_fs_dir_exists)}, {TEST_FUNC(test_bra_fs_dir_make)}, {TEST_FUNC(test_bra_fs_try_sanitize_path)}, {TEST_FUNC(test_bra_fs_sfx_filename_adjust)},
+                                     // {TEST_FUNC(test_bra_fs_symlink)},
                                  });
 }

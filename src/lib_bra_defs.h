@@ -38,8 +38,17 @@
 #define BRA_SFX_FILENAME     "bra.sfx"    // @todo: generate it through cmake conf
 #define BRA_SFX_TMP_FILE_EXT ".tmp"
 
-#define BRA_ATTR_FILE 0    //!< Regular file.
-#define BRA_ATTR_DIR  1    //!< Directory
+#define BRA_ATTR_FILE    0    //!< Regular file.
+#define BRA_ATTR_DIR     1    //!< Directory
+#define BRA_ATTR_SYM     2    //!< Symlink
+#define BRA_ATTR_SUB_DIR 4    //!< sub-dir, need to reuse last dir for full dir name.
+
+#define BRA_ATTR_STORED (0 << 2)
+// #define BRA_ATTR_BWT_MTF_RLE      (1 << 2)
+// #define BRA_ATTR_BWT_MTD_RLE_LZ78 (2 << 2)
+#define BRA_ATTR_COMPRESSED (1 << 2)
+
+
 // #define BRA_ATTR_ERR  0xFF    //!< unknown or not implemented ATTR
 
 #define BRA_PRINTF_FMT_BYTES_BUF_SIZE 12                 //!< buffer size to convert meta file sizes into char*.

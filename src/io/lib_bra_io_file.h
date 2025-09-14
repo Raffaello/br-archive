@@ -98,11 +98,11 @@ bool bra_io_file_is_sfx(const char* fn);
  * @brief Open the file @p fn in the @p mode.
  *        On failure there is no need to call @ref bra_io_file_close
  *
- * @param f[out]
- * @param fn
- * @param mode @c fopen modes
- * @return true on success
- * @return false on error and close @p f via @ref bra_io_file_close.
+ * @param f[out]   file wrapper to initialize.
+ * @param fn[in]   filename to open.
+ * @param mode[in] @c fopen modes
+ * @return true    on success
+ * @return false   on error and close @p f via @ref bra_io_file_close.
  */
 bool bra_io_file_open(bra_io_file_t* f, const char* fn, const char* mode);
 

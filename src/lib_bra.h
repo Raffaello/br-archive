@@ -34,9 +34,9 @@ char bra_format_meta_attributes(const bra_attr_t attributes);
 void bra_format_bytes(const size_t bytes, char buf[BRA_PRINTF_FMT_BYTES_BUF_SIZE]);
 
 /**
- * @brief Print a meta file @p f using @ref bra_log_printf to display attributes, size and filename.
+ * @brief Print a meta entry from @p ctx using @ref bra_log_printf to display attributes, size and filename.
  *
- * @param f Archive file whose meta will be printed.
+ * @param ctx Archive context whose meta will be printed.
  * @return true
  * @return false
  */

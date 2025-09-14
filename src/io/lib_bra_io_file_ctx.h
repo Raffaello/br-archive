@@ -24,9 +24,9 @@ bool bra_io_file_ctx_open(bra_io_file_ctx_t* ctx, const char* fn, const char* mo
  *
  * @param ctx
  * @param fn
- * @param mode @c fopen modes
- * @return true on success (file positioned at start of footer; ready for bra_io_file_read_footer)
- * @return false on error (seek errors close @p f via @ref bra_io_file_close)
+ * @param mode   @c fopen modes
+ * @return true  on success (file positioned at start of footer; ready for bra_io_file_read_footer)
+ * @return false on error (seek errors close @p ctx->f via @ref bra_io_file_close)
  */
 bool bra_io_file_ctx_sfx_open(bra_io_file_ctx_t* ctx, const char* fn, const char* mode);
 
@@ -38,23 +38,22 @@ bool bra_io_file_ctx_sfx_open(bra_io_file_ctx_t* ctx, const char* fn, const char
 void bra_io_file_ctx_close(bra_io_file_ctx_t* ctx);
 
 /**
- * @brief Read the header from the give @p f file.
+ * @brief Read the header from the file associated to @p ctx file.
  *        The file must be positioned at the beginning of the header.
  *        On error returns false and closes the file via @ref bra_io_file_close.
  *
- * @param f
- * @param out_bh
  * @param ctx[in]
+ * @param out_bh
  * @return true on success
  * @return false on error
  */
 bool bra_io_file_ctx_read_header(bra_io_file_ctx_t* ctx, bra_io_header_t* out_bh);
 
 /**
- * @brief Write the bra header into @p f with @p num_files.
- *        On error closes @p f via @ref bra_io_file_close.
+ * @brief Write the bra header into @p ctx->f with @p num_files.
+ *        On error closes @p ctx->f via @ref bra_io_file_close.
  *
- * @param ctx[out]
+ * @param ctx[in,out]
  * @param num_files
  * @return true
  * @return false
@@ -69,34 +68,34 @@ bool bra_io_file_ctx_write_header(bra_io_file_ctx_t* ctx, const uint32_t num_fil
  * @param out_bh
  * @param ctx[out]
  * @return true on success (file positioned immediately after the header, at first entry)
- * @return false on error (errors during read/seek close @p f via @ref bra_io_file_close)
+ * @return false on error (errors during read/seek close @p ctx->f via @ref bra_io_file_close)
  */
 bool bra_io_file_ctx_sfx_open_and_read_footer_header(const char* fn, bra_io_header_t* out_bh, bra_io_file_ctx_t* ctx);
 
 /**
- * @brief Read the filename meta data information that is pointing in @p f and store it on @p mf.
+ * @brief Read the filename meta data information that is pointing in @p ctx->f and store it on @p mf.
  *        @p mf must be free via @ref bra_meta_file_free.
  *
  * @param ctx[in,out]
  * @param mf
  * @return true on success @p mf must be explicitly free via @ref bra_meta_file_free.
- * @return false on error closes @p f via @ref bra_io_file_close.
+ * @return false on error closes @p ctx->f via @ref bra_io_file_close.
  */
 bool bra_io_file_ctx_read_meta_file(bra_io_file_ctx_t* ctx, bra_meta_file_t* mf);
 
 /**
- * @brief Write the filename meta data information given from @p mf in @p f.
+ * @brief Write the filename meta data information given from @p mf in @p ctx->f.
  *
  * @param ctx[in,out]
  * @param mf
  * @return true on success
- * @return false on error closes @p f via @ref bra_io_file_close.
+ * @return false on error closes @p ctx->f via @ref bra_io_file_close.
  */
 bool bra_io_file_ctx_write_meta_file(bra_io_file_ctx_t* ctx, const bra_meta_file_t* mf);
 
 /**
- * @brief Encode a file or directory @p fn and append it to the open archive @p f.
- *        On error closes @p f via @ref bra_io_file_close.
+ * @brief Encode a file or directory @p fn and append it to the open archive @p ctx->f.
+ *        On error closes @p ctx->f via @ref bra_io_file_close.
  *
  * @param ctx[in,out]
  * @param fn NULL-terminated path to file or directory.
@@ -106,8 +105,8 @@ bool bra_io_file_ctx_write_meta_file(bra_io_file_ctx_t* ctx, const bra_meta_file
 bool bra_io_file_ctx_encode_and_write_to_disk(bra_io_file_ctx_t* ctx, const char* fn);
 
 /**
- * @brief Decode the current pointed internal file contained in @p f and write it to its relative path on disk.
- *        On error closes @p f via @ref bra_io_file_close.
+ * @brief Decode the current pointed internal file contained in @p ctx->f and write it to its relative path on disk.
+ *        On error closes @p ctx->f via @ref bra_io_file_close.
  *
  * @pre  @p overwrite_policy != NULL.
  *
@@ -116,7 +115,7 @@ bool bra_io_file_ctx_encode_and_write_to_disk(bra_io_file_ctx_t* ctx, const char
  *
  * @todo better split into decode and write to disk ?
  *
- * @param ctx[out]
+ * @param ctx[in,out]
  * @param overwrite_policy[in/out]
  * @return true on success
  * @return false on error

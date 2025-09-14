@@ -204,7 +204,7 @@ bool bra_io_file_ctx_read_meta_file(bra_io_file_ctx_t* ctx, bra_meta_file_t* mf)
         //       I must replicate the parent-dir too
         // TODO: unless dir attribute has a 2nd bit to tell sub-dir or dir
         //       but then must track the sub-dir (postponed for now until recursive)
-        strncpy(ctx->last_dir, buf, buf_size);
+        memcpy(ctx->last_dir, buf, buf_size);
         ctx->last_dir_size      = buf_size;
         ctx->last_dir[buf_size] = '\0';
 
@@ -213,7 +213,8 @@ bool bra_io_file_ctx_read_meta_file(bra_io_file_ctx_t* ctx, bra_meta_file_t* mf)
         if (mf->name == NULL)
             goto BRA_IO_READ_ERR;
 
-        strncpy(mf->name, buf, buf_size);
+        memcpy(mf->name, buf, buf_size);
+        mf->name[buf_size] = '\0';
     }
     else if (mf->attributes == BRA_ATTR_FILE)
     {
@@ -233,18 +234,17 @@ bool bra_io_file_ctx_read_meta_file(bra_io_file_ctx_t* ctx, bra_meta_file_t* mf)
         char* b = NULL;
         if (ctx->last_dir_size > 0)
         {
-            // strncpy(&mf->name[g_last_dir_size + 1], buf, buf_size);
-            strncpy(mf->name, ctx->last_dir, ctx->last_dir_size);
+            memcpy(mf->name, ctx->last_dir, ctx->last_dir_size);
             mf->name[ctx->last_dir_size] = '/';
             b                            = &mf->name[ctx->last_dir_size + 1];
         }
         else
         {
-            // strncpy(mf->name, buf, buf_size);
             b = mf->name;
         }
 
-        strncpy(b, buf, buf_size);
+        memcpy(b, buf, buf_size);
+        b[buf_size] = '\0';
     }
 
     mf->name[mf->name_size] = '\0';
@@ -286,7 +286,8 @@ bool bra_io_file_ctx_write_meta_file(bra_io_file_ctx_t* ctx, const bra_meta_file
             ++l;                          // skip also '/'
 
         buf_size = mf->name_size - l;
-        strncpy(buf, &mf->name[l], buf_size);
+        memcpy(buf, &mf->name[l], buf_size);
+        buf[buf_size] = '\0';
         break;
     }
     case BRA_ATTR_DIR:
@@ -296,9 +297,9 @@ bool bra_io_file_ctx_write_meta_file(bra_io_file_ctx_t* ctx, const bra_meta_file
             goto BRA_IO_WRITE_ERR;
 
         buf_size = mf->name_size;
-        strncpy(buf, mf->name, buf_size);
+        memcpy(buf, mf->name, buf_size);
         buf[buf_size] = '\0';
-        strncpy(ctx->last_dir, buf, buf_size);
+        memcpy(ctx->last_dir, buf, buf_size);
         ctx->last_dir[buf_size] = '\0';
         ctx->last_dir_size      = buf_size;
     }

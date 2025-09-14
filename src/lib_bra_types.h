@@ -81,12 +81,15 @@ typedef struct bra_rle_chunk_t
     struct bra_rle_chunk_t* pNext;     //!< pointer to next chunk; NULL if last.
 } bra_rle_chunk_t;
 
+/**
+ * @brief Archive File Context.
+ */
 typedef struct bra_io_file_ctx_t
 {
     bra_io_file_t f;
-    uint32_t      num_files;
-    char          last_dir[BRA_MAX_PATH_LENGTH];
-    uint16_t      last_dir_size;    // TODO: use uint8_t and memcpy instead of strncpy
-    bool          last_dir_empty;
-    bool          num_files_changed;
+    uint32_t      num_files;                        //!< num files to be written in the header.
+    char          last_dir[BRA_MAX_PATH_LENGTH];    //!< the last encoded or decoded directory.
+    uint16_t      last_dir_size;                    // TODO: use uint8_t and memcpy instead of strncpy
+    bool          last_dir_empty;                   //!< flag to control the compact empty parent dir operation.
+    bool          num_files_changed;                //!< if it is changed update num_files.
 } bra_io_file_ctx_t;

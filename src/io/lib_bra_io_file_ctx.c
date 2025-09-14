@@ -11,18 +11,6 @@
 #include <string.h>
 
 
-/**
- * @brief the last encoded or decoded directory.
- *
- * @note To understand if the next dir is a sub-dir or a sibling dir
- *       there is always the full relative path.
- *
- * @todo the sub-dir though must be processed like the file contained in a directory
- *
- * @bug  having a global variable can't be thread safe
- */
-// static char         g_last_dir[BRA_MAX_PATH_LENGTH];
-// static unsigned int g_last_dir_size;
 static const char g_end_messages[][5] = {" OK ", "SKIP"};
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -80,13 +68,8 @@ void bra_io_file_ctx_close(bra_io_file_ctx_t* ctx)
 
 bool bra_io_file_ctx_read_header(bra_io_file_ctx_t* ctx, bra_io_header_t* out_bh)
 {
-    assert(ctx != NULL);
-    assert_bra_io_file_t(&ctx->f);
+    assert_bra_io_file_cxt_t(ctx);
     assert(out_bh != NULL);
-
-    // Good point to clean the variable, even if it is not needed.
-    // memset(g_last_dir, 0, sizeof(g_last_dir));
-    // g_last_dir_size = 0;
 
     if (fread(out_bh, sizeof(bra_io_header_t), 1, ctx->f.f) != 1)
     {
@@ -108,12 +91,7 @@ bool bra_io_file_ctx_read_header(bra_io_file_ctx_t* ctx, bra_io_header_t* out_bh
 
 bool bra_io_file_ctx_write_header(bra_io_file_ctx_t* ctx, const uint32_t num_files)
 {
-    assert(ctx != NULL);
-    assert_bra_io_file_t(&ctx->f);
-
-    // Good point to clean the variable, even if it is not needed.
-    // memset(g_last_dir, 0, sizeof(g_last_dir));
-    // g_last_dir_size = 0;
+    assert_bra_io_file_cxt_t(ctx);
 
     const bra_io_header_t header = {
         .magic = BRA_MAGIC,
@@ -127,11 +105,7 @@ bool bra_io_file_ctx_write_header(bra_io_file_ctx_t* ctx, const uint32_t num_fil
         return false;
     }
 
-    // memset(ctx->last_dir, 0, sizeof(ctx->last_dir));
-    // ctx->last_dir_size  = 0;
-    // ctx->last_dir_empty = false;
     ctx->num_files = num_files;
-
     return true;
 }
 
@@ -141,7 +115,6 @@ bool bra_io_file_ctx_sfx_open_and_read_footer_header(const char* fn, bra_io_head
     assert(out_bh != NULL);
     assert(ctx != NULL);
 
-    // TODO: this is not right
     if (!bra_io_file_ctx_sfx_open(ctx, fn, "rb"))
         return false;
 
@@ -180,8 +153,7 @@ bool bra_io_file_ctx_sfx_open_and_read_footer_header(const char* fn, bra_io_head
 
 bool bra_io_file_ctx_read_meta_file(bra_io_file_ctx_t* ctx, bra_meta_file_t* mf)
 {
-    assert(ctx != NULL);
-    assert_bra_io_file_t(&ctx->f);
+    assert_bra_io_file_cxt_t(ctx);
     assert(mf != NULL);
 
     char     buf[BRA_MAX_PATH_LENGTH];
@@ -281,8 +253,7 @@ bool bra_io_file_ctx_read_meta_file(bra_io_file_ctx_t* ctx, bra_meta_file_t* mf)
 
 bool bra_io_file_ctx_write_meta_file(bra_io_file_ctx_t* ctx, const bra_meta_file_t* mf)
 {
-    assert(ctx != NULL);
-    assert_bra_io_file_t(&ctx->f);
+    assert_bra_io_file_cxt_t(ctx);
     assert(mf != NULL);
     assert(mf->name != NULL);
 
@@ -366,8 +337,7 @@ bool bra_io_file_ctx_write_meta_file(bra_io_file_ctx_t* ctx, const bra_meta_file
 
 bool bra_io_file_ctx_encode_and_write_to_disk(bra_io_file_ctx_t* ctx, const char* fn)
 {
-    assert(ctx != NULL);
-    assert_bra_io_file_t(&ctx->f);
+    assert_bra_io_file_cxt_t(ctx);
     assert(fn != NULL);
 
     // 1. attributes
@@ -464,8 +434,7 @@ bool bra_io_file_ctx_encode_and_write_to_disk(bra_io_file_ctx_t* ctx, const char
 
 bool bra_io_file_ctx_decode_and_write_to_disk(bra_io_file_ctx_t* ctx, bra_fs_overwrite_policy_e* overwrite_policy)
 {
-    assert(ctx != NULL);
-    assert_bra_io_file_t(&ctx->f);
+    assert_bra_io_file_cxt_t(ctx);
     assert(overwrite_policy != NULL);
 
     const char*     end_msg;    // 'OK  ' | 'SKIP'

@@ -11,8 +11,6 @@
 #include <stdlib.h>
 #include <limits.h>
 
-_Static_assert(BRA_MAX_PATH_LENGTH > UINT8_MAX, "BRA_MAX_PATH_LENGTH must be greater than bra_meta_file_t.name_size max value");
-
 /////////////////////////////////////////////////////////////////////////////
 
 char bra_format_meta_attributes(const bra_attr_t attributes)

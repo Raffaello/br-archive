@@ -112,7 +112,7 @@ bool bra_decode_rle(bra_rle_chunk_t** cur_rle, uint8_t* buf, const size_t buf_si
                 buf[i++] = rle->value;
             else
             {
-                rle->counts -= k;
+                rle->counts -= (uint8_t) k;
                 goto BRA_DECODE_RLE_END;
             }
         }

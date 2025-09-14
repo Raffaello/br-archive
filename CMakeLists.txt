@@ -55,7 +55,6 @@ target_sources(lib_bra
 )
 target_include_directories(lib_bra
     ### TODO: select what is public (at the moment looks everything except lib_bra_private.h)
-    PRIVATE
     PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/src
         $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/src> # for configure_file (version.h)

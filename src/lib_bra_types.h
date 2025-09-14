@@ -86,7 +86,7 @@ typedef struct bra_io_file_ctx_t
     bra_io_file_t f;
     uint32_t      num_files;
     char          last_dir[BRA_MAX_PATH_LENGTH];
-    uint8_t       last_dir_size;
+    uint16_t      last_dir_size;    // TODO: use uint8_t and memcpy instead of strncpy
     bool          last_dir_empty;
     bool          num_files_changed;
 } bra_io_file_ctx_t;

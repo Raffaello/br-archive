@@ -164,7 +164,7 @@ bool bra_io_file_ctx_read_meta_file(bra_io_file_ctx_t* ctx, bra_meta_file_t* mf)
     mf->data_size = 0;
 
     // 1. attributes
-    if (fread(&mf->attributes, sizeof(uint8_t), 1, ctx->f.f) != 1)
+    if (fread(&mf->attributes, sizeof(bra_attr_t), 1, ctx->f.f) != 1)
     {
     BRA_IO_READ_ERR:
         bra_io_file_read_error(&ctx->f);
@@ -309,7 +309,7 @@ bool bra_io_file_ctx_write_meta_file(bra_io_file_ctx_t* ctx, const bra_meta_file
     }
 
     // 1. attributes
-    if (fwrite(&mf->attributes, sizeof(uint8_t), 1, ctx->f.f) != 1)
+    if (fwrite(&mf->attributes, sizeof(bra_attr_t), 1, ctx->f.f) != 1)
     {
     BRA_IO_WRITE_ERR:
         bra_io_file_write_error(&ctx->f);

@@ -5,6 +5,7 @@ extern "C" {
 #endif
 
 #include <lib_bra_types.h>
+#include <stdbool.h>
 
 
 /**

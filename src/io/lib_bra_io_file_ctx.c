@@ -51,7 +51,7 @@ bool bra_io_file_ctx_sfx_open(bra_io_file_ctx_t* ctx, const char* fn, const char
     if (bra_io_file_tell(&ctx->f) < (int64_t) sizeof(bra_io_footer_t))
     {
         bra_log_error("%s-SFX module too small (missing footer placeholder): %s", BRA_NAME, ctx->f.fn);
-        bra_io_file_ctx_close(ctx);
+        bra_io_file_close(&ctx->f);
         return false;
     }
 

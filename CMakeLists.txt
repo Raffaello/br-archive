@@ -50,6 +50,7 @@ target_sources(lib_bra
         src/fs/bra_fs_c.cpp
 
         src/io/lib_bra_io_file.c
+        src/io/lib_bra_io_file_ctx.c
 
         src/encoders/bra_rle.c
 )

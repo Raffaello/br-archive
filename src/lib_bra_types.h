@@ -80,3 +80,13 @@ typedef struct bra_rle_chunk_t
     uint8_t                 value;     //!< the repeated char.
     struct bra_rle_chunk_t* pNext;     //!< pointer to next chunk; NULL if last.
 } bra_rle_chunk_t;
+
+typedef struct bra_io_file_ctx_t
+{
+    bra_io_file_t f;
+    uint32_t      num_files;
+    char          last_dir[BRA_MAX_PATH_LENGTH];
+    uint8_t       last_dir_size;
+    bool          last_dir_empty;
+    bool          num_files_changed;
+} bra_io_file_ctx_t;

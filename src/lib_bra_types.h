@@ -72,7 +72,7 @@ typedef struct bra_meta_file_t
 } bra_meta_file_t;
 
 /**
- * @brief
+ * @brief RLE chunk representing a run of repeated characters.s
  */
 typedef struct bra_rle_chunk_t
 {

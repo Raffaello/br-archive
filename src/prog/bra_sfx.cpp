@@ -86,7 +86,9 @@ protected:
                 return 1;
         }
 
-        bra_io_file_ctx_close(&m_ctx);
+        if (!bra_io_file_ctx_close(&m_ctx))
+            return 1;
+
         return 0;
     }
 

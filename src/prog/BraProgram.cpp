@@ -25,7 +25,8 @@ namespace fs = std::filesystem;
 
 BraProgram::~BraProgram()
 {
-    bra_io_file_ctx_close(&m_ctx);
+    if (!bra_io_file_ctx_close(&m_ctx))
+        bra_log_critical("unable to close %s", m_ctx.f.fn);
 }
 
 bool BraProgram::set_overwrite_policy(const bra_fs_overwrite_policy_e op, const string& s)

@@ -58,13 +58,17 @@ bool bra_io_file_ctx_close(bra_io_file_ctx_t* ctx)
 {
     assert(ctx != NULL);
 
+    bool res = true;
+
+    // this is can be true only if the file is opened in write mode
     if (ctx->num_files_changed)
     {
         if (fflush(ctx->f.f) != 0)
         {
         BRA_IO_FILE_CTX_CLOSE_ERR:
             bra_log_error("unable to update header in %s", ctx->f.fn);
-            return false;
+            res = false;
+            goto BRA_IO_FILE_CTX_CLOSE;
         }
         // change header num files.
         if (!bra_io_file_seek(&ctx->f, sizeof(uint32_t), SEEK_SET))
@@ -74,8 +78,9 @@ bool bra_io_file_ctx_close(bra_io_file_ctx_t* ctx)
             goto BRA_IO_FILE_CTX_CLOSE_ERR;
     }
 
+BRA_IO_FILE_CTX_CLOSE:
     bra_io_file_close(&ctx->f);
-    return true;
+    return res;
 }
 
 bool bra_io_file_ctx_read_header(bra_io_file_ctx_t* ctx, bra_io_header_t* out_bh)

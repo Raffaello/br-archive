@@ -91,5 +91,5 @@ typedef struct bra_io_file_ctx_t
     char          last_dir[BRA_MAX_PATH_LENGTH];    //!< the last encoded or decoded directory.
     uint8_t       last_dir_size;                    //!< length of last_dir in bytes; [0..BRA_MAX_PATH_LENGTH-1]
     bool          last_dir_empty;                   //!< flag to control the compact empty parent dir operation.
-    bool          num_files_changed;                //!< if it is changed update num_files.
+    bool          num_files_changed;                //!< if it is changed update num_files. always false if it is not writable
 } bra_io_file_ctx_t;

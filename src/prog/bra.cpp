@@ -349,7 +349,8 @@ protected:
             if (!bra_io_file_write_footer(&m_ctx.f, m_header_offset))
                 return 2;
 
-            bra_io_file_ctx_close(&m_ctx);
+            if (!bra_io_file_ctx_close(&m_ctx))
+                return 1;
 
             if (!bra::fs::file_rename(out_fn, sfx_path))
                 goto BRA_SFX_IO_ERROR;
@@ -359,7 +360,10 @@ protected:
                 bra_log_warn("unable to set executable bit on %s", sfx_path.string().c_str());
         }
         else
-            bra_io_file_ctx_close(&m_ctx);
+        {
+            if (!bra_io_file_ctx_close(&m_ctx))
+                return 1;
+        }
 
         return 0;
     }

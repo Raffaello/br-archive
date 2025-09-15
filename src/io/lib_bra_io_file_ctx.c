@@ -15,15 +15,13 @@ static const char g_end_messages[][5] = {" OK ", "SKIP"};
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
-static bool _bra_io_file_ctx_write_meta_file_common(bra_io_file_ctx_t* ctx, const bra_meta_file_t* mf, const char* filename, const uint8_t filename_size)
+static bool _bra_io_file_ctx_write_meta_file_common(bra_io_file_ctx_t* ctx, const bra_attr_t attr, const char* filename, const uint8_t filename_size)
 {
     assert_bra_io_file_cxt_t(ctx);
-    assert(mf != NULL);
-    assert(mf->name != NULL);
     assert(filename != NULL);
 
     // 1. attributes
-    if (fwrite(&mf->attributes, sizeof(bra_attr_t), 1, ctx->f.f) != 1)
+    if (fwrite(&attr, sizeof(bra_attr_t), 1, ctx->f.f) != 1)
         return false;
 
     // 2. filename size
@@ -33,6 +31,19 @@ static bool _bra_io_file_ctx_write_meta_file_common(bra_io_file_ctx_t* ctx, cons
     // 3. filename
     if (fwrite(filename, sizeof(char), filename_size, ctx->f.f) != filename_size)
         return false;
+
+    return true;
+}
+
+static bool _bra_io_file_ctx_flush_dir(bra_io_file_ctx_t* ctx)
+{
+    if (ctx->last_dir_not_flushed)
+    {
+        bra_log_debug("flushing dir: %s", ctx->last_dir);
+        ctx->last_dir_not_flushed = false;
+        if (!_bra_io_file_ctx_write_meta_file_common(ctx, ctx->last_dir_attr, ctx->last_dir, ctx->last_dir_size))
+            return false;
+    }
 
     return true;
 }
@@ -64,17 +75,33 @@ static bool _bra_io_file_ctx_write_meta_file_process_write_file(bra_io_file_ctx_
     assert(*filename_size > 0);    // check edge case that means an error somewhere else
     memcpy(filename, &mf->name[l], *filename_size);
     filename[*filename_size] = '\0';
-    ctx->parent_dir_empty    = false;
 
-    if (!_bra_io_file_ctx_write_meta_file_common(ctx, mf, filename, *filename_size))
+    // flush dir
+    if (!_bra_io_file_ctx_flush_dir(ctx))
         return false;
 
-    // 4. data size
+    // write common meta data (attribute, filename, filename_size)
+    if (!_bra_io_file_ctx_write_meta_file_common(ctx, mf->attributes, filename, *filename_size))
+        return false;
+
+    // 3. data size
     // NOTE: for directory makes sense to be zero, but it could be used for something else.
     //       actually for directory would be better not saving it at all if it is always zero.
     if (fwrite(&mf->data_size, sizeof(uint64_t), 1, ctx->f.f) != 1)
         return false;
 
+    // 4. data (this should be paired with data_size to avoid confusion
+    // instead is in the meta file write function
+    // NOTE: that data_size is written only for file in there)
+    bra_io_file_t f2;
+    memset(&f2, 0, sizeof(bra_io_file_t));
+    if (!bra_io_file_open(&f2, mf->name, "rb"))
+        return false;
+
+    if (!bra_io_file_copy_file_chunks(&ctx->f, &f2, mf->data_size))
+        return false;    // f, f2 closed already
+
+    bra_io_file_close(&f2);
     return true;
 }
 
@@ -93,44 +120,32 @@ static bool _bra_io_file_ctx_write_meta_file_process_write_dir(bra_io_file_ctx_t
     memcpy(dirname, mf->name, *dirname_size);
     dirname[*dirname_size] = '\0';
 
-    if (ctx->parent_dir_empty && strstr(dirname, ctx->last_dir) != NULL)
+    if (ctx->last_dir_not_flushed)
     {
-        bra_log_debug("parent dir %s is empty, replacing it with %s", ctx->last_dir, dirname);
+        // TODO: replace with SUB_DIR ATTRIBUTE
+        const bool replacing_dir = strstr(dirname, ctx->last_dir) != NULL;
+        if (replacing_dir)
+        {
+            bra_log_debug("parent dir %s is empty, replacing it with %s", ctx->last_dir, dirname);
 
-        // this must also reduce the total num_files in the header
-        // TODO: num_files should be written at the end.
-        // NOTE: i can't read the file as it hasn't open for also reading.
-        const int64_t tell = bra_io_file_tell(&ctx->f);
-        if (tell < 0)
-            return false;
-
-        if (!bra_io_file_seek(&ctx->f, 0, SEEK_SET))
-            return false;
-
-        // bra_io_header_t h;
-        // if (!bra_io_file_ctx_read_header(&ctx->f, &h))
-        //     goto BRA_IO_WRITE_ERR;
-
-        // if (!bra_io_file_write_header(&ctx->f, h.num_files - 1))
-        //     goto BRA_IO_WRITE_ERR;
-        ctx->num_files--;
-        assert(ctx->num_files > 0);
-        ctx->num_files_changed = true;
-
-        // need to move back to: [g_last_size + 2] bytes
-        // TODO dir can be cached and flush at the first file (or at the end of archiving)
-        if (!bra_io_file_seek(&ctx->f, tell - (sizeof(uint8_t) + sizeof(bra_attr_t) + ctx->last_dir_size), SEEK_SET))
-            return false;
+            ctx->num_files--;
+            assert(ctx->num_files > 0);
+            ctx->num_files_changed = true;
+        }
+        else
+        {
+            // not a subdir, need to save as empty dir, otherwise wasn't given as input
+            if (!_bra_io_file_ctx_flush_dir(ctx))
+                return false;
+        }
     }
+
+    ctx->last_dir_not_flushed = true;
+    ctx->last_dir_attr        = mf->attributes;
 
     memcpy(ctx->last_dir, dirname, *dirname_size);
     ctx->last_dir[*dirname_size] = '\0';
     ctx->last_dir_size           = *dirname_size;
-    ctx->parent_dir_empty        = true;
-
-    if (!_bra_io_file_ctx_write_meta_file_common(ctx, mf, dirname, *dirname_size))
-        return false;
-
     return true;
 }
 
@@ -143,7 +158,6 @@ bool bra_io_file_ctx_open(bra_io_file_ctx_t* ctx, const char* fn, const char* mo
     assert(mode != NULL);
 
     memset(ctx, 0, sizeof(bra_io_file_ctx_t));
-
     return bra_io_file_open(&ctx->f, fn, mode);
 }
 
@@ -181,11 +195,8 @@ bool bra_io_file_ctx_close(bra_io_file_ctx_t* ctx)
 
     bool res = true;
 
-    if (!ctx->last_dir_flushed)
-    {
-        // TODO do a function to flush the dir
-        // ctx->last_dir_flushed=true;
-    }
+    if (!_bra_io_file_ctx_flush_dir(ctx))
+        return false;
 
     // this is can be true only if the file is opened in write mode
     if (ctx->num_files_changed)
@@ -508,26 +519,26 @@ bool bra_io_file_ctx_encode_and_write_to_disk(bra_io_file_ctx_t* ctx, const char
     // 4. data (this should be paired with data_size to avoid confusion
     //          instead is in the meta file write function
     //          NOTE: that data_size is written only for file in there)
-    switch (attributes)
-    {
-    case BRA_ATTR_DIR:
-        // NOTE: Directory doesn't have the data part
-        break;
-    case BRA_ATTR_FILE:
-    {
-        bra_io_file_t f2;
+    // switch (attributes)
+    // {
+    // case BRA_ATTR_DIR:
+    //     // NOTE: Directory doesn't have the data part
+    //     break;
+    // case BRA_ATTR_FILE:
+    // {
+    //     bra_io_file_t f2;
 
-        memset(&f2, 0, sizeof(bra_io_file_t));
-        if (!bra_io_file_open(&f2, fn, "rb"))
-            goto BRA_IO_WRITE_CLOSE_ERROR;
+    // memset(&f2, 0, sizeof(bra_io_file_t));
+    // if (!bra_io_file_open(&f2, fn, "rb"))
+    //     goto BRA_IO_WRITE_CLOSE_ERROR;
 
-        if (!bra_io_file_copy_file_chunks(&ctx->f, &f2, ds))
-            return false;    // f, f2 closed already
+    // if (!bra_io_file_copy_file_chunks(&ctx->f, &f2, ds))
+    //     return false;    // f, f2 closed already
 
-        bra_io_file_close(&f2);
-    }
-    break;
-    }
+    // bra_io_file_close(&f2);
+    // }
+    // break;
+    // }
 
     bra_log_printf(" [  %-4.4s  ]\n", g_end_messages[0]);
     return true;

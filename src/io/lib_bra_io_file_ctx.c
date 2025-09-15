@@ -60,9 +60,16 @@ bool bra_io_file_ctx_close(bra_io_file_ctx_t* ctx)
 
     bool res = true;
 
+    if (!ctx->last_dir_flushed)
+    {
+        // TODO do a function to flush the dir
+        // ctx->last_dir_flushed=true;
+    }
+
     // this is can be true only if the file is opened in write mode
     if (ctx->num_files_changed)
     {
+        ctx->num_files_changed = false;
         if (fflush(ctx->f.f) != 0)
         {
         BRA_IO_FILE_CTX_CLOSE_ERR:
@@ -295,7 +302,7 @@ bool bra_io_file_ctx_write_meta_file(bra_io_file_ctx_t* ctx, const bra_meta_file
             goto BRA_IO_WRITE_ERR;
         }
 
-        if (strncmp(mf->name, ctx->last_dir, ctx->last_dir_size) != 0)    // g_last_dir doesn't have '/'
+        if (strncmp(mf->name, ctx->last_dir, ctx->last_dir_size) != 0)    // ctx->last_dir doesn't have '/'
             goto BRA_IO_WRITE_ERR;
 
         size_t l = ctx->last_dir_size;    // strnlen(g_last_dir, BRA_MAX_PATH_LENGTH);
@@ -305,7 +312,8 @@ bool bra_io_file_ctx_write_meta_file(bra_io_file_ctx_t* ctx, const bra_meta_file
         buf_size = mf->name_size - l;
         assert(buf_size > 0);    // check edge case that means an error somewhere else
         memcpy(buf, &mf->name[l], buf_size);
-        buf[buf_size] = '\0';
+        buf[buf_size]         = '\0';
+        ctx->parent_dir_empty = false;
         break;
     }
     case BRA_ATTR_DIR:
@@ -317,9 +325,41 @@ bool bra_io_file_ctx_write_meta_file(bra_io_file_ctx_t* ctx, const bra_meta_file
         buf_size = mf->name_size;
         memcpy(buf, mf->name, buf_size);
         buf[buf_size] = '\0';
+
+        if (ctx->parent_dir_empty && strstr(buf, ctx->last_dir) != NULL)
+        {
+            bra_log_debug("parent dir %s is empty, replacing it with %s", ctx->last_dir, buf);
+
+            // this must also reduce the total num_files in the header
+            // TODO: num_files should be written at the end.
+            // NOTE: i can't read the file as it hasn't open for also reading.
+            const int64_t tell = bra_io_file_tell(&ctx->f);
+            if (tell < 0)
+                goto BRA_IO_WRITE_ERR;
+
+            if (!bra_io_file_seek(&ctx->f, 0, SEEK_SET))
+                goto BRA_IO_WRITE_ERR;
+
+            // bra_io_header_t h;
+            // if (!bra_io_file_ctx_read_header(&ctx->f, &h))
+            //     goto BRA_IO_WRITE_ERR;
+
+            // if (!bra_io_file_write_header(&ctx->f, h.num_files - 1))
+            //     goto BRA_IO_WRITE_ERR;
+            ctx->num_files--;
+            assert(ctx->num_files > 0);
+            ctx->num_files_changed = true;
+
+            // need to move back to: [g_last_size + 2] bytes
+            // TODO dir can be cached and flush at the first file (or at the end of archiving)
+            if (!bra_io_file_seek(&ctx->f, tell - (sizeof(uint8_t) + sizeof(bra_attr_t) + ctx->last_dir_size), SEEK_SET))
+                goto BRA_IO_WRITE_ERR;
+        }
+
         memcpy(ctx->last_dir, buf, buf_size);
         ctx->last_dir[buf_size] = '\0';
         ctx->last_dir_size      = buf_size;
+        ctx->parent_dir_empty   = true;
     }
     break;
     default:

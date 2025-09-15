@@ -159,6 +159,8 @@ bool bra_io_file_ctx_open(bra_io_file_ctx_t* ctx, const char* fn, const char* mo
     assert(mode != NULL);
 
     memset(ctx, 0, sizeof(bra_io_file_ctx_t));
+    if (mode[0] == 'w')
+        ctx->isWriteable = true;
     return bra_io_file_open(&ctx->f, fn, mode);
 }
 
@@ -196,28 +198,31 @@ bool bra_io_file_ctx_close(bra_io_file_ctx_t* ctx)
 
     bool res = true;
 
-    if (!_bra_io_file_ctx_flush_dir(ctx))
-        return false;
-
-    // this is can be true only if the file is opened in write mode
-    if (ctx->num_files != ctx->cur_files)
+    if (ctx->isWriteable)
     {
-        // ctx->num_files_changed = false;
-        bra_log_debug("Consolidated dirs results: entries: %d - original: %d", ctx->cur_files, ctx->num_files);
-        ctx->num_files = ctx->cur_files;
-        if (fflush(ctx->f.f) != 0)
-        {
-        BRA_IO_FILE_CTX_CLOSE_ERR:
-            bra_log_error("unable to update header in %s", ctx->f.fn);
-            res = false;
-            goto BRA_IO_FILE_CTX_CLOSE;
-        }
-        // change header num files.
-        if (!bra_io_file_seek(&ctx->f, sizeof(uint32_t), SEEK_SET))
-            goto BRA_IO_FILE_CTX_CLOSE_ERR;
+        if (!_bra_io_file_ctx_flush_dir(ctx))
+            return false;
 
-        if (fwrite(&ctx->num_files, sizeof(ctx->num_files), 1, ctx->f.f) != 1)
-            goto BRA_IO_FILE_CTX_CLOSE_ERR;
+        // this is can be true only if the file is opened in write mode
+        if (ctx->num_files != ctx->cur_files)
+        {
+            // ctx->num_files_changed = false;
+            bra_log_debug("Consolidated dirs results: entries: %d - original: %d", ctx->cur_files, ctx->num_files);
+            ctx->num_files = ctx->cur_files;
+            if (fflush(ctx->f.f) != 0)
+            {
+            BRA_IO_FILE_CTX_CLOSE_ERR:
+                bra_log_error("unable to update header in %s", ctx->f.fn);
+                res = false;
+                goto BRA_IO_FILE_CTX_CLOSE;
+            }
+            // change header num files.
+            if (!bra_io_file_seek(&ctx->f, sizeof(uint32_t), SEEK_SET))
+                goto BRA_IO_FILE_CTX_CLOSE_ERR;
+
+            if (fwrite(&ctx->num_files, sizeof(ctx->num_files), 1, ctx->f.f) != 1)
+                goto BRA_IO_FILE_CTX_CLOSE_ERR;
+        }
     }
 
 BRA_IO_FILE_CTX_CLOSE:

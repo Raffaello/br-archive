@@ -81,8 +81,9 @@ TEST(test_bra_fs_search_wildcard_recursive_on_dir1)
     ASSERT_EQ(files.count("dir1/file1"), 1U);
     ASSERT_EQ(files.count("dir1/file2"), 1U);
     ASSERT_EQ(files.count("dir1/dir1c"), 1U);
-    ASSERT_EQ(files.count("dir1/dir1c/file1c.txt"), 1U);
-    ASSERT_EQ(files.size(), 9U);
+    ASSERT_EQ(files.count("dir1/dir1c/dir1cc"), 1U);
+    ASSERT_EQ(files.count("dir1/dir1c/dir1cc/file1cc.txt"), 1U);
+    ASSERT_EQ(files.size(), 10U);
 
     ASSERT_TRUE(bra::fs::file_set_add_dirs(files));
     ASSERT_EQ(files.count("dir1"), 1U);
@@ -94,8 +95,9 @@ TEST(test_bra_fs_search_wildcard_recursive_on_dir1)
     ASSERT_EQ(files.count("dir1/file1"), 1U);
     ASSERT_EQ(files.count("dir1/file2"), 1U);
     ASSERT_EQ(files.count("dir1/dir1c"), 1U);
-    ASSERT_EQ(files.count("dir1/dir1c/file1c.txt"), 1U);
-    ASSERT_EQ(files.size(), 10U);
+    ASSERT_EQ(files.count("dir1/dir1c/dir1cc"), 1U);
+    ASSERT_EQ(files.count("dir1/dir1c/dir1cc/file1cc.txt"), 1U);
+    ASSERT_EQ(files.size(), 11U);
 
     files.clear();
     ASSERT_TRUE(bra::fs::search_wildcard("dir1/*.txt", files, true));
@@ -108,7 +110,7 @@ TEST(test_bra_fs_search_wildcard_recursive_on_dir1)
     ASSERT_EQ(files.count("dir1/file1"), 0U);
     ASSERT_EQ(files.count("dir1/file2"), 0U);
     ASSERT_EQ(files.count("dir1/dir1c"), 0U);
-    ASSERT_EQ(files.count("dir1/dir1c/file1c.txt"), 1U);
+    ASSERT_EQ(files.count("dir1/dir1c/dir1cc/file1cc.txt"), 1U);
     ASSERT_EQ(files.size(), 3U);
 
     ASSERT_TRUE(bra::fs::file_set_add_dirs(files));
@@ -120,9 +122,10 @@ TEST(test_bra_fs_search_wildcard_recursive_on_dir1)
     ASSERT_EQ(files.count("dir1/dir1b"), 0U);
     ASSERT_EQ(files.count("dir1/file1"), 0U);
     ASSERT_EQ(files.count("dir1/file2"), 0U);
-    ASSERT_EQ(files.count("dir1/dir1c"), 1U);
-    ASSERT_EQ(files.count("dir1/dir1c/file1c.txt"), 1U);
-    ASSERT_EQ(files.size(), 7U);
+    ASSERT_EQ(files.count("dir1/dir1c"), 1U);    // consolidating dir
+    ASSERT_EQ(files.count("dir1/dir1c/dir1cc"), 1U);
+    ASSERT_EQ(files.count("dir1/dir1c/dir1cc/file1cc.txt"), 1U);
+    ASSERT_EQ(files.size(), 8U);
 
     return 0;
 }
@@ -148,8 +151,9 @@ TEST(test_bra_fs_search_wildcard_recursive_in_dir1)
     ASSERT_EQ(files.count("file1"), 1U);
     ASSERT_EQ(files.count("file2"), 1U);
     ASSERT_EQ(files.count("dir1c"), 1U);
-    ASSERT_EQ(files.count("dir1c/file1c.txt"), 1U);
-    ASSERT_EQ(files.size(), 9U);
+    ASSERT_EQ(files.count("dir1c/dir1cc"), 1U);
+    ASSERT_EQ(files.count("dir1c/dir1cc/file1cc.txt"), 1U);
+    ASSERT_EQ(files.size(), 10U);
 
     ASSERT_TRUE(bra::fs::file_set_add_dirs(files));
     // ASSERT_EQ(files.count("dir1"), 1U);
@@ -161,8 +165,9 @@ TEST(test_bra_fs_search_wildcard_recursive_in_dir1)
     ASSERT_EQ(files.count("file1"), 1U);
     ASSERT_EQ(files.count("file2"), 1U);
     ASSERT_EQ(files.count("dir1c"), 1U);
-    ASSERT_EQ(files.count("dir1c/file1c.txt"), 1U);
-    ASSERT_EQ(files.size(), 9U);
+    ASSERT_EQ(files.count("dir1c/dir1cc"), 1U);
+    ASSERT_EQ(files.count("dir1c/dir1cc/file1cc.txt"), 1U);
+    ASSERT_EQ(files.size(), 10U);
 
     files.clear();
     ASSERT_TRUE(bra::fs::search_wildcard("*.txt", files, true));
@@ -175,7 +180,9 @@ TEST(test_bra_fs_search_wildcard_recursive_in_dir1)
     ASSERT_EQ(files.count("file1"), 0U);
     ASSERT_EQ(files.count("file2"), 0U);
     ASSERT_EQ(files.count("dir1c"), 0U);
-    ASSERT_EQ(files.count("dir1c/file1c.txt"), 1U);
+    ASSERT_EQ(files.count("dir1c/dir1cc"), 0U);
+    ASSERT_EQ(files.count("dir1c/dir1cc/file1cc.txt"), 1U);
+    ASSERT_EQ(files.size(), 3U);
 
     ASSERT_TRUE(bra::fs::file_set_add_dirs(files));
     // ASSERT_EQ(files.count("dir1"), 1U);
@@ -187,7 +194,9 @@ TEST(test_bra_fs_search_wildcard_recursive_in_dir1)
     ASSERT_EQ(files.count("file1"), 0U);
     ASSERT_EQ(files.count("file2"), 0U);
     ASSERT_EQ(files.count("dir1c"), 1U);
-    ASSERT_EQ(files.count("dir1c/file1c.txt"), 1U);
+    ASSERT_EQ(files.count("dir1c/dir1cc"), 1U);
+    ASSERT_EQ(files.count("dir1c/dir1cc/file1cc.txt"), 1U);
+    ASSERT_EQ(files.size(), 7U);
 
     fs::current_path(old_path);
     return 0;
@@ -311,7 +320,13 @@ TEST(test_bra_fs_sfx_filename_adjust)
 int main(int argc, char* argv[])
 {
     return test_main(argc, argv, {
-                                     {TEST_FUNC(test_bra_fs_search_wildcard)}, {TEST_FUNC(test_bra_fs_search_wildcard_recursive_on_dir1)}, {TEST_FUNC(test_bra_fs_search_wildcard_recursive_in_dir1)}, {TEST_FUNC(test_bra_fs_file_exists)}, {TEST_FUNC(test_bra_fs_dir_exists)}, {TEST_FUNC(test_bra_fs_dir_make)}, {TEST_FUNC(test_bra_fs_try_sanitize_path)}, {TEST_FUNC(test_bra_fs_sfx_filename_adjust)},
-                                     // {TEST_FUNC(test_bra_fs_symlink)},
+                                     {TEST_FUNC(test_bra_fs_search_wildcard)},
+                                     {TEST_FUNC(test_bra_fs_search_wildcard_recursive_on_dir1)},
+                                     {TEST_FUNC(test_bra_fs_search_wildcard_recursive_in_dir1)},
+                                     {TEST_FUNC(test_bra_fs_file_exists)},
+                                     {TEST_FUNC(test_bra_fs_dir_exists)},
+                                     {TEST_FUNC(test_bra_fs_dir_make)},
+                                     {TEST_FUNC(test_bra_fs_try_sanitize_path)},
+                                     {TEST_FUNC(test_bra_fs_sfx_filename_adjust)},
                                  });
 }

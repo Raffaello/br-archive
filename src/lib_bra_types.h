@@ -93,5 +93,6 @@ typedef struct bra_io_file_ctx_t
     uint8_t       last_dir_size;                    //!< length of last_dir in bytes; [0..BRA_MAX_PATH_LENGTH-1]
     bra_attr_t    last_dir_attr;                    //!< last_dir attribute for deferred writing (flush).
     bool          last_dir_not_flushed;             //!< last dir is not written until a file is encountered or closing ctx.
+    bool          isWriteable;                      //!< true opened in write mode, false otherwise
     // bool num_files_changed;    //!< if it is changed update num_files. always false if it is not writable
 } bra_io_file_ctx_t;

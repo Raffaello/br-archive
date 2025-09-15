@@ -15,6 +15,115 @@ static const char g_end_messages[][5] = {" OK ", "SKIP"};
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
+static bool _bra_io_file_ctx_write_meta_file_common(bra_io_file_ctx_t* ctx, const bra_meta_file_t* mf, const char* filename, const uint8_t filename_size)
+{
+    assert_bra_io_file_cxt_t(ctx);
+    assert(mf != NULL);
+    assert(mf->name != NULL);
+    assert(filename != NULL);
+
+    // 1. attributes
+    if (fwrite(&mf->attributes, sizeof(bra_attr_t), 1, ctx->f.f) != 1)
+        return false;
+
+    // 2. filename size
+    if (fwrite(&filename_size, sizeof(uint8_t), 1, ctx->f.f) != 1)
+        return false;
+
+    // 3. filename
+    if (fwrite(filename, sizeof(char), filename_size, ctx->f.f) != filename_size)
+        return false;
+
+    return true;
+}
+
+static bool _bra_io_file_ctx_write_meta_file_process_file(bra_io_file_ctx_t* ctx, const bra_meta_file_t* mf, char* filename, uint8_t* filename_size)
+{
+    assert_bra_io_file_cxt_t(ctx);
+    assert(mf != NULL);
+    assert(filename != NULL);
+    assert(filename_size != NULL);
+
+    if (ctx->last_dir_size >= mf->name_size)
+    {
+        // In this case is a parent/sibling folder.
+        // but it should have read a dir instead.
+        // error because two consecutive files in different
+        // folders are been submitted.
+        return false;
+    }
+
+    if (strncmp(mf->name, ctx->last_dir, ctx->last_dir_size) != 0)    // ctx->last_dir doesn't have '/'
+        return false;
+
+    size_t l = ctx->last_dir_size;    // strnlen(g_last_dir, BRA_MAX_PATH_LENGTH);
+    if (mf->name[l] == '/')           // or when l == 0
+        ++l;                          // skip also '/'
+
+    *filename_size = mf->name_size - l;
+    assert(*filename_size > 0);    // check edge case that means an error somewhere else
+    memcpy(filename, &mf->name[l], *filename_size);
+    filename[*filename_size] = '\0';
+    ctx->parent_dir_empty    = false;
+
+    return true;
+}
+
+static bool _bra_io_file_ctx_write_meta_file_process_dir(bra_io_file_ctx_t* ctx, const bra_meta_file_t* mf, char* dirname, uint8_t* dirname_size)
+{
+    assert_bra_io_file_cxt_t(ctx);
+    assert(mf != NULL);
+    assert(dirname != NULL);
+    assert(dirname_size != NULL);
+
+    // As a safe-guard, but pointless otherwise
+    if (mf->data_size != 0)
+        return false;
+
+    *dirname_size = mf->name_size;
+    memcpy(dirname, mf->name, *dirname_size);
+    dirname[*dirname_size] = '\0';
+
+    if (ctx->parent_dir_empty && strstr(dirname, ctx->last_dir) != NULL)
+    {
+        bra_log_debug("parent dir %s is empty, replacing it with %s", ctx->last_dir, dirname);
+
+        // this must also reduce the total num_files in the header
+        // TODO: num_files should be written at the end.
+        // NOTE: i can't read the file as it hasn't open for also reading.
+        const int64_t tell = bra_io_file_tell(&ctx->f);
+        if (tell < 0)
+            return false;
+
+        if (!bra_io_file_seek(&ctx->f, 0, SEEK_SET))
+            return false;
+
+        // bra_io_header_t h;
+        // if (!bra_io_file_ctx_read_header(&ctx->f, &h))
+        //     goto BRA_IO_WRITE_ERR;
+
+        // if (!bra_io_file_write_header(&ctx->f, h.num_files - 1))
+        //     goto BRA_IO_WRITE_ERR;
+        ctx->num_files--;
+        assert(ctx->num_files > 0);
+        ctx->num_files_changed = true;
+
+        // need to move back to: [g_last_size + 2] bytes
+        // TODO dir can be cached and flush at the first file (or at the end of archiving)
+        if (!bra_io_file_seek(&ctx->f, tell - (sizeof(uint8_t) + sizeof(bra_attr_t) + ctx->last_dir_size), SEEK_SET))
+            return false;
+    }
+
+    memcpy(ctx->last_dir, dirname, *dirname_size);
+    ctx->last_dir[*dirname_size] = '\0';
+    ctx->last_dir_size           = *dirname_size;
+    ctx->parent_dir_empty        = true;
+
+    return true;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+
 bool bra_io_file_ctx_open(bra_io_file_ctx_t* ctx, const char* fn, const char* mode)
 {
     assert(ctx != NULL);
@@ -286,100 +395,33 @@ bool bra_io_file_ctx_write_meta_file(bra_io_file_ctx_t* ctx, const bra_meta_file
 
     const size_t len = strnlen(mf->name, BRA_MAX_PATH_LENGTH);
     if (len != mf->name_size || len == 0 || len >= BRA_MAX_PATH_LENGTH)
-        goto BRA_IO_WRITE_ERR;
-
-    // Processing data
-    switch (mf->attributes)
-    {
-    case BRA_ATTR_FILE:
-    {
-        if (ctx->last_dir_size >= mf->name_size)
-        {
-            // In this case is a parent/sibling folder.
-            // but it should have read a dir instead.
-            // error because two consecutive files in different
-            // folders are been submitted.
-            goto BRA_IO_WRITE_ERR;
-        }
-
-        if (strncmp(mf->name, ctx->last_dir, ctx->last_dir_size) != 0)    // ctx->last_dir doesn't have '/'
-            goto BRA_IO_WRITE_ERR;
-
-        size_t l = ctx->last_dir_size;    // strnlen(g_last_dir, BRA_MAX_PATH_LENGTH);
-        if (mf->name[l] == '/')           // or when l == 0
-            ++l;                          // skip also '/'
-
-        buf_size = mf->name_size - l;
-        assert(buf_size > 0);    // check edge case that means an error somewhere else
-        memcpy(buf, &mf->name[l], buf_size);
-        buf[buf_size]         = '\0';
-        ctx->parent_dir_empty = false;
-        break;
-    }
-    case BRA_ATTR_DIR:
-    {
-        // As a safe-guard, but pointless otherwise
-        if (mf->data_size != 0)
-            goto BRA_IO_WRITE_ERR;
-
-        buf_size = mf->name_size;
-        memcpy(buf, mf->name, buf_size);
-        buf[buf_size] = '\0';
-
-        if (ctx->parent_dir_empty && strstr(buf, ctx->last_dir) != NULL)
-        {
-            bra_log_debug("parent dir %s is empty, replacing it with %s", ctx->last_dir, buf);
-
-            // this must also reduce the total num_files in the header
-            // TODO: num_files should be written at the end.
-            // NOTE: i can't read the file as it hasn't open for also reading.
-            const int64_t tell = bra_io_file_tell(&ctx->f);
-            if (tell < 0)
-                goto BRA_IO_WRITE_ERR;
-
-            if (!bra_io_file_seek(&ctx->f, 0, SEEK_SET))
-                goto BRA_IO_WRITE_ERR;
-
-            // bra_io_header_t h;
-            // if (!bra_io_file_ctx_read_header(&ctx->f, &h))
-            //     goto BRA_IO_WRITE_ERR;
-
-            // if (!bra_io_file_write_header(&ctx->f, h.num_files - 1))
-            //     goto BRA_IO_WRITE_ERR;
-            ctx->num_files--;
-            assert(ctx->num_files > 0);
-            ctx->num_files_changed = true;
-
-            // need to move back to: [g_last_size + 2] bytes
-            // TODO dir can be cached and flush at the first file (or at the end of archiving)
-            if (!bra_io_file_seek(&ctx->f, tell - (sizeof(uint8_t) + sizeof(bra_attr_t) + ctx->last_dir_size), SEEK_SET))
-                goto BRA_IO_WRITE_ERR;
-        }
-
-        memcpy(ctx->last_dir, buf, buf_size);
-        ctx->last_dir[buf_size] = '\0';
-        ctx->last_dir_size      = buf_size;
-        ctx->parent_dir_empty   = true;
-    }
-    break;
-    default:
-        goto BRA_IO_WRITE_ERR;
-    }
-
-    // 1. attributes
-    if (fwrite(&mf->attributes, sizeof(bra_attr_t), 1, ctx->f.f) != 1)
     {
     BRA_IO_WRITE_ERR:
         bra_io_file_write_error(&ctx->f);
         return false;
     }
 
-    // 2. filename size
-    if (fwrite(&buf_size, sizeof(uint8_t), 1, ctx->f.f) != 1)
+    // Processing data
+    switch (mf->attributes)
+    {
+    case BRA_ATTR_FILE:
+    {
+        if (!_bra_io_file_ctx_write_meta_file_process_file(ctx, mf, buf, &buf_size))
+            goto BRA_IO_WRITE_ERR;
+        break;
+    }
+    case BRA_ATTR_DIR:
+    {
+        if (!_bra_io_file_ctx_write_meta_file_process_dir(ctx, mf, buf, &buf_size))
+            goto BRA_IO_WRITE_ERR;
+        break;
+    }
+    break;
+    default:
         goto BRA_IO_WRITE_ERR;
+    }
 
-    // 3. filename
-    if (fwrite(buf, sizeof(char), buf_size, ctx->f.f) != buf_size)
+    if (!_bra_io_file_ctx_write_meta_file_common(ctx, mf, buf, buf_size))
         goto BRA_IO_WRITE_ERR;
 
     // 4. data size

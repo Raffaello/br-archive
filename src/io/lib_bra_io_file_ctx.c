@@ -32,6 +32,7 @@ static bool _bra_io_file_ctx_write_meta_file_common(bra_io_file_ctx_t* ctx, cons
     if (fwrite(filename, sizeof(char), filename_size, ctx->f.f) != filename_size)
         return false;
 
+    ++ctx->cur_files;    // all meta files are using this function, so best place to track an added file to the archive.
     return true;
 }
 
@@ -128,9 +129,9 @@ static bool _bra_io_file_ctx_write_meta_file_process_write_dir(bra_io_file_ctx_t
         {
             bra_log_debug("parent dir %s is empty, replacing it with %s", ctx->last_dir, dirname);
 
-            ctx->num_files--;
-            assert(ctx->num_files > 0);
-            ctx->num_files_changed = true;
+            // ctx->num_files--;
+            //  assert(ctx->num_files > 0);
+            //  ctx->num_files_changed = true;
         }
         else
         {
@@ -199,9 +200,11 @@ bool bra_io_file_ctx_close(bra_io_file_ctx_t* ctx)
         return false;
 
     // this is can be true only if the file is opened in write mode
-    if (ctx->num_files_changed)
+    if (ctx->num_files != ctx->cur_files)
     {
-        ctx->num_files_changed = false;
+        // ctx->num_files_changed = false;
+        bra_log_debug("Consolidated dirs results: entries: %d - original: %d", ctx->cur_files, ctx->num_files);
+        ctx->num_files = ctx->cur_files;
         if (fflush(ctx->f.f) != 0)
         {
         BRA_IO_FILE_CTX_CLOSE_ERR:

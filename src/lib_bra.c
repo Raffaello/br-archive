@@ -1,5 +1,6 @@
 #include <lib_bra.h>
 #include <io/lib_bra_io_file.h>
+#include <io/lib_bra_io_file_ctx.h>
 
 #include <lib_bra_private.h>
 
@@ -72,14 +73,15 @@ void bra_meta_file_free(bra_meta_file_t* mf)
     }
 }
 
-bool bra_io_print_meta_file(bra_io_file_t* f)
+bool bra_io_print_meta_file_ctx(bra_io_file_ctx_t* ctx)
 {
-    assert_bra_io_file_t(f);
+    assert(ctx != NULL);
+    assert_bra_io_file_t(&ctx->f);
 
     bra_meta_file_t mf;
     char            bytes[BRA_PRINTF_FMT_BYTES_BUF_SIZE];
 
-    if (!bra_io_file_read_meta_file(f, &mf))
+    if (!bra_io_file_ctx_read_meta_file(ctx, &mf))
         return false;
 
     const uint64_t ds   = mf.data_size;
@@ -92,9 +94,9 @@ bool bra_io_print_meta_file(bra_io_file_t* f)
 
     bra_meta_file_free(&mf);
     // skip data content
-    if (!bra_io_file_skip_data(f, ds))
+    if (!bra_io_file_skip_data(&ctx->f, ds))
     {
-        bra_io_file_seek_error(f);
+        bra_io_file_seek_error(&ctx->f);
         return false;
     }
 

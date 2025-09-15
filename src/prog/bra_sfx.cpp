@@ -1,5 +1,6 @@
 #include <lib_bra.h>
 #include <io/lib_bra_io_file.h>
+#include <io/lib_bra_io_file_ctx.h>
 
 #include <log/bra_log.h>
 #include <version.h>
@@ -74,18 +75,20 @@ protected:
         // and do not force extension checking to unbra
         // plus file detection, as it would be required to open the SFX
         // just for the supported exe/elf formats avoid for all the rest.
-        if (!bra_io_file_sfx_open_and_read_footer_header(m_argv0.c_str(), &bh, &m_f))
+        if (!bra_io_file_ctx_sfx_open_and_read_footer_header(m_argv0.c_str(), &bh, &m_ctx))
             return 1;
 
         // extract payload, encoded data
         bra_log_printf("%s contains num files: %u\n", BRA_NAME, bh.num_files);
         for (uint32_t i = 0; i < bh.num_files; i++)
         {
-            if (!bra_io_file_decode_and_write_to_disk(&m_f, &m_overwrite_policy))
+            if (!bra_io_file_ctx_decode_and_write_to_disk(&m_ctx, &m_overwrite_policy))
                 return 1;
         }
 
-        bra_io_file_close(&m_f);
+        if (!bra_io_file_ctx_close(&m_ctx))
+            return 1;
+
         return 0;
     }
 

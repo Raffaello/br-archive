@@ -7,7 +7,8 @@
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 
-#define assert_bra_io_file_t(x) assert((x) != NULL && (x)->f != NULL && (x)->fn != NULL)
+#define assert_bra_io_file_t(x)     assert((x) != NULL && (x)->f != NULL && (x)->fn != NULL)
+#define assert_bra_io_file_cxt_t(x) assert((x) != NULL && (x)->f.f != NULL && (x)->f.fn != NULL)
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 

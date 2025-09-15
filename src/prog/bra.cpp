@@ -1,5 +1,6 @@
 #include <lib_bra.h>
 #include <io/lib_bra_io_file.h>
+#include <io/lib_bra_io_file_ctx.h>
 
 #include <log/bra_log.h>
 #include <fs/bra_fs.hpp>
@@ -266,7 +267,7 @@ protected:
         }
 
         const string fn = path.generic_string();
-        if (!bra_io_file_encode_and_write_to_disk(&m_f, fn.c_str()))
+        if (!bra_io_file_ctx_encode_and_write_to_disk(&m_ctx, fn.c_str()))
             return false;
 
         return true;
@@ -291,14 +292,14 @@ protected:
             }
 
             // header
-            if (!bra_io_file_sfx_open(&m_f, out_fn.c_str(), "rb+"))
+            if (!bra_io_file_ctx_sfx_open(&m_ctx, out_fn.c_str(), "rb+"))
                 goto BRA_SFX_IO_ERROR;
 
             // save the start of the payload for later...
-            m_header_offset = bra_io_file_tell(&m_f);
+            m_header_offset = bra_io_file_tell(&m_ctx.f);
             if (m_header_offset < 0L)
             {
-                bra_io_file_error(&m_f, "tell");
+                bra_io_file_error(&m_ctx.f, "tell");
                 return 2;
             }
         }
@@ -307,11 +308,11 @@ protected:
             bra_log_printf("Archiving Into: %s\n", out_fn.c_str());
 
             // header
-            if (!bra_io_file_open(&m_f, out_fn.c_str(), "wb"))
+            if (!bra_io_file_ctx_open(&m_ctx, out_fn.c_str(), "wb"))
                 return 1;
         }
 
-        if (!bra_io_file_write_header(&m_f, static_cast<uint32_t>(m_tot_files)))
+        if (!bra_io_file_ctx_write_header(&m_ctx, static_cast<uint32_t>(m_tot_files)))
             return 1;
 
         m_written_num_files = 0;
@@ -345,10 +346,11 @@ protected:
 
         if (m_sfx)
         {
-            if (!bra_io_file_write_footer(&m_f, m_header_offset))
+            if (!bra_io_file_write_footer(&m_ctx.f, m_header_offset))
                 return 2;
 
-            bra_io_file_close(&m_f);
+            if (!bra_io_file_ctx_close(&m_ctx))
+                return 1;
 
             if (!bra::fs::file_rename(out_fn, sfx_path))
                 goto BRA_SFX_IO_ERROR;
@@ -358,7 +360,10 @@ protected:
                 bra_log_warn("unable to set executable bit on %s", sfx_path.string().c_str());
         }
         else
-            bra_io_file_close(&m_f);
+        {
+            if (!bra_io_file_ctx_close(&m_ctx))
+                return 1;
+        }
 
         return 0;
     }

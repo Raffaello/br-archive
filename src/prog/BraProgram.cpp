@@ -1,6 +1,7 @@
 #include "BraProgram.hpp"
 
 #include <io/lib_bra_io_file.h>
+#include <io/lib_bra_io_file_ctx.h>
 #include <log/bra_log.h>
 #include <fs/bra_fs.hpp>
 #include <fs/bra_wildcards.hpp>
@@ -24,7 +25,8 @@ namespace fs = std::filesystem;
 
 BraProgram::~BraProgram()
 {
-    bra_io_file_close(&m_f);
+    if (!bra_io_file_ctx_close(&m_ctx))
+        bra_log_critical("unable to close %s", m_ctx.f.fn);
 }
 
 bool BraProgram::set_overwrite_policy(const bra_fs_overwrite_policy_e op, const string& s)

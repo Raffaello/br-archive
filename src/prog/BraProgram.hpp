@@ -25,7 +25,7 @@ private:
 
 protected:
     std::string               m_argv0;
-    bra_io_file_t             m_f{};
+    bra_io_file_ctx_t         m_ctx{};
     bra_fs_overwrite_policy_e m_overwrite_policy = BRA_OVERWRITE_ASK;
 
     bool set_overwrite_policy(const bra_fs_overwrite_policy_e op, const std::string& s);

@@ -35,8 +35,10 @@ bool bra_io_file_ctx_sfx_open(bra_io_file_ctx_t* ctx, const char* fn, const char
  * @brief
  *
  * @param ctx
+ * @return true
+ * @return false
  */
-void bra_io_file_ctx_close(bra_io_file_ctx_t* ctx);
+bool bra_io_file_ctx_close(bra_io_file_ctx_t* ctx);
 
 /**
  * @brief Read the header from the file associated to @p ctx file.

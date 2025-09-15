@@ -54,17 +54,28 @@ bool bra_io_file_ctx_sfx_open(bra_io_file_ctx_t* ctx, const char* fn, const char
     return true;
 }
 
-void bra_io_file_ctx_close(bra_io_file_ctx_t* ctx)
+bool bra_io_file_ctx_close(bra_io_file_ctx_t* ctx)
 {
     assert(ctx != NULL);
 
     if (ctx->num_files_changed)
     {
-        // fflush(ctx->f.f);
+        if (fflush(ctx->f.f) != 0)
+        {
+        BRA_IO_FILE_CTX_CLOSE_ERR:
+            bra_log_error("unable to update header in %s", ctx->f.fn);
+            return false;
+        }
         // change header num files.
+        if (!bra_io_file_seek(&ctx->f, sizeof(uint32_t), SEEK_SET))
+            goto BRA_IO_FILE_CTX_CLOSE_ERR;
+
+        if (fwrite(&ctx->num_files, sizeof(ctx->num_files), 1, ctx->f.f) != 1)
+            goto BRA_IO_FILE_CTX_CLOSE_ERR;
     }
 
     bra_io_file_close(&ctx->f);
+    return true;
 }
 
 bool bra_io_file_ctx_read_header(bra_io_file_ctx_t* ctx, bra_io_header_t* out_bh)
@@ -261,7 +272,7 @@ bool bra_io_file_ctx_write_meta_file(bra_io_file_ctx_t* ctx, const bra_meta_file
     char    buf[BRA_MAX_PATH_LENGTH];
     uint8_t buf_size;
 
-    const size_t len = strnlen(mf->name, BRA_MAX_PATH_LENGTH + 1);
+    const size_t len = strnlen(mf->name, BRA_MAX_PATH_LENGTH);
     if (len != mf->name_size || len == 0 || len >= BRA_MAX_PATH_LENGTH)
         goto BRA_IO_WRITE_ERR;
 
@@ -287,6 +298,7 @@ bool bra_io_file_ctx_write_meta_file(bra_io_file_ctx_t* ctx, const bra_meta_file
             ++l;                          // skip also '/'
 
         buf_size = mf->name_size - l;
+        assert(buf_size > 0);    // check edge case that means an error somewhere else
         memcpy(buf, &mf->name[l], buf_size);
         buf[buf_size] = '\0';
         break;

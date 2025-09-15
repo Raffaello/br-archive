@@ -37,7 +37,7 @@ static bool _bra_io_file_ctx_write_meta_file_common(bra_io_file_ctx_t* ctx, cons
     return true;
 }
 
-static bool _bra_io_file_ctx_write_meta_file_process_file(bra_io_file_ctx_t* ctx, const bra_meta_file_t* mf, char* filename, uint8_t* filename_size)
+static bool _bra_io_file_ctx_write_meta_file_process_write_file(bra_io_file_ctx_t* ctx, const bra_meta_file_t* mf, char* filename, uint8_t* filename_size)
 {
     assert_bra_io_file_cxt_t(ctx);
     assert(mf != NULL);
@@ -66,10 +66,19 @@ static bool _bra_io_file_ctx_write_meta_file_process_file(bra_io_file_ctx_t* ctx
     filename[*filename_size] = '\0';
     ctx->parent_dir_empty    = false;
 
+    if (!_bra_io_file_ctx_write_meta_file_common(ctx, mf, filename, *filename_size))
+        return false;
+
+    // 4. data size
+    // NOTE: for directory makes sense to be zero, but it could be used for something else.
+    //       actually for directory would be better not saving it at all if it is always zero.
+    if (fwrite(&mf->data_size, sizeof(uint64_t), 1, ctx->f.f) != 1)
+        return false;
+
     return true;
 }
 
-static bool _bra_io_file_ctx_write_meta_file_process_dir(bra_io_file_ctx_t* ctx, const bra_meta_file_t* mf, char* dirname, uint8_t* dirname_size)
+static bool _bra_io_file_ctx_write_meta_file_process_write_dir(bra_io_file_ctx_t* ctx, const bra_meta_file_t* mf, char* dirname, uint8_t* dirname_size)
 {
     assert_bra_io_file_cxt_t(ctx);
     assert(mf != NULL);
@@ -118,6 +127,9 @@ static bool _bra_io_file_ctx_write_meta_file_process_dir(bra_io_file_ctx_t* ctx,
     ctx->last_dir[*dirname_size] = '\0';
     ctx->last_dir_size           = *dirname_size;
     ctx->parent_dir_empty        = true;
+
+    if (!_bra_io_file_ctx_write_meta_file_common(ctx, mf, dirname, *dirname_size))
+        return false;
 
     return true;
 }
@@ -401,36 +413,24 @@ bool bra_io_file_ctx_write_meta_file(bra_io_file_ctx_t* ctx, const bra_meta_file
         return false;
     }
 
-    // Processing data
+    // Processing & Writing data
     switch (mf->attributes)
     {
     case BRA_ATTR_FILE:
     {
-        if (!_bra_io_file_ctx_write_meta_file_process_file(ctx, mf, buf, &buf_size))
+        if (!_bra_io_file_ctx_write_meta_file_process_write_file(ctx, mf, buf, &buf_size))
             goto BRA_IO_WRITE_ERR;
         break;
     }
     case BRA_ATTR_DIR:
     {
-        if (!_bra_io_file_ctx_write_meta_file_process_dir(ctx, mf, buf, &buf_size))
+        if (!_bra_io_file_ctx_write_meta_file_process_write_dir(ctx, mf, buf, &buf_size))
             goto BRA_IO_WRITE_ERR;
         break;
     }
     break;
     default:
         goto BRA_IO_WRITE_ERR;
-    }
-
-    if (!_bra_io_file_ctx_write_meta_file_common(ctx, mf, buf, buf_size))
-        goto BRA_IO_WRITE_ERR;
-
-    // 4. data size
-    // NOTE: for directory makes sense to be zero, but it could be used for something else.
-    //       actually for directory would be better not saving it at all if it is always zero.
-    if (mf->attributes == BRA_ATTR_FILE)
-    {
-        if (fwrite(&mf->data_size, sizeof(uint64_t), 1, ctx->f.f) != 1)
-            goto BRA_IO_WRITE_ERR;
     }
 
     return true;

@@ -516,30 +516,6 @@ bool bra_io_file_ctx_encode_and_write_to_disk(bra_io_file_ctx_t* ctx, const char
     if (!res)
         return false;    // f closed already
 
-    // 4. data (this should be paired with data_size to avoid confusion
-    //          instead is in the meta file write function
-    //          NOTE: that data_size is written only for file in there)
-    // switch (attributes)
-    // {
-    // case BRA_ATTR_DIR:
-    //     // NOTE: Directory doesn't have the data part
-    //     break;
-    // case BRA_ATTR_FILE:
-    // {
-    //     bra_io_file_t f2;
-
-    // memset(&f2, 0, sizeof(bra_io_file_t));
-    // if (!bra_io_file_open(&f2, fn, "rb"))
-    //     goto BRA_IO_WRITE_CLOSE_ERROR;
-
-    // if (!bra_io_file_copy_file_chunks(&ctx->f, &f2, ds))
-    //     return false;    // f, f2 closed already
-
-    // bra_io_file_close(&f2);
-    // }
-    // break;
-    // }
-
     bra_log_printf(" [  %-4.4s  ]\n", g_end_messages[0]);
     return true;
 }

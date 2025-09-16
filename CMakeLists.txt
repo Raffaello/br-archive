@@ -80,17 +80,28 @@ add_executable(bra_sfx src/prog/bra_sfx.cpp)
 target_link_libraries(bra_sfx PRIVATE bra_prog)
 win32_wildcard(bra_sfx)
 target_compile_options(bra_sfx PRIVATE
-    # $<$<CONFIG:Debug>:-Oz> # Debug-specific flags
-    $<$<CONFIG:Release>:-Oz> # Release-specific flags
+  # Clang/AppleClang: prefer -Oz for size
+  $<$<AND:$<CONFIG:Release,MinSizeRel>,$<COMPILE_LANG_AND_ID:CXX,Clang,AppleClang>>:-Oz>
+  # GCC: use -Os for portability (Oz requires newer GCC)
+  $<$<AND:$<CONFIG:Release,MinSizeRel>,$<COMPILE_LANG_AND_ID:CXX,GNU>>:-Os>
+  # MSVC: /O1 (~Os)
+  $<$<AND:$<CONFIG:Release,MinSizeRel>,$<COMPILE_LANG_AND_ID:CXX,MSVC>>:/O1>
 )
 target_link_options(bra_sfx PRIVATE
-    $<$<CONFIG:Release>:-s>
+  # GNU/Clang on non-Darwin: pass -s to linker
+  $<$<AND:$<CONFIG:Release,MinSizeRel>,$<LINK_LANG_AND_ID:CXX,GNU,Clang>,$<NOT:$<PLATFORM_ID:Darwin>>>:-s>
+  # AppleClang (Mach-O): dead strip and strip local symbols
+  $<$<AND:$<CONFIG:Release,MinSizeRel>,$<LINK_LANG_AND_ID:CXX,AppleClang>>:-Wl,-dead_strip>
+  $<$<AND:$<CONFIG:Release,MinSizeRel>,$<LINK_LANG_AND_ID:CXX,AppleClang>>:-Wl,-x>
+  # MSVC: identical COMDAT folding and unreferenced elimination
+  $<$<AND:$<CONFIG:Release,MinSizeRel>,$<LINK_LANG_AND_ID:CXX,MSVC>>:/OPT:REF>
+  $<$<AND:$<CONFIG:Release,MinSizeRel>,$<LINK_LANG_AND_ID:CXX,MSVC>>:/OPT:ICF>
 )
-
 set_target_properties(bra_sfx PROPERTIES
     OUTPUT_NAME "bra"
     SUFFIX ".sfx"
 )
+
 
 if(BUILD_TESTING)
     add_subdirectory(test)

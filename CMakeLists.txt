@@ -80,7 +80,7 @@ add_executable(bra_sfx src/prog/bra_sfx.cpp)
 target_link_libraries(bra_sfx PRIVATE bra_prog)
 win32_wildcard(bra_sfx)
 target_compile_options(bra_sfx PRIVATE
-    $<$<AND:$<CONFIG:Release>,$<COMPILE_LANG_AND_ID:CXX,GNU>>:-Os,-ffunction-sections -fdata-sections>
+    $<$<AND:$<CONFIG:Release>,$<COMPILE_LANG_AND_ID:CXX,GNU>>:-Os -ffunction-sections -fdata-sections>
 
     # Clang/AppleClang: prefer -Oz for size
     # $<$<AND:$<CONFIG:Release>,$<COMPILE_LANG_AND_ID:CXX,Clang,AppleClang>>:-Oz>
@@ -96,7 +96,7 @@ target_compile_options(bra_sfx PRIVATE
     # $<$<AND:$<CONFIG:Release>,$<COMPILE_LANG_AND_ID:CXX,MSVC>>:/Gw>
 )
 target_link_options(bra_sfx PRIVATE
-    $<$<AND:$<CONFIG:Release>,$<LINK_LANG_AND_ID:CXX,GNU,Clang>>:-s,-Wl,--gc-sections>
+    $<$<AND:$<CONFIG:Release>,$<LINK_LANG_AND_ID:CXX,GNU,Clang>>:-s -Wl,--gc-sections>
 
     # AppleClang (Mach-O): dead strip and strip local symbols
     # $<$<AND:$<CONFIG:Release>,$<LINK_LANG_AND_ID:CXX,AppleClang>>:-Wl,-dead_strip>

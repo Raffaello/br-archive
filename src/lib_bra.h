@@ -37,8 +37,8 @@ void bra_format_bytes(const size_t bytes, char buf[BRA_PRINTF_FMT_BYTES_BUF_SIZE
  * @brief Print a meta entry from @p ctx using @ref bra_log_printf to display attributes, size and filename.
  *
  * @param ctx Archive context whose meta will be printed.
- * @return true
- * @return false
+ * @retval true
+ * @retval false
  */
 bool bra_io_print_meta_file_ctx(bra_io_file_ctx_t* ctx);
 

@@ -63,8 +63,8 @@ void bra_io_file_write_error(bra_io_file_t* f);
  * @see bra_io_file_is_sfx
  *
  * @param fn
- * @return true if ELF magic is detected.
- * @return false otherwise.
+ * @retval true if ELF magic is detected.
+ * @retval false otherwise.
  */
 bool bra_io_file_is_elf(const char* fn);
 
@@ -75,8 +75,8 @@ bool bra_io_file_is_elf(const char* fn);
  * @see bra_io_file_is_sfx
  *
  * @param fn
- * @return true if a valid PE signature is detected.
- * @return false otherwise.
+ * @retval true if a valid PE signature is detected.
+ * @retval false otherwise.
  */
 bool bra_io_file_is_pe_exe(const char* fn);
 
@@ -89,8 +89,8 @@ bool bra_io_file_is_pe_exe(const char* fn);
  * @see bra_io_file_is_pe_exe
  *
  * @param fn
- * @return true if a file appear to be an ELF or PE/EXE (SFX wrapper).
- * @return false otherwise.
+ * @retval true if a file appear to be an ELF or PE/EXE (SFX wrapper).
+ * @retval false otherwise.
  */
 bool bra_io_file_is_sfx(const char* fn);
 
@@ -101,8 +101,8 @@ bool bra_io_file_is_sfx(const char* fn);
  * @param f[out]   file wrapper to initialize.
  * @param fn[in]   filename to open.
  * @param mode[in] @c fopen modes
- * @return true    on success
- * @return false   on error and close @p f via @ref bra_io_file_close.
+ * @retval true    on success
+ * @retval false   on error and close @p f via @ref bra_io_file_close.
  */
 bool bra_io_file_open(bra_io_file_t* f, const char* fn, const char* mode);
 
@@ -119,8 +119,8 @@ void bra_io_file_close(bra_io_file_t* f);
  * @param f
  * @param offs
  * @param origin SEEK_SET, SEEK_CUR, SEEK_END
- * @return true
- * @return false
+ * @retval true
+ * @retval false
  */
 bool bra_io_file_seek(bra_io_file_t* f, const int64_t offs, const int origin);
 
@@ -139,8 +139,8 @@ int64_t bra_io_file_tell(bra_io_file_t* f);
  *
  * @param f
  * @param bf_out
- * @return true
- * @return false
+ * @retval true
+ * @retval false
  */
 bool bra_io_file_read_footer(bra_io_file_t* f, bra_io_footer_t* bf_out);
 
@@ -150,8 +150,8 @@ bool bra_io_file_read_footer(bra_io_file_t* f, bra_io_footer_t* bf_out);
  *
  * @param f
  * @param header_offset
- * @return true
- * @return false
+ * @retval true
+ * @retval false
  */
 bool bra_io_file_write_footer(bra_io_file_t* f, const int64_t header_offset);
 
@@ -163,8 +163,8 @@ bool bra_io_file_write_footer(bra_io_file_t* f, const int64_t header_offset);
  * @param dst
  * @param src
  * @param data_size
- * @return true
- * @return false
+ * @retval true
+ * @retval false
  */
 bool bra_io_file_copy_file_chunks(bra_io_file_t* dst, bra_io_file_t* src, const uint64_t data_size);
 
@@ -173,8 +173,8 @@ bool bra_io_file_copy_file_chunks(bra_io_file_t* dst, bra_io_file_t* src, const 
  *
  * @param f
  * @param data_size
- * @return true
- * @return false
+ * @retval true
+ * @retval false
  */
 bool bra_io_file_skip_data(bra_io_file_t* f, const uint64_t data_size);
 

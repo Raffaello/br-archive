@@ -71,6 +71,11 @@ static bool _bra_io_file_ctx_write_meta_file_process_write_file(bra_io_file_ctx_
     size_t l = ctx->last_dir_size;    // strnlen(g_last_dir, BRA_MAX_PATH_LENGTH);
     if (mf->name[l] == '/')           // or when l == 0
         ++l;                          // skip also '/'
+    else if (ctx->last_dir_size > 0)
+    {
+        bra_log_critical("mf->name: %s -- last_dir: %s", mf->name, ctx->last_dir);
+        return false;
+    }
 
     *filename_size = mf->name_size - l;
     assert(*filename_size > 0);    // check edge case that means an error somewhere else
@@ -124,7 +129,7 @@ static bool _bra_io_file_ctx_write_meta_file_process_write_dir(bra_io_file_ctx_t
     if (ctx->last_dir_not_flushed)
     {
         // TODO: replace with SUB_DIR ATTRIBUTE
-        const bool replacing_dir = strstr(dirname, ctx->last_dir) != NULL;
+        const bool replacing_dir = bra_fs_dir_is_sub_dir(ctx->last_dir, dirname);
         if (replacing_dir)
         {
             bra_log_debug("parent dir %s is empty, replacing it with %s", ctx->last_dir, dirname);

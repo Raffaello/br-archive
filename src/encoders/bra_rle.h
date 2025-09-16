@@ -22,8 +22,8 @@ extern "C" {
  * @param buf_size                  Size of the input buffer in bytes.
  * @param num_rle_chunks[in, out]   On input: existing chunks count; on output: total chunks after encoding. @note this is not really required, but *2 give the total size in bytes.
  * @param rle_head[in, out]
- * @return true                     on successful encoding.
- * @return false                    on error.
+ * @retval true                     on successful encoding.
+ * @retval false                    on error.
  */
 bool bra_encode_rle(const uint8_t* buf, const size_t buf_size, uint64_t* num_rle_chunks, bra_rle_chunk_t** rle_head);
 
@@ -39,8 +39,8 @@ bool bra_encode_rle(const uint8_t* buf, const size_t buf_size, uint64_t* num_rle
  * @param buf[out]          buf Output buffer to write decoded data.
  * @param buf_size          Size of the output buffer in bytes.
  * @param buf_i[out]
- * @return true             on success ( @p buf_i advanced; @p *cur_rle updated; becomes @c NULL when decoding completes).
- * @return false            on error or nothing to decode.
+ * @retval true             on success ( @p buf_i advanced; @p *cur_rle updated; becomes @c NULL when decoding completes).
+ * @retval false            on error or nothing to decode.
  */
 bool bra_decode_rle(bra_rle_chunk_t** cur_rle, uint8_t* buf, const size_t buf_size, size_t* buf_i);
 
@@ -51,8 +51,8 @@ bool bra_decode_rle(bra_rle_chunk_t** cur_rle, uint8_t* buf, const size_t buf_si
  * @see bra_decode_rle
  *
  * @param rle_head
- * @return true on success
- * @return false if rle_head is NULL
+ * @retval true on success
+ * @retval false if rle_head is NULL
  */
 bool bra_encode_rle_free_list(bra_rle_chunk_t** rle_head);
 

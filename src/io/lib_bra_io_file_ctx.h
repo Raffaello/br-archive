@@ -14,8 +14,8 @@ extern "C" {
  * @param ctx[out]
  * @param fn
  * @param mode
- * @return true
- * @return false
+ * @retval true
+ * @retval false
  */
 bool bra_io_file_ctx_open(bra_io_file_ctx_t* ctx, const char* fn, const char* mode);
 
@@ -26,8 +26,8 @@ bool bra_io_file_ctx_open(bra_io_file_ctx_t* ctx, const char* fn, const char* mo
  * @param ctx
  * @param fn
  * @param mode   @c fopen modes
- * @return true  on success (file positioned at start of footer; ready for bra_io_file_read_footer)
- * @return false on error (seek errors close @p ctx->f via @ref bra_io_file_close)
+ * @retval true  on success (file positioned at start of footer; ready for bra_io_file_read_footer)
+ * @retval false on error (seek errors close @p ctx->f via @ref bra_io_file_close)
  */
 bool bra_io_file_ctx_sfx_open(bra_io_file_ctx_t* ctx, const char* fn, const char* mode);
 
@@ -35,8 +35,8 @@ bool bra_io_file_ctx_sfx_open(bra_io_file_ctx_t* ctx, const char* fn, const char
  * @brief
  *
  * @param ctx
- * @return true
- * @return false
+ * @retval true
+ * @retval false
  */
 bool bra_io_file_ctx_close(bra_io_file_ctx_t* ctx);
 
@@ -47,8 +47,8 @@ bool bra_io_file_ctx_close(bra_io_file_ctx_t* ctx);
  *
  * @param ctx[in]
  * @param out_bh
- * @return true on success
- * @return false on error
+ * @retval true on success
+ * @retval false on error
  */
 bool bra_io_file_ctx_read_header(bra_io_file_ctx_t* ctx, bra_io_header_t* out_bh);
 
@@ -58,8 +58,8 @@ bool bra_io_file_ctx_read_header(bra_io_file_ctx_t* ctx, bra_io_header_t* out_bh
  *
  * @param ctx[in,out]
  * @param num_files
- * @return true
- * @return false
+ * @retval true
+ * @retval false
  */
 bool bra_io_file_ctx_write_header(bra_io_file_ctx_t* ctx, const uint32_t num_files);
 
@@ -70,8 +70,8 @@ bool bra_io_file_ctx_write_header(bra_io_file_ctx_t* ctx, const uint32_t num_fil
  * @param fn
  * @param out_bh
  * @param ctx[out]
- * @return true on success (file positioned immediately after the header, at first entry)
- * @return false on error (errors during read/seek close @p ctx->f via @ref bra_io_file_close)
+ * @retval true on success (file positioned immediately after the header, at first entry)
+ * @retval false on error (errors during read/seek close @p ctx->f via @ref bra_io_file_close)
  */
 bool bra_io_file_ctx_sfx_open_and_read_footer_header(const char* fn, bra_io_header_t* out_bh, bra_io_file_ctx_t* ctx);
 
@@ -81,8 +81,8 @@ bool bra_io_file_ctx_sfx_open_and_read_footer_header(const char* fn, bra_io_head
  *
  * @param ctx[in,out]
  * @param mf
- * @return true on success @p mf must be explicitly free via @ref bra_meta_file_free.
- * @return false on error closes @p ctx->f via @ref bra_io_file_close.
+ * @retval true on success @p mf must be explicitly free via @ref bra_meta_file_free.
+ * @retval false on error closes @p ctx->f via @ref bra_io_file_close.
  */
 bool bra_io_file_ctx_read_meta_file(bra_io_file_ctx_t* ctx, bra_meta_file_t* mf);
 
@@ -91,8 +91,8 @@ bool bra_io_file_ctx_read_meta_file(bra_io_file_ctx_t* ctx, bra_meta_file_t* mf)
  *
  * @param ctx[in,out]
  * @param mf
- * @return true on success
- * @return false on error closes @p ctx->f via @ref bra_io_file_close.
+ * @retval true on success
+ * @retval false on error closes @p ctx->f via @ref bra_io_file_close.
  */
 bool bra_io_file_ctx_write_meta_file(bra_io_file_ctx_t* ctx, const bra_meta_file_t* mf);
 
@@ -102,8 +102,8 @@ bool bra_io_file_ctx_write_meta_file(bra_io_file_ctx_t* ctx, const bra_meta_file
  *
  * @param ctx[in,out]
  * @param fn NULL-terminated path to file or directory.
- * @return true on success
- * @return false on error (archive handle is closed)
+ * @retval true on success
+ * @retval false on error (archive handle is closed)
  */
 bool bra_io_file_ctx_encode_and_write_to_disk(bra_io_file_ctx_t* ctx, const char* fn);
 
@@ -120,8 +120,8 @@ bool bra_io_file_ctx_encode_and_write_to_disk(bra_io_file_ctx_t* ctx, const char
  *
  * @param ctx[in,out]
  * @param overwrite_policy[in/out]
- * @return true on success
- * @return false on error
+ * @retval true on success
+ * @retval false on error
  */
 bool bra_io_file_ctx_decode_and_write_to_disk(bra_io_file_ctx_t* ctx, bra_fs_overwrite_policy_e* overwrite_policy);
 

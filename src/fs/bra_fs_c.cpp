@@ -21,6 +21,14 @@ bool bra_fs_dir_make(const char* path)
     return bra::fs::dir_make(p);
 }
 
+bool bra_fs_dir_is_sub_dir(const char* src, const char* dst)
+{
+    if (src == nullptr || dst == nullptr)
+        return false;
+
+    return bra::fs::dir_isSubDir(src, dst);
+}
+
 bool bra_fs_file_exists(const char* path)
 {
     if (path == nullptr)

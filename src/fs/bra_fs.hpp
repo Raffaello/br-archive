@@ -28,8 +28,8 @@ namespace bra::fs
  *        Existence is not checked; it only rewrites to a safe, relative path.
  *
  * @param path
- * @return true if it is successful
- * @return false otherwise
+ * @retval true if it is successful
+ * @retval false otherwise
  */
 [[nodiscard]] bool try_sanitize(std::filesystem::path& path) noexcept;
 
@@ -39,8 +39,8 @@ namespace bra::fs
  * @see file_exists
  *
  * @param path
- * @return true if the path exists and is a directory.
- * @return false otherwise.
+ * @retval true if the path exists and is a directory.
+ * @retval false otherwise.
  */
 [[nodiscard]] bool dir_exists(const std::filesystem::path& path) noexcept;
 
@@ -53,13 +53,24 @@ namespace bra::fs
  * @see dir_exists
  *
  * @param path
- * @return true if the directory was created or already existed.
- * @return false on error
+ * @retval true if the directory was created or already existed.
+ * @retval false on error
  */
 [[nodiscard]] bool dir_make(const std::filesystem::path& path) noexcept;
 
 /**
- * @brief
+ * @brief Check if the @p dst is a sub-dir of @p src relative to the current directory.
+ *        Path outside the current directory return false.
+ *
+ * @param src
+ * @param dst
+ * @retval true if @p dst is a subdir of @p src;
+ * @retval false otherwise or on error.
+ */
+[[nodiscard]] bool dir_isSubDir(const std::filesystem::path& src, const std::filesystem::path& dst) noexcept;
+
+/**
+ * @brief Make sure the file extension is #BRA_FILE_EXT
  *
  * @param path
  * @return std::filesystem::path
@@ -83,8 +94,8 @@ namespace bra::fs
  * @see dir_exists
  *
  * @param path
- * @return true
- * @return false
+ * @retval true
+ * @retval false
  */
 [[nodiscard]] bool file_exists(const std::filesystem::path& path) noexcept;
 
@@ -97,8 +108,8 @@ namespace bra::fs
  * @param overwrite_policy in/out overwrite policy; may be updated by user’s global choice.
  * @param single_overwrite if true, global choices (“Yes to all” / “No to all”) are disabled.
  * @return std::optional<bool> when has no value the file doesn't exist.
- * @return true overwrite
- * @return false don't overwrite
+ * @retval true overwrite
+ * @retval false don't overwrite
  */
 [[nodiscard]] std::optional<bool> file_exists_ask_overwrite(const std::filesystem::path& path, bra_fs_overwrite_policy_e& overwrite_policy, const bool single_overwrite) noexcept;
 
@@ -122,8 +133,8 @@ namespace bra::fs
  * @brief Remove the file at the @p path.
  *
  * @param path
- * @return true on success (also when the file does not exist)
- * @return false on error
+ * @retval true on success (also when the file does not exist)
+ * @retval false on error
  */
 [[nodiscard]] bool file_remove(const std::filesystem::path& path) noexcept;
 
@@ -137,8 +148,8 @@ namespace bra::fs
  *
  * @param from Source file path.
  * @param to Destination file path.
- * @return true on success.
- * @return false on error
+ * @retval true on success.
+ * @retval false on error
  */
 [[nodiscard]] bool file_rename(const std::filesystem::path& from, const std::filesystem::path& to) noexcept;
 
@@ -148,8 +159,8 @@ namespace bra::fs
  * @param path
  * @param permissions
  * @param perm_options
- * @return true on success
- * @return false on error
+ * @retval true on success
+ * @retval false on error
  */
 [[nodiscard]] bool file_permissions(const std::filesystem::path& path, const std::filesystem::perms permissions, const std::filesystem::perm_options perm_options) noexcept;
 
@@ -160,8 +171,8 @@ namespace bra::fs
  * @details the parent directories from the files present in @p files are added into @p files.
  *
  * @param files
- * @return true on success.
- * @return false on error. The @p files set may be left in an invalid state.
+ * @retval true on success.
+ * @retval false on error. The @p files set may be left in an invalid state.
  */
 [[nodiscard]] bool file_set_add_dirs(std::set<std::filesystem::path>& files) noexcept;
 
@@ -175,8 +186,8 @@ namespace bra::fs
  * @param pattern Regular expression pattern (not a wildcard pattern)
  * @param out_files List to append matching file paths to
  * @param recursive If false performs a non-recursive search in the immediate directory only; recursive otherwise.
- * @return true if successful
- * @return false otherwise
+ * @retval true if successful
+ * @retval false otherwise
  */
 [[nodiscard]] bool search(const std::filesystem::path& dir, const std::string& pattern, std::list<std::filesystem::path>& out_files, const bool recursive) noexcept;
 
@@ -187,8 +198,8 @@ namespace bra::fs
  * @param wildcard_path
  * @param out_files
  * @param recursive
- * @return true on success and add the results to @p out_files
- * @return false on error (unsupported wildcard, sanitization failure, or search failure).
+ * @retval true on success and add the results to @p out_files
+ * @retval false on error (unsupported wildcard, sanitization failure, or search failure).
  */
 [[nodiscard]] bool search_wildcard(const std::filesystem::path& wildcard_path, std::set<std::filesystem::path>& out_files, const bool recursive) noexcept;
 
@@ -198,8 +209,8 @@ namespace bra::fs
  * @param set_files
  * @param tree
  * @param out_tree_size
- * @return true
- * @return false
+ * @retval true
+ * @retval false
  */
 [[nodiscard]] bool make_tree(const std::set<std::filesystem::path>& set_files, std::map<std::filesystem::path, std::set<std::filesystem::path>>& tree, size_t& out_tree_size) noexcept;
 

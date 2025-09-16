@@ -21,6 +21,7 @@ add_test(NAME test_bra_fs.dir_exists            COMMAND test_bra_fs test_bra_fs_
 
 add_test(NAME test_bra_fs.try_sanitize_path     COMMAND test_bra_fs test_bra_fs_try_sanitize_path)
 add_test(NAME test_bra_fs.dir_make              COMMAND test_bra_fs test_bra_fs_dir_make)
+add_test(NAME test_bra_fs.dir_isSubDir          COMMAND test_bra_fs test_bra_fs_dir_isSubDir)
 
 add_test(NAME test_bra_fs.sfx_filename_adjust               COMMAND test_bra_fs test_bra_fs_sfx_filename_adjust)
 add_test(NAME test_bra_fs.search_wildcard                   COMMAND test_bra_fs test_bra_fs_search_wildcard)
@@ -54,7 +55,6 @@ add_test(NAME test_bra.not_more_than_1_same_file     COMMAND test_bra test_bra_n
 
 add_executable(test_bra_encoders test_bra_encoders.cpp)
 target_link_libraries(test_bra_encoders PUBLIC lib_bra)
-
 
 add_test(NAME test_bra_encoders.encode_decode_rle_1  COMMAND test_bra_encoders test_bra_encoders_encode_decode_rle_1)
 add_test(NAME test_bra_encoders.encode_decode_rle_2  COMMAND test_bra_encoders test_bra_encoders_encode_decode_rle_2)
@@ -97,8 +97,10 @@ add_custom_command(TARGET test_bra POST_BUILD
                     ${CMAKE_CURRENT_BINARY_DIR}/dir1
 )
 
+foreach(fixture_i IN ITEMS dir1)
 add_custom_command(TARGET test_bra_fs POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different
-        ${CMAKE_CURRENT_SOURCE_DIR}/fixtures/dir1
-        ${CMAKE_CURRENT_BINARY_DIR}/dir1
+        ${CMAKE_CURRENT_SOURCE_DIR}/fixtures/${fixture_i}
+        ${CMAKE_CURRENT_BINARY_DIR}/${fixture_i}
 )
+endforeach()

@@ -128,10 +128,6 @@ static bool _bra_io_file_ctx_write_meta_file_process_write_dir(bra_io_file_ctx_t
         if (replacing_dir)
         {
             bra_log_debug("parent dir %s is empty, replacing it with %s", ctx->last_dir, dirname);
-
-            // ctx->num_files--;
-            //  assert(ctx->num_files > 0);
-            //  ctx->num_files_changed = true;
         }
         else
         {
@@ -160,7 +156,7 @@ bool bra_io_file_ctx_open(bra_io_file_ctx_t* ctx, const char* fn, const char* mo
 
     memset(ctx, 0, sizeof(bra_io_file_ctx_t));
     if (mode[0] == 'w')
-        ctx->isWriteable = true;
+        ctx->isWritable = true;
     return bra_io_file_open(&ctx->f, fn, mode);
 }
 
@@ -198,7 +194,7 @@ bool bra_io_file_ctx_close(bra_io_file_ctx_t* ctx)
 
     bool res = true;
 
-    if (ctx->isWriteable)
+    if (ctx->isWritable)
     {
         if (!_bra_io_file_ctx_flush_dir(ctx))
             return false;
@@ -206,8 +202,7 @@ bool bra_io_file_ctx_close(bra_io_file_ctx_t* ctx)
         // this is can be true only if the file is opened in write mode
         if (ctx->num_files != ctx->cur_files)
         {
-            // ctx->num_files_changed = false;
-            bra_log_debug("Consolidated dirs results: entries: %d - original: %d", ctx->cur_files, ctx->num_files);
+            bra_log_debug("Consolidated dirs results: entries: %u - original: %u", ctx->cur_files, ctx->num_files);
             ctx->num_files = ctx->cur_files;
             if (fflush(ctx->f.f) != 0)
             {

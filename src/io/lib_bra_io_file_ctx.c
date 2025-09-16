@@ -155,8 +155,7 @@ bool bra_io_file_ctx_open(bra_io_file_ctx_t* ctx, const char* fn, const char* mo
     assert(mode != NULL);
 
     memset(ctx, 0, sizeof(bra_io_file_ctx_t));
-    if (mode[0] == 'w')
-        ctx->isWritable = true;
+    ctx->isWritable = mode[0] == 'w';
     return bra_io_file_open(&ctx->f, fn, mode);
 }
 
@@ -199,7 +198,6 @@ bool bra_io_file_ctx_close(bra_io_file_ctx_t* ctx)
         if (!_bra_io_file_ctx_flush_dir(ctx))
             return false;
 
-        // this is can be true only if the file is opened in write mode
         if (ctx->num_files != ctx->cur_files)
         {
             bra_log_debug("Consolidated dirs results: entries: %u - original: %u", ctx->cur_files, ctx->num_files);

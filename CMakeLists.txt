@@ -80,25 +80,34 @@ add_executable(bra_sfx src/prog/bra_sfx.cpp)
 target_link_libraries(bra_sfx PRIVATE bra_prog)
 win32_wildcard(bra_sfx)
 target_compile_options(bra_sfx PRIVATE
+    $<$<AND:$<CONFIG:Release>,$<COMPILE_LANG_AND_ID:CXX,GNU>>:-Os,-ffunction-sections -fdata-sections>
+
     # Clang/AppleClang: prefer -Oz for size
     # $<$<AND:$<CONFIG:Release>,$<COMPILE_LANG_AND_ID:CXX,Clang,AppleClang>>:-Oz>
+    
     # GCC: use -Os for portability (Oz requires newer GCC)
-    $<$<AND:$<CONFIG:Release>,$<COMPILE_LANG_AND_ID:CXX,GNU>>:-Os>
+    # $<$<AND:$<CONFIG:Release>,$<COMPILE_LANG_AND_ID:CXX,GNU>>:-Os>
+    
     # ELF: enable section splitting to allow GC
-    $<$<AND:$<CONFIG:Release>,$<COMPILE_LANG_AND_ID:CXX,GNU,Clang>,$<NOT:$<PLATFORM_ID:Darwin>>>:-ffunction-sections -fdata-sections>
+    # $<$<AND:$<CONFIG:Release>,$<COMPILE_LANG_AND_ID:CXX,GNU,Clang>,$<NOT:$<PLATFORM_ID:Darwin>>>:-ffunction-sections -fdata-sections>
     # MSVC: /O1 (~Os) # MSVC: enable function/data COMDAT for better /OPT:REF/ICF
     # $<$<AND:$<CONFIG:Release>,$<COMPILE_LANG_AND_ID:CXX,MSVC>>:/O1>
     # $<$<AND:$<CONFIG:Release>,$<COMPILE_LANG_AND_ID:CXX,MSVC>>:/Gy>
     # $<$<AND:$<CONFIG:Release>,$<COMPILE_LANG_AND_ID:CXX,MSVC>>:/Gw>
 )
 target_link_options(bra_sfx PRIVATE
+    $<$<AND:$<CONFIG:Release>,$<LINK_LANG_AND_ID:CXX,GNU,Clang>>:-s,-Wl,--gc-sections>
+
     # AppleClang (Mach-O): dead strip and strip local symbols
     # $<$<AND:$<CONFIG:Release>,$<LINK_LANG_AND_ID:CXX,AppleClang>>:-Wl,-dead_strip>
     # $<$<AND:$<CONFIG:Release>,$<LINK_LANG_AND_ID:CXX,AppleClang>>:-Wl,-x>
+    
     # GNU/Clang on non-Darwin: pass -s to linker
-    $<$<AND:$<CONFIG:Release>,$<LINK_LANG_AND_ID:CXX,GNU,Clang>,$<NOT:$<PLATFORM_ID:Darwin>>>:-s>
+    # $<$<AND:$<CONFIG:Release>,$<LINK_LANG_AND_ID:CXX,GNU,Clang>,$<NOT:$<PLATFORM_ID:Darwin>>>:-s>
+   
     # # ELF: garbage-collect unused sections
-    $<$<AND:$<CONFIG:Release>,$<LINK_LANG_AND_ID:CXX,GNU,Clang>,$<NOT:$<PLATFORM_ID:Darwin>>>:-Wl,--gc-sections>
+    # $<$<AND:$<CONFIG:Release>,$<LINK_LANG_AND_ID:CXX,GNU,Clang>,$<NOT:$<PLATFORM_ID:Darwin>>>:-Wl,--gc-sections>
+    
     # MSVC: identical COMDAT folding and unreferenced elimination
     # $<$<AND:$<CONFIG:Release>,$<LINK_LANG_AND_ID:CXX,MSVC>>:/OPT:REF>
     # $<$<AND:$<CONFIG:Release>,$<LINK_LANG_AND_ID:CXX,MSVC>>:/OPT:ICF>

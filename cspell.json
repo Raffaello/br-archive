@@ -29,6 +29,9 @@
         "Wpedantic",
         "wsetargv"
     ],
-    "ignoreWords": [],
+    "ignoreWords": [
+        "fdata",
+        "ffunction"
+    ],
     "import": []
 }

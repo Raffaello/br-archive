@@ -81,21 +81,25 @@ target_link_libraries(bra_sfx PRIVATE bra_prog)
 win32_wildcard(bra_sfx)
 target_compile_options(bra_sfx PRIVATE
   # Clang/AppleClang: prefer -Oz for size
-  $<$<AND:$<CONFIG:Release,MinSizeRel>,$<COMPILE_LANG_AND_ID:CXX,Clang,AppleClang>>:-Oz>
+  $<$<AND:$<OR:$<CONFIG:Release>,$<CONFIG:MinSizeRel>>,$<COMPILE_LANG_AND_ID:CXX,Clang,AppleClang>>:-Oz>
   # GCC: use -Os for portability (Oz requires newer GCC)
-  $<$<AND:$<CONFIG:Release,MinSizeRel>,$<COMPILE_LANG_AND_ID:CXX,GNU>>:-Os>
+  $<$<AND:$<OR:$<CONFIG:Release>,$<CONFIG:MinSizeRel>>,$<COMPILE_LANG_AND_ID:CXX,GNU>>:-Os>
   # MSVC: /O1 (~Os)
-  $<$<AND:$<CONFIG:Release,MinSizeRel>,$<COMPILE_LANG_AND_ID:CXX,MSVC>>:/O1>
+  $<$<AND:$<OR:$<CONFIG:Release>,$<CONFIG:MinSizeRel>>,$<COMPILE_LANG_AND_ID:CXX,MSVC>>:/O1>
+  # ELF: enable section splitting to allow GC
+  $<$<AND:$<OR:$<CONFIG:Release>,$<CONFIG:MinSizeRel>>,$<COMPILE_LANG_AND_ID:CXX,GNU,Clang>,$<NOT:$<PLATFORM_ID:Darwin>>>:-ffunction-sections -fdata-sections>
 )
 target_link_options(bra_sfx PRIVATE
   # GNU/Clang on non-Darwin: pass -s to linker
-  $<$<AND:$<CONFIG:Release,MinSizeRel>,$<LINK_LANG_AND_ID:CXX,GNU,Clang>,$<NOT:$<PLATFORM_ID:Darwin>>>:-s>
+  $<$<AND:$<OR:$<CONFIG:Release>,$<CONFIG:MinSizeRel>>,$<LINK_LANG_AND_ID:CXX,GNU,Clang>,$<NOT:$<PLATFORM_ID:Darwin>>>:-s>
   # AppleClang (Mach-O): dead strip and strip local symbols
-  $<$<AND:$<CONFIG:Release,MinSizeRel>,$<LINK_LANG_AND_ID:CXX,AppleClang>>:-Wl,-dead_strip>
-  $<$<AND:$<CONFIG:Release,MinSizeRel>,$<LINK_LANG_AND_ID:CXX,AppleClang>>:-Wl,-x>
+  $<$<AND:$<OR:$<CONFIG:Release>,$<CONFIG:MinSizeRel>>,$<LINK_LANG_AND_ID:CXX,AppleClang>>:-Wl,-dead_strip>
+  $<$<AND:$<OR:$<CONFIG:Release>,$<CONFIG:MinSizeRel>>,$<LINK_LANG_AND_ID:CXX,AppleClang>>:-Wl,-x>
   # MSVC: identical COMDAT folding and unreferenced elimination
-  $<$<AND:$<CONFIG:Release,MinSizeRel>,$<LINK_LANG_AND_ID:CXX,MSVC>>:/OPT:REF>
-  $<$<AND:$<CONFIG:Release,MinSizeRel>,$<LINK_LANG_AND_ID:CXX,MSVC>>:/OPT:ICF>
+  $<$<AND:$<OR:$<CONFIG:Release>,$<CONFIG:MinSizeRel>>,$<LINK_LANG_AND_ID:CXX,MSVC>>:/OPT:REF>
+  $<$<AND:$<OR:$<CONFIG:Release>,$<CONFIG:MinSizeRel>>,$<LINK_LANG_AND_ID:CXX,MSVC>>:/OPT:ICF>
+  # ELF: garbage-collect unused sections
+  $<$<AND:$<OR:$<CONFIG:Release>,$<CONFIG:MinSizeRel>>,$<LINK_LANG_AND_ID:CXX,GNU,Clang>,$<NOT:$<PLATFORM_ID:Darwin>>>:-Wl,--gc-sections>
 )
 set_target_properties(bra_sfx PROPERTIES
     OUTPUT_NAME "bra"

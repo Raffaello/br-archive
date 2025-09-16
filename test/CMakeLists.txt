@@ -97,7 +97,7 @@ add_custom_command(TARGET test_bra POST_BUILD
                     ${CMAKE_CURRENT_BINARY_DIR}/dir1
 )
 
-foreach(fixture_i IN ITEMS dir1 subdir)
+foreach(fixture_i IN ITEMS dir1)
 add_custom_command(TARGET test_bra_fs POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different
         ${CMAKE_CURRENT_SOURCE_DIR}/fixtures/${fixture_i}

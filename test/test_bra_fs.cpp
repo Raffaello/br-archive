@@ -303,7 +303,17 @@ TEST(test_bra_fs_sfx_filename_adjust)
 int test_bra_fs_dir_isSubDir()
 {
     ASSERT_TRUE(bra::fs::dir_isSubDir("foo", "foo/bar"));
+    ASSERT_TRUE(bra::fs::dir_isSubDir("foo/", "foo/bar/"));
+    ASSERT_TRUE(bra::fs::dir_isSubDir("foo", "foo/./bar"));
+
     ASSERT_FALSE(bra::fs::dir_isSubDir("foo", "foobar"));
+    ASSERT_FALSE(bra::fs::dir_isSubDir("foo", "foo/../foobar"))
+
+    ASSERT_FALSE(bra::fs::dir_isSubDir("foo", "foo"));
+    ASSERT_FALSE(bra::fs::dir_isSubDir("", "foo"));
+    ASSERT_FALSE(bra::fs::dir_isSubDir("foo", ""));
+    ASSERT_FALSE(bra::fs::dir_isSubDir(".", "."));
+    ASSERT_FALSE(bra::fs::dir_isSubDir("../", "."));
 
     return 0;
 }

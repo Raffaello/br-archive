@@ -102,10 +102,20 @@ bool dir_make(const std::filesystem::path& path) noexcept
     return created;
 }
 
-bool dir_isSubDir(const std::filesystem::path& src, const std::filesystem::path dst) noexcept
+bool dir_isSubDir(const std::filesystem::path& src, const std::filesystem::path& dst) noexcept
 {
     error_code ec;
-    fs::path   p = fs::relative(dst, src, ec);
+
+    fs::path s = src;
+    fs::path d = dst;
+
+    if (!try_sanitize(s) || !try_sanitize(d))
+        return false;
+
+    if (s.empty() || d.empty() || s == d)
+        return false;
+
+    fs::path p = fs::relative(d, s, ec);
     if (ec)
     {
         bra_log_error("unable to detect %s subdir of %s: %s", dst.string().c_str(), src.string().c_str(), ec.message().c_str());
@@ -115,7 +125,7 @@ bool dir_isSubDir(const std::filesystem::path& src, const std::filesystem::path 
     if (!try_sanitize(p))
         return false;
 
-    return !p.empty();
+    return !p.empty() && p.native()[0] != '.';
 }
 
 std::filesystem::path filename_archive_adjust(const std::filesystem::path& path) noexcept

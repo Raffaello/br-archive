@@ -37,6 +37,7 @@ bool bra_fs_dir_make(const char* path);
 
 /**
  * @brief Check if the @p dst is a sub-dir of @p src relative to the current directory.
+ *        Equality (dst == src) returns false.
  *
  * @overload bool bra::fs::dir_isSubDir(const std::filesystem::path& src, const std::filesystem::path dst)
  *

@@ -60,13 +60,14 @@ namespace bra::fs
 
 /**
  * @brief Check if the @p dst is a sub-dir of @p src relative to the current directory.
+ *        Path outside the current directory return false.
  *
  * @param src
  * @param dst
  * @retval true if @p dst is a subdir of @p src;
  * @retval false otherwise or on error.
  */
-[[nodiscard]] bool dir_isSubDir(const std::filesystem::path& src, const std::filesystem::path dst) noexcept;
+[[nodiscard]] bool dir_isSubDir(const std::filesystem::path& src, const std::filesystem::path& dst) noexcept;
 
 /**
  * @brief Make sure the file extension is #BRA_FILE_EXT

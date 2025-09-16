@@ -18,8 +18,8 @@ extern "C" {
  * @overload bra::fs::dir_exists(const std::filesystem::path& path)
  *
  * @param path
- * @retval true exists
- * @retval false not exists or error.
+ * @retval true  if the path exists and is a directory.
+ * @retval false if the path exists and is a directory.
  */
 bool bra_fs_dir_exists(const char* path);
 
@@ -54,8 +54,8 @@ bool bra_fs_dir_is_sub_dir(const char* src, const char* dst);
  * @overload bra::fs::file_exists(const std::filesystem::path& path)
  *
  * @param path
- * @retval true exists
- * @retval false if it does not exist or on error (I/O errors are not distinguished).
+ * @retval true  if the path exists and is a regular file.
+ * @retval false if it does not exist, is a directory, or on error (I/O errors are not distinguished).
  */
 bool bra_fs_file_exists(const char* path);
 
@@ -64,10 +64,9 @@ bool bra_fs_file_exists(const char* path);
  *
  * @note Wrapper around @ref bra::fs::file_attributes.
  *
- *
  * @param path
  * @param attr
- * @retval true on success.
+ * @retval true  on success.
  * @retval false on error (including NULL @p path or @p attr).
  */
 bool bra_fs_file_attributes(const char* path, bra_attr_t* attr);
@@ -79,8 +78,8 @@ bool bra_fs_file_attributes(const char* path, bra_attr_t* attr);
  *
  * @param path
  * @param file_size
- * @retval true on success.
- * @retval false on error (including NULL @p path or @p file_size).
+ * @retval true  on success (directories return size 0).
+ * @retval false on error (including @c NULL @p path or @p file_size).
  */
 bool bra_fs_file_size(const char* path, uint64_t* file_size);
 
@@ -93,7 +92,7 @@ bool bra_fs_file_size(const char* path, uint64_t* file_size);
  * @param overwrite_policy
  * @param single_overwrite if true All and None extra choice are not enabled.
  * @retval true  if the file does not exist or overwrite is approved.
- * @retval false if the file exists and overwrite is declined, or on error (e.g., NULL @p path).
+ * @retval false if the file exists and overwrite is declined, or on error (e.g., @c NULL @p path or @p overwrite_policy).
  */
 bool bra_fs_file_exists_ask_overwrite(const char* path, bra_fs_overwrite_policy_e* overwrite_policy, const bool single_overwrite);
 

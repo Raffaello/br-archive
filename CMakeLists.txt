@@ -80,7 +80,7 @@ add_executable(bra_sfx src/prog/bra_sfx.cpp)
 target_link_libraries(bra_sfx PRIVATE bra_prog)
 win32_wildcard(bra_sfx)
 target_compile_options(bra_sfx PRIVATE
-    $<$<CONFIG:Debug>:-Oz> # Debug-specific flags
+    # $<$<CONFIG:Debug>:-Oz> # Debug-specific flags
     $<$<CONFIG:Release>:-Oz> # Release-specific flags
 )
 target_link_options(bra_sfx PRIVATE

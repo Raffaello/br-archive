@@ -18,8 +18,8 @@ extern "C" {
  * @overload bra::fs::dir_exists(const std::filesystem::path& path)
  *
  * @param path
- * @return true exists
- * @return false not exists or error.
+ * @retval true exists
+ * @retval false not exists or error.
  */
 bool bra_fs_dir_exists(const char* path);
 
@@ -30,10 +30,22 @@ bool bra_fs_dir_exists(const char* path);
  * @overload bool bra::fs::dir_make(const std::filesystem::path& path)
  *
  * @param path
- * @return true on success
- * @return false on error
+ * @retval true on success
+ * @retval false on error
  */
 bool bra_fs_dir_make(const char* path);
+
+/**
+ * @brief Check if the @p dst is a sub-dir of @p src relative to the current directory.
+ *
+ * @overload bool bra::fs::dir_isSubDir(const std::filesystem::path& src, const std::filesystem::path dst)
+ *
+ * @param src
+ * @param dst
+ * @retval true
+ * @retval false
+ */
+bool bra_fs_dir_is_sub_dir(const char* src, const char* dst);
 
 /**
  * @brief Return if the given @p path is a file.
@@ -41,8 +53,8 @@ bool bra_fs_dir_make(const char* path);
  * @overload bra::fs::file_exists(const std::filesystem::path& path)
  *
  * @param path
- * @return true exists
- * @return false if it does not exist or on error (I/O errors are not distinguished).
+ * @retval true exists
+ * @retval false if it does not exist or on error (I/O errors are not distinguished).
  */
 bool bra_fs_file_exists(const char* path);
 
@@ -54,8 +66,8 @@ bool bra_fs_file_exists(const char* path);
  *
  * @param path
  * @param attr
- * @return true on success.
- * @return false on error (including NULL @p path or @p attr).
+ * @retval true on success.
+ * @retval false on error (including NULL @p path or @p attr).
  */
 bool bra_fs_file_attributes(const char* path, bra_attr_t* attr);
 
@@ -66,8 +78,8 @@ bool bra_fs_file_attributes(const char* path, bra_attr_t* attr);
  *
  * @param path
  * @param file_size
- * @return true on success.
- * @return false on error (including NULL @p path or @p file_size).
+ * @retval true on success.
+ * @retval false on error (including NULL @p path or @p file_size).
  */
 bool bra_fs_file_size(const char* path, uint64_t* file_size);
 
@@ -79,8 +91,8 @@ bool bra_fs_file_size(const char* path, uint64_t* file_size);
  * @param path
  * @param overwrite_policy
  * @param single_overwrite if true All and None extra choice are not enabled.
- * @return true  if the file does not exist or overwrite is approved.
- * @return false if the file exists and overwrite is declined, or on error (e.g., NULL @p path).
+ * @retval true  if the file does not exist or overwrite is approved.
+ * @retval false if the file exists and overwrite is declined, or on error (e.g., NULL @p path).
  */
 bool bra_fs_file_exists_ask_overwrite(const char* path, bra_fs_overwrite_policy_e* overwrite_policy, const bool single_overwrite);
 

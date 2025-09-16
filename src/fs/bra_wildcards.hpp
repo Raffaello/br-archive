@@ -21,8 +21,8 @@ namespace bra::wildcards
  * @todo instead of bool return size_t std::npos no wildcard, otherwise first wildcard char position.
  *
  * @param path
- * @return true
- * @return false
+ * @retval true
+ * @retval false
  */
 [[nodiscard]] bool is_wildcard(const std::filesystem::path& path) noexcept;
 

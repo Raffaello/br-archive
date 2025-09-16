@@ -38,8 +38,8 @@ char* _bra_strdup(const char* str);
  * @brief Validate that a meta filename is safe for extraction.
  *
  * @param mf        Meta file structure containing the filename to validate
- * @return true     if the filename is safe (no absolute paths or directory traversal)
- * @return false    if the filename contains dangerous patterns
+ * @retval true     if the filename is safe (no absolute paths or directory traversal)
+ * @retval false    if the filename contains dangerous patterns
  */
 bool _bra_validate_meta_filename(const bra_meta_file_t* mf);
 

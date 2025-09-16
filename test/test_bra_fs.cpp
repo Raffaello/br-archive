@@ -300,6 +300,14 @@ TEST(test_bra_fs_sfx_filename_adjust)
     return 0;
 }
 
+int test_bra_fs_dir_isSubDir()
+{
+    ASSERT_TRUE(bra::fs::dir_isSubDir("foo", "foo/bar"));
+    ASSERT_FALSE(bra::fs::dir_isSubDir("foo", "foobar"));
+
+    return 0;
+}
+
 // int test_bra_fs_symlink()
 // {
 //     constexpr const char* symlink = "readme.sym";    //"test.sym";
@@ -328,5 +336,6 @@ int main(int argc, char* argv[])
                                      {TEST_FUNC(test_bra_fs_dir_make)},
                                      {TEST_FUNC(test_bra_fs_try_sanitize_path)},
                                      {TEST_FUNC(test_bra_fs_sfx_filename_adjust)},
+                                     {TEST_FUNC(test_bra_fs_dir_isSubDir)},
                                  });
 }

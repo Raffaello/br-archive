@@ -129,7 +129,6 @@ static bool _bra_io_file_ctx_write_meta_file_process_write_dir(bra_io_file_ctx_t
     if (ctx->last_dir_not_flushed)
     {
         // TODO: replace with SUB_DIR ATTRIBUTE
-        // const bool replacing_dir = strstr(dirname, ctx->last_dir) != NULL;
         const bool replacing_dir = bra_fs_dir_is_sub_dir(ctx->last_dir, dirname);
         if (replacing_dir)
         {

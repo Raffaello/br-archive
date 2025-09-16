@@ -63,11 +63,6 @@ add_test(NAME test_bra_encoders.encode_decode_rle_3b COMMAND test_bra_encoders t
 
 #####################################################################################################
 
-add_executable(test_lib_bra test_lib_bra.cpp)
-target_link_libraries(test_lib_bra PUBLIC lib_bra)
-
-#####################################################################################################
-
 
 # set_tests_properties(
 #     test_bra.no_output_file

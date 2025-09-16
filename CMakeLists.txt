@@ -27,7 +27,7 @@ function(win32_wildcard target)
     if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
         # target_link_options(${target} PUBLIC "-print-file-name=CRT_glob.o")
     elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-        
+        #
     elseif (MSVC)
         target_link_options(${target} PUBLIC "setargv.obj") # wsetargv.obj
     endif()
@@ -81,28 +81,27 @@ target_link_libraries(bra_sfx PRIVATE bra_prog)
 win32_wildcard(bra_sfx)
 target_compile_options(bra_sfx PRIVATE
     # Clang/AppleClang: prefer -Oz for size
-    $<$<AND:$<OR:$<CONFIG:Release>,$<CONFIG:MinSizeRel>>,$<COMPILE_LANG_AND_ID:CXX,Clang,AppleClang>>:-Oz>
+    # $<$<AND:$<CONFIG:Release>,$<COMPILE_LANG_AND_ID:CXX,Clang,AppleClang>>:-Oz>
     # GCC: use -Os for portability (Oz requires newer GCC)
-    $<$<AND:$<OR:$<CONFIG:Release>,$<CONFIG:MinSizeRel>>,$<COMPILE_LANG_AND_ID:CXX,GNU>>:-Os>
-    # MSVC: /O1 (~Os)
-    $<$<AND:$<OR:$<CONFIG:Release>,$<CONFIG:MinSizeRel>>,$<COMPILE_LANG_AND_ID:CXX,MSVC>>:/O1>
-    # MSVC: enable function/data COMDAT for better /OPT:REF/ICF
-    $<$<AND:$<OR:$<CONFIG:Release>,$<CONFIG:MinSizeRel>>,$<COMPILE_LANG_AND_ID:CXX,MSVC>>:/Gy>
-    $<$<AND:$<OR:$<CONFIG:Release>,$<CONFIG:MinSizeRel>>,$<COMPILE_LANG_AND_ID:CXX,MSVC>>:/Gw>
+    $<$<AND:$<CONFIG:Release>,$<COMPILE_LANG_AND_ID:CXX,GNU>>:-Os>
     # ELF: enable section splitting to allow GC
-    $<$<AND:$<OR:$<CONFIG:Release>,$<CONFIG:MinSizeRel>>,$<COMPILE_LANG_AND_ID:CXX,GNU,Clang>,$<NOT:$<PLATFORM_ID:Darwin>>>:-ffunction-sections -fdata-sections>
+    $<$<AND:$<CONFIG:Release>,$<COMPILE_LANG_AND_ID:CXX,GNU,Clang>,$<NOT:$<PLATFORM_ID:Darwin>>>:-ffunction-sections -fdata-sections>
+    # MSVC: /O1 (~Os) # MSVC: enable function/data COMDAT for better /OPT:REF/ICF
+    # $<$<AND:$<CONFIG:Release>,$<COMPILE_LANG_AND_ID:CXX,MSVC>>:/O1>
+    # $<$<AND:$<CONFIG:Release>,$<COMPILE_LANG_AND_ID:CXX,MSVC>>:/Gy>
+    # $<$<AND:$<CONFIG:Release>,$<COMPILE_LANG_AND_ID:CXX,MSVC>>:/Gw>
 )
 target_link_options(bra_sfx PRIVATE
-    # GNU/Clang on non-Darwin: pass -s to linker
-    $<$<AND:$<OR:$<CONFIG:Release>,$<CONFIG:MinSizeRel>>,$<LINK_LANG_AND_ID:CXX,GNU,Clang>,$<NOT:$<PLATFORM_ID:Darwin>>>:-s>
     # AppleClang (Mach-O): dead strip and strip local symbols
-    $<$<AND:$<OR:$<CONFIG:Release>,$<CONFIG:MinSizeRel>>,$<LINK_LANG_AND_ID:CXX,AppleClang>>:-Wl,-dead_strip>
-    $<$<AND:$<OR:$<CONFIG:Release>,$<CONFIG:MinSizeRel>>,$<LINK_LANG_AND_ID:CXX,AppleClang>>:-Wl,-x>
+    # $<$<AND:$<CONFIG:Release>,$<LINK_LANG_AND_ID:CXX,AppleClang>>:-Wl,-dead_strip>
+    # $<$<AND:$<CONFIG:Release>,$<LINK_LANG_AND_ID:CXX,AppleClang>>:-Wl,-x>
+    # GNU/Clang on non-Darwin: pass -s to linker
+    $<$<AND:$<CONFIG:Release>,$<LINK_LANG_AND_ID:CXX,GNU,Clang>,$<NOT:$<PLATFORM_ID:Darwin>>>:-s>
+    # # ELF: garbage-collect unused sections
+    $<$<AND:$<CONFIG:Release>,$<LINK_LANG_AND_ID:CXX,GNU,Clang>,$<NOT:$<PLATFORM_ID:Darwin>>>:-Wl,--gc-sections>
     # MSVC: identical COMDAT folding and unreferenced elimination
-    $<$<AND:$<OR:$<CONFIG:Release>,$<CONFIG:MinSizeRel>>,$<LINK_LANG_AND_ID:CXX,MSVC>>:/OPT:REF>
-    $<$<AND:$<OR:$<CONFIG:Release>,$<CONFIG:MinSizeRel>>,$<LINK_LANG_AND_ID:CXX,MSVC>>:/OPT:ICF>
-    # ELF: garbage-collect unused sections
-    $<$<AND:$<OR:$<CONFIG:Release>,$<CONFIG:MinSizeRel>>,$<LINK_LANG_AND_ID:CXX,GNU,Clang>,$<NOT:$<PLATFORM_ID:Darwin>>>:-Wl,--gc-sections>
+    # $<$<AND:$<CONFIG:Release>,$<LINK_LANG_AND_ID:CXX,MSVC>>:/OPT:REF>
+    # $<$<AND:$<CONFIG:Release>,$<LINK_LANG_AND_ID:CXX,MSVC>>:/OPT:ICF>
 )
 set_target_properties(bra_sfx PROPERTIES
     OUTPUT_NAME "bra"

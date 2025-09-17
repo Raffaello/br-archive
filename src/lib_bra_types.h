@@ -58,6 +58,8 @@ typedef struct bra_io_file_t
     char* fn;    //!< the filename of the file on disk.
 } bra_io_file_t;
 
+#pragma pack(push, 1)
+
 typedef union bra_meta_file_attr_u
 {
     bra_attr_t attr;
@@ -69,6 +71,8 @@ typedef union bra_meta_file_attr_u
         bra_attr_t reserved : 6;
     } bra_meta_file_attr_t;
 } bra_meta_file_attr_u;
+
+#pragma pack(pop)
 
 /**
  * @brief This is the metadata of each file stored in a BR-archive.

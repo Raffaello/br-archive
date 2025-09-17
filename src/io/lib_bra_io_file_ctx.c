@@ -106,7 +106,7 @@ static bool _bra_io_file_ctx_write_meta_file_process_write_file(bra_io_file_ctx_
         return false;
 
     if (!bra_io_file_copy_file_chunks(&ctx->f, &f2, mf->data_size))
-        return false;    // f, f2 closed already
+        return false;    // f, f2 closed already (but not ctx as not required due to error terminating program)
 
     bra_io_file_close(&f2);
     return true;

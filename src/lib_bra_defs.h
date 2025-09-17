@@ -38,12 +38,13 @@
 #define BRA_SFX_FILENAME     "bra.sfx"    // @todo: generate it through cmake conf
 #define BRA_SFX_TMP_FILE_EXT ".tmp"
 
-#define BRA_ATTR_TYPE(x)           ((x) & 0x03)                             //!< first 2 bits
-#define BRA_ATTR_SET_TYPE(x, type) (((x) & ~0x03) | BRA_ATTR_TYPE(type))    //!< set first 2 bits.
-#define BRA_ATTR_TYPE_FILE         0                                        //!< Regular file.
-#define BRA_ATTR_TYPE_DIR          1                                        //!< Directory
-#define BRA_ATTR_TYPE_SYM          2                                        //!< Symlink
-#define BRA_ATTR_TYPE_SUB_DIR      3                                        //!< sub-dir, its base is an index of another dir/sub_dir previously encountered.
+#define BRA_ATTR_TYPE_MASK         0x03                                                   //!< lower 2 bits encode the type
+#define BRA_ATTR_TYPE(x)           ((x) & BRA_ATTR_TYPE_MASK)                             //!< first 2 bits
+#define BRA_ATTR_SET_TYPE(x, type) (((x) & ~BRA_ATTR_TYPE_MASK) | BRA_ATTR_TYPE(type))    //!< set first 2 bits.
+#define BRA_ATTR_TYPE_FILE         0                                                      //!< Regular file.
+#define BRA_ATTR_TYPE_DIR          1                                                      //!< Directory
+#define BRA_ATTR_TYPE_SYM          2                                                      //!< Symlink
+#define BRA_ATTR_TYPE_SUB_DIR      3                                                      //!< sub-dir, its base is an index of another dir/sub_dir previously encountered.
 
 #define BRA_ATTR_STORED (0 << 2)
 // #define BRA_ATTR_BWT_MTF_RLE      (1 << 2)

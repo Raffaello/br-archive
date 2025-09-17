@@ -58,22 +58,6 @@ typedef struct bra_io_file_t
     char* fn;    //!< the filename of the file on disk.
 } bra_io_file_t;
 
-#pragma pack(push, 1)
-
-typedef union bra_meta_file_attr_u
-{
-    bra_attr_t attr;
-
-    struct bra_meta_file_attr_t
-    {
-        bra_attr_t type : 2;
-        // bra_attr_t    compressed : 1;    // 0 = store, 1 = compressed with BWT-MTF-RLE-(LZW78-)Huffman
-        bra_attr_t reserved : 6;
-    } bra_meta_file_attr_t;
-} bra_meta_file_attr_u;
-
-#pragma pack(pop)
-
 /**
  * @brief This is the metadata of each file stored in a BR-archive.
  *        The file data is just after for @p data_size bytes.
@@ -81,11 +65,10 @@ typedef union bra_meta_file_attr_u
 typedef struct bra_meta_file_t
 {
     // TODO: add CRC ... file permissions, etc... ?
-    // bra_attr_t attributes;    //!< file attributes: #BRA_ATTR_TYPE_FILE (regular) or #BRA_ATTR_TYPE_DIR (directory)
-    bra_meta_file_attr_u attributes;
-    uint8_t              name_size;    //!< length in bytes excluding the trailing NUL; [1..UINT8_MAX]
-    char*                name;         //!< filename/dirname (owned; free via @ref bra_meta_file_free)
-    uint64_t             data_size;    //!< file contents size in bytes. Not saved for dir.
+    bra_attr_t attributes;    //!< file attributes: #BRA_ATTR_TYPE_FILE (regular) or #BRA_ATTR_TYPE_DIR (directory)
+    uint8_t    name_size;     //!< length in bytes excluding the trailing NUL; [1..UINT8_MAX]
+    char*      name;          //!< filename/dirname (owned; free via @ref bra_meta_file_free)
+    uint64_t   data_size;     //!< file contents size in bytes. Not saved for dir.
 } bra_meta_file_t;
 
 /**

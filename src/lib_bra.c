@@ -12,16 +12,13 @@
 #include <stdlib.h>
 #include <limits.h>
 
+/////////////////////////////////////////////////////////////////////////////
 
 /////////////////////////////////////////////////////////////////////////////
 
-_Static_assert(sizeof(bra_meta_file_attr_u) == sizeof(bra_attr_t), "bra_meta_file_attr_u must be exactly 1 byte.");
-
-/////////////////////////////////////////////////////////////////////////////
-
-char bra_format_meta_attributes(const bra_meta_file_attr_u attributes)
+char bra_format_meta_attributes(const bra_attr_t attributes)
 {
-    switch (attributes.bra_meta_file_attr_t.type)
+    switch (BRA_ATTR_TYPE(attributes))
     {
     case BRA_ATTR_TYPE_FILE:
         return 'f';
@@ -72,9 +69,9 @@ void bra_meta_file_free(bra_meta_file_t* mf)
 {
     assert(mf != NULL);
 
-    mf->data_size       = 0;
-    mf->name_size       = 0;
-    mf->attributes.attr = 0;
+    mf->data_size  = 0;
+    mf->name_size  = 0;
+    mf->attributes = 0;
     if (mf->name != NULL)
     {
         free(mf->name);

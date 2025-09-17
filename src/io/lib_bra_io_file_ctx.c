@@ -88,7 +88,7 @@ static bool _bra_io_file_ctx_write_meta_file_process_write_file(bra_io_file_ctx_
         return false;
 
     // write common meta data (attribute, filename, filename_size)
-    if (!_bra_io_file_ctx_write_meta_file_common(ctx, mf->attributes.attr, filename, *filename_size))
+    if (!_bra_io_file_ctx_write_meta_file_common(ctx, mf->attributes, filename, *filename_size))
         return false;
 
     // 3. data size
@@ -145,13 +145,13 @@ static bool _bra_io_file_ctx_write_meta_file_process_write_dir(bra_io_file_ctx_t
         // TODO: tree instead might occupy more if the parent directory name are very short, 1-3 chars
         //       in this case though it could revert to a normal directory as it was since the beginning
         //       using the consolidate dir as well
-        const bool replacing_dir = mf->attributes.bra_meta_file_attr_t.type == BRA_ATTR_TYPE_SUB_DIR;    // bra_fs_dir_is_sub_dir(ctx->last_dir, dirname);
+        const bool replacing_dir = BRA_ATTR_TYPE(mf->attributes) == BRA_ATTR_TYPE_SUB_DIR;    // bra_fs_dir_is_sub_dir(ctx->last_dir, dirname);
         if (replacing_dir)
         {
             bra_log_debug("parent dir %s is empty, replacing it with %s", ctx->last_dir, dirname);
             // mf->attributes.attr &= ~BRA_ATTR_TYPE(0xFF);           // clear the bits first
             // mf->attributes.attr |= BRA_ATTR_TYPE(BRA_ATTR_TYPE_DIR);    // in this case it becomes a regular dir
-            mf->attributes.bra_meta_file_attr_t.type = BRA_ATTR_TYPE_DIR;
+            mf->attributes = BRA_ATTR_SET_TYPE(mf->attributes, BRA_ATTR_TYPE_DIR);
         }
         else
         {
@@ -162,7 +162,7 @@ static bool _bra_io_file_ctx_write_meta_file_process_write_dir(bra_io_file_ctx_t
     }
 
     ctx->last_dir_not_flushed = true;
-    ctx->last_dir_attr        = mf->attributes.attr;
+    ctx->last_dir_attr        = mf->attributes;
 
     memcpy(ctx->last_dir, dirname, *dirname_size);
     ctx->last_dir[*dirname_size] = '\0';
@@ -345,7 +345,7 @@ bool bra_io_file_ctx_read_meta_file(bra_io_file_ctx_t* ctx, bra_meta_file_t* mf)
     mf->data_size = 0;
 
     // 1. attributes
-    if (fread(&mf->attributes.attr, sizeof(bra_attr_t), 1, ctx->f.f) != 1)
+    if (fread(&mf->attributes, sizeof(bra_attr_t), 1, ctx->f.f) != 1)
     {
     BRA_IO_READ_ERR:
         bra_io_file_read_error(&ctx->f);
@@ -380,7 +380,7 @@ bool bra_io_file_ctx_read_meta_file(bra_io_file_ctx_t* ctx, bra_meta_file_t* mf)
     buf[buf_size] = '\0';
 
     // 4. data size
-    switch (mf->attributes.bra_meta_file_attr_t.type)
+    switch (BRA_ATTR_TYPE(mf->attributes))
     {
     case BRA_ATTR_TYPE_SUB_DIR:
         // TODO: for now as normal BRA_ATTR_TYPE_DIR.
@@ -468,7 +468,7 @@ bool bra_io_file_ctx_write_meta_file(bra_io_file_ctx_t* ctx, bra_meta_file_t* mf
     }
 
     // Processing & Writing data
-    switch (mf->attributes.bra_meta_file_attr_t.type)
+    switch (BRA_ATTR_TYPE(mf->attributes))
     {
     case BRA_ATTR_TYPE_FILE:
     {
@@ -501,8 +501,8 @@ bool bra_io_file_ctx_encode_and_write_to_disk(bra_io_file_ctx_t* ctx, const char
     assert(fn != NULL);
 
     // 1. attributes
-    bra_meta_file_attr_u attributes;
-    if (!bra_fs_file_attributes(fn, ctx->last_dir, &attributes.attr))
+    bra_attr_t attributes;
+    if (!bra_fs_file_attributes(fn, ctx->last_dir, &attributes))
     {
         bra_log_error("%s has unknown attribute", fn);
     BRA_IO_WRITE_CLOSE_ERROR:
@@ -510,7 +510,7 @@ bool bra_io_file_ctx_encode_and_write_to_disk(bra_io_file_ctx_t* ctx, const char
         return false;
     }
 
-    bra_log_printf("Archiving %-7s:  ", g_attr_type_names[attributes.bra_meta_file_attr_t.type]);
+    bra_log_printf("Archiving %-7s:  ", g_attr_type_names[BRA_ATTR_TYPE(attributes)]);
     _bra_print_string_max_length(fn, strlen(fn), BRA_PRINTF_FMT_FILENAME_MAX_LENGTH);
 
     // 2. file name length
@@ -572,7 +572,7 @@ bool bra_io_file_ctx_decode_and_write_to_disk(bra_io_file_ctx_t* ctx, bra_fs_ove
 
     // 4. read and write in chunk data
     // NOTE: nothing to extract for a directory, but only to create it
-    switch (mf.attributes.attr)
+    switch (BRA_ATTR_TYPE(mf.attributes))
     {
     case BRA_ATTR_TYPE_FILE:
     {

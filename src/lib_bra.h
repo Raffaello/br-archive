@@ -22,7 +22,7 @@ extern "C" {
  * @param attributes
  * @return char
  */
-char bra_format_meta_attributes(const bra_meta_file_attr_u attributes);
+char bra_format_meta_attributes(const bra_attr_t attributes);
 
 /**
  * @brief Convert @p bytes into a human readable string stored in @p buf.

@@ -43,9 +43,9 @@ bool bra_fs_file_attributes(const char* base, const char* path, bra_attr_t* attr
     if (attr == nullptr || path == nullptr || base == nullptr)
         return false;
 
-    const fs::path p(path);
     const fs::path b(base);
-    const auto     a = bra::fs::file_attributes(p, b);
+    const fs::path p(path);
+    const auto     a = bra::fs::file_attributes(b, p);
     if (!a)
         return false;
 

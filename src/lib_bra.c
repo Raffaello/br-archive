@@ -12,6 +12,11 @@
 #include <stdlib.h>
 #include <limits.h>
 
+
+/////////////////////////////////////////////////////////////////////////////
+
+_Static_assert(sizeof(bra_meta_file_attr_u) == sizeof(bra_attr_t), "bra_meta_file_attr_u must be exactly 1 byte.");
+
 /////////////////////////////////////////////////////////////////////////////
 
 char bra_format_meta_attributes(const bra_meta_file_attr_u attributes)

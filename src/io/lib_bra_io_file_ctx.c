@@ -468,7 +468,7 @@ bool bra_io_file_ctx_write_meta_file(bra_io_file_ctx_t* ctx, bra_meta_file_t* mf
     }
 
     // Processing & Writing data
-    switch (mf->attributes.attr)
+    switch (mf->attributes.bra_meta_file_attr_t.type)
     {
     case BRA_ATTR_TYPE_FILE:
     {

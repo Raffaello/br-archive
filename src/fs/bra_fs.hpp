@@ -116,15 +116,15 @@ namespace bra::fs
 /**
  * @brief Get the file attributes for the given @p path.
  *
- * @param path
  * @param base used to determine if it is a directory or subdirectory.
+ * @param path
  * @return std::optional<bra_attr_t> #BRA_ATTR_TYPE_FILE    for regular files,
  *                                   #BRA_ATTR_TYPE_DIR     for directory,
- *                                   #BRA_ATTR_TYPE_SUB_DIR for sub directory relative to @p base
+ *                                   #BRA_ATTR_TYPE_SUBDIR for sub directory relative to @p base
  *                                   #BRA_ATTR_TYPE_SYM     for symlink;
  *                                   @c nullopt             for errors or unknown types.
  */
-[[nodiscard]] std::optional<bra_attr_t> file_attributes(const std::filesystem::path& path, const std::filesystem::path& base) noexcept;
+[[nodiscard]] std::optional<bra_attr_t> file_attributes(const std::filesystem::path& base, const std::filesystem::path& path) noexcept;
 
 /**
  * @brief Get the size of a file or directory.

@@ -145,7 +145,7 @@ static bool _bra_io_file_ctx_write_meta_file_process_write_dir(bra_io_file_ctx_t
         // TODO: tree instead might occupy more if the parent directory name are very short, 1-3 chars
         //       in this case though it could revert to a normal directory as it was since the beginning
         //       using the consolidate dir as well
-        const bool replacing_dir = BRA_ATTR_TYPE(mf->attributes) == BRA_ATTR_TYPE_SUB_DIR;    // bra_fs_dir_is_sub_dir(ctx->last_dir, dirname);
+        const bool replacing_dir = BRA_ATTR_TYPE(mf->attributes) == BRA_ATTR_TYPE_SUBDIR;    // bra_fs_dir_is_sub_dir(ctx->last_dir, dirname);
         if (replacing_dir)
         {
             bra_log_debug("parent dir %s is empty, replacing it with %s", ctx->last_dir, dirname);
@@ -352,21 +352,6 @@ bool bra_io_file_ctx_read_meta_file(bra_io_file_ctx_t* ctx, bra_meta_file_t* mf)
         return false;
     }
 
-    // TODO: this block can be removed as it bit masked now, no other 4 values possible at all.
-    // #ifndef NDEBUG
-    //     switch (mf->attributes.bra_meta_file_attr_t.type)
-    //     {
-    //     case BRA_ATTR_TYPE_FILE:
-    //         // [[fallthrough]];
-    //     case BRA_ATTR_TYPE_DIR:
-    //     case BRA_ATTR_TYPE_SYM:
-    //     case BRA_ATTR_TYPE_SUB_DIR:
-    //         break;
-    //     default:
-    //         goto BRA_IO_READ_ERR;
-    //     }
-    // #endif
-
     // 2. filename size
     if (fread(&buf_size, sizeof(uint8_t), 1, ctx->f.f) != 1)
         goto BRA_IO_READ_ERR;
@@ -382,7 +367,7 @@ bool bra_io_file_ctx_read_meta_file(bra_io_file_ctx_t* ctx, bra_meta_file_t* mf)
     // 4. data size
     switch (BRA_ATTR_TYPE(mf->attributes))
     {
-    case BRA_ATTR_TYPE_SUB_DIR:
+    case BRA_ATTR_TYPE_SUBDIR:
         // TODO: for now as normal BRA_ATTR_TYPE_DIR.
     case BRA_ATTR_TYPE_DIR:
     {
@@ -476,7 +461,7 @@ bool bra_io_file_ctx_write_meta_file(bra_io_file_ctx_t* ctx, bra_meta_file_t* mf
             goto BRA_IO_WRITE_ERR;
         break;
     }
-    case BRA_ATTR_TYPE_SUB_DIR:
+    case BRA_ATTR_TYPE_SUBDIR:
         // TODO: for now same as dir
     case BRA_ATTR_TYPE_DIR:
     {
@@ -502,7 +487,7 @@ bool bra_io_file_ctx_encode_and_write_to_disk(bra_io_file_ctx_t* ctx, const char
 
     // 1. attributes
     bra_attr_t attributes;
-    if (!bra_fs_file_attributes(fn, ctx->last_dir, &attributes))
+    if (!bra_fs_file_attributes(ctx->last_dir, fn, &attributes))
     {
         bra_log_error("%s has unknown attribute", fn);
     BRA_IO_WRITE_CLOSE_ERROR:
@@ -610,7 +595,7 @@ bool bra_io_file_ctx_decode_and_write_to_disk(bra_io_file_ctx_t* ctx, bra_fs_ove
         }
     }
     break;
-    case BRA_ATTR_TYPE_SUB_DIR:
+    case BRA_ATTR_TYPE_SUBDIR:
         // TODO: for now like dir
     case BRA_ATTR_TYPE_DIR:
     {

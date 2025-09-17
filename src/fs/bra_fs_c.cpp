@@ -38,7 +38,7 @@ bool bra_fs_file_exists(const char* path)
     return bra::fs::file_exists(p);
 }
 
-bool bra_fs_file_attributes(const char* path, const char* base, bra_attr_t* attr)
+bool bra_fs_file_attributes(const char* base, const char* path, bra_attr_t* attr)
 {
     if (attr == nullptr || path == nullptr || base == nullptr)
         return false;

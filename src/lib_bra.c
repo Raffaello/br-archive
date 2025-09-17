@@ -26,7 +26,7 @@ char bra_format_meta_attributes(const bra_attr_t attributes)
         return 'd';
     case BRA_ATTR_TYPE_SYM:
         return 's';
-    case BRA_ATTR_TYPE_SUB_DIR:
+    case BRA_ATTR_TYPE_SUBDIR:
         return 'D';    // TODO: this should be the same of dir, but now for debugging...
     default:
         return '?';
@@ -99,7 +99,7 @@ bool bra_io_print_meta_file_ctx(bra_io_file_ctx_t* ctx)
 
     // print last dir to understand internal structure
 #ifndef NDEBUG
-    bra_log_debug("| %s ", ctx->last_dir);
+    bra_log_printf("| %s [DEBUG]", ctx->last_dir);
 #endif
 
     bra_log_printf("|\n");

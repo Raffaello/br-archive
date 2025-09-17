@@ -11,7 +11,8 @@
 #include <string.h>
 
 
-static const char g_end_messages[][5] = {" OK ", "SKIP"};
+static const char  g_end_messages[][5] = {" OK ", "SKIP"};
+static const char* g_attr_type_names[] = {"file", "dir", "symlink", "subdir"};
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -105,13 +106,13 @@ static bool _bra_io_file_ctx_write_meta_file_process_write_file(bra_io_file_ctx_
         return false;
 
     if (!bra_io_file_copy_file_chunks(&ctx->f, &f2, mf->data_size))
-        return false;    // f, f2 closed already
+        return false;    // f, f2 closed already (but not ctx as not required due to error terminating program)
 
     bra_io_file_close(&f2);
     return true;
 }
 
-static bool _bra_io_file_ctx_write_meta_file_process_write_dir(bra_io_file_ctx_t* ctx, const bra_meta_file_t* mf, char* dirname, uint8_t* dirname_size)
+static bool _bra_io_file_ctx_write_meta_file_process_write_dir(bra_io_file_ctx_t* ctx, bra_meta_file_t* mf, char* dirname, uint8_t* dirname_size)
 {
     assert_bra_io_file_cxt_t(ctx);
     assert(mf != NULL);
@@ -128,11 +129,29 @@ static bool _bra_io_file_ctx_write_meta_file_process_write_dir(bra_io_file_ctx_t
 
     if (ctx->last_dir_not_flushed)
     {
-        // TODO: replace with SUB_DIR ATTRIBUTE
-        const bool replacing_dir = bra_fs_dir_is_sub_dir(ctx->last_dir, dirname);
+        // TODO: this will be in conflict with the new proposed tree dir structure.
+        //       need to be done as a 2nd pass at the end as an update.
+        //       as at this point can't know if it is better or not.
+        //       as it might be honestly.
+        //       the tree dir structure might be postponed for now.
+        //       besides the consolidating 1st sub-dir if parent empty is not so good.
+        //       the lazy write on directory could be kept though, not useful neither at the very end.
+        //       i am just playing around here....
+        //
+        // TODO: the only scenario were is really useful is parent dir empty and just 1 subdir
+        //       that in that case can save 1 entry to be stored.
+        //       also especially if the parent dir as a long name
+        //       but here at maximum is a save of 256 bytes.. doesn't really make sense. well better than nothing, but..
+        // TODO: tree instead might occupy more if the parent directory name are very short, 1-3 chars
+        //       in this case though it could revert to a normal directory as it was since the beginning
+        //       using the consolidate dir as well
+        const bool replacing_dir = BRA_ATTR_TYPE(mf->attributes) == BRA_ATTR_TYPE_SUBDIR;    // bra_fs_dir_is_sub_dir(ctx->last_dir, dirname);
         if (replacing_dir)
         {
             bra_log_debug("parent dir %s is empty, replacing it with %s", ctx->last_dir, dirname);
+            // mf->attributes.attr &= ~BRA_ATTR_TYPE(0xFF);           // clear the bits first
+            // mf->attributes.attr |= BRA_ATTR_TYPE(BRA_ATTR_TYPE_DIR);    // in this case it becomes a regular dir
+            mf->attributes = BRA_ATTR_SET_TYPE(mf->attributes, BRA_ATTR_TYPE_DIR);
         }
         else
         {
@@ -333,16 +352,6 @@ bool bra_io_file_ctx_read_meta_file(bra_io_file_ctx_t* ctx, bra_meta_file_t* mf)
         return false;
     }
 
-    switch (mf->attributes)
-    {
-    case BRA_ATTR_FILE:
-        // [[fallthrough]];
-    case BRA_ATTR_DIR:
-        break;
-    default:
-        goto BRA_IO_READ_ERR;
-    }
-
     // 2. filename size
     if (fread(&buf_size, sizeof(uint8_t), 1, ctx->f.f) != 1)
         goto BRA_IO_READ_ERR;
@@ -356,7 +365,11 @@ bool bra_io_file_ctx_read_meta_file(bra_io_file_ctx_t* ctx, bra_meta_file_t* mf)
     buf[buf_size] = '\0';
 
     // 4. data size
-    if (mf->attributes == BRA_ATTR_DIR)
+    switch (BRA_ATTR_TYPE(mf->attributes))
+    {
+    case BRA_ATTR_TYPE_SUBDIR:
+        // TODO: for now as normal BRA_ATTR_TYPE_DIR.
+    case BRA_ATTR_TYPE_DIR:
     {
         // NOTE: for directory doesn't have data-size nor data,
         // NOTE: here if it is a sub-dir
@@ -378,7 +391,8 @@ bool bra_io_file_ctx_read_meta_file(bra_io_file_ctx_t* ctx, bra_meta_file_t* mf)
         memcpy(mf->name, buf, buf_size);
         mf->name[buf_size] = '\0';
     }
-    else if (mf->attributes == BRA_ATTR_FILE)
+    break;
+    case BRA_ATTR_TYPE_FILE:
     {
         if (fread(&mf->data_size, sizeof(uint64_t), 1, ctx->f.f) != 1)
             goto BRA_IO_READ_ERR;
@@ -408,12 +422,20 @@ bool bra_io_file_ctx_read_meta_file(bra_io_file_ctx_t* ctx, bra_meta_file_t* mf)
         memcpy(b, buf, buf_size);
         b[buf_size] = '\0';
     }
+    break;
+    case BRA_ATTR_TYPE_SYM:
+        bra_log_critical("SYMLINK NOT IMPLEMENTED YET");
+        return false;
+        break;
+    default:
+        return false;
+    }
 
     mf->name[mf->name_size] = '\0';
     return true;
 }
 
-bool bra_io_file_ctx_write_meta_file(bra_io_file_ctx_t* ctx, const bra_meta_file_t* mf)
+bool bra_io_file_ctx_write_meta_file(bra_io_file_ctx_t* ctx, bra_meta_file_t* mf)
 {
     assert_bra_io_file_cxt_t(ctx);
     assert(mf != NULL);
@@ -431,21 +453,25 @@ bool bra_io_file_ctx_write_meta_file(bra_io_file_ctx_t* ctx, const bra_meta_file
     }
 
     // Processing & Writing data
-    switch (mf->attributes)
+    switch (BRA_ATTR_TYPE(mf->attributes))
     {
-    case BRA_ATTR_FILE:
+    case BRA_ATTR_TYPE_FILE:
     {
         if (!_bra_io_file_ctx_write_meta_file_process_write_file(ctx, mf, buf, &buf_size))
             goto BRA_IO_WRITE_ERR;
-        break;
     }
-    case BRA_ATTR_DIR:
+    break;
+    case BRA_ATTR_TYPE_SUBDIR:
+        // TODO: for now same as dir
+    case BRA_ATTR_TYPE_DIR:
     {
         if (!_bra_io_file_ctx_write_meta_file_process_write_dir(ctx, mf, buf, &buf_size))
             goto BRA_IO_WRITE_ERR;
-        break;
     }
     break;
+    case BRA_ATTR_TYPE_SYM:
+        bra_log_critical("SYMLINK NOT IMPLEMENTED YET");
+        // goto BRA_IO_WRITE_ERR; // fallthrough
     default:
         goto BRA_IO_WRITE_ERR;
     }
@@ -460,7 +486,7 @@ bool bra_io_file_ctx_encode_and_write_to_disk(bra_io_file_ctx_t* ctx, const char
 
     // 1. attributes
     bra_attr_t attributes;
-    if (!bra_fs_file_attributes(fn, &attributes))
+    if (!bra_fs_file_attributes(ctx->last_dir, fn, &attributes))
     {
         bra_log_error("%s has unknown attribute", fn);
     BRA_IO_WRITE_CLOSE_ERROR:
@@ -468,23 +494,7 @@ bool bra_io_file_ctx_encode_and_write_to_disk(bra_io_file_ctx_t* ctx, const char
         return false;
     }
 
-    // TODO: can just use it as an index and printing the right word instead.
-    //       avoiding to do a switch statement using a bit mask to manage eventual errors
-    switch (attributes)
-    {
-    case BRA_ATTR_DIR:
-        // bra_log_printf("Archiving dir :  " BRA_PRINTF_FMT_FILENAME, fn);
-        bra_log_printf("Archiving dir :  ");
-        break;
-    case BRA_ATTR_FILE:
-        // bra_log_printf("Archiving file:  " BRA_PRINTF_FMT_FILENAME, fn);
-        bra_log_printf("Archiving file:  ");
-
-        break;
-    default:
-        goto BRA_IO_WRITE_CLOSE_ERROR;
-    }
-
+    bra_log_printf("Archiving %-7s:  ", g_attr_type_names[BRA_ATTR_TYPE(attributes)]);
     _bra_print_string_max_length(fn, strlen(fn), BRA_PRINTF_FMT_FILENAME_MAX_LENGTH);
 
     // 2. file name length
@@ -546,9 +556,9 @@ bool bra_io_file_ctx_decode_and_write_to_disk(bra_io_file_ctx_t* ctx, bra_fs_ove
 
     // 4. read and write in chunk data
     // NOTE: nothing to extract for a directory, but only to create it
-    switch (mf.attributes)
+    switch (BRA_ATTR_TYPE(mf.attributes))
     {
-    case BRA_ATTR_FILE:
+    case BRA_ATTR_TYPE_FILE:
     {
         const uint64_t ds = mf.data_size;
         if (!bra_fs_file_exists_ask_overwrite(mf.name, overwrite_policy, false))
@@ -584,7 +594,9 @@ bool bra_io_file_ctx_decode_and_write_to_disk(bra_io_file_ctx_t* ctx, bra_fs_ove
         }
     }
     break;
-    case BRA_ATTR_DIR:
+    case BRA_ATTR_TYPE_SUBDIR:
+        // TODO: for now like dir
+    case BRA_ATTR_TYPE_DIR:
     {
         if (bra_fs_dir_exists(mf.name))
         {
@@ -603,6 +615,9 @@ bool bra_io_file_ctx_decode_and_write_to_disk(bra_io_file_ctx_t* ctx, bra_fs_ove
         bra_meta_file_free(&mf);
     }
     break;
+    case BRA_ATTR_TYPE_SYM:
+        bra_log_critical("SYMLINK NOT IMPLEMENTED YET");
+        // fallthrough
     default:
         goto BRA_IO_DECODE_ERR;
         break;

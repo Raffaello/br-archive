@@ -102,26 +102,27 @@ bool dir_make(const std::filesystem::path& path) noexcept
     return created;
 }
 
-bool dir_isSubDir(const std::filesystem::path& src, const std::filesystem::path& dst) noexcept
+bool dir_isSubDir(const std::filesystem::path& base, const std::filesystem::path& path) noexcept
 {
     error_code ec;
 
-    fs::path s = src;
-    fs::path d = dst;
+    fs::path b = base;
+    fs::path p = path;
 
-    if (!try_sanitize(s) || !try_sanitize(d))
+    if (!try_sanitize(b) || !try_sanitize(p))
         return false;
 
-    if (s.empty() || d.empty() || s == d)
+    if (b.empty() || p.empty() || b == p)
         return false;
 
-    fs::path p = fs::relative(d, s, ec);
+    p = fs::relative(p, b, ec);
     if (ec)
     {
-        bra_log_error("unable to detect %s subdir of %s: %s", dst.string().c_str(), src.string().c_str(), ec.message().c_str());
+        bra_log_error("unable to detect %s subdir of %s: %s", path.string().c_str(), base.string().c_str(), ec.message().c_str());
         return false;
     }
 
+    // This is requires so it will check if it is relative as a parent
     if (!try_sanitize(p))
         return false;
 
@@ -242,7 +243,7 @@ std::optional<bool> file_exists_ask_overwrite(const std::filesystem::path& path,
     return c == 'y';
 }
 
-std::optional<bra_attr_t> file_attributes(const std::filesystem::path& path) noexcept
+std::optional<bra_attr_t> file_attributes(const std::filesystem::path& base, const std::filesystem::path& path) noexcept
 {
     std::error_code ec;
     auto            err = [&path, &ec]() {
@@ -250,12 +251,44 @@ std::optional<bra_attr_t> file_attributes(const std::filesystem::path& path) noe
         return nullopt;
     };
 
-    if (fs::is_regular_file(path, ec))
-        return BRA_ATTR_FILE;
-    else if (ec)
+    const fs::file_status fileStatus = fs::status(path, ec);
+    if (ec)
         return err();
-    else if (fs::is_directory(path, ec))
-        return BRA_ATTR_DIR;
+    const fs::file_type fileType = fileStatus.type();
+    switch (fileType)
+    {
+        using enum fs::file_type;
+
+    default:
+        [[fallthrough]];
+    case none:
+        [[fallthrough]];
+    case not_found:
+        [[fallthrough]];
+    case block:
+        [[fallthrough]];
+    case character:
+        [[fallthrough]];
+    case fifo:
+        [[fallthrough]];
+    case socket:
+        [[fallthrough]];
+    case unknown:
+        return nullopt;
+        break;
+
+    case regular:
+        return BRA_ATTR_TYPE_FILE;
+    case directory:
+    {
+        if (base.empty())
+            return BRA_ATTR_TYPE_DIR;    // 1st level dir is a dir
+
+        return dir_isSubDir(base, path) ? BRA_ATTR_TYPE_SUBDIR : BRA_ATTR_TYPE_DIR;
+    }
+    case symlink:
+        return BRA_ATTR_TYPE_SYM;
+    }
 
     return nullopt;
 }

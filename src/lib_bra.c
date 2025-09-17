@@ -14,14 +14,25 @@
 
 /////////////////////////////////////////////////////////////////////////////
 
+_Static_assert(BRA_ATTR_TYPE_FILE == 0, "BRA_ATTR_TYPE_FILE index changed");
+_Static_assert(BRA_ATTR_TYPE_DIR == 1, "BRA_ATTR_TYPE_DIR index changed");
+_Static_assert(BRA_ATTR_TYPE_SYM == 2, "BRA_ATTR_TYPE_SYM index changed");
+_Static_assert(BRA_ATTR_TYPE_SUBDIR == 3, "BRA_ATTR_TYPE_SUBDIR index changed");
+
+/////////////////////////////////////////////////////////////////////////////
+
 char bra_format_meta_attributes(const bra_attr_t attributes)
 {
-    switch (attributes)
+    switch (BRA_ATTR_TYPE(attributes))
     {
-    case BRA_ATTR_FILE:
+    case BRA_ATTR_TYPE_FILE:
         return 'f';
-    case BRA_ATTR_DIR:
+    case BRA_ATTR_TYPE_DIR:
         return 'd';
+    case BRA_ATTR_TYPE_SYM:
+        return 's';
+    case BRA_ATTR_TYPE_SUBDIR:
+        return 'D';    // TODO: this should be the same of dir, but now for debugging...
     default:
         return '?';
     }
@@ -90,8 +101,13 @@ bool bra_io_print_meta_file_ctx(bra_io_file_ctx_t* ctx)
 
     bra_log_printf("|   %c  | %s | ", attr, bytes);
     _bra_print_string_max_length(mf.name, mf.name_size, BRA_PRINTF_FMT_FILENAME_MAX_LENGTH);
-    bra_log_printf("|\n");
 
+    // print last dir to understand internal structure
+#ifndef NDEBUG
+    bra_log_printf("| %s [DEBUG]", ctx->last_dir);
+#endif
+
+    bra_log_printf("|\n");
     bra_meta_file_free(&mf);
     // skip data content
     if (!bra_io_file_skip_data(&ctx->f, ds))

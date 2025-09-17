@@ -65,7 +65,7 @@ typedef struct bra_io_file_t
 typedef struct bra_meta_file_t
 {
     // TODO: add CRC ... file permissions, etc... ?
-    bra_attr_t attributes;    //!< file attributes: #BRA_ATTR_FILE (regular) or #BRA_ATTR_DIR (directory)
+    bra_attr_t attributes;    //!< file attributes: #BRA_ATTR_TYPE_FILE, #BRA_ATTR_TYPE_DIR, #BRA_ATTR_TYPE_SYMLINK, #BRA_ATTR_TYPE_SUBDIR
     uint8_t    name_size;     //!< length in bytes excluding the trailing NUL; [1..UINT8_MAX]
     char*      name;          //!< filename/dirname (owned; free via @ref bra_meta_file_free)
     uint64_t   data_size;     //!< file contents size in bytes. Not saved for dir.

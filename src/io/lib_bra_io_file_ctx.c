@@ -148,6 +148,7 @@ static bool _bra_io_file_ctx_write_meta_file_process_write_dir(bra_io_file_ctx_t
         const bool replacing_dir = BRA_ATTR_TYPE(mf->attributes) == BRA_ATTR_TYPE_SUBDIR;    // bra_fs_dir_is_sub_dir(ctx->last_dir, dirname);
         if (replacing_dir)
         {
+            // TODO: here after dir-tree should be unreachable.
             bra_log_debug("parent dir %s is empty, replacing it with %s", ctx->last_dir, dirname);
             // mf->attributes.attr &= ~BRA_ATTR_TYPE(0xFF);           // clear the bits first
             // mf->attributes.attr |= BRA_ATTR_TYPE(BRA_ATTR_TYPE_DIR);    // in this case it becomes a regular dir
@@ -368,7 +369,10 @@ bool bra_io_file_ctx_read_meta_file(bra_io_file_ctx_t* ctx, bra_meta_file_t* mf)
     switch (BRA_ATTR_TYPE(mf->attributes))
     {
     case BRA_ATTR_TYPE_SUBDIR:
-        // TODO: for now as normal BRA_ATTR_TYPE_DIR.
+        // TODO
+        bra_log_critical("subdir read not implemented yet");
+        return false;
+        break;
     case BRA_ATTR_TYPE_DIR:
     {
         // NOTE: for directory doesn't have data-size nor data,
@@ -462,7 +466,10 @@ bool bra_io_file_ctx_write_meta_file(bra_io_file_ctx_t* ctx, bra_meta_file_t* mf
     }
     break;
     case BRA_ATTR_TYPE_SUBDIR:
-        // TODO: for now same as dir
+        // TODO
+        bra_log_critical("tree subdir write not implemented yet");
+        return false;
+        break;
     case BRA_ATTR_TYPE_DIR:
     {
         if (!_bra_io_file_ctx_write_meta_file_process_write_dir(ctx, mf, buf, &buf_size))
@@ -596,6 +603,12 @@ bool bra_io_file_ctx_decode_and_write_to_disk(bra_io_file_ctx_t* ctx, bra_fs_ove
     break;
     case BRA_ATTR_TYPE_SUBDIR:
         // TODO: for now like dir
+        // This i think genuinely should be like dir,
+        // unless for the build up tree ...
+        // so need to read the parent index
+        bra_log_critical("tree subdir decode not implemented yet");
+        return false;
+        break;
     case BRA_ATTR_TYPE_DIR:
     {
         if (bra_fs_dir_exists(mf.name))

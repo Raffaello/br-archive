@@ -122,6 +122,7 @@ bool dir_isSubDir(const std::filesystem::path& base, const std::filesystem::path
         return false;
     }
 
+    // This is requires so it will check if it is relative as a parent
     if (!try_sanitize(p))
         return false;
 

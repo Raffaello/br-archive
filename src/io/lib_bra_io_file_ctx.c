@@ -459,15 +459,14 @@ bool bra_io_file_ctx_write_meta_file(bra_io_file_ctx_t* ctx, bra_meta_file_t* mf
     {
         if (!_bra_io_file_ctx_write_meta_file_process_write_file(ctx, mf, buf, &buf_size))
             goto BRA_IO_WRITE_ERR;
-        break;
     }
+    break;
     case BRA_ATTR_TYPE_SUBDIR:
         // TODO: for now same as dir
     case BRA_ATTR_TYPE_DIR:
     {
         if (!_bra_io_file_ctx_write_meta_file_process_write_dir(ctx, mf, buf, &buf_size))
             goto BRA_IO_WRITE_ERR;
-        break;
     }
     break;
     case BRA_ATTR_TYPE_SYM:

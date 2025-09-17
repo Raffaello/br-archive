@@ -59,15 +59,15 @@ namespace bra::fs
 [[nodiscard]] bool dir_make(const std::filesystem::path& path) noexcept;
 
 /**
- * @brief Check if the @p dst is a sub-dir of @p src relative to the current directory.
+ * @brief Check if the @p path is a sub-dir of @p base relative to the current directory.
  *        Path outside the current directory return false.
  *
- * @param src
- * @param dst
- * @retval true if @p dst is a subdir of @p src;
+ * @param base
+ * @param path
+ * @retval true if @p path is a subdir of @p base;
  * @retval false otherwise or on error.
  */
-[[nodiscard]] bool dir_isSubDir(const std::filesystem::path& src, const std::filesystem::path& dst) noexcept;
+[[nodiscard]] bool dir_isSubDir(const std::filesystem::path& base, const std::filesystem::path& path) noexcept;
 
 /**
  * @brief Make sure the file extension is #BRA_FILE_EXT
@@ -117,9 +117,10 @@ namespace bra::fs
  * @brief Get the file attributes for the given @p path.
  *
  * @param path
- * @return std::optional<bra_attr_t> #BRA_ATTR_FILE for regular files, #BRA_ATTR_DIR for directories, @c nullopt for errors or unknown types.
+ * @param base used to determine if it is a directory or subdirectory.
+ * @return std::optional<bra_attr_t> #BRA_ATTR_TYPE_FILE for regular files, #BRA_ATTR_TYPE_DIR for directories, @c nullopt for errors or unknown types.
  */
-[[nodiscard]] std::optional<bra_attr_t> file_attributes(const std::filesystem::path& path) noexcept;
+[[nodiscard]] std::optional<bra_attr_t> file_attributes(const std::filesystem::path& path, const std::filesystem::path& base) noexcept;
 
 /**
  * @brief Get the size of a file or directory.

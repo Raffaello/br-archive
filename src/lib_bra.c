@@ -14,14 +14,18 @@
 
 /////////////////////////////////////////////////////////////////////////////
 
-char bra_format_meta_attributes(const bra_attr_t attributes)
+char bra_format_meta_attributes(const bra_meta_file_attr_u attributes)
 {
-    switch (attributes)
+    switch (attributes.bra_meta_file_attr_t.type)
     {
-    case BRA_ATTR_FILE:
+    case BRA_ATTR_TYPE_FILE:
         return 'f';
-    case BRA_ATTR_DIR:
+    case BRA_ATTR_TYPE_DIR:
         return 'd';
+    case BRA_ATTR_TYPE_SYM:
+        return 's';
+    case BRA_ATTR_TYPE_SUB_DIR:
+        return 'D';    // TODO: this should be the same of dir, but now for debugging...
     default:
         return '?';
     }
@@ -63,9 +67,9 @@ void bra_meta_file_free(bra_meta_file_t* mf)
 {
     assert(mf != NULL);
 
-    mf->data_size  = 0;
-    mf->name_size  = 0;
-    mf->attributes = 0;
+    mf->data_size       = 0;
+    mf->name_size       = 0;
+    mf->attributes.attr = 0;
     if (mf->name != NULL)
     {
         free(mf->name);

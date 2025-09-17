@@ -38,10 +38,11 @@
 #define BRA_SFX_FILENAME     "bra.sfx"    // @todo: generate it through cmake conf
 #define BRA_SFX_TMP_FILE_EXT ".tmp"
 
-#define BRA_ATTR_FILE    0    //!< Regular file.
-#define BRA_ATTR_DIR     1    //!< Directory
-#define BRA_ATTR_SYM     2    //!< Symlink
-#define BRA_ATTR_SUB_DIR 4    //!< sub-dir, need to reuse last dir for full dir name.
+// #define BRA_ATTR_TYPE(x) (x & 0x03)    //!< first 2 bits
+#define BRA_ATTR_TYPE_FILE    0    //!< Regular file.
+#define BRA_ATTR_TYPE_DIR     1    //!< Directory
+#define BRA_ATTR_TYPE_SYM     2    //!< Symlink
+#define BRA_ATTR_TYPE_SUB_DIR 3    //!< sub-dir, need to reuse last dir for full dir name.
 
 #define BRA_ATTR_STORED (0 << 2)
 // #define BRA_ATTR_BWT_MTF_RLE      (1 << 2)

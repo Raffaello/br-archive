@@ -65,11 +65,12 @@ bool bra_fs_file_exists(const char* path);
  * @note Wrapper around @ref bra::fs::file_attributes.
  *
  * @param path
+ * @param base
  * @param attr
  * @retval true  on success.
  * @retval false on error (including NULL @p path or @p attr).
  */
-bool bra_fs_file_attributes(const char* path, bra_attr_t* attr);
+bool bra_fs_file_attributes(const char* path, const char* base, bra_attr_t* attr);
 
 /**
  * @brief Get the file size from the given @p path and store it in @p file_size.

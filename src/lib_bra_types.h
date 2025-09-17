@@ -65,6 +65,8 @@ typedef union bra_meta_file_attr_u
     struct bra_meta_file_attr_t
     {
         bra_attr_t type : 2;
+        // bra_attr_t    compressed : 1;    // 0 = store, 1 = compressed with BWT-MTF-RLE-(LZW78-)Huffman
+        bra_attr_t reserved : 6;
     } bra_meta_file_attr_t;
 } bra_meta_file_attr_u;
 

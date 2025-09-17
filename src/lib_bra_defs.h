@@ -42,7 +42,7 @@
 #define BRA_ATTR_TYPE_FILE    0    //!< Regular file.
 #define BRA_ATTR_TYPE_DIR     1    //!< Directory
 #define BRA_ATTR_TYPE_SYM     2    //!< Symlink
-#define BRA_ATTR_TYPE_SUB_DIR 3    //!< sub-dir, need to reuse last dir for full dir name.
+#define BRA_ATTR_TYPE_SUB_DIR 3    //!< sub-dir, its base is an index of another dir/sub_dir previously encountered.
 
 #define BRA_ATTR_STORED (0 << 2)
 // #define BRA_ATTR_BWT_MTF_RLE      (1 << 2)

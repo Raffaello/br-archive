@@ -254,7 +254,6 @@ std::optional<bra_attr_t> file_attributes(const std::filesystem::path& path, con
     if (ec)
         return err();
     const fs::file_type fileType = fileStatus.type();
-
     switch (fileType)
     {
         using enum fs::file_type;
@@ -281,26 +280,14 @@ std::optional<bra_attr_t> file_attributes(const std::filesystem::path& path, con
         return BRA_ATTR_TYPE_FILE;
     case directory:
     {
-        // return BRA_ATTR_TYPE_DIR;    // not implemented yet
         if (base.empty())
-            return BRA_ATTR_TYPE_DIR;
+            return BRA_ATTR_TYPE_DIR;    // 1st level dir is a dir
 
         return dir_isSubDir(base, path) ? BRA_ATTR_TYPE_SUB_DIR : BRA_ATTR_TYPE_DIR;
     }
     case symlink:
         return BRA_ATTR_TYPE_SYM;
     }
-
-    // if (fs::is_regular_file(path, ec))
-    //     return BRA_ATTR_TYPE_FILE;
-    // else if (ec)
-    //     return err();
-    // else if (fs::is_directory(path, ec))
-    //     return BRA_ATTR_TYPE_DIR;
-    // else if (fs::is_symlink(path, ec))
-    //     return BRA_ATTR_TYPE_SYM;
-    // else if (ec)
-    //     return err();
 
     return nullopt;
 }

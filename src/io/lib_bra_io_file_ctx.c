@@ -141,7 +141,7 @@ static bool _bra_io_file_ctx_write_meta_file_process_write_dir(bra_io_file_ctx_t
         // TODO: the only scenario were is really useful is parent dir empty and just 1 subdir
         //       that in that case can save 1 entry to be stored.
         //       also especially if the parent dir as a long name
-        //       but here at maximum is a save of 2 bytes.. doesn't really make sense. well better than nothing, but..
+        //       but here at maximum is a save of 256 bytes.. doesn't really make sense. well better than nothing, but..
         // TODO: tree instead might occupy more if the parent directory name are very short, 1-3 chars
         //       in this case though it could revert to a normal directory as it was since the beginning
         //       using the consolidate dir as well

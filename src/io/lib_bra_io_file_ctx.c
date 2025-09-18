@@ -602,10 +602,7 @@ bool bra_io_file_ctx_decode_and_write_to_disk(bra_io_file_ctx_t* ctx, bra_fs_ove
     }
     break;
     case BRA_ATTR_TYPE_SUBDIR:
-        // TODO: for now like dir
-        // This i think genuinely should be like dir,
-        // unless for the build up tree ...
-        // so need to read the parent index
+        // TODO: need to read the parent index and build the tree
         bra_log_critical("tree subdir decode not implemented yet");
         return false;
         break;

@@ -1,6 +1,13 @@
 include (CTest)
 enable_testing()
 
+add_executable(test_lib_bra test_lib_bra.cpp)
+target_link_libraries(test_lib_bra PRIVATE lib_bra)
+
+add_test(NAME test_lib_bra.test_lib_bra_can_be_sfx           COMMAND test_lib_bra test_lib_bra_can_be_sfx)
+
+#####################################################################################################
+
 
 add_executable(test_bra_wildcards test_bra_wildcards.cpp)
 target_link_libraries(test_bra_wildcards PRIVATE lib_bra)

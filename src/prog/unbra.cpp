@@ -145,7 +145,7 @@ protected:
             bra_log_printf("|\n");
             for (uint32_t i = 0; i < bh.num_files; i++)
             {
-                if (!bra_io_print_meta_file_ctx(&m_ctx))
+                if (!bra_io_file_ctx_print_meta_entry(&m_ctx))
                     return 2;
             }
         }

@@ -58,7 +58,7 @@ protected:
 
     bool validateArgs() override
     {
-        if (!bra_io_file_is_sfx(m_argv0.c_str()))
+        if (!bra_io_file_can_be_sfx(m_argv0.c_str()))
         {
             bra_log_error("unsupported file detected: %s", m_argv0.c_str());
             return false;

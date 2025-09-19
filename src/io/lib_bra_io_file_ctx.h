@@ -76,25 +76,28 @@ bool bra_io_file_ctx_write_header(bra_io_file_ctx_t* ctx, const uint32_t num_fil
 bool bra_io_file_ctx_sfx_open_and_read_footer_header(const char* fn, bra_io_header_t* out_bh, bra_io_file_ctx_t* ctx);
 
 /**
- * @brief Read the filename meta data information that is pointing in @p ctx->f and store it on @p mf.
- *        @p mf must be free via @ref bra_meta_file_free.
+ * @brief Read the entry metadata (file or directory) currently pointed to by @p ctx->f and store it in @p me.
+ *        @p me must be freed via @ref bra_meta_entry_free.
+ *        On success:
+ *          - for files: the stream is positioned at the start of the entry's data;
+ *          - for directories: the stream is positioned at the next entry.
  *
  * @param ctx[in,out]
- * @param mf
- * @retval true on success @p mf must be explicitly free via @ref bra_meta_file_free.
+ * @param me[out]
+ * @retval true on success, @p me must be free via @ref bra_meta_entry_free.
  * @retval false on error closes @p ctx->f via @ref bra_io_file_close.
  */
-bool bra_io_file_ctx_read_meta_file(bra_io_file_ctx_t* ctx, bra_meta_file_t* mf);
+bool bra_io_file_ctx_read_meta_entry(bra_io_file_ctx_t* ctx, bra_meta_entry_t* me);
 
 /**
- * @brief Write the filename meta data information given from @p mf in @p ctx->f.
+ * @brief Write the filename metadata from @p me into @p ctx->f.
  *
  * @param ctx[in,out]
- * @param mf[in,out]
+ * @param me[in,out]
  * @retval true on success
  * @retval false on error closes @p ctx->f via @ref bra_io_file_close.
  */
-bool bra_io_file_ctx_write_meta_file(bra_io_file_ctx_t* ctx, bra_meta_file_t* mf);
+bool bra_io_file_ctx_write_meta_entry(bra_io_file_ctx_t* ctx, bra_meta_entry_t* me);
 
 /**
  * @brief Encode a file or directory @p fn and append it to the open archive @p ctx->f.
@@ -124,6 +127,18 @@ bool bra_io_file_ctx_encode_and_write_to_disk(bra_io_file_ctx_t* ctx, const char
  * @retval false on error
  */
 bool bra_io_file_ctx_decode_and_write_to_disk(bra_io_file_ctx_t* ctx, bra_fs_overwrite_policy_e* overwrite_policy);
+
+/**
+ * @brief Read and print one meta entry from @p ctx (attributes, size, filename),
+ *        then skip its data, advancing the file position to the next entry.
+ *
+ * @note In non @c NDEBUG builds, also prints the last directory, @c ctx->last_dir, for debugging.
+ *
+ * @param ctx Archive context whose meta will be printed.
+ * @retval true
+ * @retval false
+ */
+bool bra_io_file_ctx_print_meta_entry(bra_io_file_ctx_t* ctx);
 
 #ifdef __cplusplus
 }

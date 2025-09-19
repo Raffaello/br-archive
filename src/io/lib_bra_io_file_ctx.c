@@ -16,7 +16,7 @@ static const char* g_attr_type_names[] = {"file", "dir", "symlink", "subdir"};
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
-static bool _bra_io_file_ctx_write_meta_file_common(bra_io_file_ctx_t* ctx, const bra_attr_t attr, const char* filename, const uint8_t filename_size)
+static bool _bra_io_file_ctx_write_meta_entry_common(bra_io_file_ctx_t* ctx, const bra_attr_t attr, const char* filename, const uint8_t filename_size)
 {
     assert_bra_io_file_cxt_t(ctx);
     assert(filename != NULL);
@@ -43,14 +43,14 @@ static bool _bra_io_file_ctx_flush_dir(bra_io_file_ctx_t* ctx)
     {
         bra_log_debug("flushing dir: %s", ctx->last_dir);
         ctx->last_dir_not_flushed = false;
-        if (!_bra_io_file_ctx_write_meta_file_common(ctx, ctx->last_dir_attr, ctx->last_dir, ctx->last_dir_size))
+        if (!_bra_io_file_ctx_write_meta_entry_common(ctx, ctx->last_dir_attr, ctx->last_dir, ctx->last_dir_size))
             return false;
     }
 
     return true;
 }
 
-static bool _bra_io_file_ctx_write_meta_file_process_write_file(bra_io_file_ctx_t* ctx, const bra_meta_file_t* mf, char* filename, uint8_t* filename_size)
+static bool _bra_io_file_ctx_write_meta_entry_process_write_file(bra_io_file_ctx_t* ctx, const bra_meta_entry_t* mf, char* filename, uint8_t* filename_size)
 {
     assert_bra_io_file_cxt_t(ctx);
     assert(mf != NULL);
@@ -88,7 +88,7 @@ static bool _bra_io_file_ctx_write_meta_file_process_write_file(bra_io_file_ctx_
         return false;
 
     // write common meta data (attribute, filename, filename_size)
-    if (!_bra_io_file_ctx_write_meta_file_common(ctx, mf->attributes, filename, *filename_size))
+    if (!_bra_io_file_ctx_write_meta_entry_common(ctx, mf->attributes, filename, *filename_size))
         return false;
 
     // 3. data size
@@ -112,7 +112,7 @@ static bool _bra_io_file_ctx_write_meta_file_process_write_file(bra_io_file_ctx_
     return true;
 }
 
-static bool _bra_io_file_ctx_write_meta_file_process_write_dir(bra_io_file_ctx_t* ctx, bra_meta_file_t* mf, char* dirname, uint8_t* dirname_size)
+static bool _bra_io_file_ctx_write_meta_entry_process_write_dir(bra_io_file_ctx_t* ctx, bra_meta_entry_t* mf, char* dirname, uint8_t* dirname_size)
 {
     assert_bra_io_file_cxt_t(ctx);
     assert(mf != NULL);
@@ -333,7 +333,7 @@ bool bra_io_file_ctx_sfx_open_and_read_footer_header(const char* fn, bra_io_head
     return true;
 }
 
-bool bra_io_file_ctx_read_meta_file(bra_io_file_ctx_t* ctx, bra_meta_file_t* mf)
+bool bra_io_file_ctx_read_meta_entry(bra_io_file_ctx_t* ctx, bra_meta_entry_t* mf)
 {
     assert_bra_io_file_cxt_t(ctx);
     assert(mf != NULL);
@@ -439,7 +439,7 @@ bool bra_io_file_ctx_read_meta_file(bra_io_file_ctx_t* ctx, bra_meta_file_t* mf)
     return true;
 }
 
-bool bra_io_file_ctx_write_meta_file(bra_io_file_ctx_t* ctx, bra_meta_file_t* mf)
+bool bra_io_file_ctx_write_meta_entry(bra_io_file_ctx_t* ctx, bra_meta_entry_t* mf)
 {
     assert_bra_io_file_cxt_t(ctx);
     assert(mf != NULL);
@@ -461,7 +461,7 @@ bool bra_io_file_ctx_write_meta_file(bra_io_file_ctx_t* ctx, bra_meta_file_t* mf
     {
     case BRA_ATTR_TYPE_FILE:
     {
-        if (!_bra_io_file_ctx_write_meta_file_process_write_file(ctx, mf, buf, &buf_size))
+        if (!_bra_io_file_ctx_write_meta_entry_process_write_file(ctx, mf, buf, &buf_size))
             goto BRA_IO_WRITE_ERR;
     }
     break;
@@ -472,7 +472,7 @@ bool bra_io_file_ctx_write_meta_file(bra_io_file_ctx_t* ctx, bra_meta_file_t* mf
         break;
     case BRA_ATTR_TYPE_DIR:
     {
-        if (!_bra_io_file_ctx_write_meta_file_process_write_dir(ctx, mf, buf, &buf_size))
+        if (!_bra_io_file_ctx_write_meta_entry_process_write_dir(ctx, mf, buf, &buf_size))
             goto BRA_IO_WRITE_ERR;
     }
     break;
@@ -526,7 +526,7 @@ bool bra_io_file_ctx_encode_and_write_to_disk(bra_io_file_ctx_t* ctx, const char
     if (!bra_fs_file_size(fn, &ds))
         goto BRA_IO_WRITE_CLOSE_ERROR;
 
-    bra_meta_file_t mf;
+    bra_meta_entry_t mf;
     mf.attributes = attributes;
     mf.name_size  = fn_size;
     mf.data_size  = ds;
@@ -534,8 +534,8 @@ bool bra_io_file_ctx_encode_and_write_to_disk(bra_io_file_ctx_t* ctx, const char
     if (mf.name == NULL)
         goto BRA_IO_WRITE_CLOSE_ERROR;
 
-    const bool res = bra_io_file_ctx_write_meta_file(ctx, &mf);
-    bra_meta_file_free(&mf);
+    const bool res = bra_io_file_ctx_write_meta_entry(ctx, &mf);
+    bra_meta_entry_free(&mf);
     if (!res)
         return false;    // f closed already
 
@@ -548,15 +548,15 @@ bool bra_io_file_ctx_decode_and_write_to_disk(bra_io_file_ctx_t* ctx, bra_fs_ove
     assert_bra_io_file_cxt_t(ctx);
     assert(overwrite_policy != NULL);
 
-    const char*     end_msg;    // 'OK  ' | 'SKIP'
-    bra_meta_file_t mf;
-    if (!bra_io_file_ctx_read_meta_file(ctx, &mf))
+    const char*      end_msg;    // 'OK  ' | 'SKIP'
+    bra_meta_entry_t mf;
+    if (!bra_io_file_ctx_read_meta_entry(ctx, &mf))
         return false;
 
-    if (!_bra_validate_meta_filename(&mf))
+    if (!_bra_validate_meta_name(&mf))
     {
     BRA_IO_DECODE_ERR:
-        bra_meta_file_free(&mf);
+        bra_meta_entry_free(&mf);
         bra_io_file_error(&ctx->f, "decode");
         return false;
     }
@@ -572,7 +572,7 @@ bool bra_io_file_ctx_decode_and_write_to_disk(bra_io_file_ctx_t* ctx, bra_fs_ove
         {
             end_msg = g_end_messages[1];
             bra_log_printf("Skipping file:   " BRA_PRINTF_FMT_FILENAME, mf.name);
-            bra_meta_file_free(&mf);
+            bra_meta_entry_free(&mf);
             if (!bra_io_file_skip_data(&ctx->f, ds))
             {
                 bra_io_file_seek_error(&ctx->f);
@@ -593,7 +593,7 @@ bool bra_io_file_ctx_decode_and_write_to_disk(bra_io_file_ctx_t* ctx, bra_fs_ove
             if (!bra_io_file_open(&f2, mf.name, "wb"))
                 goto BRA_IO_DECODE_ERR;
 
-            bra_meta_file_free(&mf);
+            bra_meta_entry_free(&mf);
             if (!bra_io_file_copy_file_chunks(&f2, &ctx->f, ds))
                 return false;
 
@@ -622,7 +622,7 @@ bool bra_io_file_ctx_decode_and_write_to_disk(bra_io_file_ctx_t* ctx, bra_fs_ove
                 goto BRA_IO_DECODE_ERR;
         }
 
-        bra_meta_file_free(&mf);
+        bra_meta_entry_free(&mf);
     }
     break;
     case BRA_ATTR_TYPE_SYM:
@@ -634,5 +634,40 @@ bool bra_io_file_ctx_decode_and_write_to_disk(bra_io_file_ctx_t* ctx, bra_fs_ove
     }
 
     bra_log_printf(" [  %-4.4s  ]\n", end_msg);
+    return true;
+}
+
+bool bra_io_file_ctx_print_meta_entry(bra_io_file_ctx_t* ctx)
+{
+    assert(ctx != NULL);
+    assert_bra_io_file_t(&ctx->f);
+
+    bra_meta_entry_t mf;
+    char             bytes[BRA_PRINTF_FMT_BYTES_BUF_SIZE];
+
+    if (!bra_io_file_ctx_read_meta_entry(ctx, &mf))
+        return false;
+
+    const uint64_t ds   = mf.data_size;
+    const char     attr = bra_format_meta_attributes(mf.attributes);
+    bra_format_bytes(mf.data_size, bytes);
+
+    bra_log_printf("|   %c  | %s | ", attr, bytes);
+    _bra_print_string_max_length(mf.name, mf.name_size, BRA_PRINTF_FMT_FILENAME_MAX_LENGTH);
+
+    // print last dir to understand internal structure
+#ifndef NDEBUG
+    bra_log_printf("| %s [DEBUG]", ctx->last_dir);
+#endif
+
+    bra_log_printf("|\n");
+    bra_meta_entry_free(&mf);
+    // skip data content
+    if (!bra_io_file_skip_data(&ctx->f, ds))
+    {
+        bra_io_file_seek_error(&ctx->f);
+        return false;
+    }
+
     return true;
 }

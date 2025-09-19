@@ -27,7 +27,7 @@ char* _bra_strdup(const char* str)
     return c;
 }
 
-bool _bra_validate_meta_filename(const bra_meta_file_t* mf)
+bool _bra_validate_meta_name(const bra_meta_entry_t* mf)
 {
     // sanitize output path: reject absolute or parent traversal
     // POSIX absolute, Windows drive letter, and leading backslash

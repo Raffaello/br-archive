@@ -15,7 +15,7 @@
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-_Static_assert(BRA_MAX_PATH_LENGTH > UINT8_MAX, "BRA_MAX_PATH_LENGTH must be greater than bra_meta_file_t.name_size max value");
+_Static_assert(BRA_MAX_PATH_LENGTH > UINT8_MAX, "BRA_MAX_PATH_LENGTH must be greater than bra_meta_entry_t.name_size max value");
 _Static_assert(sizeof(bra_io_header_t) == 8, "bra_io_header_t must be 8 bytes");
 _Static_assert(sizeof(bra_io_footer_t) == 12, "bra_io_footer_t must be 12 bytes");
 

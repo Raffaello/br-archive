@@ -41,7 +41,7 @@ char* _bra_strdup(const char* str);
  * @retval true     if the filename is safe (no absolute paths or directory traversal)
  * @retval false    if the filename contains dangerous patterns
  */
-bool _bra_validate_meta_filename(const bra_meta_file_t* mf);
+bool _bra_validate_meta_name(const bra_meta_entry_t* mf);
 
 /**
  * @brief Log a string with fixed width, truncating with "..." if it exceeds max_length.

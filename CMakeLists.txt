@@ -44,6 +44,7 @@ target_sources(lib_bra
         src/lib_bra_private.c
 
         src/log/bra_log.c
+        src/bra_tree_dir.c
 
         src/fs/bra_fs.cpp
         src/fs/bra_wildcards.cpp

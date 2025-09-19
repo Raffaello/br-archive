@@ -77,14 +77,14 @@ bool bra_io_file_ctx_sfx_open_and_read_footer_header(const char* fn, bra_io_head
 
 /**
  * @brief Read the filename meta data information that is pointing in @p ctx->f and store it on @p mf.
- *        @p mf must be free via @ref bra_meta_file_free.
+ *        @p mf must be free via @ref bra_meta_entry_free.
  *
  * @param ctx[in,out]
  * @param mf
- * @retval true on success @p mf must be explicitly free via @ref bra_meta_file_free.
+ * @retval true on success @p mf must be explicitly free via @ref bra_meta_entry_free.
  * @retval false on error closes @p ctx->f via @ref bra_io_file_close.
  */
-bool bra_io_file_ctx_read_meta_file(bra_io_file_ctx_t* ctx, bra_meta_file_t* mf);
+bool bra_io_file_ctx_read_meta_entry(bra_io_file_ctx_t* ctx, bra_meta_entry_t* mf);
 
 /**
  * @brief Write the filename meta data information given from @p mf in @p ctx->f.
@@ -94,7 +94,7 @@ bool bra_io_file_ctx_read_meta_file(bra_io_file_ctx_t* ctx, bra_meta_file_t* mf)
  * @retval true on success
  * @retval false on error closes @p ctx->f via @ref bra_io_file_close.
  */
-bool bra_io_file_ctx_write_meta_file(bra_io_file_ctx_t* ctx, bra_meta_file_t* mf);
+bool bra_io_file_ctx_write_meta_entry(bra_io_file_ctx_t* ctx, bra_meta_entry_t* mf);
 
 /**
  * @brief Encode a file or directory @p fn and append it to the open archive @p ctx->f.
@@ -124,6 +124,15 @@ bool bra_io_file_ctx_encode_and_write_to_disk(bra_io_file_ctx_t* ctx, const char
  * @retval false on error
  */
 bool bra_io_file_ctx_decode_and_write_to_disk(bra_io_file_ctx_t* ctx, bra_fs_overwrite_policy_e* overwrite_policy);
+
+/**
+ * @brief Print a meta entry from @p ctx using @ref bra_log_printf to display attributes, size and filename.
+ *
+ * @param ctx Archive context whose meta will be printed.
+ * @retval true
+ * @retval false
+ */
+bool bra_io_file_ctx_print_meta_entry(bra_io_file_ctx_t* ctx);
 
 #ifdef __cplusplus
 }

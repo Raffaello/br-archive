@@ -70,7 +70,7 @@ void bra_format_bytes(const size_t bytes, char buf[BRA_PRINTF_FMT_BYTES_BUF_SIZE
 #endif
 }
 
-void bra_meta_file_free(bra_meta_file_t* mf)
+void bra_meta_entry_free(bra_meta_entry_t* mf)
 {
     assert(mf != NULL);
 
@@ -82,39 +82,4 @@ void bra_meta_file_free(bra_meta_file_t* mf)
         free(mf->name);
         mf->name = NULL;
     }
-}
-
-bool bra_io_print_meta_file_ctx(bra_io_file_ctx_t* ctx)
-{
-    assert(ctx != NULL);
-    assert_bra_io_file_t(&ctx->f);
-
-    bra_meta_file_t mf;
-    char            bytes[BRA_PRINTF_FMT_BYTES_BUF_SIZE];
-
-    if (!bra_io_file_ctx_read_meta_file(ctx, &mf))
-        return false;
-
-    const uint64_t ds   = mf.data_size;
-    const char     attr = bra_format_meta_attributes(mf.attributes);
-    bra_format_bytes(mf.data_size, bytes);
-
-    bra_log_printf("|   %c  | %s | ", attr, bytes);
-    _bra_print_string_max_length(mf.name, mf.name_size, BRA_PRINTF_FMT_FILENAME_MAX_LENGTH);
-
-    // print last dir to understand internal structure
-#ifndef NDEBUG
-    bra_log_printf("| %s [DEBUG]", ctx->last_dir);
-#endif
-
-    bra_log_printf("|\n");
-    bra_meta_file_free(&mf);
-    // skip data content
-    if (!bra_io_file_skip_data(&ctx->f, ds))
-    {
-        bra_io_file_seek_error(&ctx->f);
-        return false;
-    }
-
-    return true;
 }

@@ -80,8 +80,8 @@ bool bra_io_file_ctx_sfx_open_and_read_footer_header(const char* fn, bra_io_head
  *        @p me must be freed via @ref bra_meta_entry_free.
  *
  * @param ctx[in,out]
- * @param me
- * @retval true on success @p me must be explicitly free via @ref bra_meta_entry_free.
+ * @param me[out]
+ * @retval true on success @p me must be free via @ref bra_meta_entry_free.
  * @retval false on error closes @p ctx->f via @ref bra_io_file_close.
  */
 bool bra_io_file_ctx_read_meta_entry(bra_io_file_ctx_t* ctx, bra_meta_entry_t* me);
@@ -128,6 +128,8 @@ bool bra_io_file_ctx_decode_and_write_to_disk(bra_io_file_ctx_t* ctx, bra_fs_ove
 /**
  * @brief Read and print one meta entry from @p ctx (attributes, size, filename),
  *        then skip its data, advancing the file position to the next entry.
+ *
+ * @note In non @c NDEBUG builds, also prints the last directory, @c ctx->last_dir, for debugging.
  *
  * @param ctx Archive context whose meta will be printed.
  * @retval true

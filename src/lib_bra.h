@@ -37,6 +37,10 @@ void bra_format_bytes(const size_t bytes, char buf[BRA_PRINTF_FMT_BYTES_BUF_SIZE
 /**
  * @brief Free any allocated content in @p me (e.g., me->name) and zero fields.
  *
+ * @pre  @p me @c != @c NULL.
+ *
+ * @note Idempotent: safe to call multiple times; fields are zeroed after the first call.
+ *
  * @param me
  */
 void bra_meta_entry_free(bra_meta_entry_t* me);

@@ -27,7 +27,7 @@ static int _bra_io_file_magic_is_elf(bra_io_file_t* f)
 
     // 0x7F,'E','L','F'
     const size_t MAGIC_SIZE = 4;
-    char         magic[MAGIC_SIZE];
+    uint8_t      magic[MAGIC_SIZE];
     if (fread(magic, sizeof(char), MAGIC_SIZE, f->f) != MAGIC_SIZE)
     {
         bra_io_file_read_error(f);
@@ -43,7 +43,7 @@ static int _bra_io_file_magic_is_pe_exe(bra_io_file_t* f)
 
     // 'M' 'Z'
     const size_t MAGIC_SIZE = 2;
-    char         magic[MAGIC_SIZE];
+    uint8_t      magic[MAGIC_SIZE];
     if (fread(magic, sizeof(char), MAGIC_SIZE, f->f) != MAGIC_SIZE)
     {
     _BRA_IO_FILE_MAGIC_IS_PE_EXE_READ_ERROR:
@@ -81,7 +81,6 @@ static int _bra_io_file_magic_is_pe_exe(bra_io_file_t* f)
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 
 void bra_io_file_error(bra_io_file_t* f, const char* verb)
 {

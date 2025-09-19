@@ -6,7 +6,7 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 
-char* g_argv0 = nullptr;
+const char* g_argv0 = nullptr;
 
 TEST(test_lib_bra_can_be_sfx)
 {

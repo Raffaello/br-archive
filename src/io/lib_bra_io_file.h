@@ -89,7 +89,7 @@ bool bra_io_file_is_pe_exe(const char* fn);
  * @see bra_io_file_is_pe_exe
  *
  * @param fn
- * @retval true if a file appear to be an ELF or PE/EXE (SFX wrapper).
+ * @retval true if the file appears to be an ELF or PE/EXE (SFX wrapper).
  * @retval false otherwise.
  */
 bool bra_io_file_can_be_sfx(const char* fn);

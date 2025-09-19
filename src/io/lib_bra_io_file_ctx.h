@@ -76,12 +76,15 @@ bool bra_io_file_ctx_write_header(bra_io_file_ctx_t* ctx, const uint32_t num_fil
 bool bra_io_file_ctx_sfx_open_and_read_footer_header(const char* fn, bra_io_header_t* out_bh, bra_io_file_ctx_t* ctx);
 
 /**
- * @brief Read the filename meta data information that is pointing in @p ctx->f and store it on @p me.
+ * @brief Read the entry metadata (file or directory) currently pointed to by @p ctx->f and store it in @p me.
  *        @p me must be freed via @ref bra_meta_entry_free.
+ *        On success:
+ *          - for files: the stream is positioned at the start of the entry's data;
+ *          - for directories: the stream is positioned at the next entry.
  *
  * @param ctx[in,out]
  * @param me[out]
- * @retval true on success @p me must be free via @ref bra_meta_entry_free.
+ * @retval true on success, @p me must be free via @ref bra_meta_entry_free.
  * @retval false on error closes @p ctx->f via @ref bra_io_file_close.
  */
 bool bra_io_file_ctx_read_meta_entry(bra_io_file_ctx_t* ctx, bra_meta_entry_t* me);

@@ -60,7 +60,7 @@ void bra_io_file_write_error(bra_io_file_t* f);
  *       but once read it can do both checks at the same time.
  *
  * @see bra_io_file_is_pe_exe
- * @see bra_io_file_is_sfx
+ * @see bra_io_file_can_be_sfx
  *
  * @param fn
  * @retval true if ELF magic is detected.
@@ -72,7 +72,7 @@ bool bra_io_file_is_elf(const char* fn);
  * @brief Detect if the given filename @p fn is a PE/EXE.
  *
  * @see bra_io_file_is_elf
- * @see bra_io_file_is_sfx
+ * @see bra_io_file_can_be_sfx
  *
  * @param fn
  * @retval true if a valid PE signature is detected.
@@ -92,7 +92,7 @@ bool bra_io_file_is_pe_exe(const char* fn);
  * @retval true if a file appear to be an ELF or PE/EXE (SFX wrapper).
  * @retval false otherwise.
  */
-bool bra_io_file_is_sfx(const char* fn);
+bool bra_io_file_can_be_sfx(const char* fn);
 
 /**
  * @brief Open the file @p fn in the @p mode.

@@ -140,10 +140,10 @@ bool bra_io_file_is_pe_exe(const char* fn)
     if (res == 1)
         bra_log_info("PE/EXE file detected");
 
-    return res;
+    return res == 1;
 }
 
-bool bra_io_file_is_sfx(const char* fn)
+bool bra_io_file_can_be_sfx(const char* fn)
 {
     assert(fn != NULL);
 

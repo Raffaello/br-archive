@@ -72,7 +72,7 @@ bool bra_io_file_is_elf(const char* fn);
  * @brief Detect if the given filename @p fn is a PE/EXE.
  *
  * @see bra_io_file_is_elf
- * @see bra_io_file_can_be_sfx
+ * @see w
  *
  * @param fn
  * @retval true if a valid PE signature is detected.

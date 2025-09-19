@@ -3,13 +3,6 @@
 #include <lib_bra.h>
 #include <io/lib_bra_io_file.h>
 
-#include <cstdlib>
-#include <filesystem>
-#include <fstream>
-#include <cstdio>
-
-
-namespace fs = std::filesystem;
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -17,10 +10,12 @@ char* g_argv0 = nullptr;
 
 TEST(test_lib_bra_can_be_sfx)
 {
-#ifdef linux
+#if defined(__linux__) || defined(__unix__) || defined(__APPLE__)
     ASSERT_TRUE(bra_io_file_is_elf(g_argv0));
-#else
+#elif defined(_WIN32) || defined(_WIN64)
     ASSERT_TRUE(bra_io_file_is_pe_exe(g_argv0));
+#else
+    return 1;    // what is this?
 #endif
 
     ASSERT_TRUE(bra_io_file_can_be_sfx(g_argv0));

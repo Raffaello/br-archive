@@ -77,7 +77,7 @@ bool bra_io_file_ctx_sfx_open_and_read_footer_header(const char* fn, bra_io_head
 
 /**
  * @brief Read the filename meta data information that is pointing in @p ctx->f and store it on @p me.
- *        @p me must be free via @ref bra_meta_entry_free.
+ *        @p me must be freed via @ref bra_meta_entry_free.
  *
  * @param ctx[in,out]
  * @param me
@@ -87,7 +87,7 @@ bool bra_io_file_ctx_sfx_open_and_read_footer_header(const char* fn, bra_io_head
 bool bra_io_file_ctx_read_meta_entry(bra_io_file_ctx_t* ctx, bra_meta_entry_t* me);
 
 /**
- * @brief Write the filename meta data information given from @p me in @p ctx->f.
+ * @brief Write the filename metadata from @p me into @p ctx->f.
  *
  * @param ctx[in,out]
  * @param me[in,out]
@@ -126,7 +126,8 @@ bool bra_io_file_ctx_encode_and_write_to_disk(bra_io_file_ctx_t* ctx, const char
 bool bra_io_file_ctx_decode_and_write_to_disk(bra_io_file_ctx_t* ctx, bra_fs_overwrite_policy_e* overwrite_policy);
 
 /**
- * @brief Print a meta entry from @p ctx using @ref bra_log_printf to display attributes, size and filename.
+ * @brief Read and print one meta entry from @p ctx (attributes, size, filename),
+ *        then skip its data, advancing the file position to the next entry.
  *
  * @param ctx Archive context whose meta will be printed.
  * @retval true

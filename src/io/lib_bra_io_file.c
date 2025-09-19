@@ -66,6 +66,9 @@ static int _bra_io_file_magic_is_pe_exe(bra_io_file_t* f)
     if (fread(&pe_offset, sizeof(uint32_t), 1, f->f) != 1)
         goto _BRA_IO_FILE_MAGIC_IS_PE_EXE_READ_ERROR;
 
+    if (pe_offset < 0x40)    // DOS header is at least 64 bytes
+        return 0;
+
     if (!bra_io_file_seek(f, pe_offset, SEEK_SET))
         goto _BRA_IO_FILE_MAGIC_IS_PE_EXE_SEEK_ERROR;
 

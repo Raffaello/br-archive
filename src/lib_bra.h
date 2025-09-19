@@ -35,7 +35,7 @@ void bra_format_bytes(const size_t bytes, char buf[BRA_PRINTF_FMT_BYTES_BUF_SIZE
 
 
 /**
- * @brief Free any eventual content on @p me.
+ * @brief Free any allocated content in @p me (e.g., me->name) and zero fields.
  *
  * @param me
  */

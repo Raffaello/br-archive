@@ -83,6 +83,8 @@ bool bra_io_file_is_pe_exe(const char* fn);
 /**
  * @brief Detect if the given filename @p fn is a possible SFX archive.
  *
+ * @note Implementation opens once and checks both ELF and PE signatures.
+ *
  * @see bra_io_file_is_elf
  * @see bra_io_file_is_pe_exe
  *

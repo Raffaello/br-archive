@@ -20,6 +20,7 @@ static bool _bra_io_file_ctx_write_meta_entry_common(bra_io_file_ctx_t* ctx, con
 {
     assert_bra_io_file_cxt_t(ctx);
     assert(filename != NULL);
+    assert(filename_size > 0);
 
     // 1. attributes
     if (fwrite(&attr, sizeof(bra_attr_t), 1, ctx->f.f) != 1)

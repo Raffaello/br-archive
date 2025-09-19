@@ -153,10 +153,7 @@ bool bra_io_file_can_be_sfx(const char* fn)
 
     int res = _bra_io_file_magic_is_elf(&f);
     if (res == -1)
-    {
-        bra_io_file_close(&f);
         return false;
-    }
 
     if (res == 1)
     {

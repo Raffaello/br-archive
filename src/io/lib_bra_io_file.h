@@ -17,7 +17,7 @@ extern "C" {
 void bra_io_file_error(bra_io_file_t* f, const char* verb);
 
 /**
- * @brief Log an error message and eventually close the file
+ * @brief Log an error message and close the file.
  *
  * @see bra_io_file_error
  *
@@ -53,7 +53,7 @@ void bra_io_file_seek_error(bra_io_file_t* f);
 void bra_io_file_write_error(bra_io_file_t* f);
 
 /**
- * @brief Detect if the given filename @p fn is an @c ELF.
+ * @brief Detect if the given filename @p fn is an @c ELF file.
  *
  * @todo merge with PE_EXE to check at once if it is one or the other.
  *       or just open the file with bra_io_file_open and then do the checks instead.
@@ -72,7 +72,7 @@ bool bra_io_file_is_elf(const char* fn);
  * @brief Detect if the given filename @p fn is a PE/EXE.
  *
  * @see bra_io_file_is_elf
- * @see w
+ * @see bra_io_file_can_be_sfx
  *
  * @param fn
  * @retval true if a valid PE signature is detected.
@@ -82,8 +82,6 @@ bool bra_io_file_is_pe_exe(const char* fn);
 
 /**
  * @brief Detect if the given filename @p fn is a possible SFX archive.
- *
- * @todo consider to open the file once instead of 2 times.
  *
  * @see bra_io_file_is_elf
  * @see bra_io_file_is_pe_exe

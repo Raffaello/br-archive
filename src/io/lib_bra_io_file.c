@@ -51,6 +51,17 @@ inline void bra_io_file_write_error(bra_io_file_t* f)
     bra_io_file_error(f, "write");
 }
 
+// static bool _bra_io_file_magic_is_elf(bra_io_file_t* f)
+// {
+//     // 0x7F,'E','L','F'
+//     const size_t MAGIC_SIZE = 4;
+//     char         magic[MAGIC_SIZE];
+//     if (fread(magic, sizeof(char), MAGIC_SIZE, f.f) != MAGIC_SIZE)
+//         return false;
+
+// return magic[0] == 0x7F && magic[1] == 'E' && magic[2] == 'L' && magic[3] == 'F';
+// }
+
 bool bra_io_file_is_elf(const char* fn)
 {
     bra_io_file_t f;

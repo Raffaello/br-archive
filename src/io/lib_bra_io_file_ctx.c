@@ -370,9 +370,9 @@ bool bra_io_file_ctx_read_meta_entry(bra_io_file_ctx_t* ctx, bra_meta_entry_t* m
     {
     case BRA_ATTR_TYPE_SUBDIR:
         // TODO
-        bra_log_critical("subdir read not implemented yet");
-        return false;
-        break;
+        // bra_log_critical("subdir read not implemented yet");
+        // return false;
+        // break;
     case BRA_ATTR_TYPE_DIR:
     {
         // NOTE: for directory doesn't have data-size nor data,
@@ -467,9 +467,9 @@ bool bra_io_file_ctx_write_meta_entry(bra_io_file_ctx_t* ctx, bra_meta_entry_t* 
     break;
     case BRA_ATTR_TYPE_SUBDIR:
         // TODO
-        bra_log_critical("tree subdir write not implemented yet");
-        return false;
-        break;
+        // bra_log_critical("tree subdir write not implemented yet");
+        // return false;
+        // break;
     case BRA_ATTR_TYPE_DIR:
     {
         if (!_bra_io_file_ctx_write_meta_entry_process_write_dir(ctx, mf, buf, &buf_size))
@@ -603,9 +603,9 @@ bool bra_io_file_ctx_decode_and_write_to_disk(bra_io_file_ctx_t* ctx, bra_fs_ove
     break;
     case BRA_ATTR_TYPE_SUBDIR:
         // TODO: need to read the parent index and build the tree
-        bra_log_critical("tree subdir decode not implemented yet");
-        return false;
-        break;
+        // bra_log_critical("tree subdir decode not implemented yet");
+        // return false;
+        // break;
     case BRA_ATTR_TYPE_DIR:
     {
         if (bra_fs_dir_exists(mf.name))

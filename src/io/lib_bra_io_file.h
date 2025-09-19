@@ -9,7 +9,7 @@ extern "C" {
 
 
 /**
- * @brief Print an error message and close the file.
+ * @brief Log an error message and close the file.
  *
  * @param f
  * @param verb a string to complete the error message: "unable to %s".
@@ -17,7 +17,7 @@ extern "C" {
 void bra_io_file_error(bra_io_file_t* f, const char* verb);
 
 /**
- * @brief Print an error message and eventually close the file
+ * @brief Log an error message and eventually close the file
  *
  * @see bra_io_file_error
  *
@@ -26,7 +26,7 @@ void bra_io_file_error(bra_io_file_t* f, const char* verb);
 void bra_io_file_open_error(bra_io_file_t* f);
 
 /**
- * @brief Print an error message and close the file.
+ * @brief Log an error message and close the file.
  *
  * @see bra_io_file_error
  *
@@ -35,7 +35,7 @@ void bra_io_file_open_error(bra_io_file_t* f);
 void bra_io_file_read_error(bra_io_file_t* f);
 
 /**
- * @brief Print an error message and close the file.
+ * @brief Log an error message and close the file.
  *
  * @see bra_io_file_error
  *
@@ -44,7 +44,7 @@ void bra_io_file_read_error(bra_io_file_t* f);
 void bra_io_file_seek_error(bra_io_file_t* f);
 
 /**
- * @brief Print an error message and close the file.
+ * @brief Log an error message and close the file.
  *
  * @see bra_io_file_error
  *
@@ -53,7 +53,7 @@ void bra_io_file_seek_error(bra_io_file_t* f);
 void bra_io_file_write_error(bra_io_file_t* f);
 
 /**
- * @brief Detect if the given filename @p fn is an ELF.
+ * @brief Detect if the given filename @p fn is an @c ELF.
  *
  * @todo merge with PE_EXE to check at once if it is one or the other.
  *       or just open the file with bra_io_file_open and then do the checks instead.

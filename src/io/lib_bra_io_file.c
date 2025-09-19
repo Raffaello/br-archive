@@ -172,6 +172,7 @@ bool bra_io_file_is_sfx(const char* fn)
 
     res = _bra_io_file_magic_is_pe_exe(&f);
     bra_io_file_close(&f);
+    // TODO: it can't return if it is an error, maybe int is better?
     return res == 1;
 }
 

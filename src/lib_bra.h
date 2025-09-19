@@ -35,11 +35,11 @@ void bra_format_bytes(const size_t bytes, char buf[BRA_PRINTF_FMT_BYTES_BUF_SIZE
 
 
 /**
- * @brief Free any eventual content on @p mf.
+ * @brief Free any eventual content on @p me.
  *
- * @param mf
+ * @param me
  */
-void bra_meta_entry_free(bra_meta_entry_t* mf);
+void bra_meta_entry_free(bra_meta_entry_t* me);
 
 
 #ifdef __cplusplus

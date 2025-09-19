@@ -70,16 +70,16 @@ void bra_format_bytes(const size_t bytes, char buf[BRA_PRINTF_FMT_BYTES_BUF_SIZE
 #endif
 }
 
-void bra_meta_entry_free(bra_meta_entry_t* mf)
+void bra_meta_entry_free(bra_meta_entry_t* me)
 {
-    assert(mf != NULL);
+    assert(me != NULL);
 
-    mf->data_size  = 0;
-    mf->name_size  = 0;
-    mf->attributes = 0;
-    if (mf->name != NULL)
+    me->data_size  = 0;
+    me->name_size  = 0;
+    me->attributes = 0;
+    if (me->name != NULL)
     {
-        free(mf->name);
-        mf->name = NULL;
+        free(me->name);
+        me->name = NULL;
     }
 }

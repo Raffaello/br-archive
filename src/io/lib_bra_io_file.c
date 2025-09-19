@@ -21,6 +21,65 @@ _Static_assert(sizeof(bra_io_footer_t) == 12, "bra_io_footer_t must be 12 bytes"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+static int _bra_io_file_magic_is_elf(bra_io_file_t* f)
+{
+    assert_bra_io_file_t(f);
+
+    // 0x7F,'E','L','F'
+    const size_t MAGIC_SIZE = 4;
+    char         magic[MAGIC_SIZE];
+    if (fread(magic, sizeof(char), MAGIC_SIZE, f->f) != MAGIC_SIZE)
+    {
+        bra_io_file_read_error(f);
+        return -1;
+    }
+
+    return magic[0] == 0x7F && magic[1] == 'E' && magic[2] == 'L' && magic[3] == 'F' ? 1 : 0;
+}
+
+static int _bra_io_file_magic_is_pe_exe(bra_io_file_t* f)
+{
+    assert_bra_io_file_t(f);
+
+    // 'M' 'Z'
+    const size_t MAGIC_SIZE = 2;
+    char         magic[MAGIC_SIZE];
+    if (fread(magic, sizeof(char), MAGIC_SIZE, f->f) != MAGIC_SIZE)
+    {
+    _BRA_IO_FILE_MAGIC_IS_PE_EXE_READ_ERROR:
+        bra_io_file_read_error(f);
+        return -1;
+    }
+
+    if (magic[0] != 'M' || magic[1] != 'Z')
+        return 0;
+
+    // Read the PE header offset from the DOS header
+    if (!bra_io_file_seek(f, 0x3C, SEEK_SET))
+    {
+    _BRA_IO_FILE_MAGIC_IS_PE_EXE_SEEK_ERROR:
+        bra_io_file_seek_error(f);
+        return -1;
+    }
+
+    uint32_t pe_offset;
+    if (fread(&pe_offset, sizeof(uint32_t), 1, f->f) != 1)
+        goto _BRA_IO_FILE_MAGIC_IS_PE_EXE_READ_ERROR;
+
+    if (!bra_io_file_seek(f, pe_offset, SEEK_SET))
+        goto _BRA_IO_FILE_MAGIC_IS_PE_EXE_SEEK_ERROR;
+
+    const size_t PE_MAGIC_SIZE = 4;
+    char         pe_magic[PE_MAGIC_SIZE];
+    if (fread(pe_magic, sizeof(char), PE_MAGIC_SIZE, f->f) != PE_MAGIC_SIZE)
+        goto _BRA_IO_FILE_MAGIC_IS_PE_EXE_READ_ERROR;
+
+    return pe_magic[0] == 'P' && pe_magic[1] == 'E' && pe_magic[2] == '\0' && pe_magic[3] == '\0' ? 1 : 0;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
 void bra_io_file_error(bra_io_file_t* f, const char* verb)
 {
     assert(f != NULL);
@@ -51,94 +110,69 @@ inline void bra_io_file_write_error(bra_io_file_t* f)
     bra_io_file_error(f, "write");
 }
 
-// static bool _bra_io_file_magic_is_elf(bra_io_file_t* f)
-// {
-//     // 0x7F,'E','L','F'
-//     const size_t MAGIC_SIZE = 4;
-//     char         magic[MAGIC_SIZE];
-//     if (fread(magic, sizeof(char), MAGIC_SIZE, f.f) != MAGIC_SIZE)
-//         return false;
-
-// return magic[0] == 0x7F && magic[1] == 'E' && magic[2] == 'L' && magic[3] == 'F';
-// }
-
 bool bra_io_file_is_elf(const char* fn)
 {
+    assert(fn != NULL);
+
     bra_io_file_t f;
 
     if (!bra_io_file_open(&f, fn, "rb"))
         return false;
 
-    // 0x7F,'E','L','F'
-    const size_t MAGIC_SIZE = 4;
-    char         magic[MAGIC_SIZE];
-    if (fread(magic, sizeof(char), MAGIC_SIZE, f.f) != MAGIC_SIZE)
-    {
-        bra_io_file_read_error(&f);
-        return false;
-    }
-
+    int res = _bra_io_file_magic_is_elf(&f);
     bra_io_file_close(&f);
-    const bool ret = magic[0] == 0x7F && magic[1] == 'E' && magic[2] == 'L' && magic[3] == 'F';
-    if (ret)
+    if (res)
         bra_log_info("ELF file detected");
 
-    return ret;
+    return res == 1;
 }
 
 bool bra_io_file_is_pe_exe(const char* fn)
 {
+    assert(fn != NULL);
+
     bra_io_file_t f;
     if (!bra_io_file_open(&f, fn, "rb"))
         return false;
 
-    // 'M' 'Z'
-    const size_t MAGIC_SIZE = 2;
-    char         magic[MAGIC_SIZE];
-    if (fread(magic, sizeof(char), MAGIC_SIZE, f.f) != MAGIC_SIZE)
-    {
-    BRA_IS_EXE_ERROR:
-        bra_io_file_read_error(&f);
-        return false;
-    }
+    const int res = _bra_io_file_magic_is_pe_exe(&f);
+    bra_io_file_close(&f);
+    if (res == 1)
+        bra_log_info("PE/EXE file detected");
 
-    if (magic[0] != 'M' || magic[1] != 'Z')
+    return res;
+}
+
+bool bra_io_file_is_sfx(const char* fn)
+{
+    assert(fn != NULL);
+
+    bra_io_file_t f;
+    if (!bra_io_file_open(&f, fn, "rb"))
+        return false;
+
+    int res = _bra_io_file_magic_is_elf(&f);
+    if (res == -1)
     {
         bra_io_file_close(&f);
         return false;
     }
 
-    // Read the PE header offset from the DOS header
-    if (!bra_io_file_seek(&f, 0x3C, SEEK_SET))
+    if (res == 1)
     {
-    BRA_IS_EXE_SEEK_ERROR:
+        bra_io_file_close(&f);
+        return true;
+    }
+
+    if (!bra_io_file_seek(&f, 0, SEEK_SET))
+    {
         bra_io_file_seek_error(&f);
         return false;
     }
 
-    uint32_t pe_offset;
-    if (fread(&pe_offset, sizeof(uint32_t), 1, f.f) != 1)
-        goto BRA_IS_EXE_ERROR;
-
-    if (!bra_io_file_seek(&f, pe_offset, SEEK_SET))
-        goto BRA_IS_EXE_SEEK_ERROR;
-
-    const size_t PE_MAGIC_SIZE = 4;
-    char         pe_magic[PE_MAGIC_SIZE];
-    if (fread(pe_magic, sizeof(char), PE_MAGIC_SIZE, f.f) != PE_MAGIC_SIZE)
-        goto BRA_IS_EXE_ERROR;
-
+    res = _bra_io_file_magic_is_pe_exe(&f);
     bra_io_file_close(&f);
-    const bool ret = pe_magic[0] == 'P' && pe_magic[1] == 'E' && pe_magic[2] == '\0' && pe_magic[3] == '\0';
-    if (ret)
-        bra_log_info("PE/EXE file detected");
-
-    return ret;
-}
-
-bool bra_io_file_is_sfx(const char* fn)
-{
-    return bra_io_file_is_elf(fn) || bra_io_file_is_pe_exe(fn);
+    return res == 1;
 }
 
 bool bra_io_file_open(bra_io_file_t* f, const char* fn, const char* mode)

@@ -125,7 +125,6 @@ bool bra_io_file_is_elf(const char* fn)
     bra_io_file_close(&f);
     if (res == 1)
         bra_log_info("ELF file detected");
-    // TODO: it can't return if it is an error, maybe int is better?
     return res == 1;
 }
 
@@ -141,7 +140,6 @@ bool bra_io_file_is_pe_exe(const char* fn)
     bra_io_file_close(&f);
     if (res == 1)
         bra_log_info("PE/EXE file detected");
-    // TODO: it can't return if it is an error, maybe int is better?
     return res == 1;
 }
 
@@ -171,7 +169,6 @@ bool bra_io_file_can_be_sfx(const char* fn)
 
     res = _bra_io_file_magic_is_pe_exe(&f);
     bra_io_file_close(&f);
-    // TODO: it can't return if it is an error, maybe int is better?
     return res == 1;
 }
 

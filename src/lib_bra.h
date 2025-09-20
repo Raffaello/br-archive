@@ -33,6 +33,17 @@ char bra_format_meta_attributes(const bra_attr_t attributes);
  */
 void bra_format_bytes(const size_t bytes, char buf[BRA_PRINTF_FMT_BYTES_BUF_SIZE]);
 
+/**
+ * @brief Initialize a metadata entry based on its attribute for the specific data to allocate.
+ *
+ * @param me
+ * @param attr
+ * @param filename
+ * @param filename_size
+ * @return true
+ * @return false
+ */
+bool bra_meta_entry_init(bra_meta_entry_t* me, const bra_attr_t attr, const char* filename, const uint8_t filename_size);
 
 /**
  * @brief Free any allocated content in @p me (e.g., me->name) and zero fields.
@@ -45,6 +56,25 @@ void bra_format_bytes(const size_t bytes, char buf[BRA_PRINTF_FMT_BYTES_BUF_SIZE
  */
 void bra_meta_entry_free(bra_meta_entry_t* me);
 
+/**
+ * @brief Initialize a metadata entry for a regular file.
+ *
+ * @param me
+ * @param data_size
+ * @return true
+ * @return false
+ */
+bool bra_meta_entry_file_init(bra_meta_entry_t* me, const uint64_t data_size);
+
+/**
+ * @brief Initialize a metadata entry for a subdirectory.
+ *
+ * @param me
+ * @param parent_index
+ * @return true
+ * @return false
+ */
+bool bra_meta_entry_subdir_init(bra_meta_entry_t* me, const uint32_t parent_index);
 
 #ifdef __cplusplus
 }

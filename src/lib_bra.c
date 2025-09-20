@@ -70,11 +70,59 @@ void bra_format_bytes(const size_t bytes, char buf[BRA_PRINTF_FMT_BYTES_BUF_SIZE
 #endif
 }
 
+bool bra_meta_entry_init(bra_meta_entry_t* me, const bra_attr_t attr, const char* filename, const uint8_t filename_size)
+{
+    assert(me != NULL);
+
+    me->attributes = attr;
+    switch (BRA_ATTR_TYPE(attr))
+    {
+    case BRA_ATTR_TYPE_FILE:
+        me->entry_data = malloc(sizeof(bra_meta_entry_file_t));
+        if (me->entry_data == NULL)
+            return false;
+        break;
+    case BRA_ATTR_TYPE_SUBDIR:
+        me->entry_data = malloc(sizeof(bra_meta_entry_subdir_t));    // parent tree index
+        if (me->entry_data == NULL)
+            return false;
+        break;
+    case BRA_ATTR_TYPE_DIR:
+    // break;
+    // [[fallthrough]];
+    case BRA_ATTR_TYPE_SYM:
+        me->entry_data = NULL;
+        break;
+
+    default:
+        return false;
+    }
+
+    me->name_size = filename_size;
+    if (filename != NULL)
+    {
+        me->name = _bra_strdup(filename);
+        if (me->name == NULL)
+        {
+            bra_meta_entry_free(me);
+            return false;
+        }
+    }
+    else
+        me->name = NULL;
+
+    return true;
+}
+
 void bra_meta_entry_free(bra_meta_entry_t* me)
 {
     assert(me != NULL);
 
-    me->data_size  = 0;
+    if (me->entry_data != NULL)
+    {
+        free(me->entry_data);
+        me->entry_data = NULL;
+    }
     me->name_size  = 0;
     me->attributes = 0;
     if (me->name != NULL)
@@ -82,4 +130,28 @@ void bra_meta_entry_free(bra_meta_entry_t* me)
         free(me->name);
         me->name = NULL;
     }
+}
+
+bool bra_meta_entry_file_init(bra_meta_entry_t* me, const uint64_t data_size)
+{
+    assert(me != NULL);
+
+    if (BRA_ATTR_TYPE(me->attributes) != BRA_ATTR_TYPE_FILE)
+        return false;
+
+    bra_meta_entry_file_t* mef = me->entry_data;
+    mef->data_size             = data_size;
+    return true;
+}
+
+bool bra_meta_entry_subdir_init(bra_meta_entry_t* me, const uint32_t parent_index)
+{
+    assert(me != NULL);
+
+    if (BRA_ATTR_TYPE(me->attributes) != BRA_ATTR_TYPE_SUBDIR)
+        return false;
+
+    bra_meta_entry_subdir_t* mes = me->entry_data;
+    mes->parent_index            = parent_index;
+    return true;
 }

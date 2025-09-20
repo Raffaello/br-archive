@@ -68,8 +68,7 @@ typedef struct bra_meta_entry_t
     bra_attr_t attributes;    //!< file attributes: #BRA_ATTR_TYPE_FILE, #BRA_ATTR_TYPE_DIR, #BRA_ATTR_TYPE_SYMLINK, #BRA_ATTR_TYPE_SUBDIR
     uint8_t    name_size;     //!< length in bytes excluding the trailing NUL; [1..UINT8_MAX]
     char*      name;          //!< filename/dirname (owned; free via @ref bra_meta_entry_free)
-    void*      entry_data;    //!< specific entry type data:file size in bytes; subdir store parent tree index. dir and symlink NULL.  (owned; free via @ref bra_meta_entry_free)
-    // uint64_t   data_size;     //!< file contents size in bytes.
+    void*      entry_data;    //!< Type-specific entry data: file size for files, parent tree index for subdirs, NULL for dirs and symlinks. (owned; free via @ref bra_meta_entry_free)
 } bra_meta_entry_t;
 
 /**

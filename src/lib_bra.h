@@ -34,7 +34,7 @@ char bra_format_meta_attributes(const bra_attr_t attributes);
 void bra_format_bytes(const size_t bytes, char buf[BRA_PRINTF_FMT_BYTES_BUF_SIZE]);
 
 /**
- * @brief Initialize a metadata entry based on its attribute for the specific data to alloc.s
+ * @brief Initialize a metadata entry based on its attribute for the specific data to allocate.
  *
  * @param me
  * @param attr
@@ -58,11 +58,11 @@ void bra_meta_entry_free(bra_meta_entry_t* me);
 
 /**
  * @brief Initialize a metadata entry for a regular file.
- * 
- * @param me 
- * @param data_size 
- * @return true 
- * @return false 
+ *
+ * @param me
+ * @param data_size
+ * @return true
+ * @return false
  */
 bool bra_meta_entry_file_init(bra_meta_entry_t* me, const uint64_t data_size);
 

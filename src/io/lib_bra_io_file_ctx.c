@@ -51,6 +51,30 @@ static bool _bra_io_file_ctx_flush_dir(bra_io_file_ctx_t* ctx)
     return true;
 }
 
+// static bool _bra_io_file_ctx_read_meta_entry_read_file()
+// {
+// }
+
+static bool _bra_io_file_ctx_read_meta_entry_read_dir(bra_io_file_ctx_t* ctx, bra_meta_entry_t* me, const char* buf, const uint8_t buf_size)
+{
+    assert_bra_io_file_cxt_t(ctx);
+    assert(me != NULL);
+    assert(buf_size < UINT8_MAX);
+
+    memcpy(ctx->last_dir, buf, buf_size);
+    ctx->last_dir_size      = buf_size;
+    ctx->last_dir[buf_size] = '\0';
+
+    me->name_size = buf_size;
+    me->name      = malloc(sizeof(char) * (me->name_size + 1));    // !< one extra for '\0'
+    if (me->name == NULL)
+        return false;
+
+    memcpy(me->name, buf, me->name_size);
+    me->name[me->name_size] = '\0';
+    return true;
+}
+
 static bool _bra_io_file_ctx_write_meta_entry_process_write_file(bra_io_file_ctx_t* ctx, const bra_meta_entry_t* me, char* filename, uint8_t* filename_size)
 {
     assert_bra_io_file_cxt_t(ctx);
@@ -128,31 +152,39 @@ static bool _bra_io_file_ctx_write_meta_entry_process_write_dir(bra_io_file_ctx_
     memcpy(dirname, me->name, *dirname_size);
     dirname[*dirname_size] = '\0';
 
+    if (!_bra_io_file_ctx_flush_dir(ctx))
+        return false;
+
+    ctx->last_dir_not_flushed = true;
+    ctx->last_dir_attr        = me->attributes;
+
+    memcpy(ctx->last_dir, dirname, *dirname_size);
+    ctx->last_dir[*dirname_size] = '\0';
+    ctx->last_dir_size           = *dirname_size;
+    return true;
+}
+
+static bool _bra_io_file_ctx_write_meta_entry_process_write_subdir(bra_io_file_ctx_t* ctx, bra_meta_entry_t* me, char* dirname, uint8_t* dirname_size)
+{
+    assert_bra_io_file_cxt_t(ctx);
+    assert(me != NULL);
+    assert(dirname != NULL);
+    assert(dirname_size != NULL);
+
+    // As a safe-guard, but pointless otherwise
+    if (me->data_size != 0)
+        return false;
+
+    *dirname_size = me->name_size;
+    memcpy(dirname, me->name, *dirname_size);
+    dirname[*dirname_size] = '\0';
+
     if (ctx->last_dir_not_flushed)
     {
-        // TODO: this will be in conflict with the new proposed tree dir structure.
-        //       need to be done as a 2nd pass at the end as an update.
-        //       as at this point can't know if it is better or not.
-        //       as it might be honestly.
-        //       the tree dir structure might be postponed for now.
-        //       besides the consolidating 1st sub-dir if parent empty is not so good.
-        //       the lazy write on directory could be kept though, not useful neither at the very end.
-        //       i am just playing around here....
-        //
-        // TODO: the only scenario were is really useful is parent dir empty and just 1 subdir
-        //       that in that case can save 1 entry to be stored.
-        //       also especially if the parent dir as a long name
-        //       but here at maximum is a save of 256 bytes.. doesn't really make sense. well better than nothing, but..
-        // TODO: tree instead might occupy more if the parent directory name are very short, 1-3 chars
-        //       in this case though it could revert to a normal directory as it was since the beginning
-        //       using the consolidate dir as well
         const bool replacing_dir = BRA_ATTR_TYPE(me->attributes) == BRA_ATTR_TYPE_SUBDIR;    // bra_fs_dir_is_sub_dir(ctx->last_dir, dirname);
         if (replacing_dir)
         {
-            // TODO: here after dir-tree should be unreachable.
             bra_log_debug("parent dir %s is empty, replacing it with %s", ctx->last_dir, dirname);
-            // me->attributes.attr &= ~BRA_ATTR_TYPE(0xFF);           // clear the bits first
-            // me->attributes.attr |= BRA_ATTR_TYPE(BRA_ATTR_TYPE_DIR);    // in this case it becomes a regular dir
             me->attributes = BRA_ATTR_SET_TYPE(me->attributes, BRA_ATTR_TYPE_DIR);
         }
         else
@@ -370,31 +402,16 @@ bool bra_io_file_ctx_read_meta_entry(bra_io_file_ctx_t* ctx, bra_meta_entry_t* m
     switch (BRA_ATTR_TYPE(me->attributes))
     {
     case BRA_ATTR_TYPE_SUBDIR:
-        // TODO
-        // bra_log_critical("subdir read not implemented yet");
-        // return false;
-        // break;
+    {
+        // TODO for sub-dir
+        if (!_bra_io_file_ctx_read_meta_entry_read_dir(ctx, me, buf, (uint8_t) buf_size))
+            goto BRA_IO_READ_ERR;
+    }
+    break;
     case BRA_ATTR_TYPE_DIR:
     {
-        // NOTE: for directory doesn't have data-size nor data,
-        // NOTE: here if it is a sub-dir
-        //       it could cut some extra chars, and be constructed from the other dir
-        //       but the file won't be able to reconstruct its full relative path.
-        //   SO: I can't optimize sub-dir length with this struct
-        //       I must replicate the parent-dir too
-        // TODO: unless dir attribute has a 2nd bit to tell sub-dir or dir
-        //       but then must track the sub-dir (postponed for now until recursive)
-        memcpy(ctx->last_dir, buf, buf_size);
-        ctx->last_dir_size      = buf_size;
-        ctx->last_dir[buf_size] = '\0';
-
-        me->name_size = (uint8_t) buf_size;
-        me->name      = malloc(sizeof(char) * (buf_size + 1));    // !< one extra for '\0'
-        if (me->name == NULL)
+        if (!_bra_io_file_ctx_read_meta_entry_read_dir(ctx, me, buf, (uint8_t) buf_size))
             goto BRA_IO_READ_ERR;
-
-        memcpy(me->name, buf, buf_size);
-        me->name[buf_size] = '\0';
     }
     break;
     case BRA_ATTR_TYPE_FILE:
@@ -466,14 +483,15 @@ bool bra_io_file_ctx_write_meta_entry(bra_io_file_ctx_t* ctx, bra_meta_entry_t* 
             goto BRA_IO_WRITE_ERR;
     }
     break;
-    case BRA_ATTR_TYPE_SUBDIR:
-        // TODO
-        // bra_log_critical("tree subdir write not implemented yet");
-        // return false;
-        // break;
     case BRA_ATTR_TYPE_DIR:
     {
         if (!_bra_io_file_ctx_write_meta_entry_process_write_dir(ctx, me, buf, &buf_size))
+            goto BRA_IO_WRITE_ERR;
+    }
+    break;
+    case BRA_ATTR_TYPE_SUBDIR:
+    {
+        if (!_bra_io_file_ctx_write_meta_entry_process_write_subdir(ctx, me, buf, &buf_size))
             goto BRA_IO_WRITE_ERR;
     }
     break;
@@ -603,10 +621,9 @@ bool bra_io_file_ctx_decode_and_write_to_disk(bra_io_file_ctx_t* ctx, bra_fs_ove
     }
     break;
     case BRA_ATTR_TYPE_SUBDIR:
-        // TODO: need to read the parent index and build the tree
-        // bra_log_critical("tree subdir decode not implemented yet");
-        // return false;
-        // break;
+        // at this point the sub-dir name should have been already resolved
+        // so it can fallthrough as a normal dir
+        // [[fallthrough]];
     case BRA_ATTR_TYPE_DIR:
     {
         if (bra_fs_dir_exists(me.name))

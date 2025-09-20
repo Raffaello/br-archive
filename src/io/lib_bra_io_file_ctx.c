@@ -57,7 +57,6 @@ static bool _bra_io_file_ctx_read_meta_entry_read_file(bra_io_file_ctx_t* ctx, b
     assert(me != NULL);
     assert(buf != NULL);
 
-
     if (!bra_meta_entry_file_init(me, 0))
         return false;
 
@@ -156,17 +155,13 @@ static bool _bra_io_file_ctx_write_meta_entry_process_write_file(bra_io_file_ctx
     if (!_bra_io_file_ctx_write_meta_entry_common(ctx, me->attributes, filename, *filename_size))
         return false;
 
-    // 3. data size
-    // NOTE: for directory makes sense to be zero, but it could be used for something else.
-    //       actually for directory would be better not saving it at all if it is always zero.
+    // 3. file size
     const bra_meta_entry_file_t* mef = (const bra_meta_entry_file_t*) me->entry_data;
     assert(mef != NULL);
     if (fwrite(&mef->data_size, sizeof(uint64_t), 1, ctx->f.f) != 1)
         return false;
 
-    // 4. data (this should be paired with data_size to avoid confusion
-    // instead is in the meta file write function
-    // NOTE: that data_size is written only for file in there)
+    // 4. file content
     bra_io_file_t f2;
     memset(&f2, 0, sizeof(bra_io_file_t));
     if (!bra_io_file_open(&f2, me->name, "rb"))
@@ -416,7 +411,6 @@ bool bra_io_file_ctx_read_meta_entry(bra_io_file_ctx_t* ctx, bra_meta_entry_t* m
 
     me->name      = NULL;
     me->name_size = 0;
-    // me->data_size = 0;
 
     // 1. attributes
     if (fread(&me->attributes, sizeof(bra_attr_t), 1, ctx->f.f) != 1)
@@ -462,33 +456,6 @@ bool bra_io_file_ctx_read_meta_entry(bra_io_file_ctx_t* ctx, bra_meta_entry_t* m
             goto BRA_IO_READ_ERR;
         if (!_bra_io_file_ctx_read_meta_entry_read_file(ctx, me, buf, (uint8_t) buf_size))
             goto BRA_IO_READ_ERR;
-        // if (fread(&me->data_size, sizeof(uint64_t), 1, ctx->f.f) != 1)
-        //     goto BRA_IO_READ_ERR;
-
-        // const size_t total_size =
-        //     ctx->last_dir_size + buf_size + (ctx->last_dir_size > 0);    // one extra for '/'
-        // if (total_size == 0 || total_size > UINT8_MAX)
-        //     goto BRA_IO_READ_ERR;
-
-        // me->name_size = (uint8_t) total_size;
-        // me->name      = malloc(sizeof(char) * (me->name_size + 1));    // !< one extra for '\0'
-        // if (me->name == NULL)
-        //     goto BRA_IO_READ_ERR;
-
-        // char* b = NULL;
-        // if (ctx->last_dir_size > 0)
-        // {
-        //     memcpy(me->name, ctx->last_dir, ctx->last_dir_size);
-        //     me->name[ctx->last_dir_size] = '/';
-        //     b                            = &me->name[ctx->last_dir_size + 1];
-        // }
-        // else
-        // {
-        //     b = me->name;
-        // }
-
-        // memcpy(b, buf, buf_size);
-        // b[buf_size] = '\0';
     }
     break;
     case BRA_ATTR_TYPE_SYM:
@@ -594,9 +561,10 @@ bool bra_io_file_ctx_encode_and_write_to_disk(bra_io_file_ctx_t* ctx, const char
     bra_meta_entry_t me;
     if (!bra_meta_entry_init(&me, attributes, fn, fn_size))
         goto BRA_IO_WRITE_CLOSE_ERROR;
+
     assert(me.attributes == attributes);
     assert(me.name_size == fn_size);
-    // assert(me.data_size == ds);
+
     switch (BRA_ATTR_TYPE(me.attributes))
     {
     case BRA_ATTR_TYPE_FILE:
@@ -627,7 +595,7 @@ bool bra_io_file_ctx_decode_and_write_to_disk(bra_io_file_ctx_t* ctx, bra_fs_ove
     bra_meta_entry_t me;
     if (!bra_meta_entry_init(&me, 0, NULL, 0))
         return false;
-        
+
     if (!bra_io_file_ctx_read_meta_entry(ctx, &me))
         return false;
 

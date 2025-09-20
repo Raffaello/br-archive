@@ -122,11 +122,11 @@ bool dir_isSubDir(const std::filesystem::path& base, const std::filesystem::path
         return false;
     }
 
-    // This is requires so it will check if it is relative as a parent
+    // Required: ensure p is a relative subdir of base (not "." or starting with ".")
     if (!try_sanitize(p))
         return false;
 
-    return !p.empty() && p.native()[0] != '.';
+    return !p.empty() && !p.native().starts_with('.');
 }
 
 std::filesystem::path filename_archive_adjust(const std::filesystem::path& path) noexcept

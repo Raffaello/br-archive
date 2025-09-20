@@ -33,21 +33,17 @@ char bra_format_meta_attributes(const bra_attr_t attributes);
  */
 void bra_format_bytes(const size_t bytes, char buf[BRA_PRINTF_FMT_BYTES_BUF_SIZE]);
 
-/**
- * @brief Print a meta entry from @p ctx using @ref bra_log_printf to display attributes, size and filename.
- *
- * @param ctx Archive context whose meta will be printed.
- * @retval true
- * @retval false
- */
-bool bra_io_print_meta_file_ctx(bra_io_file_ctx_t* ctx);
 
 /**
- * @brief Free any eventual content on @p mf.
+ * @brief Free any allocated content in @p me (e.g., me->name) and zero fields.
  *
- * @param mf
+ * @pre  @p me @c != @c NULL.
+ *
+ * @note Idempotent: safe to call multiple times; fields are zeroed after the first call.
+ *
+ * @param me
  */
-void bra_meta_file_free(bra_meta_file_t* mf);
+void bra_meta_entry_free(bra_meta_entry_t* me);
 
 
 #ifdef __cplusplus

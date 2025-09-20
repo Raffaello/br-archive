@@ -55,9 +55,10 @@ static bool _bra_io_file_ctx_read_meta_entry_read_file(bra_io_file_ctx_t* ctx, b
 {
     assert_bra_io_file_cxt_t(ctx);
     assert(me != NULL);
+    assert(me->entry_data != NULL);
     assert(buf != NULL);
 
-    if (!bra_meta_entry_file_init(me, 0))
+    if (BRA_ATTR_TYPE(me->attributes) != BRA_ATTR_TYPE_FILE)
         return false;
 
     bra_meta_entry_file_t* mef = me->entry_data;
@@ -575,6 +576,7 @@ bool bra_io_file_ctx_encode_and_write_to_disk(bra_io_file_ctx_t* ctx, const char
         // TODO parent_index
         if (!bra_meta_entry_subdir_init(&me, 0))
             goto BRA_IO_WRITE_CLOSE_ERROR;
+        break;
     }
 
     const bool res = bra_io_file_ctx_write_meta_entry(ctx, &me);
@@ -597,7 +599,7 @@ bool bra_io_file_ctx_decode_and_write_to_disk(bra_io_file_ctx_t* ctx, bra_fs_ove
         return false;
 
     if (!bra_io_file_ctx_read_meta_entry(ctx, &me))
-        return false;
+        goto BRA_IO_DECODE_ERR;
 
     if (!_bra_validate_meta_name(&me))
     {

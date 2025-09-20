@@ -77,7 +77,7 @@ typedef struct bra_meta_entry_t
  */
 typedef struct bra_meta_entry_file_t
 {
-    uint64_t data_size;    //!< file contents size in bytes. subdir store parent tree index. dir and symlink not saved.
+    uint64_t data_size;    //!< file contents size in bytes.
 } bra_meta_entry_file_t;
 
 /**

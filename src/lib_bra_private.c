@@ -29,6 +29,7 @@ char* _bra_strdup(const char* str)
 
 bool _bra_validate_meta_name(const bra_meta_entry_t* me)
 {
+    assert(me != NULL);
     // sanitize output path: reject absolute or parent traversal
     // POSIX absolute, Windows drive letter, and leading backslash
     if (me->name[0] == '/' || me->name[0] == '\\' ||

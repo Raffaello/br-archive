@@ -68,13 +68,31 @@ typedef struct bra_meta_entry_t
     bra_attr_t attributes;    //!< file attributes: #BRA_ATTR_TYPE_FILE, #BRA_ATTR_TYPE_DIR, #BRA_ATTR_TYPE_SYMLINK, #BRA_ATTR_TYPE_SUBDIR
     uint8_t    name_size;     //!< length in bytes excluding the trailing NUL; [1..UINT8_MAX]
     char*      name;          //!< filename/dirname (owned; free via @ref bra_meta_entry_free)
-    uint64_t   data_size;     //!< file contents size in bytes. Not saved for dir.
+    void*      entry_data;    //!< specific entry type data:file size in bytes; subdir store parent tree index. dir and symlink NULL.  (owned; free via @ref bra_meta_entry_free)
+    // uint64_t   data_size;     //!< file contents size in bytes.
 } bra_meta_entry_t;
+
+/**
+ * @brief Metadata for a file entry in a BR-archive.
+ */
+typedef struct bra_meta_entry_file_t
+{
+    uint64_t data_size;    //!< file contents size in bytes. subdir store parent tree index. dir and symlink not saved.
+} bra_meta_entry_file_t;
+
+/**
+ * @brief Metadata for a directory entry in a BR-archive.
+ */
+typedef struct bra_meta_entry_subdir_t
+{
+    uint32_t parent_index;    //!< index of the parent directory in the archive; 0 for root.
+} bra_meta_entry_subdir_t;
 
 /**
  * @brief RLE chunk representing a run of repeated characters.
  */
 typedef struct bra_rle_chunk_t
+
 {
     bra_rle_counts_t        counts;    //!< counts is stored as -1, i.e. 0 means 1 and 255 means 256
     uint8_t                 value;     //!< the repeated char.

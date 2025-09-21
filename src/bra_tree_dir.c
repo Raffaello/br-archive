@@ -61,9 +61,9 @@ static bra_tree_node_t* _bra_tree_node_parent_index_search(const bra_tree_node_t
 
         if (res->firstChild != NULL)
         {
-            res = _bra_tree_node_parent_index_search(res->firstChild, parent_index);
-            if (res != NULL)
-                return res;
+            bra_tree_node_t* r = _bra_tree_node_parent_index_search(res->firstChild, parent_index);
+            if (r != NULL)
+                return r;
         }
 
         res = res->next;

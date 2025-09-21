@@ -712,13 +712,6 @@ bool bra_io_file_ctx_decode_and_write_to_disk(bra_io_file_ctx_t* ctx, bra_fs_ove
     if (!bra_io_file_ctx_read_meta_entry(ctx, &me))
         goto BRA_IO_DECODE_ERR;
 
-    if (!_bra_validate_meta_name(&me))
-    {
-    BRA_IO_DECODE_ERR:
-        bra_meta_entry_free(&me);
-        bra_io_file_error(&ctx->f, "decode");
-        return false;
-    }
 
     // TODO: this part should resolve the meta name with the tree dir
     //       now the meta name is complete, later on will be partial
@@ -726,6 +719,14 @@ bool bra_io_file_ctx_decode_and_write_to_disk(bra_io_file_ctx_t* ctx, bra_fs_ove
     char* fn = _bra_io_file_ctx_reconstruct_meta_entry_name(ctx, &me, NULL);
     if (fn == NULL)
         goto BRA_IO_DECODE_ERR;
+
+    if (!_bra_validate_meta_name(&me))
+    {
+    BRA_IO_DECODE_ERR:
+        bra_meta_entry_free(&me);
+        bra_io_file_error(&ctx->f, "decode");
+        return false;
+    }
 
     // 4. read and write in chunk data
     // NOTE: nothing to extract for a directory, but only to create it
@@ -749,8 +750,6 @@ bool bra_io_file_ctx_decode_and_write_to_disk(bra_io_file_ctx_t* ctx, bra_fs_ove
         }
         else
         {
-            assert(strcmp(ctx->last_dir_node->dirname, me.name) == 0);
-
             bra_io_file_t f2;
             end_msg = g_end_messages[0];
             bra_log_printf("Extracting file: " BRA_PRINTF_FMT_FILENAME, fn);

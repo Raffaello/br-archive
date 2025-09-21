@@ -290,7 +290,15 @@ char* bra_tree_dir_reconstruct_path(const bra_tree_node_t* node)
     }
 
     if (len == 0U)
-        return NULL;                     // root dir
+    {
+        char* root = (char*) malloc(2);    // '.'+ \0'
+        if (root != NULL)
+        {
+            root[0] = '.';
+            root[1] = '\0';
+        }
+        return root;    // root dir
+    }
 
     char* path = (char*) malloc(len);    // last delimiter is '\0'
     if (path == NULL)

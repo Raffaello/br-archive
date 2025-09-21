@@ -37,6 +37,11 @@ char* _bra_strdup(const char* str);
 /**
  * @brief Validate that a meta filename is safe for extraction.
  *
+ * @todo this is not correct anymore when integrating with tree dir as the name will be partial
+ *       need to validate the "full" path, passing a string not meta entry.
+ *
+ * @deprecated will be replaced with tree dir validation
+ *
  * @param me        Meta file structure containing the filename to validate
  * @retval true     if the filename is safe (no absolute paths or directory traversal)
  * @retval false    if the filename contains dangerous patterns

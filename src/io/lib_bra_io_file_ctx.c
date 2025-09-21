@@ -5,6 +5,7 @@
 #include <log/bra_log.h>
 #include <fs/bra_fs_c.h>
 #include <lib_bra.h>
+#include <bra_tree_dir.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -46,6 +47,23 @@ static bool _bra_io_file_ctx_flush_dir(bra_io_file_ctx_t* ctx)
         ctx->last_dir_not_flushed = false;
         if (!_bra_io_file_ctx_write_meta_entry_common(ctx, ctx->last_dir_attr, ctx->last_dir, ctx->last_dir_size))
             return false;
+
+        switch (BRA_ATTR_TYPE(ctx->last_dir_attr))
+        {
+        case BRA_ATTR_TYPE_SUBDIR:
+        {
+            assert(ctx->last_dir_node != NULL);
+
+            bra_meta_entry_subdir_t me_subdir;
+            me_subdir.parent_index = ctx->last_dir_node->index;
+            if (fwrite(&me_subdir.parent_index, sizeof(uint32_t), 1, ctx->f.f) != 1)
+                return false;
+        }
+        break;
+
+        default:
+            break;
+        }
     }
 
     return true;
@@ -109,6 +127,19 @@ static bool _bra_io_file_ctx_read_meta_entry_read_dir(bra_io_file_ctx_t* ctx, br
 
     memcpy(me->name, buf, me->name_size);
     me->name[me->name_size] = '\0';
+    return true;
+}
+
+static bool _bra_io_file_ctx_read_meta_entry_read_subdir(bra_io_file_ctx_t* ctx, bra_meta_entry_t* me, const char* buf, const uint8_t buf_size)
+{
+    if (!_bra_io_file_ctx_read_meta_entry_read_dir(ctx, me, buf, buf_size))
+        return false;
+
+    // read parent index
+    bra_meta_entry_subdir_t* mes = me->entry_data;
+    if (fread(&mes->parent_index, sizeof(uint32_t), 1, ctx->f.f) != 1)
+        return false;
+
     return true;
 }
 
@@ -189,11 +220,19 @@ static bool _bra_io_file_ctx_write_meta_entry_process_write_dir(bra_io_file_ctx_
     memcpy(dirname, me->name, *dirname_size);
     dirname[*dirname_size] = '\0';
 
+    bra_tree_node_t* node = bra_tree_dir_add(ctx->tree, dirname);
+    if (node == NULL)
+    {
+        bra_log_error("unable to add dir %s to bra_tree", dirname);
+        return false;
+    }
+
     if (!_bra_io_file_ctx_flush_dir(ctx))
         return false;
 
     ctx->last_dir_not_flushed = true;
     ctx->last_dir_attr        = me->attributes;
+    ctx->last_dir_node        = node;
 
     memcpy(ctx->last_dir, dirname, *dirname_size);
     ctx->last_dir[*dirname_size] = '\0';
@@ -211,32 +250,46 @@ static bool _bra_io_file_ctx_write_meta_entry_process_write_subdir(bra_io_file_c
     if (BRA_ATTR_TYPE(me->attributes) != BRA_ATTR_TYPE_SUBDIR)
         return false;
 
-    *dirname_size = me->name_size;
-    memcpy(dirname, me->name, *dirname_size);
-    dirname[*dirname_size] = '\0';
+    bra_tree_node_t* node = bra_tree_dir_add(ctx->tree, me->name);
+    if (node == NULL)
+    {
+        bra_log_error("unable to add dir %s to bra_tree", me->name);
+        return false;
+    }
 
     if (ctx->last_dir_not_flushed)
     {
+        // TODO: need to be reviewed with tree dir
+        // TODO: this condition is always true.
         const bool replacing_dir = BRA_ATTR_TYPE(me->attributes) == BRA_ATTR_TYPE_SUBDIR;    // bra_fs_dir_is_sub_dir(ctx->last_dir, dirname);
         if (replacing_dir)
         {
+            // TODO: this must recompose a subdir to a dir
+            //       when subdir is present the last dir is partial.
+            //       so need to recover from the parent index the parent dir to be merged.
             bra_log_debug("parent dir %s is empty, replacing it with %s", ctx->last_dir, dirname);
             me->attributes = BRA_ATTR_SET_TYPE(me->attributes, BRA_ATTR_TYPE_DIR);
         }
         else
         {
-            // not a subdir, need to save as empty dir, otherwise wasn't given as input
+            // not a subdir(?), need to save as empty dir, otherwise wasn't given as input
             if (!_bra_io_file_ctx_flush_dir(ctx))
                 return false;
         }
     }
 
+    *dirname_size = me->name_size;
+    memcpy(dirname, me->name, *dirname_size);
+    dirname[*dirname_size] = '\0';
+
     ctx->last_dir_not_flushed = true;
     ctx->last_dir_attr        = me->attributes;
+    ctx->last_dir_node        = node;
 
+    // const size_t node_len = strnlen(node->dirname, BRA_MAX_PATH_LENGTH);
     memcpy(ctx->last_dir, dirname, *dirname_size);
     ctx->last_dir[*dirname_size] = '\0';
-    ctx->last_dir_size           = *dirname_size;
+    ctx->last_dir_size           = (uint8_t) *dirname_size;
     return true;
 }
 
@@ -250,7 +303,19 @@ bool bra_io_file_ctx_open(bra_io_file_ctx_t* ctx, const char* fn, const char* mo
 
     memset(ctx, 0, sizeof(bra_io_file_ctx_t));
     ctx->isWritable = (strchr(mode, 'w') != NULL || strchr(mode, 'a') != NULL || strchr(mode, '+') != NULL);
-    return bra_io_file_open(&ctx->f, fn, mode);
+    ctx->tree       = bra_tree_dir_create();
+    if (ctx->tree == NULL)
+        return false;
+    const bool res = bra_io_file_open(&ctx->f, fn, mode);
+    if (!res)
+    {
+        bra_tree_dir_destroy(&ctx->tree);
+        ctx->tree = NULL;
+    }
+    else
+        ctx->last_dir_node = ctx->tree->root;    // root dir
+
+    return res;
 }
 
 bool bra_io_file_ctx_sfx_open(bra_io_file_ctx_t* ctx, const char* fn, const char* mode)
@@ -286,6 +351,17 @@ bool bra_io_file_ctx_close(bra_io_file_ctx_t* ctx)
     assert(ctx != NULL);
 
     bool res = true;
+
+    if (ctx->tree != NULL)
+    {
+#ifndef NDEBUG
+        // print the tree
+        bra_tree_node_print(ctx->tree->root);
+#endif
+
+        bra_tree_dir_destroy(&ctx->tree);
+        ctx->tree = NULL;
+    }
 
     if (ctx->isWritable)
     {
@@ -433,15 +509,14 @@ bool bra_io_file_ctx_read_meta_entry(bra_io_file_ctx_t* ctx, bra_meta_entry_t* m
 
     buf[buf_size] = '\0';
 
-    // 4. data size
+    // 4. entry data
     switch (BRA_ATTR_TYPE(me->attributes))
     {
     case BRA_ATTR_TYPE_SUBDIR:
     {
-        // TODO parent-index
         if (!bra_meta_entry_subdir_init(me, 0))
             goto BRA_IO_READ_ERR;
-        if (!_bra_io_file_ctx_read_meta_entry_read_dir(ctx, me, buf, (uint8_t) buf_size))
+        if (!_bra_io_file_ctx_read_meta_entry_read_subdir(ctx, me, buf, (uint8_t) buf_size))
             goto BRA_IO_READ_ERR;
     }
     break;
@@ -471,41 +546,55 @@ bool bra_io_file_ctx_read_meta_entry(bra_io_file_ctx_t* ctx, bra_meta_entry_t* m
     return true;
 }
 
-bool bra_io_file_ctx_write_meta_entry(bra_io_file_ctx_t* ctx, bra_meta_entry_t* me)
+bool bra_io_file_ctx_write_meta_entry(bra_io_file_ctx_t* ctx, const bra_attr_t attributes, const char* fn)
 {
     assert_bra_io_file_cxt_t(ctx);
-    assert(me != NULL);
-    assert(me->name != NULL);
 
-    char    buf[BRA_MAX_PATH_LENGTH];
-    uint8_t buf_size;
+    bra_meta_entry_t me;
+    char             buf[BRA_MAX_PATH_LENGTH];
+    uint8_t          buf_size;
 
-    const size_t len = strnlen(me->name, BRA_MAX_PATH_LENGTH);
-    if (len != me->name_size || len == 0 || len >= BRA_MAX_PATH_LENGTH)
+    const size_t len = strnlen(fn, BRA_MAX_PATH_LENGTH);
+    if (len == 0 || len >= BRA_MAX_PATH_LENGTH)
     {
     BRA_IO_WRITE_ERR:
         bra_io_file_write_error(&ctx->f);
         return false;
     }
 
+    if (!bra_meta_entry_init(&me, attributes, fn, len))
+        goto BRA_IO_WRITE_ERR;
+
     // Processing & Writing data
-    switch (BRA_ATTR_TYPE(me->attributes))
+    switch (BRA_ATTR_TYPE(me.attributes))
     {
     case BRA_ATTR_TYPE_FILE:
     {
-        if (!_bra_io_file_ctx_write_meta_entry_process_write_file(ctx, me, buf, &buf_size))
+        uint64_t ds;
+        if (!bra_fs_file_size(fn, &ds))
+            goto BRA_IO_WRITE_ERR;
+
+        if (!bra_meta_entry_file_init(&me, ds))
+            goto BRA_IO_WRITE_ERR;
+
+        if (!_bra_io_file_ctx_write_meta_entry_process_write_file(ctx, &me, buf, &buf_size))
             goto BRA_IO_WRITE_ERR;
     }
     break;
     case BRA_ATTR_TYPE_DIR:
     {
-        if (!_bra_io_file_ctx_write_meta_entry_process_write_dir(ctx, me, buf, &buf_size))
+        if (!_bra_io_file_ctx_write_meta_entry_process_write_dir(ctx, &me, buf, &buf_size))
             goto BRA_IO_WRITE_ERR;
     }
     break;
     case BRA_ATTR_TYPE_SUBDIR:
     {
-        if (!_bra_io_file_ctx_write_meta_entry_process_write_subdir(ctx, me, buf, &buf_size))
+        assert(ctx->last_dir_node != NULL);
+
+        if (!bra_meta_entry_subdir_init(&me, ctx->last_dir_node->index))
+            goto BRA_IO_WRITE_ERR;
+
+        if (!_bra_io_file_ctx_write_meta_entry_process_write_subdir(ctx, &me, buf, &buf_size))
             goto BRA_IO_WRITE_ERR;
     }
     break;
@@ -516,6 +605,7 @@ bool bra_io_file_ctx_write_meta_entry(bra_io_file_ctx_t* ctx, bra_meta_entry_t* 
         goto BRA_IO_WRITE_ERR;
     }
 
+    bra_meta_entry_free(&me);
     return true;
 }
 
@@ -524,12 +614,13 @@ bool bra_io_file_ctx_encode_and_write_to_disk(bra_io_file_ctx_t* ctx, const char
     assert_bra_io_file_cxt_t(ctx);
     assert(fn != NULL);
 
-    // 1. attributes
+    // get entry attributes
+    // TODO replace ctx->last dir with tree_dir reconstructed path
+    //      (the small challenge now is that it can be greater than 255 chars)
     bra_attr_t attributes;
     if (!bra_fs_file_attributes(ctx->last_dir, fn, &attributes))
     {
         bra_log_error("%s has unknown attribute", fn);
-    BRA_IO_WRITE_CLOSE_ERROR:
         bra_io_file_close(&ctx->f);
         return false;
     }
@@ -537,51 +628,7 @@ bool bra_io_file_ctx_encode_and_write_to_disk(bra_io_file_ctx_t* ctx, const char
     bra_log_printf("Archiving %-7s:  ", g_attr_type_names[BRA_ATTR_TYPE(attributes)]);
     _bra_print_string_max_length(fn, strlen(fn), BRA_PRINTF_FMT_FILENAME_MAX_LENGTH);
 
-    // 2. file name length
-    const size_t fn_len = strnlen(fn, BRA_MAX_PATH_LENGTH);
-    // NOTE: fn_len >= BRA_MAX_PATH_LENGTH is redundant but as a safeguard
-    //       in case changing BRA_MAX_PATH_LENGTH to be UINT8_MAX
-    //       there is a static assert for that now.
-    if (fn_len > UINT8_MAX /*|| fn_len >= BRA_MAX_PATH_LENGTH*/)
-    {
-        bra_log_error("filename too long: %s", fn);
-        goto BRA_IO_WRITE_CLOSE_ERROR;
-    }
-
-    if (fn_len == 0)
-    {
-        bra_log_error("filename missing: %s", fn);
-        goto BRA_IO_WRITE_CLOSE_ERROR;
-    }
-
-    const uint8_t fn_size = (uint8_t) fn_len;
-    uint64_t      ds;
-    if (!bra_fs_file_size(fn, &ds))
-        goto BRA_IO_WRITE_CLOSE_ERROR;
-
-    bra_meta_entry_t me;
-    if (!bra_meta_entry_init(&me, attributes, fn, fn_size))
-        goto BRA_IO_WRITE_CLOSE_ERROR;
-
-    assert(me.attributes == attributes);
-    assert(me.name_size == fn_size);
-
-    switch (BRA_ATTR_TYPE(me.attributes))
-    {
-    case BRA_ATTR_TYPE_FILE:
-        if (!bra_meta_entry_file_init(&me, ds))
-            goto BRA_IO_WRITE_CLOSE_ERROR;
-        break;
-    case BRA_ATTR_TYPE_SUBDIR:
-        // TODO parent_index
-        if (!bra_meta_entry_subdir_init(&me, 0))
-            goto BRA_IO_WRITE_CLOSE_ERROR;
-        break;
-    }
-
-    const bool res = bra_io_file_ctx_write_meta_entry(ctx, &me);
-    bra_meta_entry_free(&me);
-    if (!res)
+    if (!bra_io_file_ctx_write_meta_entry(ctx, attributes, fn))
         return false;    // f closed already
 
     bra_log_printf(" [  %-4.4s  ]\n", g_end_messages[0]);
@@ -608,6 +655,10 @@ bool bra_io_file_ctx_decode_and_write_to_disk(bra_io_file_ctx_t* ctx, bra_fs_ove
         bra_io_file_error(&ctx->f, "decode");
         return false;
     }
+
+    // TODO: this part should resolve the meta name with the tree dir
+    //       now the meta name is complete, later on will be partial
+    //       so need to reconstruct the full path using the tree dir
 
     // 4. read and write in chunk data
     // NOTE: nothing to extract for a directory, but only to create it

@@ -8,6 +8,15 @@ add_test(NAME test_lib_bra.test_lib_bra_can_be_sfx           COMMAND test_lib_br
 
 #####################################################################################################
 
+add_executable(test_bra_tree_dir test_bra_tree_dir.cpp)
+target_link_libraries(test_bra_tree_dir PRIVATE lib_bra)
+
+add_test(NAME test_bra_tree_dir.test_bra_tree_dir_add1           COMMAND test_bra_tree_dir test_bra_tree_dir_add1)
+add_test(NAME test_bra_tree_dir.test_bra_tree_dir_add2           COMMAND test_bra_tree_dir test_bra_tree_dir_add2)
+add_test(NAME test_bra_tree_dir.test_bra_tree_dir_add3           COMMAND test_bra_tree_dir test_bra_tree_dir_add3)
+
+#####################################################################################################
+
 
 add_executable(test_bra_wildcards test_bra_wildcards.cpp)
 target_link_libraries(test_bra_wildcards PRIVATE lib_bra)

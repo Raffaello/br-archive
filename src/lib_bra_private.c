@@ -18,6 +18,10 @@ char* _bra_strdup(const char* str)
     if (str == NULL)
         return NULL;
 
+#ifdef __GNUC__
+    return strdup(str);
+#else
+
     const size_t sz = strlen(str) + 1;
     char*        c  = malloc(sz);
 
@@ -26,6 +30,7 @@ char* _bra_strdup(const char* str)
 
     memcpy(c, str, sizeof(char) * sz);
     return c;
+#endif
 }
 
 bool _bra_validate_meta_name(const bra_meta_entry_t* me)

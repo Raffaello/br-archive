@@ -40,8 +40,8 @@ void bra_format_bytes(const size_t bytes, char buf[BRA_PRINTF_FMT_BYTES_BUF_SIZE
  * @param attr
  * @param filename
  * @param filename_size
- * @return true
- * @return false
+ * @retval true
+ * @retval false
  */
 bool bra_meta_entry_init(bra_meta_entry_t* me, const bra_attr_t attr, const char* filename, const uint8_t filename_size);
 
@@ -61,8 +61,8 @@ void bra_meta_entry_free(bra_meta_entry_t* me);
  *
  * @param me
  * @param data_size
- * @return true
- * @return false
+ * @retval true
+ * @retval false
  */
 bool bra_meta_entry_file_init(bra_meta_entry_t* me, const uint64_t data_size);
 
@@ -71,8 +71,8 @@ bool bra_meta_entry_file_init(bra_meta_entry_t* me, const uint64_t data_size);
  *
  * @param me
  * @param parent_index
- * @return true
- * @return false
+ * @retval true
+ * @retval false
  */
 bool bra_meta_entry_subdir_init(bra_meta_entry_t* me, const uint32_t parent_index);
 

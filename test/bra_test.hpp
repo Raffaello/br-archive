@@ -31,18 +31,23 @@
     int TEST_INTERNAL_(x)
 
 
-#define ASSERT_TRUE(x)                                                            \
-    if (!(x))                                                                     \
-    {                                                                             \
-        auto l = std::source_location::current();                                 \
-        std::cerr << std::format("[TEST FAILED {}] Expected true: '{}'\n({}:{})", \
-                                 l.function_name(),                               \
-                                 #x,                                              \
-                                 l.file_name(),                                   \
-                                 l.line())                                        \
-                  << std::endl;                                                   \
-        return 1;                                                                 \
-    }
+#define ASSERT_TRUE(x)                                                                \
+    do                                                                                \
+    {                                                                                 \
+        if (!(x))                                                                     \
+        {                                                                             \
+            auto l = std::source_location::current();                                 \
+            std::cerr << std::format("[TEST FAILED {}] Expected true: '{}'\n({}:{})", \
+                                     l.function_name(),                               \
+                                     #x,                                              \
+                                     l.file_name(),                                   \
+                                     l.line())                                        \
+                      << std::endl;                                                   \
+            return 1;                                                                 \
+        }                                                                             \
+    }                                                                                 \
+    while (0)
+
 
 #define ASSERT_FALSE(x) ASSERT_TRUE(!(x))
 

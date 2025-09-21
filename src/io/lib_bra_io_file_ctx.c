@@ -275,7 +275,7 @@ static bool _bra_io_file_ctx_write_meta_entry_process_write_subdir(bra_io_file_c
     if (ctx->last_dir_not_flushed)
     {
         // TODO: need to be reviewed with tree dir
-
+        // TODO: this condition is always true.
         const bool replacing_dir = BRA_ATTR_TYPE(me->attributes) == BRA_ATTR_TYPE_SUBDIR;    // bra_fs_dir_is_sub_dir(ctx->last_dir, dirname);
         if (replacing_dir)
         {

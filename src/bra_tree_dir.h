@@ -38,7 +38,6 @@ void bra_tree_dir_destroy(bra_tree_dir_t** tree);
  *
  * @param tree
  * @param dirname is the directory to add (e.g. "dir/subdir")
- * @param parent_index
  * @return bra_tree_node_t* the inserted node, @c NULL on error.
  */
 bra_tree_node_t* bra_tree_dir_add(bra_tree_dir_t* tree, const char* dirname);
@@ -48,7 +47,7 @@ bra_tree_node_t* bra_tree_dir_add(bra_tree_dir_t* tree, const char* dirname);
  *
  * @param tree
  * @param dirname
- * @param out_index
+ * @param parent_index
  * @return bra_tree_node_t* the found node, @c NULL if not found.
  */
 bra_tree_node_t* bra_tree_dir_parent_index_search(const bra_tree_dir_t* tree, const uint32_t parent_index);

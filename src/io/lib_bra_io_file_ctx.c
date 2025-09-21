@@ -551,7 +551,8 @@ bool bra_io_file_ctx_encode_and_write_to_disk(bra_io_file_ctx_t* ctx, const char
 
     // get entry attributes
     bra_attr_t attributes;
-    if (!bra_fs_file_attributes(fn, &attributes))
+    // TODO: review when restoring BRA_ATTR_TYPE_DIR
+    if (!bra_fs_file_attributes(".", fn, &attributes))
     {
         bra_log_error("%s has unknown attribute", fn);
         bra_io_file_close(&ctx->f);

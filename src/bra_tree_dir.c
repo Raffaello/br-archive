@@ -115,7 +115,7 @@ static bra_tree_node_t* _bra_tree_dir_add_child_node(bra_tree_dir_t* tree, bra_t
 ////////////////////////////////////////////////////////////////////
 
 #ifndef NDEBUG
-void bra_tree_node_print(bra_tree_node_t* node)
+void bra_tree_node_print(const bra_tree_node_t* node)
 {
     while (node != NULL)
     {

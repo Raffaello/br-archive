@@ -53,7 +53,6 @@ static bra_tree_node_t* _bra_tree_node_parent_index_search(const bra_tree_node_t
         return NULL;
 
     bra_tree_node_t* res = (bra_tree_node_t*) node;
-
     while (res != NULL)
     {
         if (res->index == parent_index)
@@ -126,7 +125,9 @@ void bra_tree_dir_destroy(bra_tree_dir_t** tree)
     if (tree == NULL || *tree == NULL)
         return;
 
-    uint32_t count = _bra_tree_node_destroy_subtree(&(*tree)->root);
+    const uint32_t count = _bra_tree_node_destroy_subtree(&(*tree)->root);
+    if (count != (*tree)->num_nodes)
+        bra_log_warn("tree destroy count mismatch: %u != %u", count, (*tree)->num_nodes);
     assert(count == (*tree)->num_nodes);
     free(*tree);
     *tree = NULL;
@@ -243,7 +244,6 @@ bra_tree_node_t* bra_tree_dir_parent_index_search(const bra_tree_dir_t* tree, co
 
         if (cur->firstChild != NULL)
         {
-            // bra_tree_node_t* res = bra_tree_dir_parent_index_search((bra_tree_dir_t*) tree, parent_index);
             bra_tree_node_t* res = _bra_tree_node_parent_index_search(cur->firstChild, parent_index);
             if (res != NULL)
                 return res;

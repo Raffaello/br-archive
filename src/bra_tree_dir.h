@@ -8,22 +8,8 @@ extern "C" {
 
 #include <stdint.h>
 #include <stdbool.h>
+#include <lib_bra_types.h>
 
-typedef struct bra_tree_node_t
-{
-    uint32_t                index;
-    char*                   dirname;
-    struct bra_tree_node_t* parent;
-    struct bra_tree_node_t* firstChild;
-    struct bra_tree_node_t* next;
-} bra_tree_node_t;
-
-typedef struct bra_tree_dir_t
-{
-    bra_tree_node_t* root;
-    uint32_t         num_nodes;
-    // uint32_t         cur_index;    // ?? isn't num_nodes the same?
-} bra_tree_dir_t;
 
 /**
  * @brief Create a new directory tree. It adds the root node (".").

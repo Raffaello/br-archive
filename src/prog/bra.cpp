@@ -215,6 +215,7 @@ protected:
         }
 
         // build tree from the set file list.
+        bra_log_debug("Building Tree from %zu files...", m_files.size());
         m_tree.clear();
         size_t tot_files = 0;
         if (!bra::fs::make_tree(m_files, m_tree, tot_files))
@@ -222,18 +223,18 @@ protected:
         if (m_files.size() != tot_files)
             bra_log_debug("set<->tree size mismatch: %zu <-> %zu", m_files.size(), tot_files);
 
-        if (tot_files == 0)
+        if (m_files.size() == 0)
         {
             bra_log_error("no input entries to archive");
             return false;
         }
-        else if (tot_files > std::numeric_limits<uint32_t>::max())
+        else if (m_files.size() > std::numeric_limits<uint32_t>::max())
         {
-            bra_log_critical("Too many entries to archive: %zu", tot_files);
+            bra_log_critical("Too many entries to archive: %zu", m_files.size());
             return false;
         }
 
-        m_tot_files = static_cast<uint32_t>(tot_files);
+        m_tot_files = static_cast<uint32_t>(m_files.size());
 
 #ifndef NDEBUG
         bra_log_debug("Built Tree : [TOT_FILES: %u]", m_tot_files);

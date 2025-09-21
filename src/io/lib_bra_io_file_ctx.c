@@ -5,6 +5,7 @@
 #include <log/bra_log.h>
 #include <fs/bra_fs_c.h>
 #include <lib_bra.h>
+#include <bra_tree_dir.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -46,6 +47,21 @@ static bool _bra_io_file_ctx_flush_dir(bra_io_file_ctx_t* ctx)
         ctx->last_dir_not_flushed = false;
         if (!_bra_io_file_ctx_write_meta_entry_common(ctx, ctx->last_dir_attr, ctx->last_dir, ctx->last_dir_size))
             return false;
+
+        switch (BRA_ATTR_TYPE(ctx->last_dir_attr))
+        {
+        case BRA_ATTR_TYPE_SUBDIR:
+        {
+            bra_meta_entry_subdir_t me_subdir;
+            me_subdir.parent_index = ctx->last_dir_index;
+            if (fwrite(&me_subdir.parent_index, sizeof(uint32_t), 1, ctx->f.f) != 1)
+                return false;
+        }
+        break;
+
+        default:
+            break;
+        }
     }
 
     return true;
@@ -109,6 +125,19 @@ static bool _bra_io_file_ctx_read_meta_entry_read_dir(bra_io_file_ctx_t* ctx, br
 
     memcpy(me->name, buf, me->name_size);
     me->name[me->name_size] = '\0';
+    return true;
+}
+
+static bool _bra_io_file_ctx_read_meta_entry_read_subdir(bra_io_file_ctx_t* ctx, bra_meta_entry_t* me, const char* buf, const uint8_t buf_size)
+{
+    if (!_bra_io_file_ctx_read_meta_entry_read_dir(ctx, me, buf, buf_size))
+        return false;
+
+    // read parent index
+    bra_meta_entry_subdir_t* mes = me->entry_data;
+    if (fread(&mes->parent_index, sizeof(uint32_t), 1, ctx->f.f) != 1)
+        return false;
+
     return true;
 }
 
@@ -189,11 +218,19 @@ static bool _bra_io_file_ctx_write_meta_entry_process_write_dir(bra_io_file_ctx_
     memcpy(dirname, me->name, *dirname_size);
     dirname[*dirname_size] = '\0';
 
+    bra_tree_node_t* node = bra_tree_dir_add(ctx->tree, dirname);
+    if (node == NULL)
+    {
+        bra_log_error("unable to add dir %s to bra_tree", dirname);
+        return false;
+    }
+
     if (!_bra_io_file_ctx_flush_dir(ctx))
         return false;
 
     ctx->last_dir_not_flushed = true;
     ctx->last_dir_attr        = me->attributes;
+    ctx->last_dir_index       = node->index;    // TODO: this might not be required?
 
     memcpy(ctx->last_dir, dirname, *dirname_size);
     ctx->last_dir[*dirname_size] = '\0';
@@ -214,6 +251,12 @@ static bool _bra_io_file_ctx_write_meta_entry_process_write_subdir(bra_io_file_c
     *dirname_size = me->name_size;
     memcpy(dirname, me->name, *dirname_size);
     dirname[*dirname_size] = '\0';
+    bra_tree_node_t* node  = bra_tree_dir_add(ctx->tree, dirname);
+    if (node == NULL)
+    {
+        bra_log_error("unable to add dir %s to bra_tree", dirname);
+        return false;
+    }
 
     if (ctx->last_dir_not_flushed)
     {
@@ -225,7 +268,7 @@ static bool _bra_io_file_ctx_write_meta_entry_process_write_subdir(bra_io_file_c
         }
         else
         {
-            // not a subdir, need to save as empty dir, otherwise wasn't given as input
+            // not a subdir(?), need to save as empty dir, otherwise wasn't given as input
             if (!_bra_io_file_ctx_flush_dir(ctx))
                 return false;
         }
@@ -233,6 +276,7 @@ static bool _bra_io_file_ctx_write_meta_entry_process_write_subdir(bra_io_file_c
 
     ctx->last_dir_not_flushed = true;
     ctx->last_dir_attr        = me->attributes;
+    ctx->last_dir_index       = node->index;    // TODO: this might not be required?
 
     memcpy(ctx->last_dir, dirname, *dirname_size);
     ctx->last_dir[*dirname_size] = '\0';
@@ -250,6 +294,9 @@ bool bra_io_file_ctx_open(bra_io_file_ctx_t* ctx, const char* fn, const char* mo
 
     memset(ctx, 0, sizeof(bra_io_file_ctx_t));
     ctx->isWritable = (strchr(mode, 'w') != NULL || strchr(mode, 'a') != NULL || strchr(mode, '+') != NULL);
+    ctx->tree       = bra_tree_dir_create();
+    if (ctx->tree == NULL)
+        return false;
     return bra_io_file_open(&ctx->f, fn, mode);
 }
 
@@ -286,6 +333,12 @@ bool bra_io_file_ctx_close(bra_io_file_ctx_t* ctx)
     assert(ctx != NULL);
 
     bool res = true;
+
+    if (ctx->tree != NULL)
+    {
+        bra_tree_dir_destroy(&ctx->tree);
+        ctx->tree = NULL;
+    }
 
     if (ctx->isWritable)
     {
@@ -433,15 +486,14 @@ bool bra_io_file_ctx_read_meta_entry(bra_io_file_ctx_t* ctx, bra_meta_entry_t* m
 
     buf[buf_size] = '\0';
 
-    // 4. data size
+    // 4. entry data
     switch (BRA_ATTR_TYPE(me->attributes))
     {
     case BRA_ATTR_TYPE_SUBDIR:
     {
-        // TODO parent-index
         if (!bra_meta_entry_subdir_init(me, 0))
             goto BRA_IO_READ_ERR;
-        if (!_bra_io_file_ctx_read_meta_entry_read_dir(ctx, me, buf, (uint8_t) buf_size))
+        if (!_bra_io_file_ctx_read_meta_entry_read_subdir(ctx, me, buf, (uint8_t) buf_size))
             goto BRA_IO_READ_ERR;
     }
     break;

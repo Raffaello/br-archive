@@ -1,12 +1,11 @@
 #include <bra_tree_dir.h>
 #include <lib_bra_private.h>    // _bra_strdup
 #include <log/bra_log.h>
+#include <lib_bra_defs.h>
 
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
-
-#define BRA_DIR_DELIM "/"
 
 static uint32_t _bra_tree_node_destroy_subtree(bra_tree_node_t** node)
 {
@@ -290,7 +289,12 @@ char* bra_tree_dir_reconstruct_path(const bra_tree_node_t* node)
     }
 
     if (len == 0U)
-        return NULL;                     // root dir
+    {
+        char* root = (char*) malloc(1);    // '\0'
+        if (root != NULL)
+            root[0] = '\0';
+        return root;    // root dir
+    }
 
     char* path = (char*) malloc(len);    // last delimiter is '\0'
     if (path == NULL)

@@ -33,25 +33,24 @@ char* _bra_strdup(const char* str)
 #endif
 }
 
-bool _bra_validate_meta_name(const bra_meta_entry_t* me)
+bool _bra_validate_filename(const char* fn, const size_t fn_size)
 {
-    assert(me != NULL);
     // sanitize output path: reject absolute or parent traversal
     // POSIX absolute, Windows drive letter, and leading backslash
-    if (me->name[0] == '/' || me->name[0] == '\\' ||
-        (me->name_size >= 2 &&
-         ((me->name[1] == ':' &&
-           ((me->name[0] >= 'A' && me->name[0] <= 'Z') ||
-            (me->name[0] >= 'a' && me->name[0] <= 'z'))))))
+    if (fn[0] == BRA_DIR_DELIM[0] || fn[0] == '\\' ||
+        (fn_size >= 2 &&
+         ((fn[1] == ':' &&
+           ((fn[0] >= 'A' && fn[0] <= 'Z') ||
+            (fn[0] >= 'a' && fn[0] <= 'z'))))))
     {
-        bra_log_error("absolute output path: %s", me->name);
+        bra_log_error("absolute output path: %s", fn);
         return false;
     }
     // Reject common traversal patterns
-    if (strstr(me->name, "/../") != NULL || strstr(me->name, "\\..\\") != NULL ||
-        strncmp(me->name, "../", 3) == 0 || strncmp(me->name, "..\\", 3) == 0)
+    if (strstr(fn, "/../") != NULL || strstr(fn, "\\..\\") != NULL ||
+        strncmp(fn, "../", 3) == 0 || strncmp(fn, "..\\", 3) == 0)
     {
-        bra_log_error("invalid output path (contains '..'): %s", me->name);
+        bra_log_error("invalid output path (contains '..'): %s", fn);
         return false;
     }
 

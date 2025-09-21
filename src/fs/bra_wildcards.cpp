@@ -1,6 +1,7 @@
 #include <fs/bra_wildcards.hpp>
 
 #include <log/bra_log.h>
+#include <lib_bra_defs.h>
 
 #include <filesystem>
 #include <string>
@@ -29,7 +30,7 @@ std::filesystem::path wildcard_extract_dir(std::filesystem::path& path_wildcard)
     string       dir;
     string       wildcard = path_wildcard.generic_string();
     const size_t pos      = wildcard.find_first_of("?*");
-    const size_t dir_pos  = wildcard.find_last_of('/', pos);
+    const size_t dir_pos  = wildcard.find_last_of(BRA_DIR_DELIM[0], pos);
 
     if (dir_pos != string::npos)
         dir = wildcard.substr(0, dir_pos + 1);    // including '/'

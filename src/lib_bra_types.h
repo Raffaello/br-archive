@@ -123,16 +123,13 @@ typedef struct bra_tree_dir_t
  */
 typedef struct bra_io_file_ctx_t
 {
-    bra_io_file_t f;
-    uint32_t      num_files;                        //!< num files to be written in the header.
-    uint32_t      cur_files;                        //!< entries written in this session; used to reconcile header on close
-    char          last_dir[BRA_MAX_PATH_LENGTH];    //!< the last encoded or decoded directory.
-    // uint32_t         last_dir_index;                   //!< index of last_dir in the archive; 0 for root.
-    uint8_t          last_dir_size;           //!< length of last_dir in bytes; [0..BRA_MAX_PATH_LENGTH-1]
-    bra_attr_t       last_dir_attr;           //!< last_dir attribute for deferred writing (flush).
-    bool             last_dir_not_flushed;    //!< true while last_dir is pending write; last dir is not written until a file is encountered or closing ctx.
-    bool             isWritable;              //!< true opened in write mode, false otherwise
-    bra_tree_dir_t*  tree;                    //!< directory tree used when encoding.
-    bra_tree_node_t* last_dir_node;           //!< pointer to the node of last_dir in the tree; NULL for root.
+    bra_io_file_t    f;
+    uint32_t         num_files;        //!< num files to be written in the header.
+    uint32_t         cur_files;        //!< entries written in this session; used to reconcile header on close
+    char*            last_dir;         //!< the last encoded or decoded directory.
+    size_t           last_dir_size;    //!< length of last_dir in bytes;
+    bra_attr_t       last_dir_attr;    //!< last_dir attribute for deferred writing (flush).
+    bra_tree_dir_t*  tree;             //!< directory tree used when encoding.
+    bra_tree_node_t* last_dir_node;    //!< pointer to the node of last_dir in the tree; NULL for root.
 
 } bra_io_file_ctx_t;

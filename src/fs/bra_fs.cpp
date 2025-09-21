@@ -199,7 +199,6 @@ std::optional<bool> file_exists_ask_overwrite(const std::filesystem::path& path,
         break;
     }
 
-    // TODO: this should use bra_message, bra_message must be moved into bra_log.h
     if (single_overwrite)
         bra_log_printf("File %s already exists. Overwrite? ([y]es/[n]o) ", path.string().c_str());
     else

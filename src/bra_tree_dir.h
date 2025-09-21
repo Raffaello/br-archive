@@ -65,6 +65,8 @@ bra_tree_node_t* bra_tree_dir_insert_at_parent(bra_tree_dir_t* tree, const uint3
 /**
  * @brief Reconstruct the full path from the root to the given node.
  *        The return string must be freed by the caller.
+ *        Root dir return an empty string.
+ *        On error returns @c NULL.
  *
  * @param node
  * @return char*

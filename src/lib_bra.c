@@ -28,11 +28,11 @@ char bra_format_meta_attributes(const bra_attr_t attributes)
     case BRA_ATTR_TYPE_FILE:
         return 'f';
     case BRA_ATTR_TYPE_DIR:
+    // [[fallthrough]];
+    case BRA_ATTR_TYPE_SUBDIR:
         return 'd';
     case BRA_ATTR_TYPE_SYM:
         return 's';
-    case BRA_ATTR_TYPE_SUBDIR:
-        return 'D';    // TODO: this should be the same of dir, but now for debugging...
     default:
         return '?';
     }
@@ -87,9 +87,6 @@ bool bra_meta_entry_init(bra_meta_entry_t* me, const bra_attr_t attr, const char
         if (me->entry_data == NULL)
             return false;
         break;
-    case BRA_ATTR_TYPE_DIR:
-    // break;
-    // [[fallthrough]];
     case BRA_ATTR_TYPE_SYM:
         me->entry_data = NULL;
         break;

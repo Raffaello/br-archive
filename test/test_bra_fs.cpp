@@ -318,6 +318,23 @@ int test_bra_fs_dir_isSubDir()
     return 0;
 }
 
+int test_bra_fs_file_attributes()
+{
+    constexpr const char* fn = ".test_dir";
+
+    if (fs::exists(fn))
+        fs::remove(fn);
+
+    fs::create_directory(fn);
+    ASSERT_TRUE(fs::exists(fn));
+
+    auto attr = bra::fs::file_attributes("./", fn);
+    ASSERT_TRUE(attr.has_value());
+    ASSERT_EQ(*attr, BRA_ATTR_TYPE_DIR);
+
+    return 0;
+}
+
 // int test_bra_fs_symlink()
 // {
 //     constexpr const char* symlink = "readme.sym";    //"test.sym";
@@ -347,5 +364,6 @@ int main(int argc, char* argv[])
                                      {TEST_FUNC(test_bra_fs_try_sanitize_path)},
                                      {TEST_FUNC(test_bra_fs_sfx_filename_adjust)},
                                      {TEST_FUNC(test_bra_fs_dir_isSubDir)},
+                                     {TEST_FUNC(test_bra_fs_file_attributes)},
                                  });
 }

@@ -44,6 +44,9 @@ add_test(NAME test_bra_fs.search_wildcard                   COMMAND test_bra_fs 
 add_test(NAME test_bra_fs.search_wildcard_recursive_on_dir1 COMMAND test_bra_fs test_bra_fs_search_wildcard_recursive_on_dir1)
 add_test(NAME test_bra_fs.search_wildcard_recursive_in_dir1 COMMAND test_bra_fs test_bra_fs_search_wildcard_recursive_in_dir1)
 
+add_test(NAME test_bra_fs.file_attributes COMMAND test_bra_fs test_bra_fs_file_attributes)
+
+
 # add_test(NAME test_bra_fs.symlink COMMAND test_bra_fs test_bra_fs_symlink)
 
 #####################################################################################################

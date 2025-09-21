@@ -557,12 +557,17 @@ bool bra_io_file_ctx_encode_and_write_to_disk(bra_io_file_ctx_t* ctx, const char
     // get entry attributes
     bra_attr_t attributes;
     // TODO: review when restoring BRA_ATTR_TYPE_DIR
-    if (!bra_fs_file_attributes(".", fn, &attributes))
+    if (!bra_fs_file_attributes("./", fn, &attributes))
     {
         bra_log_error("%s has unknown attribute", fn);
         bra_io_file_close(&ctx->f);
         return false;
     }
+
+    // PATCH: force subdir for directories
+    // TODO: review when restoring BRA_ATTR_TYPE_DIR
+    if (BRA_ATTR_TYPE(attributes) == BRA_ATTR_TYPE_DIR)
+        attributes = BRA_ATTR_SET_TYPE(attributes, BRA_ATTR_TYPE_SUBDIR);
 
     bra_log_printf("Archiving %-7s:  ", g_attr_type_names[BRA_ATTR_TYPE(attributes)]);
     _bra_print_string_max_length(fn, strlen(fn), BRA_PRINTF_FMT_FILENAME_MAX_LENGTH);

@@ -30,6 +30,7 @@ The only exception is for the `filesystem` module aspect that is using C++ `file
  It won't support a filename longer than 255 chars and based on the directory structure at the moment,
  it might fail to encoding as the path is longer than 255 chars (`dir/filename` for e.g.).
  In such a case would be mostly enough to split in 2 entries, but it is not planned yet nor implemented.
+ (alternatively would be enough to give a max of 65k chars using a uint16_t)
  
 
 ## Self-Extracting Archive

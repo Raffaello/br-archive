@@ -59,6 +59,16 @@ bra_tree_node_t* bra_tree_dir_add(bra_tree_dir_t* tree, const char* dirname);
  */
 bra_tree_node_t* bra_tree_dir_parent_index_search(const bra_tree_dir_t* tree, const uint32_t parent_index);
 
+/**
+ * @brief Insert a directory at the specified parent index.
+ *
+ * @param tree
+ * @param parent_index
+ * @param dirname
+ * @return bra_tree_node_t* the inserted node, @c NULL on error.
+ */
+bra_tree_node_t* bra_tree_dir_insert_at_parent(bra_tree_dir_t* tree, const uint32_t parent_index, const char* dirname);
+
 
 #ifdef __cplusplus
 }

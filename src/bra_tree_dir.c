@@ -47,53 +47,61 @@ static bra_tree_node_t* _bra_tree_node_alloc()
     return node;
 }
 
-// static bool _bra_tree_node_search(bra_tree_node_t** node, const char* dirname_part)
-// {
-//     if (node == NULL || *node == NULL || dirname_part == NULL || dirname_part[0] == '\0')
-//         return false;
+static bra_tree_node_t* _bra_tree_node_parent_index_search(const bra_tree_node_t* node, const uint32_t parent_index)
+{
+    if (node == NULL)
+        return NULL;
 
-// bra_tree_node_t* cur = *node;
-// while (cur != NULL)
-// {
-//     if (strcmp(cur->dirname, dirname_part) == 0)
-//     {
-//         *node = cur;
-//         return true;
-//     }
+    bra_tree_node_t* res = (bra_tree_node_t*) node;
 
-// // if (cur->firstChild != NULL)
-//     // _bra_tree_node_search(cur->firstChild, dirname_part);
+    while (res != NULL)
+    {
+        if (res->index == parent_index)
+            return res;
 
-// cur = cur->next;
-// }
+        if (res->firstChild != NULL)
+        {
+            res = _bra_tree_node_parent_index_search(res->firstChild, parent_index);
+            if (res != NULL)
+                return res;
+        }
 
-// return false;
-// }
+        res = res->next;
+    }
 
-// static bra_tree_node_t* _bra_tree_node_parent_index_search(const bra_tree_node_t* node, const uint32_t parent_index)
-// {
-//     if (node == NULL)
-//         return NULL;
+    return NULL;
+}
 
-// bra_tree_node_t* res = node;
+static bra_tree_node_t* _bra_tree_dir_add_node(bra_tree_dir_t* tree, bra_tree_node_t* parent, const char* dirname)
+{
+    if (tree == NULL || parent == NULL || dirname == NULL || dirname[0] == '\0')
+        return NULL;
 
-// while (res != NULL)
-// {
-//     if (res->index == parent_index)
-//         return node;
+    bra_tree_node_t* new_node = _bra_tree_node_alloc();
+    if (new_node == NULL)
+        return NULL;
 
-// if (res->firstChild != NULL)
-// {
-//     res = _bra_tree_node_parent_index_search(res->firstChild, parent_index);
-//     if (res != NULL)
-//         return res;
-// }
-
-// res = res->next;
-// }
-
-// return NULL;
-// }
+    new_node->dirname = _bra_strdup(dirname);
+    if (new_node->dirname == NULL)
+    {
+        free(new_node);
+        return NULL;
+    }
+    new_node->parent = parent;
+    new_node->index  = tree->num_nodes;
+    if (parent->firstChild == NULL)
+        parent->firstChild = new_node;
+    else
+    {
+        // TODO: better to add as first child instead of last.
+        bra_tree_node_t* sibling = parent->firstChild;
+        while (sibling->next != NULL)
+            sibling = sibling->next;
+        sibling->next = new_node;
+    }
+    ++tree->num_nodes;
+    return new_node;
+}
 
 ////////////////////////////////////////////////////////////////////
 
@@ -180,72 +188,107 @@ bra_tree_node_t* bra_tree_dir_add(bra_tree_dir_t* tree, const char* dirname)
     assert(part != NULL && part[0] != '\0');
     do
     {
-        bra_tree_node_t* new_node = _bra_tree_node_alloc();
-        if (new_node == NULL)
-            goto BRA_TREE_DIR_ADD_NULL;
+        // bra_tree_node_t* new_node = _bra_tree_node_alloc();
+        // if (new_node == NULL)
+        //     goto BRA_TREE_DIR_ADD_NULL;
 
-        new_node->dirname = _bra_strdup(part);
-        if (new_node->dirname == NULL)
-        {
-            free(new_node);
+        // new_node->dirname = _bra_strdup(part);
+        // if (new_node->dirname == NULL)
+        // {
+        //     free(new_node);
+        //     goto BRA_TREE_DIR_ADD_NULL;
+        // }
+        // new_node->parent = parent;
+        // new_node->index  = tree->num_nodes;
+        // if (parent->firstChild == NULL)
+        //     parent->firstChild = new_node;
+        // else
+        // {
+        //     // TODO: better to add as first child instead of last.
+        //     bra_tree_node_t* sibling = parent->firstChild;
+        //     while (sibling->next != NULL)
+        //         sibling = sibling->next;
+        //     sibling->next = new_node;
+        // }
+        // ++tree->num_nodes;
+        // parent = new_node;
+        parent = _bra_tree_dir_add_node(tree, parent, part);
+        if (parent == NULL)
             goto BRA_TREE_DIR_ADD_NULL;
-        }
-        new_node->parent = parent;
-        new_node->index  = tree->num_nodes;
-        if (parent->firstChild == NULL)
-            parent->firstChild = new_node;
-        else
-        {
-            // TODO: better to add as first child instead of last.
-            bra_tree_node_t* sibling = parent->firstChild;
-            while (sibling->next != NULL)
-                sibling = sibling->next;
-            sibling->next = new_node;
-        }
-        ++tree->num_nodes;
-        cur    = new_node;
-        parent = new_node;
-        part   = strtok(NULL, BRA_DIR_DELIM);
+        part = strtok(NULL, BRA_DIR_DELIM);
     }
     while (part != NULL);
 
     free(parts);
-    return cur;
+    return parent;
 
 BRA_TREE_DIR_ADD_NULL:
     free(parts);
     return NULL;
 }
 
-// bra_tree_node_t* bra_tree_dir_parent_index_search(const bra_tree_dir_t* tree, const uint32_t parent_index)
-// {
-//     if (tree == NULL)
-//         return NULL;
+bra_tree_node_t* bra_tree_dir_parent_index_search(const bra_tree_dir_t* tree, const uint32_t parent_index)
+{
+    if (tree == NULL)
+        return NULL;
 
-// if (parent_index == 0U)
-//     return tree->root;
+    if (parent_index == 0U)
+        return tree->root;
 
-// bra_tree_node_t* cur = tree->root->firstChild;
-// while (cur != NULL)
-// {
-//     if (cur->index == parent_index)
-//         return cur;
+    bra_tree_node_t* cur = tree->root->firstChild;
+    while (cur != NULL)
+    {
+        if (cur->index == parent_index)
+            return cur;
 
-// if (cur->firstChild != NULL)
-// {
-//     // bra_tree_node_t* res = bra_tree_dir_parent_index_search((bra_tree_dir_t*) tree, parent_index);
-//     bra_tree_node_t* res = _bra_tree_node_parent_index_search(cur->firstChild, parent_index);
-//     if (res != NULL)
-//         return res;
-// }
+        if (cur->firstChild != NULL)
+        {
+            // bra_tree_node_t* res = bra_tree_dir_parent_index_search((bra_tree_dir_t*) tree, parent_index);
+            bra_tree_node_t* res = _bra_tree_node_parent_index_search(cur->firstChild, parent_index);
+            if (res != NULL)
+                return res;
+        }
 
-// cur = cur->next;
-// }
+        cur = cur->next;
+    }
 
-// return NULL;
-// }
+    return NULL;
+}
 
-// bool bra_tree_dir_extract()
-// {
-//     // TODO: this will rebuild the dirname from the parent index.
-// }
+bra_tree_node_t* bra_tree_dir_insert_at_parent(bra_tree_dir_t* tree, const uint32_t parent_index, const char* dirname)
+{
+    if (tree == NULL || dirname == NULL || dirname[0] == '\0')
+        return NULL;
+
+    bra_tree_node_t* parent = bra_tree_dir_parent_index_search(tree, parent_index);
+    if (parent == NULL)
+    {
+        bra_log_error("parent index %u not found in tree", parent_index);
+        return NULL;
+    }
+
+    // dirname is the dirname, not the final dir
+    // so need to be divided and inserted in the tree in chunks
+    char* parts = _bra_strdup(dirname);
+    if (parts == NULL)
+        return NULL;
+    char* part = strtok(parts, BRA_DIR_DELIM);
+    if (part == NULL)
+        part = parts;
+
+    do
+    {
+        parent = _bra_tree_dir_add_node(tree, parent, part);
+        if (parent == NULL)
+            goto BRA_TREE_DIR_INSERT_AT_PARENT_NULL;
+        part = strtok(NULL, BRA_DIR_DELIM);
+    }
+    while (part != NULL);
+
+    free(parts);
+    return parent;
+
+BRA_TREE_DIR_INSERT_AT_PARENT_NULL:
+    free(parts);
+    return NULL;
+}

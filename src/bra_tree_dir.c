@@ -70,6 +70,31 @@ static bra_tree_node_t* _bra_tree_node_alloc()
 // return false;
 // }
 
+// static bra_tree_node_t* _bra_tree_node_parent_index_search(const bra_tree_node_t* node, const uint32_t parent_index)
+// {
+//     if (node == NULL)
+//         return NULL;
+
+// bra_tree_node_t* res = node;
+
+// while (res != NULL)
+// {
+//     if (res->index == parent_index)
+//         return node;
+
+// if (res->firstChild != NULL)
+// {
+//     res = _bra_tree_node_parent_index_search(res->firstChild, parent_index);
+//     if (res != NULL)
+//         return res;
+// }
+
+// res = res->next;
+// }
+
+// return NULL;
+// }
+
 ////////////////////////////////////////////////////////////////////
 
 bra_tree_dir_t* bra_tree_dir_create()
@@ -192,20 +217,32 @@ BRA_TREE_DIR_ADD_NULL:
     return NULL;
 }
 
-// bool bra_tree_dir_search(const bra_tree_dir_t* tree, const char* dirname)
+// bra_tree_node_t* bra_tree_dir_parent_index_search(const bra_tree_dir_t* tree, const uint32_t parent_index)
 // {
-//     if (tree == NULL || dirname == NULL || dirname[0] == '\0')
-//         return false;
+//     if (tree == NULL)
+//         return NULL;
 
-// // TODO search the tree for dirname
-// bra_tree_node_t* cur = tree->root;
+// if (parent_index == 0U)
+//     return tree->root;
 
+// bra_tree_node_t* cur = tree->root->firstChild;
 // while (cur != NULL)
 // {
+//     if (cur->index == parent_index)
+//         return cur;
+
+// if (cur->firstChild != NULL)
+// {
+//     // bra_tree_node_t* res = bra_tree_dir_parent_index_search((bra_tree_dir_t*) tree, parent_index);
+//     bra_tree_node_t* res = _bra_tree_node_parent_index_search(cur->firstChild, parent_index);
+//     if (res != NULL)
+//         return res;
 // }
 
+// cur = cur->next;
+// }
 
-// return false;
+// return NULL;
 // }
 
 // bool bra_tree_dir_extract()

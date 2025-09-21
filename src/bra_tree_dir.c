@@ -295,7 +295,6 @@ char* bra_tree_dir_reconstruct_path(const bra_tree_node_t* node)
     // Reconstruct the path
     n          = (bra_tree_node_t*) node;
     size_t pos = len - 1;
-    // path[pos--] = '\0';    // Null-terminate the string
     while (n->index != 0U)
     {
         const size_t dir_len = strlen(n->dirname);

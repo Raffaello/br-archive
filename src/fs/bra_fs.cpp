@@ -199,7 +199,6 @@ std::optional<bool> file_exists_ask_overwrite(const std::filesystem::path& path,
         break;
     }
 
-    // TODO: this should use bra_message, bra_message must be moved into bra_log.h
     if (single_overwrite)
         bra_log_printf("File %s already exists. Overwrite? ([y]es/[n]o) ", path.string().c_str());
     else
@@ -243,7 +242,7 @@ std::optional<bool> file_exists_ask_overwrite(const std::filesystem::path& path,
     return c == 'y';
 }
 
-std::optional<bra_attr_t> file_attributes([[maybe_unused]] const std::filesystem::path& base, const std::filesystem::path& path) noexcept
+std::optional<bra_attr_t> file_attributes(const std::filesystem::path& path) noexcept
 {
     std::error_code ec;
     auto            err = [&path, &ec]() {
@@ -280,13 +279,7 @@ std::optional<bra_attr_t> file_attributes([[maybe_unused]] const std::filesystem
     case regular:
         return BRA_ATTR_TYPE_FILE;
     case directory:
-    {
-        // if (base.empty())
-        //     return BRA_ATTR_TYPE_DIR;    // 1st level dir is a dir
-
-        // return dir_isSubDir(base, path) ? BRA_ATTR_TYPE_SUBDIR : BRA_ATTR_TYPE_DIR;
         return BRA_ATTR_TYPE_SUBDIR;
-    }
     case symlink:
         return BRA_ATTR_TYPE_SYM;
     }

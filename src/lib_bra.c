@@ -15,7 +15,7 @@
 /////////////////////////////////////////////////////////////////////////////
 
 _Static_assert(BRA_ATTR_TYPE_FILE == 0, "BRA_ATTR_TYPE_FILE index changed");
-_Static_assert(BRA_ATTR_TYPE_DIR == 1, "BRA_ATTR_TYPE_DIR index changed");
+// _Static_assert(BRA_ATTR_TYPE_DIR == 1, "BRA_ATTR_TYPE_DIR index changed");
 _Static_assert(BRA_ATTR_TYPE_SYM == 2, "BRA_ATTR_TYPE_SYM index changed");
 _Static_assert(BRA_ATTR_TYPE_SUBDIR == 3, "BRA_ATTR_TYPE_SUBDIR index changed");
 
@@ -27,8 +27,8 @@ char bra_format_meta_attributes(const bra_attr_t attributes)
     {
     case BRA_ATTR_TYPE_FILE:
         return 'f';
-    case BRA_ATTR_TYPE_DIR:
-        return 'd';
+    // case BRA_ATTR_TYPE_DIR:
+    // return 'd';
     case BRA_ATTR_TYPE_SYM:
         return 's';
     case BRA_ATTR_TYPE_SUBDIR:
@@ -87,7 +87,7 @@ bool bra_meta_entry_init(bra_meta_entry_t* me, const bra_attr_t attr, const char
         if (me->entry_data == NULL)
             return false;
         break;
-    case BRA_ATTR_TYPE_DIR:
+    // case BRA_ATTR_TYPE_DIR:
     // break;
     // [[fallthrough]];
     case BRA_ATTR_TYPE_SYM:

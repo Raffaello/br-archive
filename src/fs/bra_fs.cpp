@@ -243,7 +243,7 @@ std::optional<bool> file_exists_ask_overwrite(const std::filesystem::path& path,
     return c == 'y';
 }
 
-std::optional<bra_attr_t> file_attributes(const std::filesystem::path& base, const std::filesystem::path& path) noexcept
+std::optional<bra_attr_t> file_attributes([[maybe_unused]] const std::filesystem::path& base, const std::filesystem::path& path) noexcept
 {
     std::error_code ec;
     auto            err = [&path, &ec]() {
@@ -281,10 +281,11 @@ std::optional<bra_attr_t> file_attributes(const std::filesystem::path& base, con
         return BRA_ATTR_TYPE_FILE;
     case directory:
     {
-        if (base.empty())
-            return BRA_ATTR_TYPE_DIR;    // 1st level dir is a dir
+        // if (base.empty())
+        //     return BRA_ATTR_TYPE_DIR;    // 1st level dir is a dir
 
-        return dir_isSubDir(base, path) ? BRA_ATTR_TYPE_SUBDIR : BRA_ATTR_TYPE_DIR;
+        // return dir_isSubDir(base, path) ? BRA_ATTR_TYPE_SUBDIR : BRA_ATTR_TYPE_DIR;
+        return BRA_ATTR_TYPE_SUBDIR;
     }
     case symlink:
         return BRA_ATTR_TYPE_SYM;

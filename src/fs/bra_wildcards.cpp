@@ -1,6 +1,7 @@
 #include <fs/bra_wildcards.hpp>
 
 #include <log/bra_log.h>
+#include <lib_bra_defs.h>
 
 #include <filesystem>
 #include <string>

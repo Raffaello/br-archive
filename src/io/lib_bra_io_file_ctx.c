@@ -613,7 +613,7 @@ bool bra_io_file_ctx_decode_and_write_to_disk(bra_io_file_ctx_t* ctx, bra_fs_ove
             if (!bra_io_file_skip_data(&ctx->f, ds))
             {
                 bra_io_file_seek_error(&ctx->f);
-                return false;
+                goto BRA_IO_DECODE_ERR;
             }
         }
         else
@@ -631,7 +631,7 @@ bool bra_io_file_ctx_decode_and_write_to_disk(bra_io_file_ctx_t* ctx, bra_fs_ove
 
             bra_meta_entry_free(&me);
             if (!bra_io_file_copy_file_chunks(&f2, &ctx->f, ds))
-                return false;
+                goto BRA_IO_DECODE_ERR;
 
             bra_io_file_close(&f2);
         }

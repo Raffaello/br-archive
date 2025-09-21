@@ -71,21 +71,25 @@ TEST(test_bra_tree_dir_add2)
     bra_tree_node_t* n1 = bra_tree_dir_add(tree, "dir1");
     bra_tree_node_t* n2 = bra_tree_dir_add(tree, "dir2");
     bra_tree_node_t* n3 = bra_tree_dir_add(tree, "dir1/dir11");
+    bra_tree_node_t* n4 = bra_tree_dir_add(tree, "dir1/dir11/dir111");
     ASSERT_TRUE(n1 != nullptr);
     ASSERT_TRUE(n2 != nullptr);
     ASSERT_TRUE(n3 != nullptr);
+    ASSERT_TRUE(n4 != nullptr);
 
-    ASSERT_EQ(tree->num_nodes, 4U);
+    ASSERT_EQ(tree->num_nodes, 5U);
     ASSERT_TRUE(tree->root->firstChild != nullptr);
 
     bra_tree_node_t* n = tree->root->firstChild;
     ASSERT_EQ(_test_bra_tree_node(n, 1U, "dir1", tree->root, false, false), 0);
     ASSERT_EQ(_test_bra_tree_node(n->next, 2U, "dir2", tree->root, true, true), 0);
-    ASSERT_EQ(_test_bra_tree_node(n->firstChild, 3U, "dir11", n, true, true), 0);
+    ASSERT_EQ(_test_bra_tree_node(n->firstChild, 3U, "dir11", n, true, false), 0);
+    ASSERT_EQ(_test_bra_tree_node(n->firstChild->firstChild, 4U, "dir111", n->firstChild, true, true), 0);
 
     ASSERT_TRUE(n1 == n);
     ASSERT_TRUE(n2 == n->next);
     ASSERT_TRUE(n3 == n->firstChild);
+    ASSERT_TRUE(n4 == n->firstChild->firstChild);
 
     bra_tree_dir_destroy(&tree);
     ASSERT_TRUE(tree == nullptr);
@@ -106,11 +110,11 @@ TEST(test_bra_tree_dir_add3)
     ASSERT_TRUE(bra_tree_dir_add(tree, "dir3/dir33/dir333/dir3333") == nullptr);
 
 
-    ASSERT_EQ(tree->num_nodes, 11U);
+    ASSERT_EQ(tree->num_nodes, 9U);
     ASSERT_TRUE(tree->root->firstChild != nullptr);
     bra_tree_node_t* n = tree->root->firstChild;
     ASSERT_EQ(_test_bra_tree_node(n, 1U, "dir1", tree->root, false, false), 0);
-    ASSERT_EQ(_test_bra_tree_node(n->next, 2U, "dir2", tree->root, true, true), 0);
+    ASSERT_EQ(_test_bra_tree_node(n->next, 2U, "dir2", tree->root, false, true), 0);
     ASSERT_EQ(_test_bra_tree_node(n->firstChild, 3U, "dir11", n, true, false), 0);
 
     bra_tree_node_t* n2 = n->firstChild->firstChild;    // dir111
@@ -121,7 +125,7 @@ TEST(test_bra_tree_dir_add3)
     n2 = n2->firstChild;    // dir33
     ASSERT_EQ(_test_bra_tree_node(n2->firstChild, 7U, "dir333", n2, true, false), 0);
     n2 = n2->firstChild;    // dir333
-    ASSERT_EQ(_test_bra_tree_node(n2->firstChild, 8U, "dir3333", n2, true, false), 0);
+    ASSERT_EQ(_test_bra_tree_node(n2->firstChild, 8U, "dir3333", n2, true, true), 0);
 
     bra_tree_dir_destroy(&tree);
     ASSERT_TRUE(tree == nullptr);

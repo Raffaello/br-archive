@@ -178,8 +178,9 @@ bra_tree_node_t* bra_tree_dir_add(bra_tree_dir_t* tree, const char* dirname)
             sibling->next = new_node;
         }
         ++tree->num_nodes;
-        cur  = new_node;
-        part = strtok(NULL, BRA_DIR_DELIM);
+        cur    = new_node;
+        parent = new_node;
+        part   = strtok(NULL, BRA_DIR_DELIM);
     }
     while (part != NULL);
 

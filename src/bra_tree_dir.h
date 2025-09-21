@@ -10,6 +10,14 @@ extern "C" {
 #include <stdbool.h>
 #include <lib_bra_types.h>
 
+#ifndef NDEBUG
+/**
+ * @brief Print the tree starting from @p node.
+ *
+ * @param node
+ */
+void bra_tree_node_print(bra_tree_node_t* node);
+#endif
 
 /**
  * @brief Create a new directory tree. It adds the root node (".").

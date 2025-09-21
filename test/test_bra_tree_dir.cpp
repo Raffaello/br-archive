@@ -122,7 +122,7 @@ TEST(test_bra_tree_dir_add3)
     ASSERT_EQ(_test_bra_tree_node(n2, 4U, "dir111", n->firstChild, true, true), 0);
 
     n2 = n->next;    // dir2
-    ASSERT_EQ(_test_bra_tree_node(n2, 2U, "dir2", tree->root, false, true), 0);
+    ASSERT_EQ(_test_bra_tree_node(n2, 2U, "dir2", tree->root, false, false), 0);
     ASSERT_EQ(_test_bra_tree_node(n2->firstChild, 9U, "dir22", n2, true, true), 0);
 
     n2 = n->next->next;    // dir3

@@ -17,21 +17,6 @@ static const char* g_attr_type_names[] = {"file", "dir", "symlink", "subdir"};
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
-#ifndef NDEBUG
-static void _bra_tree_node_print(bra_tree_node_t* node)
-{
-    while (node != NULL)
-    {
-        bra_log_debug("tree: [%u] %s", node->index, node->dirname);
-
-        _bra_tree_node_print(node->firstChild);
-
-        node = node->next;
-    }
-}
-
-#endif
-
 static bool _bra_io_file_ctx_write_meta_entry_common(bra_io_file_ctx_t* ctx, const bra_attr_t attr, const char* filename, const uint8_t filename_size)
 {
     assert_bra_io_file_cxt_t(ctx);
@@ -371,7 +356,7 @@ bool bra_io_file_ctx_close(bra_io_file_ctx_t* ctx)
     {
 #ifndef NDEBUG
         // print the tree
-        _bra_tree_node_print(ctx->tree->root);
+        bra_tree_node_print(ctx->tree->root);
 #endif
 
         bra_tree_dir_destroy(&ctx->tree);

@@ -113,6 +113,20 @@ static bra_tree_node_t* _bra_tree_dir_add_node(bra_tree_dir_t* tree, bra_tree_no
 
 ////////////////////////////////////////////////////////////////////
 
+#ifndef NDEBUG
+void bra_tree_node_print(bra_tree_node_t* node)
+{
+    while (node != NULL)
+    {
+        bra_log_debug("tree: [%u] %s", node->index, node->dirname);
+
+        bra_tree_node_print(node->firstChild);
+
+        node = node->next;
+    }
+}
+#endif
+
 bra_tree_dir_t* bra_tree_dir_create()
 {
     bra_tree_dir_t* tree = (bra_tree_dir_t*) malloc(sizeof(bra_tree_dir_t));

@@ -93,11 +93,12 @@ bool bra_io_file_ctx_read_meta_entry(bra_io_file_ctx_t* ctx, bra_meta_entry_t* m
  * @brief Write the filename metadata from @p me into @p ctx->f.
  *
  * @param ctx[in,out]
- * @param me[in,out]
+ * @param attributes[in]
+ * @param fn[in]
  * @retval true on success
  * @retval false on error closes @p ctx->f via @ref bra_io_file_close.
  */
-bool bra_io_file_ctx_write_meta_entry(bra_io_file_ctx_t* ctx, bra_meta_entry_t* me);
+bool bra_io_file_ctx_write_meta_entry(bra_io_file_ctx_t* ctx, const bra_attr_t attributes, const char* fn);
 
 /**
  * @brief Encode a file or directory @p fn and append it to the open archive @p ctx->f.

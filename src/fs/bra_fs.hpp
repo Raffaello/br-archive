@@ -121,6 +121,7 @@ namespace bra::fs
  * @return std::optional<bra_attr_t> #BRA_ATTR_TYPE_FILE    for regular files,
  *                                   #BRA_ATTR_TYPE_DIR     for directory,
  *                                   #BRA_ATTR_TYPE_SYM     for symlink;
+ *                                   #BRA_ATTR_TYPE_SUBDIR  for subdirectory of @p base;
  *                                   @c nullopt             for errors or unknown types.
  */
 [[nodiscard]] std::optional<bra_attr_t> file_attributes(const std::filesystem::path& path) noexcept;

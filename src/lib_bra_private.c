@@ -15,6 +15,9 @@ inline uint64_t _bra_min(const uint64_t a, const uint64_t b)
 
 char* _bra_strdup(const char* str)
 {
+#ifdef __GNUC__
+    return strdup(str);
+#else
     if (str == NULL)
         return NULL;
 
@@ -26,6 +29,7 @@ char* _bra_strdup(const char* str)
 
     memcpy(c, str, sizeof(char) * sz);
     return c;
+#endif
 }
 
 bool _bra_validate_meta_name(const bra_meta_entry_t* me)

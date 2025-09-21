@@ -6,6 +6,60 @@
 extern "C" {
 #endif
 
+#include <stdint.h>
+#include <stdbool.h>
+
+typedef struct bra_tree_node_t
+{
+    uint32_t                index;
+    char*                   dirname;
+    struct bra_tree_node_t* parent;
+    struct bra_tree_node_t* firstChild;
+    struct bra_tree_node_t* next;
+} bra_tree_node_t;
+
+typedef struct bra_tree_dir_t
+{
+    bra_tree_node_t* root;
+    uint32_t         num_nodes;
+    // uint32_t         cur_index;    // ?? isn't num_nodes the same?
+} bra_tree_dir_t;
+
+/**
+ * @brief Create a new directory tree. It adds the root node (".").
+ *
+ * @return bra_tree_dir_t*
+ */
+bra_tree_dir_t* bra_tree_dir_create(void);
+
+/**
+ * @brief Destroy a directory tree.
+ *
+ * @param tree
+ */
+void bra_tree_dir_destroy(bra_tree_dir_t** tree);
+
+/**
+ * @brief Add a directory to the tree.
+ *
+ * @param tree
+ * @param dirname is the directory to add (e.g. "dir/subdir")
+ * @param parent_index
+ * @return bra_tree_node_t* the inserted node, @c NULL on error.
+ */
+bra_tree_node_t* bra_tree_dir_add(bra_tree_dir_t* tree, const char* dirname);
+
+/**
+ * @brief Search for a directory in the tree.
+ *
+ * @param tree
+ * @param dirname
+ * @param out_index
+ * @retval true
+ * @retval false
+ */
+// bool bra_tree_dir_search(const bra_tree_dir_t* tree, const char* dirname, uint32_t* out_index);
+
 
 #ifdef __cplusplus
 }

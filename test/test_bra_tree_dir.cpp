@@ -5,7 +5,7 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 
-static int _test_bra_tree_node(const bra_tree_node_t* n, const uint32_t index, const char* dirname, const bra_tree_node_t* parent, const bool nextIsNull, const bool fistChildIsNull)
+static int _test_bra_tree_node(const bra_tree_node_t* n, const uint32_t index, const char* dirname, const bra_tree_node_t* parent, const bool nextIsNull, const bool firstChildIsNull)
 {
     ASSERT_TRUE(n != nullptr);
 
@@ -22,7 +22,7 @@ static int _test_bra_tree_node(const bra_tree_node_t* n, const uint32_t index, c
         ASSERT_TRUE(n->next != nullptr);
     }
 
-    if (fistChildIsNull)
+    if (firstChildIsNull)
     {
         ASSERT_TRUE(n->firstChild == nullptr);
     }
@@ -56,7 +56,7 @@ TEST(test_bra_tree_dir_add1)
     bra_tree_node_t* n = tree->root->firstChild;
     ASSERT_TRUE(n == n1);
     ASSERT_EQ(n->index, 1U);
-    ASSERT_EQ(strncmp(n->dirname, "dir1", 5), 0);
+    ASSERT_EQ(strcmp(n->dirname, "dir1"), 0);
     ASSERT_TRUE(n->parent == tree->root);
     bra_tree_dir_destroy(&tree);
     ASSERT_TRUE(tree == nullptr);

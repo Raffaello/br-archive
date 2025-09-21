@@ -321,8 +321,16 @@ bool bra_io_file_ctx_open(bra_io_file_ctx_t* ctx, const char* fn, const char* mo
     ctx->tree       = bra_tree_dir_create();
     if (ctx->tree == NULL)
         return false;
-    ctx->last_dir_node = ctx->tree->root;    // root dir
-    return bra_io_file_open(&ctx->f, fn, mode);
+    const bool res = bra_io_file_open(&ctx->f, fn, mode);
+    if (!res)
+    {
+        bra_tree_dir_destroy(&ctx->tree);
+        ctx->tree = NULL;
+    }
+    else
+        ctx->last_dir_node = ctx->tree->root;    // root dir
+
+    return res;
 }
 
 bool bra_io_file_ctx_sfx_open(bra_io_file_ctx_t* ctx, const char* fn, const char* mode)

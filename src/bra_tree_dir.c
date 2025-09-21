@@ -47,12 +47,9 @@ static bra_tree_node_t* _bra_tree_node_alloc()
     return node;
 }
 
-static bra_tree_node_t* _bra_tree_node_parent_index_search(const bra_tree_node_t* node, const uint32_t parent_index)
+static bra_tree_node_t* _bra_tree_node_parent_index_search(bra_tree_node_t* node, const uint32_t parent_index)
 {
-    if (node == NULL)
-        return NULL;
-
-    bra_tree_node_t* res = (bra_tree_node_t*) node;
+    bra_tree_node_t* res = node;
     while (res != NULL)
     {
         if (res->index == parent_index)
@@ -75,6 +72,18 @@ static bra_tree_node_t* _bra_tree_dir_add_node(bra_tree_dir_t* tree, bra_tree_no
 {
     if (tree == NULL || parent == NULL || dirname == NULL || dirname[0] == '\0')
         return NULL;
+
+    // check if it is not already present first
+    if (parent->firstChild != NULL)
+    {
+        bra_tree_node_t* sibling = parent->firstChild;
+        while (sibling->next != NULL)
+        {
+            if (strcmp(sibling->dirname, dirname) == 0)
+                return sibling;    // already present
+            sibling = sibling->next;
+        }
+    }
 
     bra_tree_node_t* new_node = _bra_tree_node_alloc();
     if (new_node == NULL)
@@ -146,10 +155,11 @@ bra_tree_node_t* bra_tree_dir_add(bra_tree_dir_t* tree, const char* dirname)
 
     char* part = strtok(parts, BRA_DIR_DELIM);
     if (part == NULL)
-        part = parts;
-
-    // bra_tree_node_t* cur    = tree->root;
-    // bra_tree_node_t* parent = NULL;
+    {
+        bra_log_error("invalid dirname, can't tokenize: %s", dirname);
+        free(parts);
+        return NULL;
+    }
 
     // skip the root as it is current directory always
     bra_tree_node_t* parent = tree->root;
@@ -189,30 +199,6 @@ bra_tree_node_t* bra_tree_dir_add(bra_tree_dir_t* tree, const char* dirname)
     assert(part != NULL && part[0] != '\0');
     do
     {
-        // bra_tree_node_t* new_node = _bra_tree_node_alloc();
-        // if (new_node == NULL)
-        //     goto BRA_TREE_DIR_ADD_NULL;
-
-        // new_node->dirname = _bra_strdup(part);
-        // if (new_node->dirname == NULL)
-        // {
-        //     free(new_node);
-        //     goto BRA_TREE_DIR_ADD_NULL;
-        // }
-        // new_node->parent = parent;
-        // new_node->index  = tree->num_nodes;
-        // if (parent->firstChild == NULL)
-        //     parent->firstChild = new_node;
-        // else
-        // {
-        //     // TODO: better to add as first child instead of last.
-        //     bra_tree_node_t* sibling = parent->firstChild;
-        //     while (sibling->next != NULL)
-        //         sibling = sibling->next;
-        //     sibling->next = new_node;
-        // }
-        // ++tree->num_nodes;
-        // parent = new_node;
         parent = _bra_tree_dir_add_node(tree, parent, part);
         if (parent == NULL)
             goto BRA_TREE_DIR_ADD_NULL;
@@ -236,23 +222,7 @@ bra_tree_node_t* bra_tree_dir_parent_index_search(const bra_tree_dir_t* tree, co
     if (parent_index == 0U)
         return tree->root;
 
-    bra_tree_node_t* cur = tree->root->firstChild;
-    while (cur != NULL)
-    {
-        if (cur->index == parent_index)
-            return cur;
-
-        if (cur->firstChild != NULL)
-        {
-            bra_tree_node_t* res = _bra_tree_node_parent_index_search(cur->firstChild, parent_index);
-            if (res != NULL)
-                return res;
-        }
-
-        cur = cur->next;
-    }
-
-    return NULL;
+    return _bra_tree_node_parent_index_search(tree->root, parent_index);
 }
 
 bra_tree_node_t* bra_tree_dir_insert_at_parent(bra_tree_dir_t* tree, const uint32_t parent_index, const char* dirname)

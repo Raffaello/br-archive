@@ -32,6 +32,7 @@
 
 
 #define ASSERT_TRUE(x)                                                                \
+    do                                                                                \
     {                                                                                 \
         if (!(x))                                                                     \
         {                                                                             \
@@ -44,7 +45,9 @@
                       << std::endl;                                                   \
             return 1;                                                                 \
         }                                                                             \
-    }
+    }                                                                                 \
+    while (0)
+
 
 #define ASSERT_FALSE(x) ASSERT_TRUE(!(x))
 

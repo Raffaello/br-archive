@@ -21,9 +21,9 @@ The only exception is for the `filesystem` module aspect that is using C++ `file
  The `bra_fs` can be used directly in C++, but `lib-bra` is using the C wrapper `bra-fs_c`.
 
 
- ## Entry MAX_LENGTH (Directory & Filename)
+## Entry MAX_LENGTH (Directory & Filename)
 
- There is a limit for each entry, file or directory, to be max 255 chars.
+ There is a limit for each entry, file or directory, to be 255 characters max.
 
  Potentially if divided in multiple entry, sub-dirs for e.g., it can overcome that maximum.
 

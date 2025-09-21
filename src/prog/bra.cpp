@@ -223,18 +223,18 @@ protected:
         if (m_files.size() != tot_files)
             bra_log_debug("set<->tree size mismatch: %zu <-> %zu", m_files.size(), tot_files);
 
-        if (m_files.size() == 0)
+        if (tot_files == 0)
         {
             bra_log_error("no input entries to archive");
             return false;
         }
-        else if (m_files.size() > std::numeric_limits<uint32_t>::max())
+        else if (tot_files > std::numeric_limits<uint32_t>::max())
         {
-            bra_log_critical("Too many entries to archive: %zu", m_files.size());
+            bra_log_critical("Too many entries to archive: %zu", tot_files);
             return false;
         }
 
-        m_tot_files = static_cast<uint32_t>(m_files.size());
+        m_tot_files = static_cast<uint32_t>(tot_files);
 
 #ifndef NDEBUG
         bra_log_debug("Built Tree : [TOT_FILES: %u]", m_tot_files);

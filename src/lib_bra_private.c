@@ -15,11 +15,12 @@ inline uint64_t _bra_min(const uint64_t a, const uint64_t b)
 
 char* _bra_strdup(const char* str)
 {
+    if (str == NULL)
+        return NULL;
+
 #ifdef __GNUC__
     return strdup(str);
 #else
-    if (str == NULL)
-        return NULL;
 
     const size_t sz = strlen(str) + 1;
     char*        c  = malloc(sz);

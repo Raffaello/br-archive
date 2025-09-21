@@ -281,7 +281,7 @@ static bool _bra_io_file_ctx_write_meta_entry_process_write_subdir(bra_io_file_c
         {
             // TODO: this must recompose a subdir to a dir
             //       when subdir is present the last dir is partial.
-            //       so need to recover from the parent index the pparent dir to be merged.
+            //       so need to recover from the parent index the parent dir to be merged.
             bra_log_debug("parent dir %s is empty, replacing it with %s", ctx->last_dir, dirname);
             me->attributes = BRA_ATTR_SET_TYPE(me->attributes, BRA_ATTR_TYPE_DIR);
         }

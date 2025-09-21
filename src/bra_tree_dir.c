@@ -291,12 +291,9 @@ char* bra_tree_dir_reconstruct_path(const bra_tree_node_t* node)
 
     if (len == 0U)
     {
-        char* root = (char*) malloc(2);    // '.'+ \0'
+        char* root = (char*) malloc(1);    // '.'+ \0'
         if (root != NULL)
-        {
-            root[0] = '.';
-            root[1] = '\0';
-        }
+            root[0] = '\0';
         return root;    // root dir
     }
 

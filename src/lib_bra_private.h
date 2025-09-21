@@ -35,18 +35,14 @@ uint64_t _bra_min(const uint64_t a, const uint64_t b);
 char* _bra_strdup(const char* str);
 
 /**
- * @brief Validate that a meta filename is safe for extraction.
+ * @brief Validate that a filename is safe for extraction.
  *
- * @todo this is not correct anymore when integrating with tree dir as the name will be partial
- *       need to validate the "full" path, passing a string not meta entry.
- *
- * @deprecated will be replaced with tree dir validation
- *
- * @param me        Meta file structure containing the filename to validate
+ * @param fn        filename to validate
+ * @param fn_size   size of filename in bytes
  * @retval true     if the filename is safe (no absolute paths or directory traversal)
  * @retval false    if the filename contains dangerous patterns
  */
-bool _bra_validate_meta_name(const bra_meta_entry_t* me);
+bool _bra_validate_filename(const char* fn, const size_t fn_size);
 
 /**
  * @brief Log a string with fixed width, truncating with "..." if it exceeds max_length.

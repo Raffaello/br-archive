@@ -68,21 +68,18 @@ static bra_tree_node_t* _bra_tree_node_parent_index_search(bra_tree_node_t* node
     return NULL;
 }
 
-static bra_tree_node_t* _bra_tree_dir_add_node(bra_tree_dir_t* tree, bra_tree_node_t* parent, const char* dirname)
+static bra_tree_node_t* _bra_tree_dir_add_child_node(bra_tree_dir_t* tree, bra_tree_node_t* parent, const char* dirname)
 {
     if (tree == NULL || parent == NULL || dirname == NULL || dirname[0] == '\0')
         return NULL;
 
     // check if it is not already present first
-    if (parent->firstChild != NULL)
+    bra_tree_node_t* sibling = parent->firstChild;
+    while (sibling != NULL)
     {
-        bra_tree_node_t* sibling = parent->firstChild;
-        while (sibling->next != NULL)
-        {
-            if (strcmp(sibling->dirname, dirname) == 0)
-                return sibling;    // already present
-            sibling = sibling->next;
-        }
+        if (strcmp(sibling->dirname, dirname) == 0)
+            return sibling;    // already present
+        sibling = sibling->next;
     }
 
     bra_tree_node_t* new_node = _bra_tree_node_alloc();
@@ -102,7 +99,9 @@ static bra_tree_node_t* _bra_tree_dir_add_node(bra_tree_dir_t* tree, bra_tree_no
     else
     {
         // TODO: better to add as first child instead of last.
-        bra_tree_node_t* sibling = parent->firstChild;
+        // new_node->next     = parent->firstChild;
+        // parent->firstChild = new_node;
+        sibling = parent->firstChild;
         while (sibling->next != NULL)
             sibling = sibling->next;
         sibling->next = new_node;
@@ -212,7 +211,7 @@ bra_tree_node_t* bra_tree_dir_add(bra_tree_dir_t* tree, const char* dirname)
     assert(part != NULL && part[0] != '\0');
     do
     {
-        parent = _bra_tree_dir_add_node(tree, parent, part);
+        parent = _bra_tree_dir_add_child_node(tree, parent, part);
         if (parent == NULL)
             goto BRA_TREE_DIR_ADD_NULL;
         part = strtok(NULL, BRA_DIR_DELIM);
@@ -261,7 +260,7 @@ bra_tree_node_t* bra_tree_dir_insert_at_parent(bra_tree_dir_t* tree, const uint3
 
     do
     {
-        parent = _bra_tree_dir_add_node(tree, parent, part);
+        parent = _bra_tree_dir_add_child_node(tree, parent, part);
         if (parent == NULL)
             goto BRA_TREE_DIR_INSERT_AT_PARENT_NULL;
         part = strtok(NULL, BRA_DIR_DELIM);

@@ -43,19 +43,20 @@ static char* _bra_io_file_ctx_reconstruct_meta_entry_name(bra_io_file_ctx_t* ctx
             fn[dirname_len] = '/';
             memcpy(&fn[dirname_len + 1], me->name, me->name_size);
             fn[dirname_len + 1 + me->name_size] = '\0';
+            if (len != NULL)
+                *len = dirname_len + me->name_size + 1;
         }
         else
         {
             fn = _bra_strdup(me->name);
             if (fn == NULL)
                 goto _BRA_IO_FILE_CTX_RECONSTRUCT_META_ENTRY_NAME_EXIT;
+            if (len != NULL)
+                *len = me->name_size;
         }
 
     _BRA_IO_FILE_CTX_RECONSTRUCT_META_ENTRY_NAME_EXIT:
         free(dirname);
-        if (len != NULL)
-            *len = dirname_len + me->name_size + 1;
-
         return fn;
     }
     break;
@@ -103,6 +104,7 @@ static bool _bra_io_file_ctx_flush_dir(bra_io_file_ctx_t* ctx)
     case BRA_ATTR_TYPE_SUBDIR:
     {
         assert(ctx->last_dir_node != NULL);
+        assert(ctx->last_dir_node->parent != NULL);    // not root
 
         const size_t len = strnlen(ctx->last_dir_node->dirname, BRA_MAX_PATH_LENGTH);
         if (len > UINT8_MAX)
@@ -153,7 +155,7 @@ static bool _bra_io_file_ctx_read_meta_entry_read_file(bra_io_file_ctx_t* ctx, b
 static bool _bra_io_file_ctx_read_meta_entry_read_dir(bra_meta_entry_t* me, const char* buf, const uint8_t buf_size)
 {
     assert(me != NULL);
-    assert(buf_size < UINT8_MAX);
+    assert(buf_size > 0);
 
     me->name_size = buf_size;
     me->name      = _bra_strdup(buf);
@@ -681,15 +683,14 @@ bool bra_io_file_ctx_print_meta_entry(bra_io_file_ctx_t* ctx)
         return false;
 
     if (!bra_io_file_ctx_read_meta_entry(ctx, &me))
-        return false;
-
+        goto BRA_IO_FILE_CTX_PRINT_META_ENTRY_ERR;
 
     const uint64_t ds   = BRA_ATTR_TYPE(me.attributes) == BRA_ATTR_TYPE_FILE ? ((bra_meta_entry_file_t*) me.entry_data)->data_size : 0;
     const char     attr = bra_format_meta_attributes(me.attributes);
     size_t         len  = 0;
     char*          fn   = _bra_io_file_ctx_reconstruct_meta_entry_name(ctx, &me, &len);
     if (fn == NULL)
-        return false;
+        goto BRA_IO_FILE_CTX_PRINT_META_ENTRY_ERR;
 
     bra_format_bytes(ds, bytes);
     bra_log_printf("|   %c  | %s | ", attr, bytes);
@@ -702,8 +703,12 @@ bool bra_io_file_ctx_print_meta_entry(bra_io_file_ctx_t* ctx)
     if (!bra_io_file_skip_data(&ctx->f, ds))
     {
         bra_io_file_seek_error(&ctx->f);
-        return false;
+        goto BRA_IO_FILE_CTX_PRINT_META_ENTRY_ERR;
     }
 
     return true;
+
+BRA_IO_FILE_CTX_PRINT_META_ENTRY_ERR:
+    bra_meta_entry_free(&me);
+    return false;
 }

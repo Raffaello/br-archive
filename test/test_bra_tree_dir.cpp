@@ -140,6 +140,7 @@ TEST(test_bra_tree_dir_add3)
     free(path);
 
     path = bra_tree_dir_reconstruct_path(tree->root);
+    ASSERT_TRUE(path != nullptr);
     ASSERT_EQ(strcmp(path, ""), 0);
     free(path);
 

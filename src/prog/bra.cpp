@@ -214,8 +214,11 @@ protected:
             }
         }
 
-        // build tree from the set file list.
-        // bra_log_debug("Building Tree from %zu files...", m_files.size());
+// build tree from the set file list.
+#ifndef NDEBUG
+        bra_log_debug("Building Tree from %zu files...", m_files.size());
+#endif
+
         m_tree.clear();
         size_t tot_files = 0;
         if (!bra::fs::make_tree(m_files, m_tree, tot_files))

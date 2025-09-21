@@ -127,7 +127,7 @@ typedef struct bra_io_file_ctx_t
     uint32_t         num_files;        //!< num files to be written in the header.
     uint32_t         cur_files;        //!< entries written in this session; used to reconcile header on close
     char*            last_dir;         //!< the last encoded or decoded directory.
-    uint8_t          last_dir_size;    //!< length of last_dir in bytes;
+    size_t           last_dir_size;    //!< length of last_dir in bytes;
     bra_attr_t       last_dir_attr;    //!< last_dir attribute for deferred writing (flush).
     bra_tree_dir_t*  tree;             //!< directory tree used when encoding.
     bra_tree_node_t* last_dir_node;    //!< pointer to the node of last_dir in the tree; NULL for root.

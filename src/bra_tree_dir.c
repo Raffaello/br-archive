@@ -99,6 +99,8 @@ static bra_tree_node_t* _bra_tree_dir_add_child_node(bra_tree_dir_t* tree, bra_t
     else
     {
         // TODO: better to add as first child instead of last.
+        //       this will change the order though.
+        //       alternative track the tail too (lastChild for faster insertion)
         // new_node->next     = parent->firstChild;
         // parent->firstChild = new_node;
         sibling = parent->firstChild;

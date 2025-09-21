@@ -137,8 +137,11 @@ TEST(test_bra_tree_dir_add3)
     char* path = bra_tree_dir_reconstruct_path(n2->firstChild);
     ASSERT_TRUE(path != nullptr);
     ASSERT_EQ(strcmp(path, "dir3/dir33/dir333/dir3333"), 0);
-
     free(path);
+
+    path = bra_tree_dir_reconstruct_path(tree->root);
+    ASSERT_TRUE(path == nullptr);
+
     bra_tree_dir_destroy(&tree);
     ASSERT_TRUE(tree == nullptr);
     return 0;

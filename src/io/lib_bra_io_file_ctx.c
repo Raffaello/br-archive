@@ -43,19 +43,33 @@ static bool _bra_io_file_ctx_flush_dir(bra_io_file_ctx_t* ctx)
 {
     if (ctx->last_dir_not_flushed)
     {
-        bra_log_debug("flushing dir: %s", ctx->last_dir);
-        ctx->last_dir_not_flushed = false;
-        if (!_bra_io_file_ctx_write_meta_entry_common(ctx, ctx->last_dir_attr, ctx->last_dir, ctx->last_dir_size))
-            return false;
-
         switch (BRA_ATTR_TYPE(ctx->last_dir_attr))
         {
+        case BRA_ATTR_TYPE_DIR:
+            bra_log_debug("flushing dir: %s", ctx->last_dir);
+            ctx->last_dir_not_flushed = false;
+            if (!_bra_io_file_ctx_write_meta_entry_common(ctx, ctx->last_dir_attr, ctx->last_dir, ctx->last_dir_size))
+                return false;
+            break;
         case BRA_ATTR_TYPE_SUBDIR:
         {
             assert(ctx->last_dir_node != NULL);
 
+            bra_log_debug("flushing subdir: %s", ctx->last_dir_node->dirname);
+            ctx->last_dir_not_flushed = false;
+            const size_t len          = strnlen(ctx->last_dir_node->dirname, BRA_MAX_PATH_LENGTH);
+            if (len > UINT8_MAX)
+            {
+                bra_log_critical("dirname %s too long %zu", ctx->last_dir_node->dirname, len);
+                return false;
+            }
+
+            if (!_bra_io_file_ctx_write_meta_entry_common(ctx, ctx->last_dir_attr, ctx->last_dir_node->dirname, len))
+                return false;
+
             bra_meta_entry_subdir_t me_subdir;
-            me_subdir.parent_index = ctx->last_dir_node->index;
+            me_subdir.parent_index = ctx->last_dir_node->parent->index;
+            assert(me_subdir.parent_index > 0);    // its just a dir if parent index is 0
             if (fwrite(&me_subdir.parent_index, sizeof(uint32_t), 1, ctx->f.f) != 1)
                 return false;
         }
@@ -257,26 +271,26 @@ static bool _bra_io_file_ctx_write_meta_entry_process_write_subdir(bra_io_file_c
         return false;
     }
 
-    if (ctx->last_dir_not_flushed)
-    {
-        // TODO: need to be reviewed with tree dir
-        // TODO: this condition is always true.
-        const bool replacing_dir = BRA_ATTR_TYPE(me->attributes) == BRA_ATTR_TYPE_SUBDIR;    // bra_fs_dir_is_sub_dir(ctx->last_dir, dirname);
-        if (replacing_dir)
-        {
-            // TODO: this must recompose a subdir to a dir
-            //       when subdir is present the last dir is partial.
-            //       so need to recover from the parent index the parent dir to be merged.
-            bra_log_debug("parent dir %s is empty, replacing it with %s", ctx->last_dir, dirname);
-            me->attributes = BRA_ATTR_SET_TYPE(me->attributes, BRA_ATTR_TYPE_DIR);
-        }
-        else
-        {
-            // not a subdir(?), need to save as empty dir, otherwise wasn't given as input
-            if (!_bra_io_file_ctx_flush_dir(ctx))
-                return false;
-        }
-    }
+    // if (ctx->last_dir_not_flushed)
+    // {
+    // TODO: need to be reviewed with tree dir
+    // TODO: this condition is always true.
+    // const bool replacing_dir = BRA_ATTR_TYPE(me->attributes) == BRA_ATTR_TYPE_SUBDIR;    // bra_fs_dir_is_sub_dir(ctx->last_dir, dirname);
+    // if (replacing_dir)
+    // {
+    //     // TODO: this must recompose a subdir to a dir
+    //     //       when subdir is present the last dir is partial.
+    //     //       so need to recover from the parent index the parent dir to be merged.
+    //     bra_log_debug("parent dir %s is empty, replacing it with %s", ctx->last_dir, dirname);
+    //     me->attributes = BRA_ATTR_SET_TYPE(me->attributes, BRA_ATTR_TYPE_DIR);
+    // }
+    // else
+    // {
+    // not a subdir(?), need to save as empty dir, otherwise wasn't given as input
+    if (!_bra_io_file_ctx_flush_dir(ctx))
+        return false;
+    // }
+    // }
 
     *dirname_size = me->name_size;
     memcpy(dirname, me->name, *dirname_size);

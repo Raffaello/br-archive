@@ -275,3 +275,38 @@ BRA_TREE_DIR_INSERT_AT_PARENT_NULL:
     free(parts);
     return NULL;
 }
+
+char* bra_tree_dir_reconstruct_path(const bra_tree_node_t* node)
+{
+    assert(node != NULL);
+
+    size_t           len = 0U;
+    bra_tree_node_t* n   = (bra_tree_node_t*) node;
+    while (n->index != 0U)
+    {
+        len += strlen(n->dirname) + 1U;    // +1 for delimiter
+        n    = n->parent;
+    }
+
+    char* path = (char*) malloc(len);    // last delimiter is '\0'
+    if (path == NULL)
+        return NULL;
+
+    // Reconstruct the path
+    n          = (bra_tree_node_t*) node;
+    size_t pos = len - 1;
+    // path[pos--] = '\0';    // Null-terminate the string
+    while (n->index != 0U)
+    {
+        const size_t dir_len = strlen(n->dirname);
+        path[pos]            = BRA_DIR_DELIM[0];
+        assert(pos >= dir_len);
+        memcpy(&path[pos - dir_len], n->dirname, dir_len);
+        pos -= (dir_len + 1);
+        n    = n->parent;
+    }
+
+    assert(pos == (size_t) -1);
+    path[len - 1] = '\0';    // Null-terminate the string
+    return path;
+}

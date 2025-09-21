@@ -63,6 +63,14 @@ bra_tree_node_t* bra_tree_dir_parent_index_search(const bra_tree_dir_t* tree, co
  */
 bra_tree_node_t* bra_tree_dir_insert_at_parent(bra_tree_dir_t* tree, const uint32_t parent_index, const char* dirname);
 
+/**
+ * @brief Reconstruct the full path from the root to the given node.
+ *        The return string must be freed by the caller.
+ *
+ * @param node
+ * @return char*
+ */
+char* bra_tree_dir_reconstruct_path(const bra_tree_node_t* node);
 
 #ifdef __cplusplus
 }

@@ -37,7 +37,7 @@ bool _bra_validate_filename(const char* fn, const size_t fn_size)
 {
     // sanitize output path: reject absolute or parent traversal
     // POSIX absolute, Windows drive letter, and leading backslash
-    if (fn[0] == '/' || fn[0] == '\\' ||
+    if (fn[0] == BRA_DIR_DELIM[0] || fn[0] == '\\' ||
         (fn_size >= 2 &&
          ((fn[1] == ':' &&
            ((fn[0] >= 'A' && fn[0] <= 'Z') ||

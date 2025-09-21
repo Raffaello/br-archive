@@ -40,7 +40,7 @@ static char* _bra_io_file_ctx_reconstruct_meta_entry_name(bra_io_file_ctx_t* ctx
                 goto _BRA_IO_FILE_CTX_RECONSTRUCT_META_ENTRY_NAME_EXIT;
 
             memcpy(fn, dirname, dirname_len);
-            fn[dirname_len] = '/';
+            fn[dirname_len] = BRA_DIR_DELIM[0];
             memcpy(&fn[dirname_len + 1], me->name, me->name_size);
             fn[dirname_len + 1 + me->name_size] = '\0';
             if (len != NULL)
@@ -107,7 +107,12 @@ static bool _bra_io_file_ctx_flush_dir(bra_io_file_ctx_t* ctx)
         assert(ctx->last_dir_node->parent != NULL);    // not root
 
         const size_t len = strnlen(ctx->last_dir_node->dirname, BRA_MAX_PATH_LENGTH);
-        if (len > UINT8_MAX)
+        if (len == 0)
+        {
+            bra_log_critical("empty dirname for index %u", ctx->last_dir_node->index);
+            return false;
+        }
+        else if (len > UINT8_MAX)
         {
             bra_log_critical("dirname %s too long %zu", ctx->last_dir_node->dirname, len);
             return false;
@@ -188,7 +193,7 @@ static bool _bra_io_file_ctx_write_meta_entry_process_write_file(bra_io_file_ctx
 
     bra_meta_entry_t me;
     size_t           l = ctx->last_dir_size;    // strnlen(g_last_dir, BRA_MAX_PATH_LENGTH);
-    if (filename[l] == '/')                     // or when l == 0
+    if (filename[l] == BRA_DIR_DELIM[0])        // or when l == 0
         ++l;                                    // skip also '/'
     else if (ctx->last_dir_size > 0)
     {
@@ -600,10 +605,10 @@ bool bra_io_file_ctx_decode_and_write_to_disk(bra_io_file_ctx_t* ctx, bra_fs_ove
         const bra_meta_entry_file_t* mef = (const bra_meta_entry_file_t*) me.entry_data;
         assert(mef != NULL);
         const uint64_t ds = mef->data_size;
-        if (!bra_fs_file_exists_ask_overwrite(me.name, overwrite_policy, false))
+        if (!bra_fs_file_exists_ask_overwrite(fn, overwrite_policy, false))
         {
             end_msg = g_end_messages[1];
-            bra_log_printf("Skipping file:   " BRA_PRINTF_FMT_FILENAME, me.name);
+            bra_log_printf("Skipping file:   " BRA_PRINTF_FMT_FILENAME, fn);
             bra_meta_entry_free(&me);
             if (!bra_io_file_skip_data(&ctx->f, ds))
             {

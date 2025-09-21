@@ -38,6 +38,9 @@
 #define BRA_SFX_FILENAME     "bra.sfx"    // @todo: generate it through cmake conf
 #define BRA_SFX_TMP_FILE_EXT ".tmp"
 
+#define BRA_DIR_DELIM "/"
+
+
 #define BRA_ATTR_TYPE_MASK         ((bra_attr_t) 0x03)                                                 //!< lower 2 bits encode the type
 #define BRA_ATTR_TYPE(x)           ((bra_attr_t) (x) & BRA_ATTR_TYPE_MASK)                             //!< first 2 bits
 #define BRA_ATTR_SET_TYPE(x, type) ((bra_attr_t) ((x) & ~BRA_ATTR_TYPE_MASK) | BRA_ATTR_TYPE(type))    //!< set first 2 bits.

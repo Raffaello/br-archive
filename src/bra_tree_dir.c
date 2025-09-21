@@ -1,12 +1,11 @@
 #include <bra_tree_dir.h>
 #include <lib_bra_private.h>    // _bra_strdup
 #include <log/bra_log.h>
+#include <lib_bra_defs.h>
 
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
-
-#define BRA_DIR_DELIM "/"
 
 static uint32_t _bra_tree_node_destroy_subtree(bra_tree_node_t** node)
 {

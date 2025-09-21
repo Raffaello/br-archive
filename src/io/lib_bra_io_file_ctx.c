@@ -116,7 +116,6 @@ static bool _bra_io_file_ctx_flush_dir(bra_io_file_ctx_t* ctx)
 
         bra_meta_entry_subdir_t me_subdir;
         me_subdir.parent_index = ctx->last_dir_node->parent->index;
-        // assert(me_subdir.parent_index > 0);    // its just a dir if parent index is 0
         if (fwrite(&me_subdir.parent_index, sizeof(uint32_t), 1, ctx->f.f) != 1)
             return false;
     }
@@ -192,7 +191,7 @@ static bool _bra_io_file_ctx_write_meta_entry_process_write_file(bra_io_file_ctx
         ++l;                                    // skip also '/'
     else if (ctx->last_dir_size > 0)
     {
-        bra_log_critical("me->name: %s -- last_dir: %s", filename, ctx->last_path);
+        bra_log_critical("me->name: %s -- last_dir: %s", filename, ctx->last_dir);
         return false;
     }
 
@@ -260,17 +259,17 @@ static bool _bra_io_file_ctx_write_meta_entry_process_write_subdir(bra_io_file_c
 
     ctx->last_dir_attr = attributes;
     ctx->last_dir_node = node;
-    if (ctx->last_path != NULL)
+    if (ctx->last_dir != NULL)
     {
-        free(ctx->last_path);
-        ctx->last_path = NULL;
+        free(ctx->last_dir);
+        ctx->last_dir = NULL;
     }
 
-    ctx->last_path = _bra_strdup(dirname);
-    if (ctx->last_path == NULL)
+    ctx->last_dir = _bra_strdup(dirname);
+    if (ctx->last_dir == NULL)
         goto _BRA_IO_FILE_CTX_WRITE_META_ENTRY_PROCESS_WRITE_SUBDIR_ERR;
 
-    ctx->last_dir_size = strlen(ctx->last_path);
+    ctx->last_dir_size = strlen(ctx->last_dir);
     if (!_bra_io_file_ctx_flush_dir(ctx))
         goto _BRA_IO_FILE_CTX_WRITE_META_ENTRY_PROCESS_WRITE_SUBDIR_ERR;
 
@@ -351,10 +350,10 @@ bool bra_io_file_ctx_close(bra_io_file_ctx_t* ctx)
         ctx->tree = NULL;
     }
 
-    if (ctx->last_path != NULL)
+    if (ctx->last_dir != NULL)
     {
-        free(ctx->last_path);
-        ctx->last_path = NULL;
+        free(ctx->last_dir);
+        ctx->last_dir = NULL;
     }
 
     bra_io_file_close(&ctx->f);
@@ -666,6 +665,7 @@ bool bra_io_file_ctx_decode_and_write_to_disk(bra_io_file_ctx_t* ctx, bra_fs_ove
 BRA_IO_DECODE_ERR:
     if (fn != NULL)
         free(fn);
+
     bra_meta_entry_free(&me);
     bra_io_file_error(&ctx->f, "decode");
     return false;

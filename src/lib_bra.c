@@ -27,6 +27,8 @@ char bra_format_meta_attributes(const bra_attr_t attributes)
     {
     case BRA_ATTR_TYPE_FILE:
         return 'f';
+    case BRA_ATTR_TYPE_DIR:
+    // [[fallthrough]];
     case BRA_ATTR_TYPE_SUBDIR:
         return 'd';
     case BRA_ATTR_TYPE_SYM:

@@ -150,9 +150,8 @@ static bool _bra_io_file_ctx_read_meta_entry_read_file(bra_io_file_ctx_t* ctx, b
     return true;
 }
 
-static bool _bra_io_file_ctx_read_meta_entry_read_dir(bra_io_file_ctx_t* ctx, bra_meta_entry_t* me, const char* buf, const uint8_t buf_size)
+static bool _bra_io_file_ctx_read_meta_entry_read_dir(bra_meta_entry_t* me, const char* buf, const uint8_t buf_size)
 {
-    assert_bra_io_file_cxt_t(ctx);
     assert(me != NULL);
     assert(buf_size < UINT8_MAX);
 
@@ -166,7 +165,7 @@ static bool _bra_io_file_ctx_read_meta_entry_read_dir(bra_io_file_ctx_t* ctx, br
 
 static bool _bra_io_file_ctx_read_meta_entry_read_subdir(bra_io_file_ctx_t* ctx, bra_meta_entry_t* me, const char* buf, const uint8_t buf_size)
 {
-    if (!_bra_io_file_ctx_read_meta_entry_read_dir(ctx, me, buf, buf_size))
+    if (!_bra_io_file_ctx_read_meta_entry_read_dir(me, buf, buf_size))
         return false;
 
     // read parent index

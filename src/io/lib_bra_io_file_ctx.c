@@ -97,9 +97,10 @@ static bool _bra_io_file_ctx_write_meta_entry_common(bra_io_file_ctx_t* ctx, con
     return true;
 }
 
-static bool _bra_io_file_ctx_flush_type_dir(bra_io_file_ctx_t* ctx)
+static bool _bra_io_file_ctx_flush_type_dir(bra_io_file_ctx_t* ctx, const bra_meta_entry_t* me)
 {
     assert_bra_io_file_cxt_t(ctx);
+    assert(me != NULL);
     assert(ctx->last_dir_node != NULL);
     assert(ctx->last_dir_node->parent != NULL);    // not root
 
@@ -115,26 +116,27 @@ static bool _bra_io_file_ctx_flush_type_dir(bra_io_file_ctx_t* ctx)
         return false;
     }
 
-    if (!_bra_io_file_ctx_write_meta_entry_common(ctx, ctx->last_dir_attr, ctx->last_dir_node->dirname, len))
+    if (!_bra_io_file_ctx_write_meta_entry_common(ctx, me->attributes, ctx->last_dir_node->dirname, len))
         return false;
 
     return true;
 }
 
-static bool _bra_io_file_ctx_flush_dir(bra_io_file_ctx_t* ctx)
+static bool _bra_io_file_ctx_flush_dir(bra_io_file_ctx_t* ctx, const bra_meta_entry_t* me)
 {
     assert_bra_io_file_cxt_t(ctx);
+    assert(me != NULL);
 
-    switch (BRA_ATTR_TYPE(ctx->last_dir_attr))
+    switch (BRA_ATTR_TYPE(me->attributes))
     {
     case BRA_ATTR_TYPE_DIR:
     {
-        return _bra_io_file_ctx_flush_type_dir(ctx);
+        return _bra_io_file_ctx_flush_type_dir(ctx, me);
     }
     break;
     case BRA_ATTR_TYPE_SUBDIR:
     {
-        if (!_bra_io_file_ctx_flush_type_dir(ctx))
+        if (!_bra_io_file_ctx_flush_type_dir(ctx, me))
             return false;
 
         bra_meta_entry_subdir_t me_subdir;
@@ -292,7 +294,6 @@ static bool _bra_io_file_ctx_write_meta_entry_process_write_dir_subdir(bra_io_fi
             goto _BRA_IO_FILE_CTX_WRITE_META_ENTRY_PROCESS_WRITE_SUBDIR_ERR;
     }
 
-    ctx->last_dir_attr = attributes;
     ctx->last_dir_node = node;
     if (ctx->last_dir != NULL)
     {
@@ -305,7 +306,7 @@ static bool _bra_io_file_ctx_write_meta_entry_process_write_dir_subdir(bra_io_fi
         goto _BRA_IO_FILE_CTX_WRITE_META_ENTRY_PROCESS_WRITE_SUBDIR_ERR;
 
     ctx->last_dir_size = strlen(ctx->last_dir);
-    if (!_bra_io_file_ctx_flush_dir(ctx))
+    if (!_bra_io_file_ctx_flush_dir(ctx, &me))
         goto _BRA_IO_FILE_CTX_WRITE_META_ENTRY_PROCESS_WRITE_SUBDIR_ERR;
 
     bra_meta_entry_free(&me);

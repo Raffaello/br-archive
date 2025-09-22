@@ -357,6 +357,10 @@ int test_bra_fs_file_attributes()
     ASSERT_TRUE(attr.has_value());
     ASSERT_EQ(*attr, BRA_ATTR_TYPE_DIR);
 
+    // Cleanup
+    // best-effort; directories are empty here
+    fs::remove(f2);
+    fs::remove(fn);
 
     return 0;
 }

@@ -44,11 +44,11 @@ Currently supported wildcards: `*` and `?`.
 > - BRa itself only expands directory arguments to `dir/*` (non-recursive); empty directories are intentionally not archived.
 > - Examples: `*.txt`, `image_??.png`
 
-## Entry MAX_LENGTH (Directory & Filename)
-
-There is a limit for each entry, file or directory, to be 255 characters max for the single element name:
+## Entry name length limit (single path component)
+Each entry name (file or directory) is limited to 255 bytes after UTF‑8 encoding.
+The limit applies to a single path component (no parent path) and does not include the trailing `NULL`.
 
 - file is the filename without the directory path
 - directory is just the directory name without the parent path.
 
-It won't support entries longer than 255 characters.
+Entries whose single‑component name exceeds 255 bytes are rejected at pack time and treated as invalid during extraction.

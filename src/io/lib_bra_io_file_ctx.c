@@ -498,14 +498,15 @@ bool bra_io_file_ctx_read_meta_entry(bra_io_file_ctx_t* ctx, bra_meta_entry_t* m
     assert_bra_io_file_cxt_t(ctx);
     assert(me != NULL);
 
-    char     buf[BRA_MAX_PATH_LENGTH];
-    unsigned buf_size = 0;
+    char       buf[BRA_MAX_PATH_LENGTH];
+    unsigned   buf_size = 0;
+    bra_attr_t attr;
 
     me->name      = NULL;
     me->name_size = 0;
 
     // 1. attributes
-    if (fread(&me->attributes, sizeof(bra_attr_t), 1, ctx->f.f) != 1)
+    if (fread(&attr, sizeof(bra_attr_t), 1, ctx->f.f) != 1)
     {
     BRA_IO_READ_ERR:
         bra_io_file_read_error(&ctx->f);
@@ -523,6 +524,9 @@ bool bra_io_file_ctx_read_meta_entry(bra_io_file_ctx_t* ctx, bra_meta_entry_t* m
         goto BRA_IO_READ_ERR;
 
     buf[buf_size] = '\0';
+
+    if (!bra_meta_entry_init(me, attr, buf, buf_size))
+        return false;
 
     // 4. entry data
     switch (BRA_ATTR_TYPE(me->attributes))
@@ -745,8 +749,6 @@ bool bra_io_file_ctx_print_meta_entry(bra_io_file_ctx_t* ctx)
 
     char             bytes[BRA_PRINTF_FMT_BYTES_BUF_SIZE];
     bra_meta_entry_t me;
-    if (!bra_meta_entry_init(&me, 0, NULL, 0))
-        return false;
 
     if (!bra_io_file_ctx_read_meta_entry(ctx, &me))
         goto BRA_IO_FILE_CTX_PRINT_META_ENTRY_ERR;

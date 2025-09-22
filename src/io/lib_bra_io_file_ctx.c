@@ -264,7 +264,7 @@ static bool _bra_io_file_ctx_write_meta_entry_process_write_dir_subdir(bra_io_fi
 
     assert(ctx->last_dir_node != NULL);
 
-    if (BRA_ATTR_TYPE(attributes) != BRA_ATTR_TYPE_SUBDIR && BRA_ATTR_TYPE(attributes) != (BRA_ATTR_TYPE_DIR))
+    if (BRA_ATTR_TYPE(attributes) != BRA_ATTR_TYPE_SUBDIR && BRA_ATTR_TYPE(attributes) != BRA_ATTR_TYPE_DIR)
         return false;
 
     bra_tree_node_t* node = bra_tree_dir_add(ctx->tree, dirname);

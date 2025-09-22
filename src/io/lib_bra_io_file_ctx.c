@@ -532,13 +532,14 @@ bool bra_io_file_ctx_read_meta_entry(bra_io_file_ctx_t* ctx, bra_meta_entry_t* m
         if (!_bra_io_file_ctx_read_meta_entry_read_dir(me, buf, buf_size))
             return false;
 
-        ctx->last_dir_node = bra_tree_dir_insert_at_parent(ctx->tree, 0, me->name);
+        ctx->last_dir_node = bra_tree_dir_insert_at_parent(ctx->tree, BRA_TREE_NODE_ROOT_INDEX, me->name);
         if (ctx->last_dir_node == NULL)
             goto BRA_IO_READ_ERR;
     }
     break;
     case BRA_ATTR_TYPE_SUBDIR:
     {
+        assert(me->entry_data != NULL);
         if (!bra_meta_entry_subdir_init(me, 0))
             goto BRA_IO_READ_ERR;
         if (!_bra_io_file_ctx_read_meta_entry_read_subdir(ctx, me, buf, (uint8_t) buf_size))
@@ -551,6 +552,8 @@ bool bra_io_file_ctx_read_meta_entry(bra_io_file_ctx_t* ctx, bra_meta_entry_t* m
     break;
     case BRA_ATTR_TYPE_FILE:
     {
+        assert(me->entry_data != NULL);
+
         if (!bra_meta_entry_file_init(me, 0))
             goto BRA_IO_READ_ERR;
         if (!_bra_io_file_ctx_read_meta_entry_read_file(ctx, me, buf, (uint8_t) buf_size))

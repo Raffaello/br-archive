@@ -10,6 +10,9 @@ extern "C" {
 #include <stdbool.h>
 #include <lib_bra_types.h>
 
+
+#define BRA_TREE_NODE_ROOT_INDEX 0
+
 #ifndef NDEBUG
 /**
  * @brief Print the tree starting from @p node.

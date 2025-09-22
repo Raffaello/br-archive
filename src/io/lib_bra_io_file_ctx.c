@@ -280,7 +280,8 @@ static bool _bra_io_file_ctx_write_meta_entry_process_write_dir_subdir(bra_io_fi
 
     if (node->parent->index == 0)
     {
-        // parent is root
+        assert(node->parent != NULL);
+        assert(node->parent->index == 0);    // parent is root
         me.attributes = BRA_ATTR_SET_TYPE(attributes, BRA_ATTR_TYPE_DIR);
     }
     else
@@ -290,7 +291,10 @@ static bool _bra_io_file_ctx_write_meta_entry_process_write_dir_subdir(bra_io_fi
 
     if (BRA_ATTR_TYPE(attributes) == BRA_ATTR_TYPE_SUBDIR)
     {
-        if (!bra_meta_entry_subdir_init(&me, node->index))
+        assert(node->parent != NULL);
+        assert(node->parent->index != 0);    // parent is not root
+        // set parent index
+        if (!bra_meta_entry_subdir_init(&me, node->parent->index))
             goto _BRA_IO_FILE_CTX_WRITE_META_ENTRY_PROCESS_WRITE_SUBDIR_ERR;
     }
 

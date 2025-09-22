@@ -620,7 +620,7 @@ bool bra_io_file_ctx_write_meta_entry(bra_io_file_ctx_t* ctx, const bra_attr_t a
 
     if (fwrite(&me.crc32, sizeof(uint32_t), 1, ctx->f.f) != 1)
         goto BRA_IO_WRITE_ERR;
-    fflush(ctx->f.f);
+    // fflush(ctx->f.f);
 
     bra_log_debug("%s CRC32 %08X", fn, me.crc32);
 
@@ -705,7 +705,8 @@ bool bra_io_file_ctx_decode_and_write_to_disk(bra_io_file_ctx_t* ctx, bra_fs_ove
         else
         {
             bra_io_file_t f2;
-            end_msg = g_end_messages[0];
+            end_msg  = g_end_messages[0];
+            me.crc32 = bra_crc32c(&mef->data_size, sizeof(uint64_t), me.crc32);
             bra_log_printf("Extracting file: " BRA_PRINTF_FMT_FILENAME, fn);
             // NOTE: the directory must have been created in the previous entry,
             //       otherwise this will fail to create the file.

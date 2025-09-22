@@ -284,12 +284,7 @@ std::optional<bra_attr_t> file_attributes(const std::filesystem::path& base, con
     case regular:
         return BRA_ATTR_TYPE_FILE;
     case directory:
-    {
-        // if (base.empty())
-        // return BRA_ATTR_TYPE_DIR;    // 1st level dir is a dir
-
         return dir_isSubDir(base, path) ? BRA_ATTR_TYPE_SUBDIR : BRA_ATTR_TYPE_DIR;
-    }
     case symlink:
         return BRA_ATTR_TYPE_SYM;
     }

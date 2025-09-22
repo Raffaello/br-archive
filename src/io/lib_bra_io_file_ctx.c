@@ -620,11 +620,6 @@ bool bra_io_file_ctx_encode_and_write_to_disk(bra_io_file_ctx_t* ctx, const char
         return false;
     }
 
-    if (BRA_ATTR_TYPE(attributes) == BRA_ATTR_TYPE_DIR)
-    {
-        // check if it is instead a subdir
-    }
-
     bra_log_printf("Archiving %-7s:  ", g_attr_type_names[BRA_ATTR_TYPE(attributes)]);
     _bra_print_string_max_length(fn, strlen(fn), BRA_PRINTF_FMT_FILENAME_MAX_LENGTH);
 

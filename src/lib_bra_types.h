@@ -69,12 +69,13 @@ typedef struct bra_meta_entry_t
     uint8_t    name_size;     //!< length in bytes excluding the trailing NUL; [1..UINT8_MAX]
     char*      name;          //!< filename/dirname (owned; free via @ref bra_meta_entry_free)
     void*      entry_data;    //!< Type-specific entry data: file size for files, parent tree index for subdirs, NULL for dirs and symlinks. (owned; free via @ref bra_meta_entry_free)
+    uint32_t   crc32;         //!< CRC32C of the file data; 0 if not computed.
 } bra_meta_entry_t;
 
-typedef struct bra_meta_entry_footer_t
-{
-    uint32_t crc32;    //!< CRC32C of the file data; 0 if not computed.
-} bra_meta_entry_footer_t;
+// typedef struct bra_meta_entry_footer_t
+// {
+//     uint32_t crc32;
+// } bra_meta_entry_footer_t;
 
 /**
  * @brief Metadata for a file entry in a BR-archive.

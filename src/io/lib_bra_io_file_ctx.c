@@ -579,6 +579,8 @@ bool bra_io_file_ctx_write_meta_entry(bra_io_file_ctx_t* ctx, const bra_attr_t a
 {
     assert_bra_io_file_cxt_t(ctx);
 
+    uint32_t crc32 = 0;
+
     // Processing & Writing data
     switch (BRA_ATTR_TYPE(attributes))
     {
@@ -605,39 +607,17 @@ bool bra_io_file_ctx_write_meta_entry(bra_io_file_ctx_t* ctx, const bra_attr_t a
         goto BRA_IO_WRITE_ERR;
     }
 
-    return true;
-
-BRA_IO_WRITE_ERR:
-    bra_io_file_write_error(&ctx->f);
-    return false;
-}
-
-bool bra_io_file_ctx_read_meta_entry_footer(bra_io_file_ctx_t* ctx, bra_meta_entry_footer_t* mef)
-{
-    assert_bra_io_file_cxt_t(ctx);
-    assert(mef != NULL);
-
-    if (fread(&mef->crc32, sizeof(uint32_t), 1, ctx->f.f) != 1)
-    {
-        bra_io_file_read_error(&ctx->f);
-        return false;
-    }
-
-    return true;
-}
-
-bool bra_io_file_ctx_write_meta_entry_footer(bra_io_file_ctx_t* ctx, const bra_meta_entry_footer_t* mef)
-{
-    assert_bra_io_file_cxt_t(ctx);
-    assert(mef != NULL);
-
-    if (fwrite(&mef->crc32, sizeof(uint32_t), 1, ctx->f.f) != 1)
+    if (fwrite(&crc32, sizeof(uint32_t), 1, ctx->f.f) != 1)
     {
         bra_io_file_write_error(&ctx->f);
         return false;
     }
 
     return true;
+
+BRA_IO_WRITE_ERR:
+    bra_io_file_write_error(&ctx->f);
+    return false;
 }
 
 bool bra_io_file_ctx_encode_and_write_to_disk(bra_io_file_ctx_t* ctx, const char* fn)
@@ -660,9 +640,6 @@ bool bra_io_file_ctx_encode_and_write_to_disk(bra_io_file_ctx_t* ctx, const char
 
     if (!bra_io_file_ctx_write_meta_entry(ctx, attributes, fn))
         return false;    // f closed already
-
-    if (!bra_io_file_ctx_write_meta_entry_footer(ctx, &(bra_meta_entry_footer_t) {.crc32 = 0}))
-        return false;
 
     bra_log_printf(" [  %-4.4s  ]\n", g_end_messages[0]);
     return true;
@@ -703,7 +680,6 @@ bool bra_io_file_ctx_decode_and_write_to_disk(bra_io_file_ctx_t* ctx, bra_fs_ove
         {
             end_msg = g_end_messages[1];
             bra_log_printf("Skipping file:   " BRA_PRINTF_FMT_FILENAME, fn);
-            bra_meta_entry_free(&me);
             if (!bra_io_file_skip_data(&ctx->f, ds))
             {
                 bra_io_file_seek_error(&ctx->f);
@@ -723,7 +699,6 @@ bool bra_io_file_ctx_decode_and_write_to_disk(bra_io_file_ctx_t* ctx, bra_fs_ove
             if (!bra_io_file_open(&f2, fn, "wb"))
                 goto BRA_IO_DECODE_ERR;
 
-            bra_meta_entry_free(&me);
             if (!bra_io_file_copy_file_chunks(&f2, &ctx->f, ds))
                 goto BRA_IO_DECODE_ERR;
 
@@ -748,8 +723,6 @@ bool bra_io_file_ctx_decode_and_write_to_disk(bra_io_file_ctx_t* ctx, bra_fs_ove
             if (!bra_fs_dir_make(fn))
                 goto BRA_IO_DECODE_ERR;
         }
-
-        bra_meta_entry_free(&me);
     }
     break;
     case BRA_ATTR_TYPE_SYM:
@@ -760,14 +733,11 @@ bool bra_io_file_ctx_decode_and_write_to_disk(bra_io_file_ctx_t* ctx, bra_fs_ove
         break;
     }
 
-    // read footer
-    bra_meta_entry_footer_t mef = {.crc32 = 0xFFFFFFFF};
-    if (!bra_io_file_ctx_read_meta_entry_footer(ctx, &mef))
+    // read CRC32
+    if (fread(&me.crc32, sizeof(uint32_t), 1, ctx->f.f) != 1)
         goto BRA_IO_DECODE_ERR;
 
-    // bra_log_printf("|x%08X|\n", mef.crc32);
-    // assert(mef.crc32 == 0x0);
-
+    bra_meta_entry_free(&me);
     free(fn);
     bra_log_printf(" [  %-4.4s  ]\n", end_msg);
     return true;
@@ -804,7 +774,6 @@ bool bra_io_file_ctx_print_meta_entry(bra_io_file_ctx_t* ctx)
     _bra_print_string_max_length(fn, len, BRA_PRINTF_FMT_FILENAME_MAX_LENGTH);
     free(fn);
 
-    bra_meta_entry_free(&me);
     // skip data content
     if (!bra_io_file_skip_data(&ctx->f, ds))
     {
@@ -813,16 +782,16 @@ bool bra_io_file_ctx_print_meta_entry(bra_io_file_ctx_t* ctx)
     }
 
     // read footer
-    bra_meta_entry_footer_t mef = {.crc32 = 0xFFFFFFFF};
-    if (!bra_io_file_ctx_read_meta_entry_footer(ctx, &mef))
+    // read CRC32
+    if (fread(&me.crc32, sizeof(uint32_t), 1, ctx->f.f) != 1)
     {
         bra_io_file_read_error(&ctx->f);
         goto BRA_IO_FILE_CTX_PRINT_META_ENTRY_ERR;
     }
 
-    bra_log_printf("|x%08X|\n", mef.crc32);
-    // assert(mef.crc32 == 0x0);
+    bra_log_printf("|x%08X|\n", me.crc32);
 
+    bra_meta_entry_free(&me);
     return true;
 
 BRA_IO_FILE_CTX_PRINT_META_ENTRY_ERR:

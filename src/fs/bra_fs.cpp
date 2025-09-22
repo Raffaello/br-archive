@@ -24,7 +24,7 @@ bool try_sanitize(std::filesystem::path& path) noexcept
 {
     error_code ec;
     auto       err = [&path, &ec]() {
-        bra_log_error("unable to sanitize path %s: %s", path.string().c_str(), ec.message().c_str());
+        bra_log_error("unable to sanitize path '%s': %s", path.string().c_str(), ec.message().c_str());
         return false;
     };
 
@@ -115,7 +115,9 @@ bool dir_isSubDir(const std::filesystem::path& base, const std::filesystem::path
     if (b.empty() || p.empty() || b == p)
         return false;
 
-    p = fs::relative(p, b, ec);
+    const bool isRoot = b.relative_path() == ".";
+
+    p = fs::relative("." / p, "." / b, ec);
     if (ec)
     {
         bra_log_error("unable to detect %s subdir of %s: %s", path.string().c_str(), base.string().c_str(), ec.message().c_str());
@@ -124,6 +126,9 @@ bool dir_isSubDir(const std::filesystem::path& base, const std::filesystem::path
 
     // Ensure p is a non-empty relative subpath of base (dot‑prefixed names allowed); sanitized above.
     if (!try_sanitize(p))
+        return false;
+
+    if (isRoot && p.parent_path().empty())
         return false;
 
     return !p.empty();
@@ -280,8 +285,8 @@ std::optional<bra_attr_t> file_attributes(const std::filesystem::path& base, con
         return BRA_ATTR_TYPE_FILE;
     case directory:
     {
-        if (base.empty())
-            return BRA_ATTR_TYPE_DIR;    // 1st level dir is a dir
+        // if (base.empty())
+        // return BRA_ATTR_TYPE_DIR;    // 1st level dir is a dir
 
         return dir_isSubDir(base, path) ? BRA_ATTR_TYPE_SUBDIR : BRA_ATTR_TYPE_DIR;
     }

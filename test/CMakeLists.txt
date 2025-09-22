@@ -70,7 +70,7 @@ add_test(NAME test_bra.sfx_2                         COMMAND test_bra test_bra_s
 
 add_test(NAME test_bra.not_more_than_1_same_file     COMMAND test_bra test_bra_not_more_than_1_same_file)
 
-add_test(NAME test_bra.unbra_all                     COMMAND test_bra test_bra_unbra_all)
+add_test(NAME test_bra.bra_unbra_all                 COMMAND test_bra test_bra_unbra_all)
 
 #####################################################################################################
 

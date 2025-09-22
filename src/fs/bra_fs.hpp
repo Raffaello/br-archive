@@ -61,6 +61,12 @@ namespace bra::fs
 /**
  * @brief Check if the @p path is a sub-dir of @p base relative to the current directory.
  *        Path outside the current directory return false.
+ *        if the @p base is pointing to the current directory, if it is a direct subdir will return false,
+ *        e.g.
+ *          ```
+ *          "./", "dir1" // this will return false
+ *          "./", "dir1/dirA" // this will return true
+ *          ```
  *
  * @param base
  * @param path

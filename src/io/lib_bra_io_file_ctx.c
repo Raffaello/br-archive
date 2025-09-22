@@ -13,7 +13,7 @@
 
 
 static const char  g_end_messages[][5] = {" OK ", "SKIP"};
-static const char* g_attr_type_names[] = {"file", "dir", "symlink", "dir"};
+static const char* g_attr_type_names[] = {"file", "dir", "symlink", "subdir"};
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -613,11 +613,16 @@ bool bra_io_file_ctx_encode_and_write_to_disk(bra_io_file_ctx_t* ctx, const char
 
     // get entry attributes
     bra_attr_t attributes;
-    if (!bra_fs_file_attributes(ctx->last_dir, fn, &attributes))
+    if (!bra_fs_file_attributes("./", fn, &attributes))
     {
         bra_log_error("%s has unknown attribute", fn);
         bra_io_file_close(&ctx->f);
         return false;
+    }
+
+    if (BRA_ATTR_TYPE(attributes) == BRA_ATTR_TYPE_DIR)
+    {
+        // check if it is instead a subdir
     }
 
     bra_log_printf("Archiving %-7s:  ", g_attr_type_names[BRA_ATTR_TYPE(attributes)]);

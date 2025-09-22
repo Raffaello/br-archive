@@ -32,7 +32,7 @@ private:
     Unbra& operator=(Unbra&&)      = delete;
 
     fs::path m_bra_file;
-    fs::path m_output_path = fs::current_path();
+    fs::path m_output_path;
     bool     m_listContent = false;
     bool     m_sfx         = false;
 
@@ -53,7 +53,7 @@ protected:
     virtual void help_options() const override
     {
         bra_log_printf("--list       | -l : view archive content.\n");
-        bra_log_printf("--output     | -o : output path (default: current directory).\n");
+        bra_log_printf("--output     | -o : output path: must be a directory relative to the current one (default: current directory).\n");
     };
 
     int parseArgs_minArgc() const override { return 2; }
@@ -74,9 +74,6 @@ protected:
             }
 
             m_output_path = fs::path(argv[++i]);
-
-            if (!bra::fs::try_sanitize(m_output_path))
-                return false;
         }
         else
             return nullopt;
@@ -127,13 +124,34 @@ protected:
 
         if (m_output_path.empty())
         {
-            bra_log_error("no output path provided");
-            return false;
+            std::error_code ec;
+            m_output_path = fs::current_path(ec);
+            if (ec)
+            {
+                bra_log_error("unable to get current directory");
+                return false;
+            }
+
+            if (!bra::fs::try_sanitize(m_output_path))
+            {
+                bra_log_error("invalid current path: '%s'", m_output_path.string().c_str());
+                return false;
+            }
         }
-        else if (bra::fs::dir_exists(m_output_path))
+        else
         {
-            bra_log_warn("output path %s already exists.", m_output_path.string().c_str());
+            if (!bra::fs::try_sanitize(m_output_path) || m_output_path.empty())
+            {
+                bra_log_error("invalid output path: '%s'", m_output_path.string().c_str());
+                return false;
+            }
+
+            if (bra::fs::dir_exists(m_output_path))
+            {
+                bra_log_warn("output path %s already exists.", m_output_path.string().c_str());
+            }
         }
+
 
 #ifndef NDEBUG
         bra_log_debug("output path: %s", m_output_path.string().c_str());
@@ -142,7 +160,9 @@ protected:
         return true;
     }
 
-    int run_prog() override
+    int
+    run_prog() override
+
     {
         // header
         bra_io_header_t bh{};
@@ -177,19 +197,36 @@ protected:
         }
         else
         {
+            std::error_code ec;
             if (!bra::fs::dir_exists(m_output_path))
             {
                 bra_log_printf("Creating output path: %s\n", m_output_path.string().c_str());
                 if (!bra::fs::dir_make(m_output_path))
                     return 1;
             }
+            const fs::path cur_path = fs::current_path(ec);
+            if (ec)
+            {
+                bra_log_error("unable to get current directory");
+                return 1;
+            }
 
-            fs::current_path(m_output_path);
+            fs::current_path(m_output_path, ec);
+            if (ec)
+            {
+                bra_log_error("unable to change current directory to: %s", m_output_path.string().c_str());
+                return 1;
+            }
+
             for (uint32_t i = 0; i < bh.num_files; i++)
             {
                 if (!bra_io_file_ctx_decode_and_write_to_disk(&m_ctx, &m_overwrite_policy))
                     return 1;
             }
+
+            fs::current_path(cur_path, ec);
+            if (ec)
+                bra_log_warn("unable to change current directory to: %s", cur_path.string().c_str());
         }
 
         bra_io_file_ctx_close(&m_ctx);
@@ -197,7 +234,8 @@ protected:
     }
 
 public:
-    Unbra()          = default;
+    Unbra() = default;
+
     virtual ~Unbra() = default;
 };
 

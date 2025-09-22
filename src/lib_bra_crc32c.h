@@ -10,10 +10,11 @@
 
 /**
  * @brief Calculates the CRC32C (Castagnoli) checksum of the given data.
+ *        If @p length is @c UINT64_MAX the function recursively call itself twice splitting the data in 2 halves.
  *
  * @param data         Pointer to the input data.
- * @param length       Length of the input data.
+ * @param length       Length of the input data in bytes.
  * @param previous_crc Previous CRC value (for incremental updates).
  * @return uint32_t    The calculated CRC32C checksum.
  */
-uint32_t bra_crc32c(const uint8_t* data, const size_t length, const uint32_t previous_crc);
+uint32_t bra_crc32c(const void* data, const uint64_t length, const uint32_t previous_crc);

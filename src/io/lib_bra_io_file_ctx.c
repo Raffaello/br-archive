@@ -620,9 +620,10 @@ bool bra_io_file_ctx_write_meta_entry(bra_io_file_ctx_t* ctx, const bra_attr_t a
 
     if (fwrite(&me.crc32, sizeof(uint32_t), 1, ctx->f.f) != 1)
         goto BRA_IO_WRITE_ERR;
-    // fflush(ctx->f.f);
 
+#ifndef NDEBUG
     bra_log_debug("%s CRC32 %08X", fn, me.crc32);
+#endif
 
     bra_meta_entry_free(&me);
     return true;
@@ -756,18 +757,15 @@ bool bra_io_file_ctx_decode_and_write_to_disk(bra_io_file_ctx_t* ctx, bra_fs_ove
         break;
     }
 
-    bra_log_debug("%s tell %llu", me.name, bra_io_file_tell(&ctx->f));
     // read CRC32
     uint32_t read_crc32;
     if (fread(&read_crc32, sizeof(uint32_t), 1, ctx->f.f) != 1)
         return false;
-    bra_log_debug("%s read crc32 %08x", me.name, read_crc32);
 
     // compare CRC32
     if (read_crc32 != me.crc32)
     {
         bra_log_critical("%s checksum failed!!!", me.name);
-        bra_log_debug("read_crc32=0x%08X  computed_crc32=0x%08X", read_crc32, me.crc32);
         return false;
     }
 

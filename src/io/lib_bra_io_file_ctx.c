@@ -13,7 +13,7 @@
 
 
 static const char  g_end_messages[][5] = {" OK ", "SKIP"};
-static const char* g_attr_type_names[] = {"file", "dir", "symlink", "subdir"};
+static const char* g_attr_type_names[] = {"file", "dir", "symlink", "dir"};
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 

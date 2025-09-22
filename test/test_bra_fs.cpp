@@ -321,16 +321,42 @@ int test_bra_fs_dir_isSubDir()
 int test_bra_fs_file_attributes()
 {
     constexpr const char* fn = ".test_dir";
+    constexpr const char* f2 = "Test.dir";
 
     if (fs::exists(fn))
         fs::remove(fn);
+    if (fs::exists(f2))
+        fs::remove(f2);
 
     fs::create_directory(fn);
     ASSERT_TRUE(fs::exists(fn));
+    fs::create_directory(f2);
+    ASSERT_TRUE(fs::exists(f2));
 
     auto attr = bra::fs::file_attributes("./", fn);
     ASSERT_TRUE(attr.has_value());
+    ASSERT_EQ(*attr, BRA_ATTR_TYPE_SUBDIR);
+
+    attr = bra::fs::file_attributes(".", fn);
+    ASSERT_TRUE(attr.has_value());
+    ASSERT_EQ(*attr, BRA_ATTR_TYPE_SUBDIR);
+
+    attr = bra::fs::file_attributes("", fn);
+    ASSERT_TRUE(attr.has_value());
     ASSERT_EQ(*attr, BRA_ATTR_TYPE_DIR);
+
+    attr = bra::fs::file_attributes("./", f2);
+    ASSERT_TRUE(attr.has_value());
+    ASSERT_EQ(*attr, BRA_ATTR_TYPE_SUBDIR);
+
+    attr = bra::fs::file_attributes(".", f2);
+    ASSERT_TRUE(attr.has_value());
+    ASSERT_EQ(*attr, BRA_ATTR_TYPE_SUBDIR);
+
+    attr = bra::fs::file_attributes("", f2);
+    ASSERT_TRUE(attr.has_value());
+    ASSERT_EQ(*attr, BRA_ATTR_TYPE_DIR);
+
 
     return 0;
 }

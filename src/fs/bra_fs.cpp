@@ -126,7 +126,7 @@ bool dir_isSubDir(const std::filesystem::path& base, const std::filesystem::path
     if (!try_sanitize(p))
         return false;
 
-    return !p.empty() && !p.native().starts_with('.');
+    return !p.empty();
 }
 
 std::filesystem::path filename_archive_adjust(const std::filesystem::path& path) noexcept

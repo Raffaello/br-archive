@@ -85,11 +85,11 @@ static bool _bra_io_file_ctx_write_meta_entry_common(bra_io_file_ctx_t* ctx, con
     if (fwrite(&attr, sizeof(bra_attr_t), 1, ctx->f.f) != 1)
         return false;
 
-    // 2. filename size
+    // 3. filename size
     if (fwrite(&filename_size, sizeof(uint8_t), 1, ctx->f.f) != 1)
         return false;
 
-    // 3. filename
+    // 4. filename
     if (fwrite(filename, sizeof(char), filename_size, ctx->f.f) != filename_size)
         return false;
 
@@ -612,6 +612,34 @@ BRA_IO_WRITE_ERR:
     return false;
 }
 
+bool bra_io_file_ctx_read_meta_entry_footer(bra_io_file_ctx_t* ctx, bra_meta_entry_footer_t* mef)
+{
+    assert_bra_io_file_cxt_t(ctx);
+    assert(mef != NULL);
+
+    if (fread(&mef->crc32, sizeof(uint32_t), 1, ctx->f.f) != 1)
+    {
+        bra_io_file_read_error(&ctx->f);
+        return false;
+    }
+
+    return true;
+}
+
+bool bra_io_file_ctx_write_meta_entry_footer(bra_io_file_ctx_t* ctx, const bra_meta_entry_footer_t* mef)
+{
+    assert_bra_io_file_cxt_t(ctx);
+    assert(mef != NULL);
+
+    if (fwrite(&mef->crc32, sizeof(uint32_t), 1, ctx->f.f) != 1)
+    {
+        bra_io_file_write_error(&ctx->f);
+        return false;
+    }
+
+    return true;
+}
+
 bool bra_io_file_ctx_encode_and_write_to_disk(bra_io_file_ctx_t* ctx, const char* fn)
 {
     assert_bra_io_file_cxt_t(ctx);
@@ -632,6 +660,9 @@ bool bra_io_file_ctx_encode_and_write_to_disk(bra_io_file_ctx_t* ctx, const char
 
     if (!bra_io_file_ctx_write_meta_entry(ctx, attributes, fn))
         return false;    // f closed already
+
+    if (!bra_io_file_ctx_write_meta_entry_footer(ctx, &(bra_meta_entry_footer_t) {.crc32 = 0}))
+        return false;
 
     bra_log_printf(" [  %-4.4s  ]\n", g_end_messages[0]);
     return true;
@@ -729,6 +760,14 @@ bool bra_io_file_ctx_decode_and_write_to_disk(bra_io_file_ctx_t* ctx, bra_fs_ove
         break;
     }
 
+    // read footer
+    bra_meta_entry_footer_t mef = {.crc32 = 0xFFFFFFFF};
+    if (!bra_io_file_ctx_read_meta_entry_footer(ctx, &mef))
+        goto BRA_IO_DECODE_ERR;
+
+    // bra_log_printf("|x%08X|\n", mef.crc32);
+    // assert(mef.crc32 == 0x0);
+
     free(fn);
     bra_log_printf(" [  %-4.4s  ]\n", end_msg);
     return true;
@@ -765,7 +804,6 @@ bool bra_io_file_ctx_print_meta_entry(bra_io_file_ctx_t* ctx)
     _bra_print_string_max_length(fn, len, BRA_PRINTF_FMT_FILENAME_MAX_LENGTH);
     free(fn);
 
-    bra_log_printf("|\n");
     bra_meta_entry_free(&me);
     // skip data content
     if (!bra_io_file_skip_data(&ctx->f, ds))
@@ -773,6 +811,17 @@ bool bra_io_file_ctx_print_meta_entry(bra_io_file_ctx_t* ctx)
         bra_io_file_seek_error(&ctx->f);
         goto BRA_IO_FILE_CTX_PRINT_META_ENTRY_ERR;
     }
+
+    // read footer
+    bra_meta_entry_footer_t mef = {.crc32 = 0xFFFFFFFF};
+    if (!bra_io_file_ctx_read_meta_entry_footer(ctx, &mef))
+    {
+        bra_io_file_read_error(&ctx->f);
+        goto BRA_IO_FILE_CTX_PRINT_META_ENTRY_ERR;
+    }
+
+    bra_log_printf("|x%08X|\n", mef.crc32);
+    // assert(mef.crc32 == 0x0);
 
     return true;
 

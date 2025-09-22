@@ -32,7 +32,7 @@ bool bra_io_file_ctx_open(bra_io_file_ctx_t* ctx, const char* fn, const char* mo
 bool bra_io_file_ctx_sfx_open(bra_io_file_ctx_t* ctx, const char* fn, const char* mode);
 
 /**
- * @brief
+ * @brief Close the file associated with @p ctx and free any allocated resources.
  *
  * @param ctx
  * @retval true
@@ -99,6 +99,26 @@ bool bra_io_file_ctx_read_meta_entry(bra_io_file_ctx_t* ctx, bra_meta_entry_t* m
  * @retval false on error closes @p ctx->f via @ref bra_io_file_close.
  */
 bool bra_io_file_ctx_write_meta_entry(bra_io_file_ctx_t* ctx, const bra_attr_t attributes, const char* fn);
+
+/**
+ * @brief
+ *
+ * @param ctx
+ * @param mef
+ * @return true
+ * @return false
+ */
+bool bra_io_file_ctx_read_meta_entry_footer(bra_io_file_ctx_t* ctx, bra_meta_entry_footer_t* mef);
+
+/**
+ * @brief
+ *
+ * @param ctx
+ * @param mef
+ * @return true
+ * @return false
+ */
+bool bra_io_file_ctx_write_meta_entry_footer(bra_io_file_ctx_t* ctx, const bra_meta_entry_footer_t* mef);
 
 /**
  * @brief Encode a file or directory @p fn and append it to the open archive @p ctx->f.

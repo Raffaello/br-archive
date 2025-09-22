@@ -42,6 +42,7 @@ add_library(lib_bra STATIC src/lib_bra.c)
 target_sources(lib_bra
     PRIVATE
         src/lib_bra_private.c
+        src/lib_bra_crc32c.c
 
         src/log/bra_log.c
 

@@ -49,7 +49,6 @@ bra_tree_node_t* bra_tree_dir_add(bra_tree_dir_t* tree, const char* dirname);
  * @brief Search a node by its index (0 is root) and return the node pointer.
  *
  * @param tree
- * @param dirname
  * @param parent_index
  * @return bra_tree_node_t* the found node, @c NULL if not found.
  */

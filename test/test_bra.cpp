@@ -314,7 +314,6 @@ TEST(test_bra_unbra_all)
     const std::string unbra    = CMD_PREFIX + "unbra -l";
     const std::string in_file  = "*";
     const std::string out_file = "./all.BRa";
-    // const std::string exp_file = "./test.txt.exp";
 
     if (fs::exists(out_file))
         fs::remove(out_file);

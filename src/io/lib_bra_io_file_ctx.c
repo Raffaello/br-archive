@@ -257,7 +257,7 @@ BRA_IO_FILE_CTX_WRITE_META_ENTRY_PROCESS_WRITE_FILE_ERR:
     return false;
 }
 
-static bool _bra_io_file_ctx_write_meta_entry_process_write_dir_subdir(bra_io_file_ctx_t* ctx, const bra_attr_t attributes, const char* dirname)
+static bool _bra_io_file_ctx_write_meta_entry_process_write_dir_subdir(bra_io_file_ctx_t* ctx, bra_attr_t attributes, const char* dirname)
 {
     assert_bra_io_file_cxt_t(ctx);
     assert(dirname != NULL);
@@ -275,18 +275,14 @@ static bool _bra_io_file_ctx_write_meta_entry_process_write_dir_subdir(bra_io_fi
     }
 
     bra_meta_entry_t me;
-    if (!bra_meta_entry_init(&me, attributes, node->dirname, strlen(node->dirname)))
-        return false;
-
     assert(node->parent != NULL);
     if (node->parent->index == 0)
-    {
-        me.attributes = BRA_ATTR_SET_TYPE(attributes, BRA_ATTR_TYPE_DIR);
-    }
+        attributes = BRA_ATTR_SET_TYPE(attributes, BRA_ATTR_TYPE_DIR);
     else
-    {
-        me.attributes = BRA_ATTR_SET_TYPE(attributes, BRA_ATTR_TYPE_SUBDIR);
-    }
+        attributes = BRA_ATTR_SET_TYPE(attributes, BRA_ATTR_TYPE_SUBDIR);
+
+    if (!bra_meta_entry_init(&me, attributes, node->dirname, strlen(node->dirname)))
+        return false;
 
     if (BRA_ATTR_TYPE(me.attributes) == BRA_ATTR_TYPE_SUBDIR)
     {

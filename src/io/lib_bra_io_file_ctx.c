@@ -330,23 +330,29 @@ bool bra_io_file_ctx_open(bra_io_file_ctx_t* ctx, const char* fn, const char* mo
         return false;
     ctx->last_dir = _bra_strdup("");
     if (ctx->last_dir == NULL)
-    {
-        bra_tree_dir_destroy(&ctx->tree);
-        ctx->tree = NULL;
-        return false;
-    }
+        goto BRA_IO_FILE_CTX_OPEN_ERR;
 
     const bool res = bra_io_file_open(&ctx->f, fn, mode);
     if (!res)
-    {
-        bra_tree_dir_destroy(&ctx->tree);
-        free(ctx->last_dir);
-        ctx->tree = NULL;
-    }
+        goto BRA_IO_FILE_CTX_OPEN_ERR;
     else
         ctx->last_dir_node = ctx->tree->root;    // root dir
 
     return res;
+
+BRA_IO_FILE_CTX_OPEN_ERR:
+    if (ctx->tree != NULL)
+    {
+        bra_tree_dir_destroy(&ctx->tree);
+        ctx->tree = NULL;
+    }
+    if (ctx->last_dir != NULL)
+    {
+        free(ctx->last_dir);
+        ctx->last_dir = NULL;
+    }
+
+    return false;
 }
 
 bool bra_io_file_ctx_sfx_open(bra_io_file_ctx_t* ctx, const char* fn, const char* mode)

@@ -21,18 +21,6 @@ The only exception is for the `filesystem` module aspect that is using C++ `file
  The `bra_fs` can be used directly in C++, but `lib-bra` is using the C wrapper `bra-fs_c`.
 
 
-## Entry MAX_LENGTH (Directory & Filename)
-
- There is a limit for each entry, file or directory, to be 255 characters max.
-
- Potentially if divided in multiple entry, sub-dirs for e.g., it can overcome that maximum.
-
- It won't support a filename longer than 255 chars and based on the directory structure at the moment,
- it might fail to encoding as the path is longer than 255 chars (`dir/filename` for e.g.).
- In such a case would be mostly enough to split in 2 entries, but it is not planned yet nor implemented.
- (alternatively would be enough to give a max of 65k chars using a uint16_t)
- 
-
 ## Self-Extracting Archive
 
 The self extracting archive will be done in the following formats:
@@ -55,3 +43,12 @@ Currently supported wildcards: `*` and `?`.
 > - On Windows cmd.exe, patterns are expanded by the C runtime (setargv) enabled in our build; use ^ or quotes to prevent expansion.
 > - BRa itself only expands directory arguments to `dir/*` (non-recursive); empty directories are intentionally not archived.
 > - Examples: `*.txt`, `image_??.png`
+
+## Entry name length limit (single path component)
+Each entry name (file or directory) is limited to 255 bytes after UTF‑8 encoding.
+The limit applies to a single path component (no parent path) and does not include the trailing `NULL`.
+
+- file is the filename without the directory path
+- directory is just the directory name without the parent path.
+
+Entries whose single‑component name exceeds 255 bytes are rejected at pack time and treated as invalid during extraction.

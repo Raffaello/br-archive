@@ -44,6 +44,9 @@ add_test(NAME test_bra_fs.search_wildcard                   COMMAND test_bra_fs 
 add_test(NAME test_bra_fs.search_wildcard_recursive_on_dir1 COMMAND test_bra_fs test_bra_fs_search_wildcard_recursive_on_dir1)
 add_test(NAME test_bra_fs.search_wildcard_recursive_in_dir1 COMMAND test_bra_fs test_bra_fs_search_wildcard_recursive_in_dir1)
 
+add_test(NAME test_bra_fs.file_attributes COMMAND test_bra_fs test_bra_fs_file_attributes)
+
+
 # add_test(NAME test_bra_fs.symlink COMMAND test_bra_fs test_bra_fs_symlink)
 
 #####################################################################################################
@@ -66,6 +69,8 @@ add_test(NAME test_bra.sfx_1                         COMMAND test_bra test_bra_s
 add_test(NAME test_bra.sfx_2                         COMMAND test_bra test_bra_sfx_2)
 
 add_test(NAME test_bra.not_more_than_1_same_file     COMMAND test_bra test_bra_not_more_than_1_same_file)
+
+add_test(NAME test_bra.bra_unbra_all                 COMMAND test_bra test_bra_unbra_all)
 
 #####################################################################################################
 

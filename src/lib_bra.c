@@ -87,6 +87,8 @@ bool bra_meta_entry_init(bra_meta_entry_t* me, const bra_attr_t attr, const char
         if (me->entry_data == NULL)
             return false;
         break;
+    case BRA_ATTR_TYPE_DIR:
+    // [[fallthrough]];
     case BRA_ATTR_TYPE_SYM:
         me->entry_data = NULL;
         break;

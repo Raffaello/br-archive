@@ -309,11 +309,81 @@ int test_bra_fs_dir_isSubDir()
     ASSERT_FALSE(bra::fs::dir_isSubDir("foo", "foobar"));
     ASSERT_FALSE(bra::fs::dir_isSubDir("foo", "foo/../foobar"));
 
+    ASSERT_FALSE(bra::fs::dir_isSubDir("./", "bar"));
+    ASSERT_TRUE(bra::fs::dir_isSubDir("./", "foo/bar"));
+
     ASSERT_FALSE(bra::fs::dir_isSubDir("foo", "foo"));
     ASSERT_FALSE(bra::fs::dir_isSubDir("", "foo"));
     ASSERT_FALSE(bra::fs::dir_isSubDir("foo", ""));
     ASSERT_FALSE(bra::fs::dir_isSubDir(".", "."));
     ASSERT_FALSE(bra::fs::dir_isSubDir("../", "."));
+
+    return 0;
+}
+
+int test_bra_fs_file_attributes()
+{
+    constexpr const char* fn = ".test_dir";
+    constexpr const char* f2 = "Test.dir";
+    const fs::path        f3 = fs::path(fn) / "test_subdir";
+
+
+    if (fs::exists(f3))
+        fs::remove_all(f3);
+    if (fs::exists(fn))
+        fs::remove(fn);
+    if (fs::exists(f2))
+        fs::remove(f2);
+
+    fs::create_directories(f3);
+    ASSERT_TRUE(fs::exists(f3));
+    fs::create_directory(fn);
+    ASSERT_TRUE(fs::exists(fn));
+    fs::create_directory(f2);
+    ASSERT_TRUE(fs::exists(f2));
+
+
+    auto attr = bra::fs::file_attributes("./", fn);
+    ASSERT_TRUE(attr.has_value());
+    ASSERT_EQ(*attr, BRA_ATTR_TYPE_DIR);
+
+    attr = bra::fs::file_attributes(".", fn);
+    ASSERT_TRUE(attr.has_value());
+    ASSERT_EQ(*attr, BRA_ATTR_TYPE_DIR);
+
+    attr = bra::fs::file_attributes("", fn);
+    ASSERT_TRUE(attr.has_value());
+    ASSERT_EQ(*attr, BRA_ATTR_TYPE_DIR);
+
+    attr = bra::fs::file_attributes("./", f2);
+    ASSERT_TRUE(attr.has_value());
+    ASSERT_EQ(*attr, BRA_ATTR_TYPE_DIR);
+
+    attr = bra::fs::file_attributes(".", f2);
+    ASSERT_TRUE(attr.has_value());
+    ASSERT_EQ(*attr, BRA_ATTR_TYPE_DIR);
+
+    attr = bra::fs::file_attributes("", f2);
+    ASSERT_TRUE(attr.has_value());
+    ASSERT_EQ(*attr, BRA_ATTR_TYPE_DIR);
+
+    attr = bra::fs::file_attributes("./", f3);
+    ASSERT_TRUE(attr.has_value());
+    ASSERT_EQ(*attr, BRA_ATTR_TYPE_SUBDIR);
+
+    attr = bra::fs::file_attributes(".", f3);
+    ASSERT_TRUE(attr.has_value());
+    ASSERT_EQ(*attr, BRA_ATTR_TYPE_SUBDIR);
+
+    attr = bra::fs::file_attributes("", f3);
+    ASSERT_TRUE(attr.has_value());
+    ASSERT_EQ(*attr, BRA_ATTR_TYPE_DIR);
+
+    // Cleanup
+    // best-effort; directories are empty here
+    fs::remove_all(f3);
+    fs::remove(f2);
+    fs::remove(fn);
 
     return 0;
 }
@@ -347,5 +417,6 @@ int main(int argc, char* argv[])
                                      {TEST_FUNC(test_bra_fs_try_sanitize_path)},
                                      {TEST_FUNC(test_bra_fs_sfx_filename_adjust)},
                                      {TEST_FUNC(test_bra_fs_dir_isSubDir)},
+                                     {TEST_FUNC(test_bra_fs_file_attributes)},
                                  });
 }

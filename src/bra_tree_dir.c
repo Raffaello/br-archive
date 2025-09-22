@@ -133,8 +133,9 @@ bra_tree_dir_t* bra_tree_dir_create()
     if (tree == NULL)
         return NULL;
 
-    tree->root      = _bra_tree_node_alloc();    // alloc root with './' current dir
-    tree->num_nodes = 1U;
+    tree->root        = _bra_tree_node_alloc();    // alloc root with './' current dir
+    tree->root->index = BRA_TREE_NODE_ROOT_INDEX;
+    tree->num_nodes   = 1U;
 
     if (tree->root == NULL)
         bra_tree_dir_destroy(&tree);

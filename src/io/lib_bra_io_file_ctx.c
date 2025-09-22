@@ -60,6 +60,8 @@ static char* _bra_io_file_ctx_reconstruct_meta_entry_name(bra_io_file_ctx_t* ctx
         return fn;
     }
     break;
+    case BRA_ATTR_TYPE_DIR:
+    // [[fallthrough]];
     case BRA_ATTR_TYPE_SUBDIR:
     {
         if (len != NULL)
@@ -95,30 +97,46 @@ static bool _bra_io_file_ctx_write_meta_entry_common(bra_io_file_ctx_t* ctx, con
     return true;
 }
 
-static bool _bra_io_file_ctx_flush_dir(bra_io_file_ctx_t* ctx)
+static bool _bra_io_file_ctx_flush_type_dir(bra_io_file_ctx_t* ctx, const bra_meta_entry_t* me)
 {
     assert_bra_io_file_cxt_t(ctx);
+    assert(me != NULL);
+    assert(ctx->last_dir_node != NULL);
+    assert(ctx->last_dir_node->parent != NULL);    // not root
 
-    switch (BRA_ATTR_TYPE(ctx->last_dir_attr))
+    const size_t len = strnlen(ctx->last_dir_node->dirname, BRA_MAX_PATH_LENGTH);
+    if (len == 0)
     {
+        bra_log_critical("empty dirname for index %u", ctx->last_dir_node->index);
+        return false;
+    }
+    else if (len > UINT8_MAX)
+    {
+        bra_log_critical("dirname %s too long %zu", ctx->last_dir_node->dirname, len);
+        return false;
+    }
+
+    if (!_bra_io_file_ctx_write_meta_entry_common(ctx, me->attributes, ctx->last_dir_node->dirname, len))
+        return false;
+
+    return true;
+}
+
+static bool _bra_io_file_ctx_flush_dir(bra_io_file_ctx_t* ctx, const bra_meta_entry_t* me)
+{
+    assert_bra_io_file_cxt_t(ctx);
+    assert(me != NULL);
+
+    switch (BRA_ATTR_TYPE(me->attributes))
+    {
+    case BRA_ATTR_TYPE_DIR:
+    {
+        return _bra_io_file_ctx_flush_type_dir(ctx, me);
+    }
+    break;
     case BRA_ATTR_TYPE_SUBDIR:
     {
-        assert(ctx->last_dir_node != NULL);
-        assert(ctx->last_dir_node->parent != NULL);    // not root
-
-        const size_t len = strnlen(ctx->last_dir_node->dirname, BRA_MAX_PATH_LENGTH);
-        if (len == 0)
-        {
-            bra_log_critical("empty dirname for index %u", ctx->last_dir_node->index);
-            return false;
-        }
-        else if (len > UINT8_MAX)
-        {
-            bra_log_critical("dirname %s too long %zu", ctx->last_dir_node->dirname, len);
-            return false;
-        }
-
-        if (!_bra_io_file_ctx_write_meta_entry_common(ctx, ctx->last_dir_attr, ctx->last_dir_node->dirname, len))
+        if (!_bra_io_file_ctx_flush_type_dir(ctx, me))
             return false;
 
         bra_meta_entry_subdir_t me_subdir;
@@ -239,14 +257,14 @@ BRA_IO_FILE_CTX_WRITE_META_ENTRY_PROCESS_WRITE_FILE_ERR:
     return false;
 }
 
-static bool _bra_io_file_ctx_write_meta_entry_process_write_subdir(bra_io_file_ctx_t* ctx, const bra_attr_t attributes, const char* dirname)
+static bool _bra_io_file_ctx_write_meta_entry_process_write_dir_subdir(bra_io_file_ctx_t* ctx, bra_attr_t attributes, const char* dirname)
 {
     assert_bra_io_file_cxt_t(ctx);
     assert(dirname != NULL);
 
     assert(ctx->last_dir_node != NULL);
 
-    if (BRA_ATTR_TYPE(attributes) != BRA_ATTR_TYPE_SUBDIR)
+    if (BRA_ATTR_TYPE(attributes) != BRA_ATTR_TYPE_SUBDIR && BRA_ATTR_TYPE(attributes) != BRA_ATTR_TYPE_DIR)
         return false;
 
     bra_tree_node_t* node = bra_tree_dir_add(ctx->tree, dirname);
@@ -257,13 +275,22 @@ static bool _bra_io_file_ctx_write_meta_entry_process_write_subdir(bra_io_file_c
     }
 
     bra_meta_entry_t me;
+    assert(node->parent != NULL);
+    if (node->parent->index == 0)
+        attributes = BRA_ATTR_SET_TYPE(attributes, BRA_ATTR_TYPE_DIR);
+    else
+        attributes = BRA_ATTR_SET_TYPE(attributes, BRA_ATTR_TYPE_SUBDIR);
+
     if (!bra_meta_entry_init(&me, attributes, node->dirname, strlen(node->dirname)))
         return false;
 
-    if (!bra_meta_entry_subdir_init(&me, node->index))
-        goto _BRA_IO_FILE_CTX_WRITE_META_ENTRY_PROCESS_WRITE_SUBDIR_ERR;
+    if (BRA_ATTR_TYPE(me.attributes) == BRA_ATTR_TYPE_SUBDIR)
+    {
+        // set parent index
+        if (!bra_meta_entry_subdir_init(&me, node->parent->index))
+            goto _BRA_IO_FILE_CTX_WRITE_META_ENTRY_PROCESS_WRITE_SUBDIR_ERR;
+    }
 
-    ctx->last_dir_attr = attributes;
     ctx->last_dir_node = node;
     if (ctx->last_dir != NULL)
     {
@@ -276,7 +303,7 @@ static bool _bra_io_file_ctx_write_meta_entry_process_write_subdir(bra_io_file_c
         goto _BRA_IO_FILE_CTX_WRITE_META_ENTRY_PROCESS_WRITE_SUBDIR_ERR;
 
     ctx->last_dir_size = strlen(ctx->last_dir);
-    if (!_bra_io_file_ctx_flush_dir(ctx))
+    if (!_bra_io_file_ctx_flush_dir(ctx, &me))
         goto _BRA_IO_FILE_CTX_WRITE_META_ENTRY_PROCESS_WRITE_SUBDIR_ERR;
 
     bra_meta_entry_free(&me);
@@ -299,16 +326,31 @@ bool bra_io_file_ctx_open(bra_io_file_ctx_t* ctx, const char* fn, const char* mo
     ctx->tree = bra_tree_dir_create();
     if (ctx->tree == NULL)
         return false;
+    ctx->last_dir = _bra_strdup("");
+    if (ctx->last_dir == NULL)
+        goto BRA_IO_FILE_CTX_OPEN_ERR;
+
     const bool res = bra_io_file_open(&ctx->f, fn, mode);
     if (!res)
-    {
-        bra_tree_dir_destroy(&ctx->tree);
-        ctx->tree = NULL;
-    }
+        goto BRA_IO_FILE_CTX_OPEN_ERR;
     else
         ctx->last_dir_node = ctx->tree->root;    // root dir
 
     return res;
+
+BRA_IO_FILE_CTX_OPEN_ERR:
+    if (ctx->tree != NULL)
+    {
+        bra_tree_dir_destroy(&ctx->tree);
+        ctx->tree = NULL;
+    }
+    if (ctx->last_dir != NULL)
+    {
+        free(ctx->last_dir);
+        ctx->last_dir = NULL;
+    }
+
+    return false;
 }
 
 bool bra_io_file_ctx_sfx_open(bra_io_file_ctx_t* ctx, const char* fn, const char* mode)
@@ -456,14 +498,15 @@ bool bra_io_file_ctx_read_meta_entry(bra_io_file_ctx_t* ctx, bra_meta_entry_t* m
     assert_bra_io_file_cxt_t(ctx);
     assert(me != NULL);
 
-    char     buf[BRA_MAX_PATH_LENGTH];
-    unsigned buf_size = 0;
+    char       buf[BRA_MAX_PATH_LENGTH];
+    unsigned   buf_size = 0;
+    bra_attr_t attr;
 
     me->name      = NULL;
     me->name_size = 0;
 
     // 1. attributes
-    if (fread(&me->attributes, sizeof(bra_attr_t), 1, ctx->f.f) != 1)
+    if (fread(&attr, sizeof(bra_attr_t), 1, ctx->f.f) != 1)
     {
     BRA_IO_READ_ERR:
         bra_io_file_read_error(&ctx->f);
@@ -482,11 +525,25 @@ bool bra_io_file_ctx_read_meta_entry(bra_io_file_ctx_t* ctx, bra_meta_entry_t* m
 
     buf[buf_size] = '\0';
 
+    if (!bra_meta_entry_init(me, attr, buf, buf_size))
+        return false;
+
     // 4. entry data
     switch (BRA_ATTR_TYPE(me->attributes))
     {
+    case BRA_ATTR_TYPE_DIR:
+    {
+        if (!_bra_io_file_ctx_read_meta_entry_read_dir(me, buf, buf_size))
+            return false;
+
+        ctx->last_dir_node = bra_tree_dir_insert_at_parent(ctx->tree, BRA_TREE_NODE_ROOT_INDEX, me->name);
+        if (ctx->last_dir_node == NULL)
+            goto BRA_IO_READ_ERR;
+    }
+    break;
     case BRA_ATTR_TYPE_SUBDIR:
     {
+        assert(me->entry_data != NULL);
         if (!bra_meta_entry_subdir_init(me, 0))
             goto BRA_IO_READ_ERR;
         if (!_bra_io_file_ctx_read_meta_entry_read_subdir(ctx, me, buf, (uint8_t) buf_size))
@@ -499,6 +556,8 @@ bool bra_io_file_ctx_read_meta_entry(bra_io_file_ctx_t* ctx, bra_meta_entry_t* m
     break;
     case BRA_ATTR_TYPE_FILE:
     {
+        assert(me->entry_data != NULL);
+
         if (!bra_meta_entry_file_init(me, 0))
             goto BRA_IO_READ_ERR;
         if (!_bra_io_file_ctx_read_meta_entry_read_file(ctx, me, buf, (uint8_t) buf_size))
@@ -529,9 +588,13 @@ bool bra_io_file_ctx_write_meta_entry(bra_io_file_ctx_t* ctx, const bra_attr_t a
             goto BRA_IO_WRITE_ERR;
     }
     break;
+    case BRA_ATTR_TYPE_DIR:
+        if (!_bra_io_file_ctx_write_meta_entry_process_write_dir_subdir(ctx, attributes, fn))
+            goto BRA_IO_WRITE_ERR;
+        break;
     case BRA_ATTR_TYPE_SUBDIR:
     {
-        if (!_bra_io_file_ctx_write_meta_entry_process_write_subdir(ctx, attributes, fn))
+        if (!_bra_io_file_ctx_write_meta_entry_process_write_dir_subdir(ctx, attributes, fn))
             goto BRA_IO_WRITE_ERR;
     }
     break;
@@ -553,11 +616,11 @@ bool bra_io_file_ctx_encode_and_write_to_disk(bra_io_file_ctx_t* ctx, const char
 {
     assert_bra_io_file_cxt_t(ctx);
     assert(fn != NULL);
+    assert(ctx->last_dir != NULL);
 
     // get entry attributes
     bra_attr_t attributes;
-    // TODO: review when restoring BRA_ATTR_TYPE_DIR
-    if (!bra_fs_file_attributes(".", fn, &attributes))
+    if (!bra_fs_file_attributes("./", fn, &attributes))
     {
         bra_log_error("%s has unknown attribute", fn);
         bra_io_file_close(&ctx->f);
@@ -637,6 +700,8 @@ bool bra_io_file_ctx_decode_and_write_to_disk(bra_io_file_ctx_t* ctx, bra_fs_ove
         }
     }
     break;
+    case BRA_ATTR_TYPE_DIR:
+    // [[fallthrough]];
     case BRA_ATTR_TYPE_SUBDIR:
     {
         if (bra_fs_dir_exists(fn))
@@ -684,8 +749,6 @@ bool bra_io_file_ctx_print_meta_entry(bra_io_file_ctx_t* ctx)
 
     char             bytes[BRA_PRINTF_FMT_BYTES_BUF_SIZE];
     bra_meta_entry_t me;
-    if (!bra_meta_entry_init(&me, 0, NULL, 0))
-        return false;
 
     if (!bra_io_file_ctx_read_meta_entry(ctx, &me))
         goto BRA_IO_FILE_CTX_PRINT_META_ENTRY_ERR;

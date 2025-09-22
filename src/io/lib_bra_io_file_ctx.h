@@ -83,7 +83,7 @@ bool bra_io_file_ctx_sfx_open_and_read_footer_header(const char* fn, bra_io_head
  *          - for directories: the stream is positioned at the next entry.
  *
  * @param ctx[in,out]
- * @param me[out]
+ * @param me[out] initialize bra_meta_entry_t. If it was already initalized there is a memory leak.
  * @retval true on success, @p me must be free via @ref bra_meta_entry_free.
  * @retval false on error closes @p ctx->f via @ref bra_io_file_close.
  */

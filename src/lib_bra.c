@@ -110,6 +110,7 @@ bool bra_meta_entry_init(bra_meta_entry_t* me, const bra_attr_t attr, const char
     else
         me->name = NULL;
 
+    me->crc32 = BRA_CRC32_INIT;
     return true;
 }
 

@@ -201,40 +201,50 @@ static bool _bra_io_file_ctx_read_meta_entry_read_subdir(bra_io_file_ctx_t* ctx,
     return true;
 }
 
-static bool _bra_io_file_ctx_write_meta_entry_process_write_file(bra_io_file_ctx_t* ctx, const bra_attr_t attributes, const char* filename)
+/**
+ * @brief
+ *
+ * @param ctx
+ * @param attributes
+ * @param filename
+ * @param me        it is allocated here and must be free by the callee.
+ * @retval true     On success. @p me is allocated and must be freed.
+ * @retval false    on error. It frees @p me
+ */
+static bool _bra_io_file_ctx_write_meta_entry_process_write_file(bra_io_file_ctx_t* ctx, const bra_attr_t attributes, const char* filename, bra_meta_entry_t* me)
 {
     assert_bra_io_file_cxt_t(ctx);
     assert(filename != NULL);
+    assert(me != NULL);
 
     if (BRA_ATTR_TYPE(attributes) != BRA_ATTR_TYPE_FILE)
         return false;
 
-    bra_meta_entry_t me;
-    size_t           l = ctx->last_dir_size;    // strnlen(g_last_dir, BRA_MAX_PATH_LENGTH);
-    if (filename[l] == BRA_DIR_DELIM[0])        // or when l == 0
-        ++l;                                    // skip also '/'
+    size_t l = ctx->last_dir_size;          // strnlen(g_last_dir, BRA_MAX_PATH_LENGTH);
+    if (filename[l] == BRA_DIR_DELIM[0])    // or when l == 0
+        ++l;                                // skip also '/'
     else if (ctx->last_dir_size > 0)
     {
         bra_log_critical("me->name: %s -- last_dir: %s", filename, ctx->last_dir);
         return false;
     }
 
-    if (!bra_meta_entry_init(&me, attributes, &filename[l], strlen(&filename[l])))
+    if (!bra_meta_entry_init(me, attributes, &filename[l], strlen(&filename[l])))
         return false;
 
     uint64_t ds;
     if (!bra_fs_file_size(filename, &ds))
         goto BRA_IO_FILE_CTX_WRITE_META_ENTRY_PROCESS_WRITE_FILE_ERR;
 
-    if (!bra_meta_entry_file_init(&me, ds))
+    if (!bra_meta_entry_file_init(me, ds))
         goto BRA_IO_FILE_CTX_WRITE_META_ENTRY_PROCESS_WRITE_FILE_ERR;
 
     // write common meta data (attribute, filename, filename_size)
-    if (!_bra_io_file_ctx_write_meta_entry_common(ctx, attributes, me.name, (uint8_t) me.name_size))
+    if (!_bra_io_file_ctx_write_meta_entry_common(ctx, attributes, me->name, me->name_size))
         goto BRA_IO_FILE_CTX_WRITE_META_ENTRY_PROCESS_WRITE_FILE_ERR;
 
     // 3. file size
-    const bra_meta_entry_file_t* mef = (const bra_meta_entry_file_t*) me.entry_data;
+    const bra_meta_entry_file_t* mef = (const bra_meta_entry_file_t*) me->entry_data;
     assert(mef != NULL);
     if (fwrite(&mef->data_size, sizeof(uint64_t), 1, ctx->f.f) != 1)
         goto BRA_IO_FILE_CTX_WRITE_META_ENTRY_PROCESS_WRITE_FILE_ERR;
@@ -249,19 +259,28 @@ static bool _bra_io_file_ctx_write_meta_entry_process_write_file(bra_io_file_ctx
         goto BRA_IO_FILE_CTX_WRITE_META_ENTRY_PROCESS_WRITE_FILE_ERR;
 
     bra_io_file_close(&f2);
-    bra_meta_entry_free(&me);
     return true;
 
 BRA_IO_FILE_CTX_WRITE_META_ENTRY_PROCESS_WRITE_FILE_ERR:
-    bra_meta_entry_free(&me);
+    bra_meta_entry_free(me);
     return false;
 }
 
-static bool _bra_io_file_ctx_write_meta_entry_process_write_dir_subdir(bra_io_file_ctx_t* ctx, bra_attr_t attributes, const char* dirname)
+/**
+ * @brief
+ *
+ * @param ctx
+ * @param attributes
+ * @param dirname
+ * @param me         it is allocated here and must be free by the callee.
+ * @retval true      On success. @p me is allocated and must be freed.
+ * @retval false     on error. It frees @p me
+ */
+static bool _bra_io_file_ctx_write_meta_entry_process_write_dir_subdir(bra_io_file_ctx_t* ctx, bra_attr_t attributes, const char* dirname, bra_meta_entry_t* me)
 {
     assert_bra_io_file_cxt_t(ctx);
     assert(dirname != NULL);
-
+    assert(me != NULL);
     assert(ctx->last_dir_node != NULL);
 
     if (BRA_ATTR_TYPE(attributes) != BRA_ATTR_TYPE_SUBDIR && BRA_ATTR_TYPE(attributes) != BRA_ATTR_TYPE_DIR)
@@ -274,20 +293,19 @@ static bool _bra_io_file_ctx_write_meta_entry_process_write_dir_subdir(bra_io_fi
         return false;
     }
 
-    bra_meta_entry_t me;
     assert(node->parent != NULL);
     if (node->parent->index == 0)
         attributes = BRA_ATTR_SET_TYPE(attributes, BRA_ATTR_TYPE_DIR);
     else
         attributes = BRA_ATTR_SET_TYPE(attributes, BRA_ATTR_TYPE_SUBDIR);
 
-    if (!bra_meta_entry_init(&me, attributes, node->dirname, strlen(node->dirname)))
+    if (!bra_meta_entry_init(me, attributes, node->dirname, strlen(node->dirname)))
         return false;
 
-    if (BRA_ATTR_TYPE(me.attributes) == BRA_ATTR_TYPE_SUBDIR)
+    if (BRA_ATTR_TYPE(me->attributes) == BRA_ATTR_TYPE_SUBDIR)
     {
         // set parent index
-        if (!bra_meta_entry_subdir_init(&me, node->parent->index))
+        if (!bra_meta_entry_subdir_init(me, node->parent->index))
             goto _BRA_IO_FILE_CTX_WRITE_META_ENTRY_PROCESS_WRITE_SUBDIR_ERR;
     }
 
@@ -303,14 +321,13 @@ static bool _bra_io_file_ctx_write_meta_entry_process_write_dir_subdir(bra_io_fi
         goto _BRA_IO_FILE_CTX_WRITE_META_ENTRY_PROCESS_WRITE_SUBDIR_ERR;
 
     ctx->last_dir_size = strlen(ctx->last_dir);
-    if (!_bra_io_file_ctx_flush_dir(ctx, &me))
+    if (!_bra_io_file_ctx_flush_dir(ctx, me))
         goto _BRA_IO_FILE_CTX_WRITE_META_ENTRY_PROCESS_WRITE_SUBDIR_ERR;
 
-    bra_meta_entry_free(&me);
     return true;
 
 _BRA_IO_FILE_CTX_WRITE_META_ENTRY_PROCESS_WRITE_SUBDIR_ERR:
-    bra_meta_entry_free(&me);
+    bra_meta_entry_free(me);
     return false;
 }
 
@@ -502,9 +519,6 @@ bool bra_io_file_ctx_read_meta_entry(bra_io_file_ctx_t* ctx, bra_meta_entry_t* m
     unsigned   buf_size = 0;
     bra_attr_t attr;
 
-    me->name      = NULL;
-    me->name_size = 0;
-
     // 1. attributes
     if (fread(&attr, sizeof(bra_attr_t), 1, ctx->f.f) != 1)
     {
@@ -572,6 +586,10 @@ bool bra_io_file_ctx_read_meta_entry(bra_io_file_ctx_t* ctx, bra_meta_entry_t* m
         return false;
     }
 
+    // read CRC32
+    if (fread(&me->crc32, sizeof(uint32_t), 1, ctx->f.f) != 1)
+        return false;
+
     return true;
 }
 
@@ -579,24 +597,24 @@ bool bra_io_file_ctx_write_meta_entry(bra_io_file_ctx_t* ctx, const bra_attr_t a
 {
     assert_bra_io_file_cxt_t(ctx);
 
-    uint32_t crc32 = 0;
+    bra_meta_entry_t me;
 
     // Processing & Writing data
     switch (BRA_ATTR_TYPE(attributes))
     {
     case BRA_ATTR_TYPE_FILE:
     {
-        if (!_bra_io_file_ctx_write_meta_entry_process_write_file(ctx, attributes, fn))
+        if (!_bra_io_file_ctx_write_meta_entry_process_write_file(ctx, attributes, fn, &me))
             goto BRA_IO_WRITE_ERR;
     }
     break;
     case BRA_ATTR_TYPE_DIR:
-        if (!_bra_io_file_ctx_write_meta_entry_process_write_dir_subdir(ctx, attributes, fn))
+        if (!_bra_io_file_ctx_write_meta_entry_process_write_dir_subdir(ctx, attributes, fn, &me))
             goto BRA_IO_WRITE_ERR;
         break;
     case BRA_ATTR_TYPE_SUBDIR:
     {
-        if (!_bra_io_file_ctx_write_meta_entry_process_write_dir_subdir(ctx, attributes, fn))
+        if (!_bra_io_file_ctx_write_meta_entry_process_write_dir_subdir(ctx, attributes, fn, &me))
             goto BRA_IO_WRITE_ERR;
     }
     break;
@@ -607,7 +625,7 @@ bool bra_io_file_ctx_write_meta_entry(bra_io_file_ctx_t* ctx, const bra_attr_t a
         goto BRA_IO_WRITE_ERR;
     }
 
-    if (fwrite(&crc32, sizeof(uint32_t), 1, ctx->f.f) != 1)
+    if (fwrite(&me.crc32, sizeof(uint32_t), 1, ctx->f.f) != 1)
     {
         bra_io_file_write_error(&ctx->f);
         return false;
@@ -653,8 +671,6 @@ bool bra_io_file_ctx_decode_and_write_to_disk(bra_io_file_ctx_t* ctx, bra_fs_ove
     const char*      end_msg;    // 'OK  ' | 'SKIP'
     char*            fn = NULL;
     bra_meta_entry_t me;
-    if (!bra_meta_entry_init(&me, 0, NULL, 0))
-        return false;
 
     if (!bra_io_file_ctx_read_meta_entry(ctx, &me))
         goto BRA_IO_DECODE_ERR;
@@ -733,9 +749,11 @@ bool bra_io_file_ctx_decode_and_write_to_disk(bra_io_file_ctx_t* ctx, bra_fs_ove
         break;
     }
 
-    // read CRC32
-    if (fread(&me.crc32, sizeof(uint32_t), 1, ctx->f.f) != 1)
-        goto BRA_IO_DECODE_ERR;
+    // // read CRC32
+    // if (fread(&me.crc32, sizeof(uint32_t), 1, ctx->f.f) != 1)
+    //     goto BRA_IO_DECODE_ERR;
+
+    // TODO: compare CRC32
 
     bra_meta_entry_free(&me);
     free(fn);
@@ -781,13 +799,13 @@ bool bra_io_file_ctx_print_meta_entry(bra_io_file_ctx_t* ctx)
         goto BRA_IO_FILE_CTX_PRINT_META_ENTRY_ERR;
     }
 
-    // read footer
     // read CRC32
-    if (fread(&me.crc32, sizeof(uint32_t), 1, ctx->f.f) != 1)
-    {
-        bra_io_file_read_error(&ctx->f);
-        goto BRA_IO_FILE_CTX_PRINT_META_ENTRY_ERR;
-    }
+    // if (fread(&me.crc32, sizeof(uint32_t), 1, ctx->f.f) != 1)
+    // {
+    //     bra_io_file_read_error(&ctx->f);
+    //     goto BRA_IO_FILE_CTX_PRINT_META_ENTRY_ERR;
+    // }
+    // TODO: compare CRC32 if is in testing mode
 
     bra_log_printf("|x%08X|\n", me.crc32);
 

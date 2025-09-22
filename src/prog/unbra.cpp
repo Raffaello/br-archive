@@ -21,9 +21,6 @@ using namespace std;
 
 namespace fs = std::filesystem;
 
-// TODO: unbra must be able to read sfx too
-// TODO: add output path as parameter
-
 //////////////////////////////////////////////////////////////////////////
 
 class Unbra : public BraProgram
@@ -35,6 +32,7 @@ private:
     Unbra& operator=(Unbra&&)      = delete;
 
     fs::path m_bra_file;
+    fs::path m_output_path;
     bool     m_listContent = false;
     bool     m_sfx         = false;
 
@@ -55,16 +53,27 @@ protected:
     virtual void help_options() const override
     {
         bra_log_printf("--list       | -l : view archive content.\n");
+        bra_log_printf("--output     | -o : output path: must be a directory relative to the current one (default: current directory).\n");
     };
 
     int parseArgs_minArgc() const override { return 2; }
 
-    std::optional<bool> parseArgs_option([[maybe_unused]] const int argc, [[maybe_unused]] const char* const argv[], [[maybe_unused]] int& i, const std::string& s) override
+    std::optional<bool> parseArgs_option(const int argc, const char* const argv[], int& i, const std::string& s) override
     {
         if (s == "--list" || s == "-l")
         {
             // list content
             m_listContent = true;
+        }
+        else if (s == "--output" || s == "-o")
+        {
+            if (i + 1 >= argc)
+            {
+                bra_log_error("missing argument for --output");
+                return false;
+            }
+
+            m_output_path = fs::path(argv[++i]);
         }
         else
             return nullopt;
@@ -113,6 +122,41 @@ protected:
             return false;
         }
 
+        if (m_output_path.empty())
+        {
+            std::error_code ec;
+            m_output_path = fs::current_path(ec);
+            if (ec)
+            {
+                bra_log_error("unable to get current directory");
+                return false;
+            }
+
+            if (!bra::fs::try_sanitize(m_output_path))
+            {
+                bra_log_error("invalid current path: '%s'", m_output_path.string().c_str());
+                return false;
+            }
+        }
+        else
+        {
+            if (!bra::fs::try_sanitize(m_output_path) || m_output_path.empty())
+            {
+                bra_log_error("invalid output path: '%s'", m_output_path.string().c_str());
+                return false;
+            }
+
+            if (bra::fs::dir_exists(m_output_path))
+            {
+                bra_log_warn("output path %s already exists.", m_output_path.string().c_str());
+            }
+        }
+
+
+#ifndef NDEBUG
+        bra_log_debug("output path: %s", m_output_path.string().c_str());
+#endif
+
         return true;
     }
 
@@ -151,11 +195,36 @@ protected:
         }
         else
         {
+            std::error_code ec;
+            if (!bra::fs::dir_exists(m_output_path))
+            {
+                bra_log_printf("Creating output path: %s\n", m_output_path.string().c_str());
+                if (!bra::fs::dir_make(m_output_path))
+                    return 1;
+            }
+            const fs::path cur_path = fs::current_path(ec);
+            if (ec)
+            {
+                bra_log_error("unable to get current directory");
+                return 1;
+            }
+
+            fs::current_path(m_output_path, ec);
+            if (ec)
+            {
+                bra_log_error("unable to change current directory to: %s", m_output_path.string().c_str());
+                return 1;
+            }
+
             for (uint32_t i = 0; i < bh.num_files; i++)
             {
                 if (!bra_io_file_ctx_decode_and_write_to_disk(&m_ctx, &m_overwrite_policy))
                     return 1;
             }
+
+            fs::current_path(cur_path, ec);
+            if (ec)
+                bra_log_warn("unable to change current directory to: %s", cur_path.string().c_str());
         }
 
         bra_io_file_ctx_close(&m_ctx);

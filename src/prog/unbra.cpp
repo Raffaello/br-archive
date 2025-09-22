@@ -21,7 +21,6 @@ using namespace std;
 
 namespace fs = std::filesystem;
 
-// TODO: unbra must be able to read sfx too
 // TODO: add output path as parameter
 
 //////////////////////////////////////////////////////////////////////////

@@ -58,7 +58,7 @@ protected:
 
     int parseArgs_minArgc() const override { return 2; }
 
-    std::optional<bool> parseArgs_option([[maybe_unused]] const int argc, [[maybe_unused]] const char* const argv[], [[maybe_unused]] int& i, const std::string& s) override
+    std::optional<bool> parseArgs_option(const int argc, const char* const argv[], int& i, const std::string& s) override
     {
         if (s == "--list" || s == "-l")
         {
@@ -160,9 +160,7 @@ protected:
         return true;
     }
 
-    int
-    run_prog() override
-
+    int run_prog() override
     {
         // header
         bra_io_header_t bh{};
@@ -234,8 +232,7 @@ protected:
     }
 
 public:
-    Unbra() = default;
-
+    Unbra()          = default;
     virtual ~Unbra() = default;
 };
 

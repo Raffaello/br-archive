@@ -166,23 +166,17 @@ static bool _bra_io_file_ctx_flush_dir(bra_io_file_ctx_t* ctx, const bra_meta_en
     return true;
 }
 
-static bool _bra_io_file_ctx_read_meta_entry_read_file(bra_io_file_ctx_t* ctx, bra_meta_entry_t* me, const char* buf, const uint8_t buf_size)
+static bool _bra_io_file_ctx_read_meta_entry_read_file(bra_io_file_ctx_t* ctx, bra_meta_entry_t* me)
 {
     assert_bra_io_file_cxt_t(ctx);
     assert(me != NULL);
     assert(me->entry_data != NULL);
-    assert(buf != NULL);
 
     if (BRA_ATTR_TYPE(me->attributes) != BRA_ATTR_TYPE_FILE)
         return false;
 
     bra_meta_entry_file_t* mef = me->entry_data;
     if (fread(&mef->data_size, sizeof(uint64_t), 1, ctx->f.f) != 1)
-        return false;
-
-    me->name_size = (uint8_t) buf_size;
-    me->name      = _bra_strdup(buf);
-    if (me->name == NULL)
         return false;
 
     return true;
@@ -246,13 +240,16 @@ static bool _bra_io_file_ctx_write_meta_entry_process_write_file(bra_io_file_ctx
     if (fwrite(&mef->data_size, sizeof(uint64_t), 1, ctx->f.f) != 1)
         goto BRA_IO_FILE_CTX_WRITE_META_ENTRY_PROCESS_WRITE_FILE_ERR;
 
+    me->crc32 = _bra_compute_common_crc32(me);
+    me->crc32 = bra_crc32c(&mef->data_size, sizeof(uint64_t), me->crc32);
+
     // 4. file content
     bra_io_file_t f2;
     memset(&f2, 0, sizeof(bra_io_file_t));
     if (!bra_io_file_open(&f2, filename, "rb"))
         goto BRA_IO_FILE_CTX_WRITE_META_ENTRY_PROCESS_WRITE_FILE_ERR;
 
-
+    // TODO: need a better interface when compressing (encoding)
     if (!bra_io_file_copy_file_chunks(&ctx->f, &f2, mef->data_size, me))
         goto BRA_IO_FILE_CTX_WRITE_META_ENTRY_PROCESS_WRITE_FILE_ERR;
 
@@ -300,11 +297,16 @@ static bool _bra_io_file_ctx_write_meta_entry_process_write_dir_subdir(bra_io_fi
     if (!bra_meta_entry_init(me, attributes, node->dirname, strlen(node->dirname)))
         return false;
 
+    me->crc32 = _bra_compute_common_crc32(me);
+
     if (BRA_ATTR_TYPE(me->attributes) == BRA_ATTR_TYPE_SUBDIR)
     {
         // set parent index
         if (!bra_meta_entry_subdir_init(me, node->parent->index))
             goto _BRA_IO_FILE_CTX_WRITE_META_ENTRY_PROCESS_WRITE_SUBDIR_ERR;
+
+        const bra_meta_entry_subdir_t* mes = me->entry_data;
+        me->crc32                          = bra_crc32c(&mes->parent_index, sizeof(uint32_t), me->crc32);
     }
 
     ctx->last_dir_node = node;
@@ -571,7 +573,7 @@ bool bra_io_file_ctx_read_meta_entry(bra_io_file_ctx_t* ctx, bra_meta_entry_t* m
 
         if (!bra_meta_entry_file_init(me, 0))
             goto BRA_IO_READ_ERR;
-        if (!_bra_io_file_ctx_read_meta_entry_read_file(ctx, me, buf, (uint8_t) buf_size))
+        if (!_bra_io_file_ctx_read_meta_entry_read_file(ctx, me))
             goto BRA_IO_READ_ERR;
     }
     break;
@@ -582,10 +584,6 @@ bool bra_io_file_ctx_read_meta_entry(bra_io_file_ctx_t* ctx, bra_meta_entry_t* m
     default:
         return false;
     }
-
-    // read CRC32
-    if (fread(&me->crc32, sizeof(uint32_t), 1, ctx->f.f) != 1)
-        return false;
 
     return true;
 }
@@ -606,9 +604,7 @@ bool bra_io_file_ctx_write_meta_entry(bra_io_file_ctx_t* ctx, const bra_attr_t a
     }
     break;
     case BRA_ATTR_TYPE_DIR:
-        if (!_bra_io_file_ctx_write_meta_entry_process_write_dir_subdir(ctx, attributes, fn, &me))
-            goto BRA_IO_WRITE_ERR;
-        break;
+    // [[fallthrough]]
     case BRA_ATTR_TYPE_SUBDIR:
     {
         if (!_bra_io_file_ctx_write_meta_entry_process_write_dir_subdir(ctx, attributes, fn, &me))
@@ -617,20 +613,22 @@ bool bra_io_file_ctx_write_meta_entry(bra_io_file_ctx_t* ctx, const bra_attr_t a
     break;
     case BRA_ATTR_TYPE_SYM:
         bra_log_critical("SYMLINK NOT IMPLEMENTED YET");
-        // goto BRA_IO_WRITE_ERR; // fallthrough
+        // fallthrough
     default:
         goto BRA_IO_WRITE_ERR;
     }
 
     if (fwrite(&me.crc32, sizeof(uint32_t), 1, ctx->f.f) != 1)
-    {
-        bra_io_file_write_error(&ctx->f);
-        return false;
-    }
+        goto BRA_IO_WRITE_ERR;
+    fflush(ctx->f.f);
 
+    bra_log_debug("%s CRC32 %08X", fn, me.crc32);
+
+    bra_meta_entry_free(&me);
     return true;
 
 BRA_IO_WRITE_ERR:
+    bra_meta_entry_free(&me);
     bra_io_file_write_error(&ctx->f);
     return false;
 }
@@ -680,8 +678,7 @@ bool bra_io_file_ctx_decode_and_write_to_disk(bra_io_file_ctx_t* ctx, bra_fs_ove
     if (!_bra_validate_filename(fn, strlen(fn)))
         goto BRA_IO_DECODE_ERR;
 
-    const uint32_t read_crc32 = me.crc32;
-    me.crc32                  = _bra_compute_common_crc32(&me);
+    me.crc32 = _bra_compute_common_crc32(&me);
 
     // 4. read and write in chunk data
     // NOTE: nothing to extract for a directory, but only to create it
@@ -758,6 +755,13 @@ bool bra_io_file_ctx_decode_and_write_to_disk(bra_io_file_ctx_t* ctx, bra_fs_ove
         break;
     }
 
+    bra_log_debug("%s tell %llu", me.name, bra_io_file_tell(&ctx->f));
+    // read CRC32
+    uint32_t read_crc32;
+    if (fread(&read_crc32, sizeof(uint32_t), 1, ctx->f.f) != 1)
+        return false;
+    bra_log_debug("%s read crc32 %08x", me.name, read_crc32);
+
     // compare CRC32
     if (read_crc32 != me.crc32)
     {
@@ -811,11 +815,11 @@ bool bra_io_file_ctx_print_meta_entry(bra_io_file_ctx_t* ctx)
     }
 
     // read CRC32
-    // if (fread(&me.crc32, sizeof(uint32_t), 1, ctx->f.f) != 1)
-    // {
-    //     bra_io_file_read_error(&ctx->f);
-    //     goto BRA_IO_FILE_CTX_PRINT_META_ENTRY_ERR;
-    // }
+    if (fread(&me.crc32, sizeof(uint32_t), 1, ctx->f.f) != 1)
+    {
+        bra_io_file_read_error(&ctx->f);
+        goto BRA_IO_FILE_CTX_PRINT_META_ENTRY_ERR;
+    }
     // TODO: compare CRC32 if is in testing mode
 
     bra_log_printf("|x%08X|\n", me.crc32);

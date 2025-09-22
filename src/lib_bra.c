@@ -125,6 +125,7 @@ void bra_meta_entry_free(bra_meta_entry_t* me)
     }
     me->name_size  = 0;
     me->attributes = 0;
+    me->crc32      = 0;
     if (me->name != NULL)
     {
         free(me->name);

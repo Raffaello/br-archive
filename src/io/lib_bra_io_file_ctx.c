@@ -98,11 +98,11 @@ static bool _bra_io_file_ctx_write_meta_entry_common(bra_io_file_ctx_t* ctx, con
     if (fwrite(&attr, sizeof(bra_attr_t), 1, ctx->f.f) != 1)
         return false;
 
-    // 3. filename size
+    // 2. filename size
     if (fwrite(&filename_size, sizeof(uint8_t), 1, ctx->f.f) != 1)
         return false;
 
-    // 4. filename
+    // 3. filename
     if (fwrite(filename, sizeof(char), filename_size, ctx->f.f) != filename_size)
         return false;
 
@@ -510,7 +510,7 @@ bool bra_io_file_ctx_read_meta_entry(bra_io_file_ctx_t* ctx, bra_meta_entry_t* m
     assert(me != NULL);
 
     char       buf[BRA_MAX_PATH_LENGTH];
-    unsigned   buf_size = 0;
+    uint8_t    buf_size = 0;
     bra_attr_t attr;
 
     // 1. attributes
@@ -522,15 +522,17 @@ bool bra_io_file_ctx_read_meta_entry(bra_io_file_ctx_t* ctx, bra_meta_entry_t* m
     }
 
     // 2. filename size
+    // TODO: use memcpy for names forget the ending '\0'.
     if (fread(&buf_size, sizeof(uint8_t), 1, ctx->f.f) != 1)
         goto BRA_IO_READ_ERR;
-    if (buf_size == 0 || buf_size >= BRA_MAX_PATH_LENGTH)
+    if (buf_size == 0)
         goto BRA_IO_READ_ERR;
 
     // 3. filename
     if (fread(buf, sizeof(char), buf_size, ctx->f.f) != buf_size)
         goto BRA_IO_READ_ERR;
 
+    // TODO: use memcpy for names forget the ending '\0'.
     buf[buf_size] = '\0';
 
     if (!bra_meta_entry_init(me, attr, buf, buf_size))
@@ -818,6 +820,9 @@ bool bra_io_file_ctx_print_meta_entry(bra_io_file_ctx_t* ctx)
         bra_io_file_read_error(&ctx->f);
         goto BRA_IO_FILE_CTX_PRINT_META_ENTRY_ERR;
     }
+
+    // TODO: verify CRC32 if --test | -t is set (--test implies --list)
+    //       must also decode the content to compute the CRC32
 
     bra_log_printf("|%08X|\n", me.crc32);
     bra_meta_entry_free(&me);

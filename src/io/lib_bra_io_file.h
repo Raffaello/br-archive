@@ -163,7 +163,7 @@ bool bra_io_file_write_footer(bra_io_file_t* f, const int64_t header_offset);
  * @param dst
  * @param src
  * @param data_size
- * @param me        passed to compute the CRC32 of the file content.
+ * @param me        passed to compute the CRC32C of the file content and not @c NULL.
  * @retval true
  * @retval false
  */

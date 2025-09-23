@@ -13,7 +13,6 @@
 
 /**
  * @brief Calculates the CRC32C (Castagnoli) checksum of the given data.
- *        If @p length is @c UINT64_MAX the function recursively call itself twice splitting the data in 2 halves.
  *
  * @param data         Pointer to the input data.
  * @param length       Length of the input data in bytes.

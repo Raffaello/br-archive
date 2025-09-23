@@ -225,20 +225,20 @@ static bool _bra_io_file_ctx_write_meta_entry_process_write_file(bra_io_file_ctx
 
     uint64_t ds;
     if (!bra_fs_file_size(filename, &ds))
-        goto BRA_IO_FILE_CTX_WRITE_META_ENTRY_PROCESS_WRITE_FILE_ERR;
+        return false;
 
     if (!bra_meta_entry_file_init(me, ds))
-        goto BRA_IO_FILE_CTX_WRITE_META_ENTRY_PROCESS_WRITE_FILE_ERR;
+        return false;
 
     // write common meta data (attribute, filename, filename_size)
     if (!_bra_io_file_ctx_write_meta_entry_common(ctx, attributes, me->name, me->name_size))
-        goto BRA_IO_FILE_CTX_WRITE_META_ENTRY_PROCESS_WRITE_FILE_ERR;
+        return false;
 
     // 3. file size
     const bra_meta_entry_file_t* mef = (const bra_meta_entry_file_t*) me->entry_data;
     assert(mef != NULL);
     if (fwrite(&mef->data_size, sizeof(uint64_t), 1, ctx->f.f) != 1)
-        goto BRA_IO_FILE_CTX_WRITE_META_ENTRY_PROCESS_WRITE_FILE_ERR;
+        return false;
 
     me->crc32 = _bra_compute_common_crc32(me);
     me->crc32 = bra_crc32c(&mef->data_size, sizeof(uint64_t), me->crc32);
@@ -247,18 +247,14 @@ static bool _bra_io_file_ctx_write_meta_entry_process_write_file(bra_io_file_ctx
     bra_io_file_t f2;
     memset(&f2, 0, sizeof(bra_io_file_t));
     if (!bra_io_file_open(&f2, filename, "rb"))
-        goto BRA_IO_FILE_CTX_WRITE_META_ENTRY_PROCESS_WRITE_FILE_ERR;
+        return false;
 
     // TODO: need a better interface when compressing (encoding)
     if (!bra_io_file_copy_file_chunks(&ctx->f, &f2, mef->data_size, me))
-        goto BRA_IO_FILE_CTX_WRITE_META_ENTRY_PROCESS_WRITE_FILE_ERR;
+        return false;
 
     bra_io_file_close(&f2);
     return true;
-
-BRA_IO_FILE_CTX_WRITE_META_ENTRY_PROCESS_WRITE_FILE_ERR:
-    bra_meta_entry_free(me);
-    return false;
 }
 
 /**
@@ -592,7 +588,7 @@ bool bra_io_file_ctx_write_meta_entry(bra_io_file_ctx_t* ctx, const bra_attr_t a
 {
     assert_bra_io_file_cxt_t(ctx);
 
-    bra_meta_entry_t me;
+    bra_meta_entry_t me = {0};
 
     // Processing & Writing data
     switch (BRA_ATTR_TYPE(attributes))
@@ -666,7 +662,7 @@ bool bra_io_file_ctx_decode_and_write_to_disk(bra_io_file_ctx_t* ctx, bra_fs_ove
 
     const char*      end_msg;    // 'OK  ' | 'SKIP'
     char*            fn = NULL;
-    bra_meta_entry_t me;
+    bra_meta_entry_t me = {0};
 
     if (!bra_io_file_ctx_read_meta_entry(ctx, &me))
         goto BRA_IO_DECODE_ERR;
@@ -789,7 +785,7 @@ bool bra_io_file_ctx_print_meta_entry(bra_io_file_ctx_t* ctx)
     assert_bra_io_file_t(&ctx->f);
 
     char             bytes[BRA_PRINTF_FMT_BYTES_BUF_SIZE];
-    bra_meta_entry_t me;
+    bra_meta_entry_t me = {0};
 
     if (!bra_io_file_ctx_read_meta_entry(ctx, &me))
         goto BRA_IO_FILE_CTX_PRINT_META_ENTRY_ERR;
@@ -819,10 +815,8 @@ bool bra_io_file_ctx_print_meta_entry(bra_io_file_ctx_t* ctx)
         bra_io_file_read_error(&ctx->f);
         goto BRA_IO_FILE_CTX_PRINT_META_ENTRY_ERR;
     }
-    // TODO: compare CRC32 if is in testing mode
 
-    bra_log_printf("|x%08X|\n", me.crc32);
-
+    bra_log_printf("|%08X|\n", me.crc32);
     bra_meta_entry_free(&me);
     return true;
 

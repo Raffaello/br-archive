@@ -75,17 +75,33 @@ static char* _bra_io_file_ctx_reconstruct_meta_entry_name(bra_io_file_ctx_t* ctx
     return NULL;
 }
 
-static uint32_t _bra_compute_common_crc32(const bra_meta_entry_t* me)
+static uint32_t _bra_compute_common_crc32_3(const bra_attr_t attributes, const uint16_t name_size, const char* name)
 {
-    assert(me != NULL);
+    assert(name != NULL);
+    assert(name_size > 0);
 
     uint32_t crc32;
 
-    crc32 = bra_crc32c(&me->attributes, sizeof(bra_attr_t), BRA_CRC32C_INIT);
-    crc32 = bra_crc32c(&me->name_size, sizeof(uint8_t), crc32);
-    crc32 = bra_crc32c(me->name, me->name_size, crc32);
+    crc32 = bra_crc32c(&attributes, sizeof(bra_attr_t), BRA_CRC32C_INIT);
+    crc32 = bra_crc32c(&name_size, sizeof(uint16_t), crc32);
+    crc32 = bra_crc32c(name, name_size, crc32);
 
     return crc32;
+}
+
+static uint32_t _bra_compute_common_crc32_2(const bra_attr_t attributes, const char* name)
+{
+    assert(name != NULL);
+
+    const size_t name_len = strlen(name);
+    if (name_len > UINT16_MAX)
+    {
+        bra_log_critical("entry-name %s too long %zu", name, name_len);
+        return false;
+    }
+
+    const uint16_t name_size = (uint16_t) name_len;
+    return _bra_compute_common_crc32_3(attributes, name_size, name);
 }
 
 static bool _bra_io_file_ctx_write_meta_entry_common(bra_io_file_ctx_t* ctx, const bra_attr_t attr, const char* filename, const uint8_t filename_size)
@@ -220,7 +236,14 @@ static bool _bra_io_file_ctx_write_meta_entry_process_write_file(bra_io_file_ctx
         return false;
     }
 
-    if (!bra_meta_entry_init(me, attributes, &filename[l], strlen(&filename[l])))
+    const size_t filename_len = strlen(filename);
+    if (filename_len - l > UINT8_MAX)
+    {
+        bra_log_critical("entry-name %s too long %zu", filename, filename_len - l);
+        return false;
+    }
+
+    if (!bra_meta_entry_init(me, attributes, &filename[l], filename_len - l))
         return false;
 
     uint64_t ds;
@@ -240,7 +263,13 @@ static bool _bra_io_file_ctx_write_meta_entry_process_write_file(bra_io_file_ctx
     if (fwrite(&mef->data_size, sizeof(uint64_t), 1, ctx->f.f) != 1)
         return false;
 
-    me->crc32 = _bra_compute_common_crc32(me);
+
+    if (filename_len > UINT16_MAX)
+    {
+        bra_log_critical("filename %s too long %zu", filename, filename_len);
+        return false;
+    }
+    me->crc32 = _bra_compute_common_crc32_3(me->attributes, (uint16_t) filename_len, filename);
     me->crc32 = bra_crc32c(&mef->data_size, sizeof(uint64_t), me->crc32);
 
     // 4. file content
@@ -290,10 +319,17 @@ static bool _bra_io_file_ctx_write_meta_entry_process_write_dir_subdir(bra_io_fi
     else
         attributes = BRA_ATTR_SET_TYPE(attributes, BRA_ATTR_TYPE_SUBDIR);
 
-    if (!bra_meta_entry_init(me, attributes, node->dirname, strlen(node->dirname)))
+    const size_t node_dirname_len = strlen(node->dirname);
+    if (node_dirname_len > UINT8_MAX)
+    {
+        bra_log_critical("dirname %s too long %zu", node->dirname, node_dirname_len);
+        return false;
+    }
+
+    if (!bra_meta_entry_init(me, attributes, node->dirname, node_dirname_len))
         return false;
 
-    me->crc32 = _bra_compute_common_crc32(me);
+    me->crc32 = _bra_compute_common_crc32_2(attributes, dirname);
 
     if (BRA_ATTR_TYPE(me->attributes) == BRA_ATTR_TYPE_SUBDIR)
     {
@@ -672,10 +708,17 @@ bool bra_io_file_ctx_decode_and_write_to_disk(bra_io_file_ctx_t* ctx, bra_fs_ove
     if (fn == NULL)
         goto BRA_IO_DECODE_ERR;
 
-    if (!_bra_validate_filename(fn, strlen(fn)))
+    const size_t fn_len = strlen(fn);
+    if (!_bra_validate_filename(fn, fn_len))
         goto BRA_IO_DECODE_ERR;
 
-    me.crc32 = _bra_compute_common_crc32(&me);
+    if (fn_len > UINT16_MAX)
+    {
+        bra_log_critical("entry-name %s too long %zu", fn, fn_len);
+        goto BRA_IO_DECODE_ERR;
+    }
+
+    me.crc32 = _bra_compute_common_crc32_3(me.attributes, fn_len, fn);
 
     bool skip_entry = false;
     // 4. read and write in chunk data

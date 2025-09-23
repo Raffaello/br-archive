@@ -4,13 +4,6 @@
 
 uint32_t bra_crc32c(const void* data, const uint64_t length, const uint32_t previous_crc)
 {
-    if (length == UINT64_MAX)
-    {
-        bra_log_warn("CRC32 encoding length invalid, split in half...");
-        uint32_t crc = bra_crc32c(data, length / 2, previous_crc);
-        return bra_crc32c(&((uint8_t*) data)[length / 2], length - (length / 2), crc);
-    }
-
     uint32_t crc = ~previous_crc;    // Invert initial CRC value
     for (uint64_t i = 0; i < length; ++i)
     {

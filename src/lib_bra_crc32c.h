@@ -8,7 +8,7 @@
  */
 // #define BRA_CRC32_INIT      0xFFFFFFFF     // 0x1EDC6F41
 // #define BRA_CRC32C_POLY     0x1EDC6F41u    // CRC-32C (Castagnoli) polynomial
-#define BRA_CRC32C_INIT 0              // reflected initial value
+#define BRA_CRC32C_INIT 0u             // reflected initial value
 #define BRA_CRC32C_POLY 0x82F63B78u    // reflected CRC-32C (Castagnoli)
 
 /**

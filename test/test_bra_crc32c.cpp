@@ -16,6 +16,11 @@ TEST(test_bra_crc32c_compute_crc32)
     constexpr char data1[] = "123456789";
 
     ASSERT_EQ(bra_crc32c(data1, sizeof(data1) - 1, 0), 0xE3069283);
+    ASSERT_EQ(bra_crc32c("", 0, BRA_CRC32C_INIT), BRA_CRC32C_INIT);
+
+    printf("All CRC-32C tests passed!\n");
+
+
     return 0;
 }
 

@@ -299,7 +299,7 @@ static bool _bra_io_file_ctx_write_meta_entry_process_write_dir_subdir(bra_io_fi
     {
         // set parent index
         if (!bra_meta_entry_subdir_init(me, node->parent->index))
-            goto _BRA_IO_FILE_CTX_WRITE_META_ENTRY_PROCESS_WRITE_SUBDIR_ERR;
+            return false;
 
         const bra_meta_entry_subdir_t* mes = me->entry_data;
         me->crc32                          = bra_crc32c(&mes->parent_index, sizeof(uint32_t), me->crc32);
@@ -314,17 +314,13 @@ static bool _bra_io_file_ctx_write_meta_entry_process_write_dir_subdir(bra_io_fi
 
     ctx->last_dir = _bra_strdup(dirname);
     if (ctx->last_dir == NULL)
-        goto _BRA_IO_FILE_CTX_WRITE_META_ENTRY_PROCESS_WRITE_SUBDIR_ERR;
+        return false;
 
     ctx->last_dir_size = strlen(ctx->last_dir);
     if (!_bra_io_file_ctx_flush_dir(ctx, me))
-        goto _BRA_IO_FILE_CTX_WRITE_META_ENTRY_PROCESS_WRITE_SUBDIR_ERR;
+        return false;
 
     return true;
-
-_BRA_IO_FILE_CTX_WRITE_META_ENTRY_PROCESS_WRITE_SUBDIR_ERR:
-    bra_meta_entry_free(me);
-    return false;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -402,7 +398,9 @@ bool bra_io_file_ctx_close(bra_io_file_ctx_t* ctx)
 
     if (ctx->tree != NULL)
     {
-#ifndef NDEBUG
+
+#if 0
+// #ifndef NDEBUG
         // print the tree
         bra_tree_node_print(ctx->tree->root);
 #endif
@@ -550,11 +548,11 @@ bool bra_io_file_ctx_read_meta_entry(bra_io_file_ctx_t* ctx, bra_meta_entry_t* m
         if (!_bra_io_file_ctx_read_meta_entry_read_subdir(ctx, me))
             goto BRA_IO_READ_ERR;
 
-        // ctx->last_dir_node = bra_tree_dir_insert_at_parent(ctx->tree, ((bra_meta_entry_subdir_t*) me->entry_data)->parent_index, me->name);
-        // if (ctx->last_dir_node == NULL)
-        //     goto BRA_IO_READ_ERR;
+        ctx->last_dir_node = bra_tree_dir_insert_at_parent(ctx->tree, ((bra_meta_entry_subdir_t*) me->entry_data)->parent_index, me->name);
+        if (ctx->last_dir_node == NULL)
+            goto BRA_IO_READ_ERR;
     }
-    // fallthrough
+    break;
     case BRA_ATTR_TYPE_DIR:
     {
         // nothing extra to save except the common entry data.
@@ -735,12 +733,12 @@ bool bra_io_file_ctx_decode_and_write_to_disk(bra_io_file_ctx_t* ctx, bra_fs_ove
         if (bra_fs_dir_exists(fn))
         {
             end_msg = g_end_messages[1];
-            bra_log_printf("Dir exists:   " BRA_PRINTF_FMT_FILENAME, fn);
+            bra_log_printf("Dir exists:    : " BRA_PRINTF_FMT_FILENAME, fn);
         }
         else
         {
             end_msg = g_end_messages[0];
-            bra_log_printf("Creating dir: " BRA_PRINTF_FMT_FILENAME, fn);
+            bra_log_printf("Creating dir   : " BRA_PRINTF_FMT_FILENAME, fn);
 
             if (!bra_fs_dir_make(fn))
                 goto BRA_IO_DECODE_ERR;

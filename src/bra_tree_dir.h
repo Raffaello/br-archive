@@ -13,7 +13,7 @@ extern "C" {
 
 #define BRA_TREE_NODE_ROOT_INDEX 0
 
-#ifndef NDEBUG
+#if 0
 /**
  * @brief Print the tree starting from @p node.
  *

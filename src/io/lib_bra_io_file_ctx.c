@@ -81,7 +81,7 @@ static uint32_t _bra_compute_common_crc32(const bra_meta_entry_t* me)
 
     uint32_t crc32;
 
-    crc32 = bra_crc32c(&me->attributes, sizeof(bra_attr_t), BRA_CRC32_INIT);
+    crc32 = bra_crc32c(&me->attributes, sizeof(bra_attr_t), BRA_CRC32C_INIT);
     crc32 = bra_crc32c(&me->name_size, sizeof(uint8_t), crc32);
     crc32 = bra_crc32c(me->name, me->name_size, crc32);
 
@@ -677,6 +677,7 @@ bool bra_io_file_ctx_decode_and_write_to_disk(bra_io_file_ctx_t* ctx, bra_fs_ove
 
     me.crc32 = _bra_compute_common_crc32(&me);
 
+    bool skip_entry = false;
     // 4. read and write in chunk data
     // NOTE: nothing to extract for a directory, but only to create it
     switch (BRA_ATTR_TYPE(me.attributes))
@@ -698,6 +699,7 @@ bool bra_io_file_ctx_decode_and_write_to_disk(bra_io_file_ctx_t* ctx, bra_fs_ove
                 bra_io_file_seek_error(&ctx->f);
                 goto BRA_IO_DECODE_ERR;
             }
+            skip_entry = true;
         }
         else
         {
@@ -753,16 +755,19 @@ bool bra_io_file_ctx_decode_and_write_to_disk(bra_io_file_ctx_t* ctx, bra_fs_ove
         break;
     }
 
-    // read CRC32
-    uint32_t read_crc32;
-    if (fread(&read_crc32, sizeof(uint32_t), 1, ctx->f.f) != 1)
-        return false;
-
-    // compare CRC32
-    if (read_crc32 != me.crc32)
+    if (!skip_entry)
     {
-        bra_log_critical("%s checksum failed!!!", me.name);
-        return false;
+        // read CRC32
+        uint32_t read_crc32;
+        if (fread(&read_crc32, sizeof(uint32_t), 1, ctx->f.f) != 1)
+            goto BRA_IO_DECODE_ERR;
+
+        // compare CRC32
+        if (read_crc32 != me.crc32)
+        {
+            bra_log_critical("%s checksum failed!!!", me.name);
+            goto BRA_IO_DECODE_ERR;
+        }
     }
 
     bra_meta_entry_free(&me);

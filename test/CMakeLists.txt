@@ -84,6 +84,13 @@ add_test(NAME test_bra_encoders.encode_decode_rle_3b COMMAND test_bra_encoders t
 
 #####################################################################################################
 
+add_executable(test_bra_crc32c test_bra_crc32c.cpp)
+target_link_libraries(test_bra_crc32c PUBLIC lib_bra)
+
+add_test(NAME test_bra_crc32c.compute_crc32  COMMAND test_bra_crc32c test_bra_crc32c_compute_crc32)
+
+#####################################################################################################
+
 
 # set_tests_properties(
 #     test_bra.no_output_file

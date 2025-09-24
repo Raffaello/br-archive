@@ -211,12 +211,14 @@ static bool _bra_io_file_ctx_read_meta_entry_read_subdir(bra_io_file_ctx_t* ctx,
 /**
  * @brief
  *
+ * @note @pe must be free either on error or success by the caller.
+ *
  * @param ctx
  * @param attributes
  * @param filename
- * @param me        it is allocated here and must be free by the callee.
- * @retval true     On success. @p me is allocated and must be freed.
- * @retval false    on error. It frees @p me
+ * @param me        Provided by caller; this function initializes/populates it.
+ * @retval true     On success.
+ * @retval false    on error.
  */
 static bool _bra_io_file_ctx_write_meta_entry_process_write_file(bra_io_file_ctx_t* ctx, const bra_attr_t attributes, const char* filename, bra_meta_entry_t* me)
 {
@@ -289,12 +291,14 @@ static bool _bra_io_file_ctx_write_meta_entry_process_write_file(bra_io_file_ctx
 /**
  * @brief
  *
+ * @note @pe must be free either on error or success by the caller.
+ *
  * @param ctx
  * @param attributes
  * @param dirname
- * @param me         it is allocated here and must be free by the callee.
- * @retval true      On success. @p me is allocated and must be freed.
- * @retval false     on error. It frees @p me
+ * @param me         Provided by caller; this function initializes/populates it.
+ * @retval true      On success.
+ * @retval false     on error.
  */
 static bool _bra_io_file_ctx_write_meta_entry_process_write_dir_subdir(bra_io_file_ctx_t* ctx, bra_attr_t attributes, const char* dirname, bra_meta_entry_t* me)
 {

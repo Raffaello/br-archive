@@ -243,9 +243,17 @@ static bool _bra_io_file_ctx_write_meta_entry_process_write_file(bra_io_file_ctx
         return false;
     }
 
+    // double check
+    if (l > 0 && memcmp(ctx->last_dir, filename, l) != 0)
+    {
+        bra_log_critical("filename %s not belonging to dir %s", filename, ctx->last_dir);
+        return false;
+    }
+
+
     if (filename[l] == BRA_DIR_DELIM[0])    // or when l == 0
         ++l;                                // skip also '/'
-    else if (ctx->last_dir_size > 0)
+    else if (l > 0)
     {
         bra_log_critical("me->name: %s -- last_dir: %s", filename, ctx->last_dir);
         return false;

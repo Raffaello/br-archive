@@ -435,10 +435,9 @@ bool bra_io_file_ctx_close(bra_io_file_ctx_t* ctx)
     if (ctx->tree != NULL)
     {
 
-#if 0
-// #ifndef NDEBUG
-        // print the tree
-        bra_tree_node_print(ctx->tree->root);
+#ifndef NDEBUG
+        // print the tree (verbose level)
+        bra_tree_node_log_verbose(ctx->tree->root);
 #endif
 
         bra_tree_dir_destroy(&ctx->tree);
@@ -654,7 +653,7 @@ bool bra_io_file_ctx_write_meta_entry(bra_io_file_ctx_t* ctx, const bra_attr_t a
         goto BRA_IO_WRITE_ERR;
 
 #ifndef NDEBUG
-    bra_log_debug("%s CRC32 %08X", fn, me.crc32);
+    bra_log_verbose("%s CRC32 %08X", fn, me.crc32);
 #endif
 
     bra_meta_entry_free(&me);

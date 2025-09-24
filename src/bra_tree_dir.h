@@ -13,13 +13,13 @@ extern "C" {
 
 #define BRA_TREE_NODE_ROOT_INDEX 0
 
-#if 0
+#ifndef NDEBUG
 /**
  * @brief Print the tree starting from @p node.
  *
  * @param node
  */
-void bra_tree_node_print(const bra_tree_node_t* node);
+void bra_tree_node_log_verbose(const bra_tree_node_t* node);
 #endif
 
 /**

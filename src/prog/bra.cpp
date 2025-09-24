@@ -40,6 +40,7 @@ private:
     int64_t                                m_header_offset     = -1;
     bool                                   m_sfx               = false;
     bool                                   m_recursive         = false;
+    uint8_t                                m_progress_width    = 0;
 
 
 protected:
@@ -141,12 +142,10 @@ protected:
         if (!bra::fs::file_set_add_dirs(m_files))
             return false;
 
-#if 0
 #ifndef NDEBUG
-        bra_log_debug("Detected files:");
+        bra_log_verbose("Detected files:");
         for (const auto& file : m_files)
-            bra_log_debug("- %s", file.string().c_str());
-#endif
+            bra_log_verbose("- %s", file.string().c_str());
 #endif
 
         // TODO: Here could also start encoding the filenames
@@ -216,7 +215,7 @@ protected:
 
 // build tree from the set file list.
 #ifndef NDEBUG
-        bra_log_debug("Building Tree from %zu files...", m_files.size());
+        bra_log_verbose("Building Tree from %zu files...", m_files.size());
 #endif
 
         m_tree.clear();
@@ -243,17 +242,19 @@ protected:
         m_tot_files = static_cast<uint32_t>(tot_files);
 
 #ifndef NDEBUG
-        bra_log_debug("Built Tree : [TOT_FILES: %u]", m_tot_files);
+        bra_log_verbose("Built Tree : [TOT_FILES: %u]", m_tot_files);
         for (const auto& [dir, files] : m_tree)
         {
             if (m_recursive)
-                bra_log_debug("- [%s]", dir.string().c_str());
+                bra_log_verbose("- [%s]", dir.string().c_str());
             for (const auto& file : files)
-                bra_log_debug("- [%s]/%s", dir.string().c_str(), file.string().c_str());
+                bra_log_verbose("- [%s]/%s", dir.string().c_str(), file.string().c_str());
         }
 #endif
 
         m_files.clear();
+        m_progress_width = snprintf(nullptr, 0, "%u", m_tot_files);
+        bra_log_debug("Progress width: %u", m_progress_width);
         return true;
     };
 
@@ -261,10 +262,9 @@ protected:
     {
         auto path = p;
 
-        // TODO: write Progress bar?
-#if 0
-            bra_log_printf("[%u/%u] ", m_written_num_files, static_cast<uint32_t>(m_tot_files)s);
-#endif
+        // write Progress (+1 because it is the file that is going to be written nows)
+        // TODO: add progress bar?
+        bra_log_printf("[%*u/%u] ", m_progress_width, m_written_num_files + 1, m_tot_files);
 
         // no need to sanitize it again, but it won't hurt neither
         if (!bra::fs::try_sanitize(path))

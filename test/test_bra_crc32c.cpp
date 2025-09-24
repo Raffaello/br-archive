@@ -18,7 +18,7 @@ TEST(test_bra_crc32c_compute_crc32)
     ASSERT_EQ(bra_crc32c(data1, sizeof(data1) - 1, 0), 0xE3069283);
 
     uint32_t crc = bra_crc32c(data1, 5, BRA_CRC32C_INIT);    // "12345"
-    crc          = bra_crc32c(&data1[5], 4, crc);            // "s6789"
+    crc          = bra_crc32c(&data1[5], 4, crc);            // "6789"
     ASSERT_EQ(crc, 0xE3069283);
 
     return 0;

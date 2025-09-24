@@ -97,7 +97,7 @@ static bool _bra_compute_common_crc32_2(const bra_attr_t attributes, const char*
     const size_t name_len = strlen(name);
     if (name_len > UINT16_MAX)
     {
-        bra_log_critical("entry-name %s too long %zu", name, name_len);
+        bra_log_critical("full entry-name %s too long %zu", name, name_len);
         return false;
     }
 
@@ -233,7 +233,7 @@ static bool _bra_io_file_ctx_write_meta_entry_process_write_file(bra_io_file_ctx
 
     const size_t filename_len = strlen(filename);
     size_t       l            = ctx->last_dir_size;    // strnlen(g_last_dir, BRA_MAX_PATH_LENGTH);
-    if (l > filename)
+    if (l > filename_len)
     {
         bra_log_critical("last cached dir %s is not a prefix of filename %s: last_dir_size=%zu filename_len=%zu",
                          ctx->last_dir,
@@ -730,7 +730,7 @@ bool bra_io_file_ctx_decode_and_write_to_disk(bra_io_file_ctx_t* ctx, bra_fs_ove
 
     if (fn_len > UINT16_MAX)
     {
-        bra_log_critical("entry-name %s too long %zu", fn, fn_len);
+        bra_log_critical("full entry-name %s too long %zu", fn, fn_len);
         goto BRA_IO_DECODE_ERR;
     }
 

@@ -40,7 +40,7 @@ private:
     int64_t                                m_header_offset     = -1;
     bool                                   m_sfx               = false;
     bool                                   m_recursive         = false;
-    uint8_t                                m_progress_width    = 0;
+    int                                    m_progress_width    = 0;
 
 
 protected:
@@ -254,6 +254,12 @@ protected:
 
         m_files.clear();
         m_progress_width = snprintf(nullptr, 0, "%u", m_tot_files);
+        if (m_progress_width < 0)
+        {
+            bra_log_critical("internal error");
+            return false;
+        }
+
         return true;
     };
 

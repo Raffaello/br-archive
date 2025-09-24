@@ -268,7 +268,7 @@ protected:
     {
         auto path = p;
 
-        // write Progress (+1 because it is the file that is going to be written nows)
+        // write Progress (+1 because it is the file that is going to be written now)
         // TODO: add progress bar?
         bra_log_printf("[%*u/%u] ", m_progress_width, m_written_num_files + 1, m_tot_files);
 

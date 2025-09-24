@@ -106,6 +106,26 @@ static bool _bra_compute_common_crc32_2(const bra_attr_t attributes, const char*
     return true;
 }
 
+static bool _bra_compute_header_crc32(const size_t filename_len, const char* filename, bra_meta_entry_t* me)
+{
+    assert(filename != NULL);
+    assert(me != NULL);
+
+    if (filename_len == 0)
+    {
+        bra_log_critical("empty filename");
+        return false;
+    }
+
+    if (filename_len > UINT16_MAX)
+    {
+        bra_log_critical("filename %s too long %zu", filename, filename_len);
+        return false;
+    }
+    me->crc32 = _bra_compute_common_crc32_3(me->attributes, (uint16_t) filename_len, filename);
+    return true;
+}
+
 static bool _bra_io_file_ctx_write_meta_entry_common(bra_io_file_ctx_t* ctx, const bra_attr_t attr, const char* filename, const uint8_t filename_size)
 {
     assert_bra_io_file_cxt_t(ctx);
@@ -285,13 +305,9 @@ static bool _bra_io_file_ctx_write_meta_entry_process_write_file(bra_io_file_ctx
     if (fwrite(&mef->data_size, sizeof(uint64_t), 1, ctx->f.f) != 1)
         return false;
 
-
-    if (filename_len > UINT16_MAX)
-    {
-        bra_log_critical("filename %s too long %zu", filename, filename_len);
+    // compute crc32 up to here
+    if (!_bra_compute_header_crc32(filename_len, filename, me))
         return false;
-    }
-    me->crc32 = _bra_compute_common_crc32_3(me->attributes, (uint16_t) filename_len, filename);
     me->crc32 = bra_crc32c(&mef->data_size, sizeof(uint64_t), me->crc32);
 
     // 4. file content
@@ -736,13 +752,8 @@ bool bra_io_file_ctx_decode_and_write_to_disk(bra_io_file_ctx_t* ctx, bra_fs_ove
     if (!_bra_validate_filename(fn, fn_len))
         goto BRA_IO_DECODE_ERR;
 
-    if (fn_len > UINT16_MAX)
-    {
-        bra_log_critical("full entry-name %s too long %zu", fn, fn_len);
+    if (!_bra_compute_header_crc32(fn_len, fn, &me))
         goto BRA_IO_DECODE_ERR;
-    }
-
-    me.crc32 = _bra_compute_common_crc32_3(me.attributes, fn_len, fn);
 
     bool skip_entry = false;
     // 4. read and write in chunk data

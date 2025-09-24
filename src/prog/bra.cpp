@@ -16,6 +16,7 @@
 #include <map>
 
 #include <cstdint>
+#include <cstdio>
 
 
 using namespace std;

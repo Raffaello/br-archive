@@ -233,7 +233,7 @@ static bool _bra_io_file_ctx_read_meta_entry_read_subdir(bra_io_file_ctx_t* ctx,
 /**
  * @brief
  *
- * @note @pe must be free either on error or success by the caller.
+ * @note @p me must be free either on error or success by the caller.
  *
  * @param ctx
  * @param attributes

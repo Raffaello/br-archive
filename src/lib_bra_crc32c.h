@@ -10,6 +10,8 @@
 /**
  * @brief Calculates the CRC32C (Castagnoli) checksum of the given data.
  *
+ * @todo this is very inefficient, replace with a table-based implementation and SSE4.2.
+ *
  * @param data         Pointer to the input data.
  * @param length       Length of the input data in bytes.
  * @param previous_crc Previous CRC value (for incremental updates).

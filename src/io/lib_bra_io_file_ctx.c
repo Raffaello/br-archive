@@ -89,9 +89,10 @@ static uint32_t _bra_compute_common_crc32_3(const bra_attr_t attributes, const u
     return crc32;
 }
 
-static uint32_t _bra_compute_common_crc32_2(const bra_attr_t attributes, const char* name)
+static bool _bra_compute_common_crc32_2(const bra_attr_t attributes, const char* name, uint32_t* out_crc32)
 {
     assert(name != NULL);
+    assert(out_crc32 != NULL);
 
     const size_t name_len = strlen(name);
     if (name_len > UINT16_MAX)
@@ -101,7 +102,8 @@ static uint32_t _bra_compute_common_crc32_2(const bra_attr_t attributes, const c
     }
 
     const uint16_t name_size = (uint16_t) name_len;
-    return _bra_compute_common_crc32_3(attributes, name_size, name);
+    *out_crc32               = _bra_compute_common_crc32_3(attributes, name_size, name);
+    return true;
 }
 
 static bool _bra_io_file_ctx_write_meta_entry_common(bra_io_file_ctx_t* ctx, const bra_attr_t attr, const char* filename, const uint8_t filename_size)
@@ -229,7 +231,18 @@ static bool _bra_io_file_ctx_write_meta_entry_process_write_file(bra_io_file_ctx
     if (BRA_ATTR_TYPE(attributes) != BRA_ATTR_TYPE_FILE)
         return false;
 
-    size_t l = ctx->last_dir_size;          // strnlen(g_last_dir, BRA_MAX_PATH_LENGTH);
+    const size_t filename_len = strlen(filename);
+    size_t       l            = ctx->last_dir_size;    // strnlen(g_last_dir, BRA_MAX_PATH_LENGTH);
+    if (l > filename)
+    {
+        bra_log_critical("last cached dir %s is not a prefix of filename %s: last_dir_size=%zu filename_len=%zu",
+                         ctx->last_dir,
+                         filename,
+                         l,
+                         filename_len);
+        return false;
+    }
+
     if (filename[l] == BRA_DIR_DELIM[0])    // or when l == 0
         ++l;                                // skip also '/'
     else if (ctx->last_dir_size > 0)
@@ -238,7 +251,6 @@ static bool _bra_io_file_ctx_write_meta_entry_process_write_file(bra_io_file_ctx
         return false;
     }
 
-    const size_t filename_len = strlen(filename);
     if (filename_len - l > UINT8_MAX)
     {
         bra_log_critical("entry-name %s too long %zu", filename, filename_len - l);
@@ -333,7 +345,8 @@ static bool _bra_io_file_ctx_write_meta_entry_process_write_dir_subdir(bra_io_fi
     if (!bra_meta_entry_init(me, attributes, node->dirname, node_dirname_len))
         return false;
 
-    me->crc32 = _bra_compute_common_crc32_2(attributes, dirname);
+    if (!_bra_compute_common_crc32_2(attributes, dirname, &me->crc32))
+        return false;
 
     if (BRA_ATTR_TYPE(me->attributes) == BRA_ATTR_TYPE_SUBDIR)
     {

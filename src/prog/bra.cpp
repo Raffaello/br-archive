@@ -254,7 +254,6 @@ protected:
 
         m_files.clear();
         m_progress_width = snprintf(nullptr, 0, "%u", m_tot_files);
-        bra_log_debug("Progress width: %u", m_progress_width);
         return true;
     };
 

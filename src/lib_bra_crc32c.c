@@ -7,7 +7,7 @@ uint32_t bra_crc32c(const void* data, const uint64_t length, const uint32_t prev
     uint32_t crc = ~previous_crc;    // Invert initial CRC value
     for (uint64_t i = 0; i < length; ++i)
     {
-        const uint8_t byte  = ((uint8_t*) data)[i];
+        const uint8_t byte  = ((const uint8_t*) data)[i];
         crc                ^= byte;    // XOR byte into the least significant byte of CRC
         for (int j = 0; j < 8; ++j)    // Process each bit
         {

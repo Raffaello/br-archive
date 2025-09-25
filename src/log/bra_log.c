@@ -55,29 +55,6 @@ static bra_message_callback_f* g_msg_cb = vprintf;
 
 ///////////////////////////////////////////////////////////////////////////
 
-// Function to be executed before main() (in GCC)
-BRA_FUNC_ATTR_CONSTRUCTOR static void _init_bra_log()
-{
-#ifdef __GNUC__
-    g_use_ansi_color = isatty(STDERR_FILENO) != 0;
-#elif defined(_WIN32) || defined(_WIN64)
-    // NOTE Ths code will never be executed as MSVC doesn't have a constructor attribute
-    g_use_ansi_color = _isatty(_fileno(stderr)) != 0;
-    // enable ANSI VT sequences when available
-    HANDLE h = GetStdHandle(STD_ERROR_HANDLE);
-    if (h != INVALID_HANDLE_VALUE)
-    {
-        DWORD mode = 0;
-        if (GetConsoleMode(h, &mode))
-        {
-            SetConsoleMode(h, mode | ENABLE_VIRTUAL_TERMINAL_PROCESSING);
-        }
-    }
-
-    g_log_isInit = true;
-#endif
-}
-
 static inline void _bra_log_set_no_color(void)
 {
     fputs("\033[0m", stderr);
@@ -127,6 +104,28 @@ static inline void _bra_log_set_ansi_color(const bra_log_level_e level)
 
 ////////////////////////////////////////////////////////////////////////////
 
+
+void bra_log_init()
+{
+#ifdef __GNUC__
+    g_use_ansi_color = isatty(STDERR_FILENO) != 0;
+#elif defined(_WIN32) || defined(_WIN64)
+    // NOTE Ths code will never be executed as MSVC doesn't have a constructor attribute
+    g_use_ansi_color = _isatty(_fileno(stderr)) != 0;
+    // enable ANSI VT sequences when available
+    HANDLE h = GetStdHandle(STD_ERROR_HANDLE);
+    if (h != INVALID_HANDLE_VALUE)
+    {
+        DWORD mode = 0;
+        if (GetConsoleMode(h, &mode))
+        {
+            SetConsoleMode(h, mode | ENABLE_VIRTUAL_TERMINAL_PROCESSING);
+        }
+    }
+
+    g_log_isInit = true;
+#endif
+}
 
 void bra_log_set_message_callback(bra_message_callback_f* msg_cb)
 {

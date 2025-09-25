@@ -9,6 +9,12 @@ extern "C" {
 #include <stdarg.h>
 
 /**
+ * @brief Initialize the logging system.
+ *
+ */
+void bra_log_init();
+
+/**
  * @brief Function prototype for the message callback (vprintf-style).
  *
  * @details Contract:

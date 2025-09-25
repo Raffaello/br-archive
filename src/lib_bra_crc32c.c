@@ -1,6 +1,7 @@
 #include <lib_bra_crc32c.h>
 
 #include <log/bra_log.h>
+#include <lib_bra.h>
 
 #if defined(__GNUC__) || defined(__clang__)
 #define BRA_TARGET_DEFAULT __attribute__((target("default")))
@@ -148,4 +149,12 @@ uint32_t bra_crc32c(const void* data, const uint64_t length, const uint32_t prev
 {
     // TODO: need to init with sse42 if available at runtime...
     return g_bra_crc32c_f(data, length, previous_crc);
+}
+
+void bra_crc32c_use_sse42(const bool use_sse42)
+{
+    if (use_sse42 && bra_has_sse42())
+        g_bra_crc32c_f = bra_crc32c_sse42;
+    else
+        g_bra_crc32c_f = bra_crc32c_table;
 }

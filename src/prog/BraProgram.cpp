@@ -44,6 +44,8 @@ bool BraProgram::set_overwrite_policy(const bra_fs_overwrite_policy_e op, const 
 void BraProgram::banner() const
 {
     bra_log_printf("BR-Archive Utility %s | Version: %s\n", fs::path(m_argv0).filename().string().c_str(), VERSION);
+    if (bra_has_sse42())
+        bra_log_printf("SSE4.2 support detected.\n");
     bra_log_printf("\n");
 }
 
@@ -166,6 +168,9 @@ std::optional<bool> BraProgram::parseArgs(const int argc, const char* const argv
 
 int BraProgram::run(const int argc, const char* const argv[])
 {
+    if (!bra_init())
+        return 1;
+
 #ifndef NDEBUG
     for (int i = 1; i < argc; ++i)
         bra_log_verbose("- %d. %s\n", i, argv[i]);

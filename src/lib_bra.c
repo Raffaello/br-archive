@@ -21,6 +21,23 @@ _Static_assert(BRA_ATTR_TYPE_SUBDIR == 3, "BRA_ATTR_TYPE_SUBDIR index changed");
 
 /////////////////////////////////////////////////////////////////////////////
 
+bool bra_init(void)
+{
+    bra_log_init();
+    bra_crc32c_use_sse42(true);
+
+    return true;
+}
+
+bool bra_has_sse42(void)
+{
+#if defined(__GNUC__) || defined(__clang__)
+    return __builtin_cpu_supports("sse4.2");
+#else
+    return false;
+#endif
+}
+
 char bra_format_meta_attributes(const bra_attr_t attributes)
 {
     switch (BRA_ATTR_TYPE(attributes))

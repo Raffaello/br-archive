@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdint.h>
+#include <stdbool.h>
 
 // #define BRA_CRC32_INIT      0xFFFFFFFF     // 0x1EDC6F41
 #define BRA_CRC32C_INIT 0u    // public initial value; function inverts in/out (std CRC-32C init/xor=0xFFFFFFFF)
@@ -47,3 +48,10 @@ uint32_t bra_crc32c_sse42(const void* data, const uint64_t length, const uint32_
  * @return uint32_t    The calculated CRC32/C checksum.
  */
 uint32_t bra_crc32c(const void* data, const uint64_t length, const uint32_t previous_crc);
+
+/**
+ * @brief Set the CRC32C implementation to use SSE4.2 intrinsics or not.
+ *
+ * @param use_sse42
+ */
+void bra_crc32c_use_sse42(const bool use_sse42);

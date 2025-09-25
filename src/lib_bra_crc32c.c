@@ -2,7 +2,10 @@
 
 #include <log/bra_log.h>
 
-// CRC32C lookup table (256 entries)
+// #define BRA_CRC32C_POLY     0x1EDC6F41u    // CRC-32C (Castagnoli) polynomial
+#define BRA_CRC32C_POLY 0x82F63B78u    // reflected CRC-32C (Castagnoli)
+
+                                       // CRC32C lookup table (256 entries)
 // Pre-computed using the reflected CRC-32C (Castagnoli) polynomial 0x82F63B78
 // clang-format off
 static const uint32_t crc32c_table[256] = {

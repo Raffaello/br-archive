@@ -46,6 +46,7 @@ void BraProgram::banner() const
     bra_log_printf("BR-Archive Utility %s | Version: %s\n", fs::path(m_argv0).filename().string().c_str(), VERSION);
     if (bra_has_sse42())
         bra_log_printf("SSE4.2 acceleration enabled.\n");
+
     bra_log_printf("\n");
 }
 

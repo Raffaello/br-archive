@@ -10,7 +10,6 @@ extern "C" {
 
 /**
  * @brief Initialize the logging system.
- *
  */
 void bra_log_init();
 

@@ -20,16 +20,16 @@ extern "C" {
 /**
  * @brief Initialize the library.
  *
- * @return true
- * @return false
+ * @retval true
+ * @retval false
  */
 bool bra_init(void);
 
 /**
  * @brief Check if the CPU has SSE4.2 support.
  *
- * @return true
- * @return false
+ * @retval true
+ * @retval false
  */
 bool bra_has_sse42(void);
 

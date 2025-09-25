@@ -23,12 +23,16 @@ _Static_assert(sizeof(bra_io_footer_t) == 12, "bra_io_footer_t must be 12 bytes"
 
 static int _bra_io_file_magic_is_elf(bra_io_file_t* f)
 {
+    enum
+    {
+        MAGIC_SIZE = 4
+    };
+
     assert_bra_io_file_t(f);
 
     // 0x7F,'E','L','F'
-    const size_t MAGIC_SIZE = 4;
-    uint8_t      magic[MAGIC_SIZE];
-    if (fread(magic, sizeof(char), MAGIC_SIZE, f->f) != MAGIC_SIZE)
+    uint8_t magic[MAGIC_SIZE];
+    if (fread(magic, sizeof(uint8_t), MAGIC_SIZE, f->f) != MAGIC_SIZE)
     {
         bra_io_file_read_error(f);
         return -1;
@@ -39,12 +43,17 @@ static int _bra_io_file_magic_is_elf(bra_io_file_t* f)
 
 static int _bra_io_file_magic_is_pe_exe(bra_io_file_t* f)
 {
+    enum
+    {
+        MAGIC_SIZE    = 2,
+        PE_MAGIC_SIZE = 4
+    };
+
     assert_bra_io_file_t(f);
 
     // 'M' 'Z'
-    const size_t MAGIC_SIZE = 2;
-    uint8_t      magic[MAGIC_SIZE];
-    if (fread(magic, sizeof(char), MAGIC_SIZE, f->f) != MAGIC_SIZE)
+    uint8_t magic[MAGIC_SIZE];
+    if (fread(magic, sizeof(uint8_t), MAGIC_SIZE, f->f) != MAGIC_SIZE)
     {
     _BRA_IO_FILE_MAGIC_IS_PE_EXE_READ_ERROR:
         bra_io_file_read_error(f);
@@ -72,9 +81,8 @@ static int _bra_io_file_magic_is_pe_exe(bra_io_file_t* f)
     if (!bra_io_file_seek(f, pe_offset, SEEK_SET))
         goto _BRA_IO_FILE_MAGIC_IS_PE_EXE_SEEK_ERROR;
 
-    const size_t PE_MAGIC_SIZE = 4;
-    char         pe_magic[PE_MAGIC_SIZE];
-    if (fread(pe_magic, sizeof(char), PE_MAGIC_SIZE, f->f) != PE_MAGIC_SIZE)
+    uint8_t pe_magic[PE_MAGIC_SIZE];
+    if (fread(pe_magic, sizeof(uint8_t), PE_MAGIC_SIZE, f->f) != PE_MAGIC_SIZE)
         goto _BRA_IO_FILE_MAGIC_IS_PE_EXE_READ_ERROR;
 
     return pe_magic[0] == 'P' && pe_magic[1] == 'E' && pe_magic[2] == '\0' && pe_magic[3] == '\0' ? 1 : 0;

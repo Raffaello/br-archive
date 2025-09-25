@@ -284,7 +284,7 @@ static bool _bra_io_file_ctx_write_meta_entry_file(bra_io_file_ctx_t* ctx, const
         return false;
     }
 
-    if (!bra_meta_entry_init(me, attributes, &filename[l], filename_len - l))
+    if (!bra_meta_entry_init(me, attributes, &filename[l], (uint8_t) (filename_len - l)))
         return false;
 
     uint64_t ds;
@@ -343,7 +343,7 @@ static bool _bra_io_file_ctx_write_meta_entry_dir_subdir(bra_io_file_ctx_t* ctx,
         return false;
     }
 
-    if (!bra_meta_entry_init(me, attributes, node->dirname, node_dirname_len))
+    if (!bra_meta_entry_init(me, attributes, node->dirname, (uint8_t) node_dirname_len))
         return false;
 
     if (!_bra_compute_header_crc32(strlen(dirname), dirname, me))
@@ -698,7 +698,7 @@ bool bra_io_file_ctx_encode_and_write_to_disk(bra_io_file_ctx_t* ctx, const char
     }
 
     bra_log_printf("Archiving %-7s:  ", g_attr_type_names[BRA_ATTR_TYPE(attributes)]);
-    _bra_print_string_max_length(fn, strlen(fn), BRA_PRINTF_FMT_FILENAME_MAX_LENGTH);
+    _bra_print_string_max_length(fn, (int) strlen(fn), BRA_PRINTF_FMT_FILENAME_MAX_LENGTH);
 
     if (!bra_io_file_ctx_write_meta_entry(ctx, attributes, fn))
         return false;    // f closed already
@@ -781,7 +781,7 @@ bool bra_io_file_ctx_decode_and_write_to_disk(bra_io_file_ctx_t* ctx, bra_fs_ove
         const bra_meta_entry_subdir_t* mes = me.entry_data;
         me.crc32                           = bra_crc32c(&mes->parent_index, sizeof(uint32_t), me.crc32);
     }
-        __attribute__((fallthrough));
+        BRA_FALLTHROUGH;
     // [[fallthrough]];
     case BRA_ATTR_TYPE_DIR:
     {
@@ -857,7 +857,7 @@ bool bra_io_file_ctx_print_meta_entry(bra_io_file_ctx_t* ctx)
 
     bra_format_bytes(ds, bytes);
     bra_log_printf("|   %c  | %s | ", attr, bytes);
-    _bra_print_string_max_length(fn, len, BRA_PRINTF_FMT_FILENAME_MAX_LENGTH);
+    _bra_print_string_max_length(fn, (int) len, BRA_PRINTF_FMT_FILENAME_MAX_LENGTH);
     free(fn);
 
     // skip data content

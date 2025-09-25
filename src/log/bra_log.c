@@ -19,10 +19,7 @@ static bra_log_level_e g_log_level = BRA_LOG_LEVEL_INFO;
 #endif
 
 static bool g_use_ansi_color;
-
-#if !defined(__GNUC__) && (defined(_WIN32) || defined(_WIN64))
 static bool g_log_isInit = false;
-#endif
 
 /**
  * @brief Define ANSI color codes https://en.wikipedia.org/wiki/ANSI_escape_code#SGR
@@ -54,28 +51,6 @@ static bool g_log_isInit = false;
 static bra_message_callback_f* g_msg_cb = vprintf;
 
 ///////////////////////////////////////////////////////////////////////////
-
-// Function to be executed before main() (in GCC)
-BRA_FUNC_ATTR_CONSTRUCTOR static void _init_bra_log()
-{
-#ifdef __GNUC__
-    g_use_ansi_color = isatty(STDERR_FILENO) != 0;
-#elif defined(_WIN32) || defined(_WIN64)
-    g_use_ansi_color = _isatty(_fileno(stderr)) != 0;
-    // enable ANSI VT sequences when available
-    HANDLE h = GetStdHandle(STD_ERROR_HANDLE);
-    if (h != INVALID_HANDLE_VALUE)
-    {
-        DWORD mode = 0;
-        if (GetConsoleMode(h, &mode))
-        {
-            SetConsoleMode(h, mode | ENABLE_VIRTUAL_TERMINAL_PROCESSING);
-        }
-    }
-
-    g_log_isInit = true;
-#endif
-}
 
 static inline void _bra_log_set_no_color(void)
 {
@@ -126,6 +101,31 @@ static inline void _bra_log_set_ansi_color(const bra_log_level_e level)
 
 ////////////////////////////////////////////////////////////////////////////
 
+
+void bra_log_init()
+{
+    if (g_log_isInit)
+        return;
+
+#ifdef __GNUC__
+    g_use_ansi_color = isatty(STDERR_FILENO) != 0;
+#elif defined(_WIN32) || defined(_WIN64)
+    // Windows: explicit initialization path (no constructor attribute)
+    g_use_ansi_color = _isatty(_fileno(stderr)) != 0;
+    // enable ANSI VT sequences when available
+    HANDLE h = GetStdHandle(STD_ERROR_HANDLE);
+    if (h != INVALID_HANDLE_VALUE)
+    {
+        DWORD mode = 0;
+        if (GetConsoleMode(h, &mode))
+        {
+            SetConsoleMode(h, mode | ENABLE_VIRTUAL_TERMINAL_PROCESSING);
+        }
+    }
+#endif
+
+    g_log_isInit = true;
+}
 
 void bra_log_set_message_callback(bra_message_callback_f* msg_cb)
 {
@@ -224,11 +224,6 @@ void bra_log_v(const bra_log_level_e level, const char* fmt, va_list args)
 {
     if (g_log_level > level || level == BRA_LOG_LEVEL_QUIET)
         return;
-
-#if !defined(__GNUC__) && (defined(_WIN32) || defined(_WIN64))
-    if (!g_log_isInit)
-        _init_bra_log();
-#endif
 
     if (g_use_ansi_color)
         _bra_log_set_ansi_color(level);

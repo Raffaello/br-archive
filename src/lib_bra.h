@@ -18,6 +18,22 @@ extern "C" {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
+ * @brief Initialize the library.
+ *
+ * @retval true
+ * @retval false
+ */
+bool bra_init(void);
+
+/**
+ * @brief Check if the CPU has SSE4.2 support.
+ *
+ * @retval true
+ * @retval false
+ */
+bool bra_has_sse42(void);
+
+/**
  * @brief Convert meta file @p attributes into a char.
  *
  * @param attributes

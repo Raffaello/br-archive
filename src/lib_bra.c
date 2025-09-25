@@ -21,6 +21,35 @@ _Static_assert(BRA_ATTR_TYPE_SUBDIR == 3, "BRA_ATTR_TYPE_SUBDIR index changed");
 
 /////////////////////////////////////////////////////////////////////////////
 
+bool bra_init(void)
+{
+    bra_log_init();
+    bra_crc32c_use_sse42(true);
+
+    return true;
+}
+
+bool bra_has_sse42(void)
+{
+#if defined(__GNUC__) || defined(__clang__)
+
+#if defined(__x86_64__) || defined(__i386__) || defined(_M_X64) || defined(_M_IX86)
+    __builtin_cpu_init();
+    return __builtin_cpu_supports("sse4.2");
+#else
+    return false;
+#endif    // defined(__x86_64__) || defined(__i386__) || defined(_M_X64) || defined(_M_IX86)CPU
+
+#elif defined(_MSC_VER) && (defined(_M_X64) || defined(_M_IX86))
+    int info[4] = {0};
+    __cpuidex(info, 1, 0);
+    // ECX bit 20 indicates SSE4.2 support
+    return (info[2] & (1 << 20)) != 0;
+#else
+    return false;
+#endif    // defined(__GNUC__) || defined(__clang__)
+}
+
 char bra_format_meta_attributes(const bra_attr_t attributes)
 {
     switch (BRA_ATTR_TYPE(attributes))

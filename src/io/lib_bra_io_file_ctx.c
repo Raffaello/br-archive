@@ -86,6 +86,7 @@ static bool _bra_compute_header_crc32(const size_t filename_len, const char* fil
         return false;
     }
 
+
     me->crc32 = bra_crc32c(&me->attributes, sizeof(bra_attr_t), BRA_CRC32C_INIT);
     me->crc32 = bra_crc32c(&filename_len, sizeof(uint16_t), me->crc32);
     me->crc32 = bra_crc32c(filename, filename_len, me->crc32);

@@ -75,52 +75,22 @@ static char* _bra_io_file_ctx_reconstruct_meta_entry_name(bra_io_file_ctx_t* ctx
     return NULL;
 }
 
-static bool _bra_compute_header_crc32_3(const bra_attr_t attributes, const uint16_t name_size, const char* name, uint32_t* out_crc32)
-{
-    assert(name != NULL);
-    assert(out_crc32 != NULL);
-
-    if (name_size == 0)
-    {
-        bra_log_critical("empty entry name_size");
-        return false;
-    }
-
-    *out_crc32 = bra_crc32c(&attributes, sizeof(bra_attr_t), BRA_CRC32C_INIT);
-    *out_crc32 = bra_crc32c(&name_size, sizeof(uint16_t), *out_crc32);
-    *out_crc32 = bra_crc32c(name, name_size, *out_crc32);
-
-    return true;
-}
-
-static bool _bra_compute_header_crc32_2(const bra_attr_t attributes, const char* name, uint32_t* out_crc32)
-{
-    assert(name != NULL);
-    assert(out_crc32 != NULL);
-
-    const size_t name_len = strlen(name);
-    if (name_len > UINT16_MAX)
-    {
-        bra_log_critical("full entry-name '%s' too long%zu", name, name_len);
-        return false;
-    }
-
-    const uint16_t name_size = (uint16_t) name_len;
-    return _bra_compute_header_crc32_3(attributes, name_size, name, out_crc32);
-}
-
 static bool _bra_compute_header_crc32(const size_t filename_len, const char* filename, bra_meta_entry_t* me)
 {
     assert(filename != NULL);
     assert(me != NULL);
 
-    if (filename_len > UINT16_MAX)
+    if (filename_len > UINT16_MAX || filename_len == 0)
     {
-        bra_log_critical("filename '%s' too long %zu", filename, filename_len);
+        bra_log_critical("filename '%s' too long or empty %zu", filename, filename_len);
         return false;
     }
 
-    return _bra_compute_header_crc32_3(me->attributes, (uint16_t) filename_len, filename, &me->crc32);
+    me->crc32 = bra_crc32c(&me->attributes, sizeof(bra_attr_t), BRA_CRC32C_INIT);
+    me->crc32 = bra_crc32c(&filename_len, sizeof(uint16_t), me->crc32);
+    me->crc32 = bra_crc32c(filename, filename_len, me->crc32);
+
+    return true;
 }
 
 static bool _bra_io_file_ctx_write_meta_entry_header(bra_io_file_ctx_t* ctx, const bra_attr_t attr, const char* filename, const uint8_t filename_size)
@@ -365,7 +335,7 @@ static bool _bra_io_file_ctx_write_meta_entry_dir_subdir(bra_io_file_ctx_t* ctx,
     if (!bra_meta_entry_init(me, attributes, node->dirname, node_dirname_len))
         return false;
 
-    if (!_bra_compute_header_crc32_2(attributes, dirname, &me->crc32))
+    if (!_bra_compute_header_crc32(strlen(dirname), dirname, me))
         return false;
 
     if (BRA_ATTR_TYPE(me->attributes) == BRA_ATTR_TYPE_SUBDIR)

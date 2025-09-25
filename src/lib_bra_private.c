@@ -8,7 +8,7 @@
 
 ////////////////////////////////////////////////////////////////////////////
 
-inline uint64_t _bra_min(const uint64_t a, const uint64_t b)
+uint64_t _bra_min(const uint64_t a, const uint64_t b)
 {
     return a < b ? a : b;
 }
@@ -57,7 +57,7 @@ bool _bra_validate_filename(const char* fn, const size_t fn_size)
     return true;
 }
 
-inline void _bra_print_string_max_length(const char* buf, const int buf_length, const int max_length)
+void _bra_print_string_max_length(const char* buf, const int buf_length, const int max_length)
 {
     if (buf_length > max_length)
         bra_log_printf("%.*s...", max_length - 3, buf);

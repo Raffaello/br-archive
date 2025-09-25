@@ -278,15 +278,14 @@ std::optional<bra_attr_t> file_attributes(const std::filesystem::path& base, con
     case socket:
         [[fallthrough]];
     case unknown:
-        return nullopt;
         break;
 
     case regular:
-        return BRA_ATTR_TYPE_FILE;
+        return (uint8_t) BRA_ATTR_TYPE_FILE;
     case directory:
-        return dir_isSubDir(base, path) ? BRA_ATTR_TYPE_SUBDIR : BRA_ATTR_TYPE_DIR;
+        return (uint8_t) (dir_isSubDir(base, path) ? BRA_ATTR_TYPE_SUBDIR : BRA_ATTR_TYPE_DIR);
     case symlink:
-        return BRA_ATTR_TYPE_SYM;
+        return (uint8_t) BRA_ATTR_TYPE_SYM;
     }
 
     return nullopt;

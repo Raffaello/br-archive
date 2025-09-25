@@ -40,12 +40,12 @@ char bra_format_meta_attributes(const bra_attr_t attributes)
 
 void bra_format_bytes(const size_t bytes, char buf[BRA_PRINTF_FMT_BYTES_BUF_SIZE])
 {
-    static const size_t KB = 1024;
-    static const size_t MB = KB * 1024;
-    static const size_t GB = MB * 1024;
-    static const size_t TB = GB * 1024;
-    static const size_t PB = TB * 1024;
-    static const size_t EB = PB * 1024;    // fits in uint64_t up to ~16 EB (platform dependent)
+#define KB ((size_t) 1024ULL)
+#define MB (KB * 1024ULL)
+#define GB (MB * 1024ULL)
+#define TB (GB * 1024ULL)
+#define PB (TB * 1024ULL)
+#define EB (PB * 1024ULL)    // fits in uint64_t up to ~16 EB (platform dependent)
 
 #if defined(__GNUC__)
 #pragma GCC diagnostic push
@@ -68,6 +68,13 @@ void bra_format_bytes(const size_t bytes, char buf[BRA_PRINTF_FMT_BYTES_BUF_SIZE
 #if defined(__GNUC__)
 #pragma GCC diagnostic pop
 #endif
+
+#undef KB
+#undef MB
+#undef GB
+#undef TB
+#undef PB
+#undef EB
 }
 
 bool bra_meta_entry_init(bra_meta_entry_t* me, const bra_attr_t attr, const char* filename, const uint8_t filename_size)

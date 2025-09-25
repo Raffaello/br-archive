@@ -1,3 +1,7 @@
+#ifdef _MSC_VER
+#define _CRT_SECURE_NO_WARNINGS
+#endif
+
 #include <bra_tree_dir.h>
 #include <lib_bra_private.h>    // _bra_strdup
 #include <log/bra_log.h>

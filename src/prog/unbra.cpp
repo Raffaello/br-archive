@@ -209,6 +209,9 @@ protected:
                 bra_log_printf("Creating output path: %s\n", m_output_path.string().c_str());
                 if (!bra::fs::dir_make(m_output_path))
                     return 1;
+
+                if (m_testContent)
+                    bra_log_printf("* All %u entr%s verified successfully.\n", bh.num_files, bh.num_files == 1 ? "y" : "ies");
             }
             const fs::path cur_path = fs::current_path(ec);
             if (ec)
@@ -236,6 +239,7 @@ protected:
         }
 
         bra_io_file_ctx_close(&m_ctx);
+
         return 0;
     }
 

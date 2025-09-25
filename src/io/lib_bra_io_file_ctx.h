@@ -135,8 +135,10 @@ bool bra_io_file_ctx_decode_and_write_to_disk(bra_io_file_ctx_t* ctx, bra_fs_ove
  *
  * @note In non @c NDEBUG builds, also prints the last directory, @c ctx->last_dir, for debugging.
  *
- * @param ctx Archive context whose meta will be printed.
- * @param test_mode If true, the function will also perform the CRC checks. if false, it will just print the entries.
+ * @param ctx       Archive context whose meta will be printed.
+ * @param test_mode If true, recomputes and verifies the entry CRC32 (reading file content when needed)
+ *                  and returns false on mismatch; if false, prints the entry and skips its data without verification.
+ *                  In both cases, the stream ends positioned just after the entry's CRC32.
  * @retval true
  * @retval false
  */

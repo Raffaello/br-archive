@@ -123,19 +123,23 @@ static bool _bra_io_file_ctx_flush_entry_file(bra_io_file_ctx_t* ctx, bra_meta_e
     assert(me != NULL);
     assert(filename != NULL);
 
+    if (BRA_ATTR_TYPE(me->attributes) != BRA_ATTR_TYPE_FILE)
+        return false;
+
+    // compute crc32 up to here
+    const bra_meta_entry_file_t* mef = (const bra_meta_entry_file_t*) me->entry_data;
+    if (!_bra_compute_header_crc32(filename_len, filename, me))
+        return false;
+    me->crc32 = bra_crc32c(&mef->data_size, sizeof(uint64_t), me->crc32);
+
+    // write common meta data (attribute, filename, filename_size)
     if (!_bra_io_file_ctx_write_meta_entry_header(ctx, me->attributes, me->name, me->name_size))
         return false;
 
     // 3. file size
-    const bra_meta_entry_file_t* mef = (const bra_meta_entry_file_t*) me->entry_data;
     assert(mef != NULL);
     if (fwrite(&mef->data_size, sizeof(uint64_t), 1, ctx->f.f) != 1)
         return false;
-
-    // compute crc32 up to here
-    if (!_bra_compute_header_crc32(filename_len, filename, me))
-        return false;
-    me->crc32 = bra_crc32c(&mef->data_size, sizeof(uint64_t), me->crc32);
 
     // 4. file content
     bra_io_file_t f2;
@@ -157,6 +161,10 @@ static bool _bra_io_file_ctx_flush_entry_dir(bra_io_file_ctx_t* ctx, const bra_m
     assert(me != NULL);
     assert(ctx->last_dir_node != NULL);
     assert(ctx->last_dir_node->parent != NULL);    // not root
+
+    if (BRA_ATTR_TYPE(me->attributes) != BRA_ATTR_TYPE_DIR &&
+        BRA_ATTR_TYPE(me->attributes) != BRA_ATTR_TYPE_SUBDIR)
+        return false;
 
     if (!_bra_io_file_ctx_write_meta_entry_header(ctx, me->attributes, me->name, me->name_size))
         return false;
@@ -189,7 +197,8 @@ static bool _bra_io_file_ctx_flush_entry_dir_subdir(bra_io_file_ctx_t* ctx, cons
     break;
 
     default:
-        break;
+        bra_log_critical("invalid attribute type for dir/subdir: %u", BRA_ATTR_TYPE(me->attributes));
+        return false;
     }
 
     return true;

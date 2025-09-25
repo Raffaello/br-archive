@@ -17,8 +17,10 @@
 #define BRA_ATTR_FALLTHROUGH      __attribute__((fallthrough))
 #elif defined(_WIN32) || defined(_WIN64)
 #define BRA_FUNC_ATTR_CONSTRUCTOR
+#define BRA_ATTR_FALLTHROUGH
 #else
 #define BRA_FUNC_ATTR_CONSTRUCTOR
+#define BRA_ATTR_FALLTHROUGH
 #endif
 
 // Enable printf-like format checking where supported

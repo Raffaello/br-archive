@@ -110,6 +110,7 @@ bool bra_meta_entry_init(bra_meta_entry_t* me, const bra_attr_t attr, const char
     else
         me->name = NULL;
 
+    me->crc32 = BRA_CRC32C_INIT;
     return true;
 }
 
@@ -124,6 +125,7 @@ void bra_meta_entry_free(bra_meta_entry_t* me)
     }
     me->name_size  = 0;
     me->attributes = 0;
+    me->crc32      = 0;
     if (me->name != NULL)
     {
         free(me->name);

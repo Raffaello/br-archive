@@ -19,7 +19,7 @@ extern "C" {
  *
  * @param node
  */
-void bra_tree_node_print(const bra_tree_node_t* node);
+void bra_tree_node_log_verbose(const bra_tree_node_t* node);
 #endif
 
 /**

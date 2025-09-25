@@ -468,7 +468,10 @@ bool search(const std::filesystem::path& dir, const std::string& pattern, std::l
                     continue;
                 }
 
-                bra_log_debug("Matched dir: %s", ep.string().c_str());
+#ifndef NDEBUG
+                bra_log_verbose("Matched dir: %s", ep.string().c_str());
+#endif
+
                 // out_files.push_back(ep);    // but if it is not a wildcard match it shouldn't be added.
                 if (!search(ep, pattern, out_files, recursive))
                     return false;

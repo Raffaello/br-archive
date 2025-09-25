@@ -32,7 +32,7 @@ bool bra_io_file_ctx_open(bra_io_file_ctx_t* ctx, const char* fn, const char* mo
 bool bra_io_file_ctx_sfx_open(bra_io_file_ctx_t* ctx, const char* fn, const char* mode);
 
 /**
- * @brief
+ * @brief Close the file associated with @p ctx and free any allocated resources.
  *
  * @param ctx
  * @retval true

@@ -61,6 +61,7 @@ BRA_FUNC_ATTR_CONSTRUCTOR static void _init_bra_log()
 #ifdef __GNUC__
     g_use_ansi_color = isatty(STDERR_FILENO) != 0;
 #elif defined(_WIN32) || defined(_WIN64)
+    // NOTE Ths code will never be executed as MSVC doesn't have a constructor attribute
     g_use_ansi_color = _isatty(_fileno(stderr)) != 0;
     // enable ANSI VT sequences when available
     HANDLE h = GetStdHandle(STD_ERROR_HANDLE);

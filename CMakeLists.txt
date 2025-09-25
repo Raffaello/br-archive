@@ -16,7 +16,7 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     add_compile_options(-Wall -Wextra -Wpedantic)
 elseif (MSVC)
-    add_compile_options(/W4)
+    add_compile_options(/W4 /Zc:__cplusplus)
 endif()
 
 function(win32_wildcard target)

@@ -781,7 +781,7 @@ bool bra_io_file_ctx_decode_and_write_to_disk(bra_io_file_ctx_t* ctx, bra_fs_ove
         const bra_meta_entry_subdir_t* mes = me.entry_data;
         me.crc32                           = bra_crc32c(&mes->parent_index, sizeof(uint32_t), me.crc32);
     }
-        __attribute__((fallthrough));
+        BRA_ATTR_FALLTHROUGH;
     // [[fallthrough]];
     case BRA_ATTR_TYPE_DIR:
     {

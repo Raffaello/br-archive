@@ -82,7 +82,7 @@ static bool _bra_compute_header_crc32_3(const bra_attr_t attributes, const uint1
 
     if (name_size == 0)
     {
-        bra_log_critical("empty entry-name");
+        bra_log_critical("empty entry name_size");
         return false;
     }
 
@@ -101,7 +101,7 @@ static bool _bra_compute_header_crc32_2(const bra_attr_t attributes, const char*
     const size_t name_len = strlen(name);
     if (name_len > UINT16_MAX)
     {
-        bra_log_critical("full entry-name '%s' too long or empty %zu", name, name_len);
+        bra_log_critical("full entry-name '%s' too long%zu", name, name_len);
         return false;
     }
 
@@ -116,7 +116,7 @@ static bool _bra_compute_header_crc32(const size_t filename_len, const char* fil
 
     if (filename_len > UINT16_MAX)
     {
-        bra_log_critical("filename %s too long %zu", filename, filename_len);
+        bra_log_critical("filename '%s' too long %zu", filename, filename_len);
         return false;
     }
 

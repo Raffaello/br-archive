@@ -844,6 +844,7 @@ bool bra_io_file_ctx_print_meta_entry(bra_io_file_ctx_t* ctx, const bool test_mo
 
     char             bytes[BRA_PRINTF_FMT_BYTES_BUF_SIZE];
     bra_meta_entry_t me = {0};
+    char*            fn = NULL;
 
     if (!bra_io_file_ctx_read_meta_entry(ctx, &me))
         goto BRA_IO_FILE_CTX_PRINT_META_ENTRY_ERR;
@@ -851,7 +852,8 @@ bool bra_io_file_ctx_print_meta_entry(bra_io_file_ctx_t* ctx, const bool test_mo
     const uint64_t ds   = BRA_ATTR_TYPE(me.attributes) == BRA_ATTR_TYPE_FILE ? ((bra_meta_entry_file_t*) me.entry_data)->data_size : 0;
     const char     attr = bra_format_meta_attributes(me.attributes);
     size_t         len  = 0;
-    char*          fn   = _bra_io_file_ctx_reconstruct_meta_entry_name(ctx, &me, &len);
+
+    fn = _bra_io_file_ctx_reconstruct_meta_entry_name(ctx, &me, &len);
     if (fn == NULL)
         goto BRA_IO_FILE_CTX_PRINT_META_ENTRY_ERR;
 
@@ -944,6 +946,7 @@ BRA_IO_FILE_CTX_PRINT_META_ENTRY_ERR:
         free(fn);
         fn = NULL;
     }
+
     bra_meta_entry_free(&me);
     return false;
 }

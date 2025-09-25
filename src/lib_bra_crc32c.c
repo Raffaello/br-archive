@@ -146,6 +146,6 @@ BRA_TARGET_SSE42 uint32_t bra_crc32c_sse42(const void* data, const uint64_t leng
 
 uint32_t bra_crc32c(const void* data, const uint64_t length, const uint32_t previous_crc)
 {
-    // TODO: need to use a pointer and init with sse42 if available at runtime.
+    // TODO: need to init with sse42 if available at runtime...
     return g_bra_crc32c_f(data, length, previous_crc);
 }

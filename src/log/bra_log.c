@@ -104,10 +104,13 @@ static inline void _bra_log_set_ansi_color(const bra_log_level_e level)
 
 void bra_log_init()
 {
+    if (g_log_isInit)
+        return;
+
 #ifdef __GNUC__
     g_use_ansi_color = isatty(STDERR_FILENO) != 0;
 #elif defined(_WIN32) || defined(_WIN64)
-    // NOTE Ths code will never be executed as MSVC doesn't have a constructor attribute
+    // Windows: explicit initialization path (no constructor attribute)
     g_use_ansi_color = _isatty(_fileno(stderr)) != 0;
     // enable ANSI VT sequences when available
     HANDLE h = GetStdHandle(STD_ERROR_HANDLE);

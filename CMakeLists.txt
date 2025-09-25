@@ -17,6 +17,7 @@ elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     add_compile_options(-Wall -Wextra -Wpedantic)
 elseif (MSVC)
     add_compile_options(/W4 $<$<COMPILE_LANGUAGE:CXX>:/Zc:__cplusplus>)
+    add_compile_definitions(_CRT_SECURE_NO_WARNINGS=1)
 endif()
 
 function(win32_wildcard target)

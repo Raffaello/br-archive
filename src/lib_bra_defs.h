@@ -14,13 +14,13 @@
 
 #if defined(__GNUC__) || defined(__clang__)
 #define BRA_FUNC_ATTR_CONSTRUCTOR __attribute__((constructor))
-#define BRA_ATTR_FALLTHROUGH      __attribute__((fallthrough))
+#define BRA_FALLTHROUGH           __attribute__((fallthrough))
 #elif defined(_WIN32) || defined(_WIN64)
 #define BRA_FUNC_ATTR_CONSTRUCTOR
-#define BRA_ATTR_FALLTHROUGH
+#define BRA_FALLTHROUGH /* fallthrough */
 #else
 #define BRA_FUNC_ATTR_CONSTRUCTOR
-#define BRA_ATTR_FALLTHROUGH
+#define BRA_FALLTHROUGH /* fallthrough */
 #endif
 
 // Enable printf-like format checking where supported

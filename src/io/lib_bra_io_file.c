@@ -1,7 +1,3 @@
-#ifdef _MSC_VER
-#define _CRT_SECURE_NO_WARNINGS
-#endif
-
 #include <io/lib_bra_io_file.h>
 
 #include <lib_bra.h>
@@ -27,7 +23,10 @@ _Static_assert(sizeof(bra_io_footer_t) == 12, "bra_io_footer_t must be 12 bytes"
 
 static int _bra_io_file_magic_is_elf(bra_io_file_t* f)
 {
-#define MAGIC_SIZE 4
+    enum
+    {
+        MAGIC_SIZE = 4
+    };
 
     assert_bra_io_file_t(f);
 
@@ -40,13 +39,15 @@ static int _bra_io_file_magic_is_elf(bra_io_file_t* f)
     }
 
     return magic[0] == 0x7F && magic[1] == 'E' && magic[2] == 'L' && magic[3] == 'F' ? 1 : 0;
-#undef MAGIC_SIZE
 }
 
 static int _bra_io_file_magic_is_pe_exe(bra_io_file_t* f)
 {
-#define MAGIC_SIZE    2
-#define PE_MAGIC_SIZE 4
+    enum
+    {
+        MAGIC_SIZE    = 2,
+        PE_MAGIC_SIZE = 4
+    };
 
     assert_bra_io_file_t(f);
 
@@ -85,8 +86,6 @@ static int _bra_io_file_magic_is_pe_exe(bra_io_file_t* f)
         goto _BRA_IO_FILE_MAGIC_IS_PE_EXE_READ_ERROR;
 
     return pe_magic[0] == 'P' && pe_magic[1] == 'E' && pe_magic[2] == '\0' && pe_magic[3] == '\0' ? 1 : 0;
-#undef MAGIC_SIZE
-#undef PE_MAGIC_SIZE
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////

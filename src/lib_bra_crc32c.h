@@ -3,7 +3,7 @@
 #include <stdint.h>
 
 // #define BRA_CRC32_INIT      0xFFFFFFFF     // 0x1EDC6F41
-#define BRA_CRC32C_INIT 0u    // reflected initial value
+#define BRA_CRC32C_INIT 0u    // // public initial value; function inverts in/out (std CRC-32C init/xor=0xFFFFFFFF)
 
 /**
  * @brief Calculates the CRC32C (Castagnoli) checksum of the given data.
@@ -16,9 +16,7 @@
  * @param previous_crc Previous CRC value (for incremental updates).
  * @return uint32_t    The calculated CRC32C checksum.
  */
-__attribute__((target("default")))
-uint32_t
-bra_crc32c(const void* data, const uint64_t length, const uint32_t previous_crc);
+uint32_t bra_crc32c_table(const void* data, const uint64_t length, const uint32_t previous_crc);
 
 /**
  * @brief Calculates the CRC32C (Castagnoli) checksum using SSE4.2 intrinsics.
@@ -32,6 +30,6 @@ bra_crc32c(const void* data, const uint64_t length, const uint32_t previous_crc)
  * @param previous_crc Previous CRC value (for incremental updates).
  * @return uint32_t    The calculated CRC32C checksum.
  */
-__attribute__((target("sse4.2")))
-uint32_t
-bra_crc32c_sse42(const void* data, const uint64_t length, const uint32_t previous_crc);
+uint32_t bra_crc32c_sse42(const void* data, const uint64_t length, const uint32_t previous_crc);
+
+uint32_t bra_crc32c(const void* data, const uint64_t length, const uint32_t previous_crc);

@@ -2,13 +2,35 @@
 
 #include <log/bra_log.h>
 
+#if defined(__GNUC__) || defined(__clang__)
+#define BRA_TARGET_DEFAULT __attribute__((target("default")))
+/* Only make SSE4.2 attribute visible on x86/x64 toolchains */
+#if defined(__x86_64__) || defined(_M_X64) || defined(__i386__) || defined(_M_IX86)
+#define BRA_TARGET_SSE42 __attribute__((target("sse4.2")))
+#else
+#define BRA_TARGET_SSE42
+#endif
+#else
+#define BRA_TARGET_DEFAULT
+#define BRA_TARGET_SSE42
+#endif
+
+// For SSE4.2 intrinsics (x86/x64 only)
+#if defined(__x86_64__) || defined(_M_X64) || defined(__i386__) || defined(_M_IX86)
 #include <nmmintrin.h>    // For SSE4.2 intrinsics
+#endif
 
 
 // #define BRA_CRC32C_POLY     0x1EDC6F41u    // CRC-32C (Castagnoli) polynomial
 #define BRA_CRC32C_POLY 0x82F63B78u    // reflected CRC-32C (Castagnoli)
 
-                                       // CRC32C lookup table (256 entries)
+typedef uint32_t (*bra_crc32_f)(const void* data, const uint64_t length, const uint32_t previous_crc);
+
+///////////////////////////////////////////////////////////////////////////////////////////
+
+static bra_crc32_f g_bra_crc32c_f = bra_crc32c_table;
+
+// CRC32C lookup table (256 entries)
 // Pre-computed using the reflected CRC-32C (Castagnoli) polynomial 0x82F63B78
 // clang-format off
 static const uint32_t crc32c_table[256] = {
@@ -48,7 +70,7 @@ static const uint32_t crc32c_table[256] = {
 // clang-format on
 
 // Default implementation using lookup table
-__attribute__((target("default"))) uint32_t bra_crc32c(const void* data, const uint64_t length, const uint32_t previous_crc)
+BRA_TARGET_DEFAULT uint32_t bra_crc32c_table(const void* data, const uint64_t length, const uint32_t previous_crc)
 {
     uint32_t       crc   = ~previous_crc;    // Invert initial CRC value
     const uint8_t* bytes = (const uint8_t*) data;
@@ -63,13 +85,15 @@ __attribute__((target("default"))) uint32_t bra_crc32c(const void* data, const u
 }
 
 // SSE4.2 optimized implementation
-__attribute__((target("sse4.2"))) uint32_t bra_crc32c_sse42(const void* data, const uint64_t length, const uint32_t previous_crc)
+BRA_TARGET_SSE42 uint32_t bra_crc32c_sse42(const void* data, const uint64_t length, const uint32_t previous_crc)
 {
     uint32_t       crc       = ~previous_crc;    // Invert initial CRC value
     const uint8_t* bytes     = (const uint8_t*) data;
     uint64_t       remaining = length;
     uintptr_t      addr      = (uintptr_t) bytes;
 
+
+#if defined(__x86_64__) || defined(_M_X64)
     // Align to 8-byte boundary for u64 operations
     while (remaining > 0 && (addr & 7) != 0)
     {
@@ -86,6 +110,16 @@ __attribute__((target("sse4.2"))) uint32_t bra_crc32c_sse42(const void* data, co
         bytes     += 8;
         remaining -= 8;
     }
+
+#else
+    // Align to 4-byte boundary for u64 operations
+    while (remaining > 0 && (addr & 3) != 0)
+    {
+        crc = _mm_crc32_u8(crc, *bytes++);
+        addr++;
+        remaining--;
+    }
+#endif
 
     // Process 4-byte chunk if remaining
     if (remaining >= 4)
@@ -108,4 +142,10 @@ __attribute__((target("sse4.2"))) uint32_t bra_crc32c_sse42(const void* data, co
         crc = _mm_crc32_u8(crc, *bytes);
 
     return ~crc;    // Invert final CRC value
+}
+
+uint32_t bra_crc32c(const void* data, const uint64_t length, const uint32_t previous_crc)
+{
+    // TODO: need to use a pointer and init with sse42 if available at runtime.
+    return g_bra_crc32c_f(data, length, previous_crc);
 }

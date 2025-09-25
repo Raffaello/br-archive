@@ -89,9 +89,16 @@ target_link_libraries(test_bra_crc32c PRIVATE lib_bra)
 
 add_test(NAME test_bra_crc32c.compute_crc32         COMMAND test_bra_crc32c test_bra_crc32c_compute_crc32)
 add_test(NAME test_bra_crc32c.empty_input           COMMAND test_bra_crc32c test_bra_crc32c_empty_input)
-add_test(NAME test_bra_crc32c.sse42_compute_crc32   COMMAND test_bra_crc32c test_bra_crc32c_sse42_compute_crc32)
-add_test(NAME test_bra_crc32c.sse42_empty_input     COMMAND test_bra_crc32c test_bra_crc32c_sse42_empty_input)
-add_test(NAME test_bra_crc32c.consistency           COMMAND test_bra_crc32c test_bra_crc32c_consistency)
+
+### SSE4.2 specific tests (only on x86_64/AMD64/i386)
+if(CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|AMD64|i[3-6]86")
+    add_test(NAME test_bra_crc32c.sse42_compute_crc32   COMMAND test_bra_crc32c test_bra_crc32c_sse42_compute_crc32)
+    add_test(NAME test_bra_crc32c.sse42_empty_input     COMMAND test_bra_crc32c test_bra_crc32c_sse42_empty_input)
+    add_test(NAME test_bra_crc32c.consistency           COMMAND test_bra_crc32c test_bra_crc32c_consistency)
+else()
+    message(STATUS "Skipping test_bra_crc32c.sse42_* tests: not an x86_64/AMD64/i386 architecture")
+endif()
+
 #####################################################################################################
 
 

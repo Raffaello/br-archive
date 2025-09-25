@@ -3,7 +3,7 @@
 #include <stdint.h>
 
 // #define BRA_CRC32_INIT      0xFFFFFFFF     // 0x1EDC6F41
-#define BRA_CRC32C_INIT 0u    // // public initial value; function inverts in/out (std CRC-32C init/xor=0xFFFFFFFF)
+#define BRA_CRC32C_INIT 0u    // public initial value; function inverts in/out (std CRC-32C init/xor=0xFFFFFFFF)
 
 /**
  * @brief Calculates the CRC32C (Castagnoli) checksum of the given data using a look-up table.

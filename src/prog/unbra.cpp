@@ -34,6 +34,7 @@ private:
     fs::path m_bra_file;
     fs::path m_output_path;
     bool     m_listContent = false;
+    bool     m_testContent = false;
     bool     m_sfx         = false;
 
 protected:
@@ -53,6 +54,7 @@ protected:
     virtual void help_options() const override
     {
         bra_log_printf("--list       | -l : view archive content.\n");
+        bra_log_printf("--test       | -t : test archive integrity (implies --list).\n");
         bra_log_printf("--output     | -o : output path: must be a directory relative to the current one (default: current directory).\n");
     };
 
@@ -63,6 +65,12 @@ protected:
         if (s == "--list" || s == "-l")
         {
             // list content
+            m_listContent = true;
+        }
+        else if (s == "--test" || s == "-t")
+        {
+            // test content
+            m_testContent = true;
             m_listContent = true;
         }
         else if (s == "--output" || s == "-o")
@@ -180,7 +188,7 @@ protected:
         }
 
         bra_log_printf("%s contains num files: %u\n", m_ctx.f.fn, bh.num_files);
-        if (m_listContent)
+        if (m_listContent || m_testContent)
         {
             bra_log_printf("| ATTR |   SIZE    | " BRA_PRINTF_FMT_FILENAME "| CRC32  |\n", "FILENAME");
             bra_log_printf("|------|-----------|-");
@@ -189,7 +197,7 @@ protected:
             bra_log_printf("|--------|\n");
             for (uint32_t i = 0; i < bh.num_files; i++)
             {
-                if (!bra_io_file_ctx_print_meta_entry(&m_ctx))
+                if (!bra_io_file_ctx_print_meta_entry(&m_ctx, m_testContent))
                     return 2;
             }
         }

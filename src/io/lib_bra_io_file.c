@@ -285,6 +285,31 @@ bool bra_io_file_write_footer(bra_io_file_t* f, const int64_t header_offset)
     return true;
 }
 
+bool bra_io_file_read_file_chunks(bra_io_file_t* src, const uint64_t data_size, bra_meta_entry_t* me)
+{
+    assert_bra_io_file_t(src);
+    assert(me != NULL);
+
+    char buf[BRA_MAX_CHUNK_SIZE];
+
+    for (uint64_t i = 0; i < data_size;)
+    {
+        const uint64_t s = _bra_min(BRA_MAX_CHUNK_SIZE, data_size - i);
+
+        // read source chunk
+        if (fread(buf, sizeof(char), s, src->f) != s)
+        {
+            bra_io_file_read_error(src);
+            return false;
+        }
+
+        me->crc32  = bra_crc32c(buf, s, me->crc32);
+        i         += s;
+    }
+
+    return true;
+}
+
 bool bra_io_file_copy_file_chunks(bra_io_file_t* dst, bra_io_file_t* src, const uint64_t data_size, bra_meta_entry_t* me)
 {
     assert_bra_io_file_t(dst);

@@ -156,6 +156,17 @@ bool bra_io_file_read_footer(bra_io_file_t* f, bra_io_footer_t* bf_out);
 bool bra_io_file_write_footer(bra_io_file_t* f, const int64_t header_offset);
 
 /**
+ * @brief
+ *
+ * @param src
+ * @param data_size
+ * @param me
+ * @retval true
+ * @retval false
+ */
+bool bra_io_file_read_file_chunks(bra_io_file_t* src, const uint64_t data_size, bra_meta_entry_t* me);
+
+/**
  * @brief Copy from @p src to @p dst in chunks size of #BRA_MAX_CHUNK_SIZE for @p data_size bytes
  *        the files must be positioned at the correct read/write offsets.
  *        On failure closes both @p dst and @p src via @ref bra_io_file_close

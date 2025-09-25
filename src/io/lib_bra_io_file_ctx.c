@@ -75,11 +75,10 @@ static char* _bra_io_file_ctx_reconstruct_meta_entry_name(bra_io_file_ctx_t* ctx
     return NULL;
 }
 
-static uint32_t _bra_compute_header_crc32_3(const bra_attr_t attributes, const uint16_t name_size, const char* name)
+static bool _bra_compute_header_crc32_3(const bra_attr_t attributes, const uint16_t name_size, const char* name, uint32_t* out_crc32)
 {
     assert(name != NULL);
-
-    uint32_t crc32;
+    assert(out_crc32 != NULL);
 
     if (name_size == 0)
     {
@@ -87,11 +86,11 @@ static uint32_t _bra_compute_header_crc32_3(const bra_attr_t attributes, const u
         return false;
     }
 
-    crc32 = bra_crc32c(&attributes, sizeof(bra_attr_t), BRA_CRC32C_INIT);
-    crc32 = bra_crc32c(&name_size, sizeof(uint16_t), crc32);
-    crc32 = bra_crc32c(name, name_size, crc32);
+    *out_crc32 = bra_crc32c(&attributes, sizeof(bra_attr_t), BRA_CRC32C_INIT);
+    *out_crc32 = bra_crc32c(&name_size, sizeof(uint16_t), *out_crc32);
+    *out_crc32 = bra_crc32c(name, name_size, *out_crc32);
 
-    return crc32;
+    return true;
 }
 
 static bool _bra_compute_header_crc32_2(const bra_attr_t attributes, const char* name, uint32_t* out_crc32)
@@ -107,8 +106,7 @@ static bool _bra_compute_header_crc32_2(const bra_attr_t attributes, const char*
     }
 
     const uint16_t name_size = (uint16_t) name_len;
-    *out_crc32               = _bra_compute_header_crc32_3(attributes, name_size, name);
-    return true;
+    return _bra_compute_header_crc32_3(attributes, name_size, name, out_crc32);
 }
 
 static bool _bra_compute_header_crc32(const size_t filename_len, const char* filename, bra_meta_entry_t* me)
@@ -122,8 +120,7 @@ static bool _bra_compute_header_crc32(const size_t filename_len, const char* fil
         return false;
     }
 
-    me->crc32 = _bra_compute_header_crc32_3(me->attributes, (uint16_t) filename_len, filename);
-    return true;
+    return _bra_compute_header_crc32_3(me->attributes, (uint16_t) filename_len, filename, &me->crc32);
 }
 
 static bool _bra_io_file_ctx_write_meta_entry_header(bra_io_file_ctx_t* ctx, const bra_attr_t attr, const char* filename, const uint8_t filename_size)

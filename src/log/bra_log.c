@@ -19,10 +19,7 @@ static bra_log_level_e g_log_level = BRA_LOG_LEVEL_INFO;
 #endif
 
 static bool g_use_ansi_color;
-
-#if !defined(__GNUC__) && (defined(_WIN32) || defined(_WIN64))
 static bool g_log_isInit = false;
-#endif
 
 /**
  * @brief Define ANSI color codes https://en.wikipedia.org/wiki/ANSI_escape_code#SGR
@@ -122,9 +119,9 @@ void bra_log_init()
             SetConsoleMode(h, mode | ENABLE_VIRTUAL_TERMINAL_PROCESSING);
         }
     }
+#endif
 
     g_log_isInit = true;
-#endif
 }
 
 void bra_log_set_message_callback(bra_message_callback_f* msg_cb)
@@ -224,11 +221,6 @@ void bra_log_v(const bra_log_level_e level, const char* fmt, va_list args)
 {
     if (g_log_level > level || level == BRA_LOG_LEVEL_QUIET)
         return;
-
-#if !defined(__GNUC__) && (defined(_WIN32) || defined(_WIN64))
-    if (!g_log_isInit)
-        _init_bra_log();
-#endif
 
     if (g_use_ansi_color)
         _bra_log_set_ansi_color(level);

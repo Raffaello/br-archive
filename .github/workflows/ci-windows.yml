@@ -1,0 +1,50 @@
+name: ci-windows
+on:
+  # release:
+  #   types: [created]
+  pull_request:
+    branches: [main]
+    paths-ignore:
+      - "doc/**"
+      - ".gitignore"
+      - ".gitattributes"
+      - "README.md"
+      - "LICENSE"
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        build_type: [Debug, Release]
+        os: ["2022"]
+    name: Build Windows
+    runs-on: windows-${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v5
+      - name: create build dir
+        run: mkdir build
+      - name: cmake generator
+        run: |
+          cmake -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} ..
+        working-directory: build
+      - name: cmake build
+        run: |
+          cmake --build . --config=${{ matrix.build_type }} -j4
+        working-directory: build
+      - name: CTest
+        run: ctest --output-on-failure -V
+        working-directory: build
+      # - name: cmake install
+      #   run: cmake --build . --target install --config ${{ matrix.build_type }} -j4
+      #   working-directory: build
+      # - name: cmake package
+      #   run: cmake --build . --target package --config ${{ matrix.build_type }} -j4
+      #   working-directory: build
+      # - name: Release
+      #   uses: softprops/action-gh-release@v2
+      #   if: startsWith(github.ref, 'refs/tags/')
+      #   with:
+      #       generate_release_notes: true
+      #       prerelease: false
+      #       files: "build/*.zip"

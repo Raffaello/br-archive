@@ -86,9 +86,10 @@ static bool _bra_compute_header_crc32(const size_t filename_len, const char* fil
         return false;
     }
 
+    const uint16_t filename_len_u16 = (uint16_t) filename_len;
 
     me->crc32 = bra_crc32c(&me->attributes, sizeof(bra_attr_t), BRA_CRC32C_INIT);
-    me->crc32 = bra_crc32c(&filename_len, sizeof(uint16_t), me->crc32);
+    me->crc32 = bra_crc32c(&filename_len_u16, sizeof(uint16_t), me->crc32);
     me->crc32 = bra_crc32c(filename, filename_len, me->crc32);
 
     return true;
@@ -808,7 +809,7 @@ bool bra_io_file_ctx_decode_and_write_to_disk(bra_io_file_ctx_t* ctx, bra_fs_ove
         // compare CRC32
         if (read_crc32 != me.crc32)
         {
-            bra_log_critical("%s checksum failed!!!", me.name);
+            bra_log_critical("%s checksum failed!!!", fn);
             goto BRA_IO_DECODE_ERR;
         }
     }

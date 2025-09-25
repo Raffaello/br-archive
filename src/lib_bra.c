@@ -32,9 +32,9 @@ bool bra_init(void)
 bool bra_has_sse42(void)
 {
 #if defined(__GNUC__) || defined(__clang__)
-    __builtin_cpu_init();
 
 #if defined(__x86_64__) || defined(__i386__) || defined(_M_X64) || defined(_M_IX86)
+    __builtin_cpu_init();
     return __builtin_cpu_supports("sse4.2");
 #else
     return false;

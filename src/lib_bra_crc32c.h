@@ -16,4 +16,22 @@
  * @param previous_crc Previous CRC value (for incremental updates).
  * @return uint32_t    The calculated CRC32C checksum.
  */
-uint32_t bra_crc32c(const void* data, const uint64_t length, const uint32_t previous_crc);
+__attribute__((target("default")))
+uint32_t
+bra_crc32c(const void* data, const uint64_t length, const uint32_t previous_crc);
+
+/**
+ * @brief Calculates the CRC32C (Castagnoli) checksum using SSE4.2 intrinsics.
+ *
+ * @details This implementation uses the hardware CRC32C instruction available in
+ *          processors with SSE4.2 support. Falls back to the table-based implementation
+ *          if SSE4.2 is not available at compile time.
+ *
+ * @param data         Pointer to the input data.
+ * @param length       Length of the input data in bytes.
+ * @param previous_crc Previous CRC value (for incremental updates).
+ * @return uint32_t    The calculated CRC32C checksum.
+ */
+__attribute__((target("sse4.2")))
+uint32_t
+bra_crc32c_sse42(const void* data, const uint64_t length, const uint32_t previous_crc);

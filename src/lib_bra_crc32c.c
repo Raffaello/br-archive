@@ -2,6 +2,9 @@
 
 #include <log/bra_log.h>
 
+#include <nmmintrin.h>    // For SSE4.2 intrinsics
+
+
 // #define BRA_CRC32C_POLY     0x1EDC6F41u    // CRC-32C (Castagnoli) polynomial
 #define BRA_CRC32C_POLY 0x82F63B78u    // reflected CRC-32C (Castagnoli)
 
@@ -42,9 +45,10 @@ static const uint32_t crc32c_table[256] = {
     0xF36E6F75, 0x0105EC76, 0x12551F82, 0xE03E9C81, 0x34F4F86A, 0xC69F7B69, 0xD5CF889D, 0x27A40B9E,
     0x79B737BA, 0x8BDCB4B9, 0x988C474D, 0x6AE7C44E, 0xBE2DA0A5, 0x4C4623A6, 0x5F16D052, 0xAD7D5351
 };
-//clang-format on
+// clang-format on
 
-uint32_t bra_crc32c(const void* data, const uint64_t length, const uint32_t previous_crc)
+// Default implementation using lookup table
+__attribute__((target("default"))) uint32_t bra_crc32c(const void* data, const uint64_t length, const uint32_t previous_crc)
 {
     uint32_t       crc   = ~previous_crc;    // Invert initial CRC value
     const uint8_t* bytes = (const uint8_t*) data;
@@ -54,6 +58,54 @@ uint32_t bra_crc32c(const void* data, const uint64_t length, const uint32_t prev
     {
         crc = crc32c_table[(crc ^ bytes[i]) & 0xFF] ^ (crc >> 8);
     }
+
+    return ~crc;    // Invert final CRC value
+}
+
+// SSE4.2 optimized implementation
+__attribute__((target("sse4.2"))) uint32_t bra_crc32c_sse42(const void* data, const uint64_t length, const uint32_t previous_crc)
+{
+    uint32_t       crc       = ~previous_crc;    // Invert initial CRC value
+    const uint8_t* bytes     = (const uint8_t*) data;
+    uint64_t       remaining = length;
+    uintptr_t      addr      = (uintptr_t) bytes;
+
+    // Align to 8-byte boundary for u64 operations
+    while (remaining > 0 && (addr & 7) != 0)
+    {
+        crc = _mm_crc32_u8(crc, *bytes++);
+        addr++;
+        remaining--;
+    }
+
+    // Process 8-byte chunks using 64-bit CRC32C instruction
+    while (remaining >= 8)
+    {
+        // Load 8 bytes in a portable way
+        crc        = (uint32_t) _mm_crc32_u64(crc, *(const uint64_t*) bytes);
+        bytes     += 8;
+        remaining -= 8;
+    }
+
+    // Process 4-byte chunk if remaining
+    if (remaining >= 4)
+    {
+        crc        = _mm_crc32_u32(crc, *(const uint32_t*) bytes);
+        bytes     += 4;
+        remaining -= 4;
+    }
+
+    // Process 2-byte chunk if remaining
+    if (remaining >= 2)
+    {
+        crc        = _mm_crc32_u16(crc, *(const uint16_t*) bytes);
+        bytes     += 2;
+        remaining -= 2;
+    }
+
+    // Process final byte if remaining
+    if (remaining == 1)
+        crc = _mm_crc32_u8(crc, *bytes);
 
     return ~crc;    // Invert final CRC value
 }

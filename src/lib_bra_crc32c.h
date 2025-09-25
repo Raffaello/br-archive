@@ -10,7 +10,8 @@
 /**
  * @brief Calculates the CRC32C (Castagnoli) checksum of the given data.
  *
- * @todo this is very inefficient, replace with a table-based implementation and SSE4.2.
+ * This implementation uses a pre-computed 256-entry lookup table for efficient
+ * calculation of the CRC32C checksum using the reflected polynomial 0x82F63B78.
  *
  * @param data         Pointer to the input data.
  * @param length       Length of the input data in bytes.

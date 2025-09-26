@@ -17,6 +17,14 @@ static const char* g_attr_type_names[] = {"file", "dir", "symlink", "subdir"};
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
+/**
+ * @brief Reconstructs the full path of a meta entry.
+ *
+ * @param ctx The file context.
+ * @param me  The meta entry.
+ * @param len The length of the reconstructed path.
+ * @return char* The reconstructed path or NULL on failure.
+ */
 static char* _bra_io_file_ctx_reconstruct_meta_entry_name(bra_io_file_ctx_t* ctx, bra_meta_entry_t* me, size_t* len)
 {
     assert_bra_io_file_cxt_t(ctx);
@@ -868,11 +876,10 @@ bool bra_io_file_ctx_print_meta_entry(bra_io_file_ctx_t* ctx, const bool test_mo
 
         // duplicated block from decode
         // refactor in a function
-        const size_t fn_len = strlen(fn);
-        if (!_bra_validate_filename(fn, fn_len))
+        if (!_bra_validate_filename(fn, len))
             goto BRA_IO_FILE_CTX_PRINT_META_ENTRY_ERR;
 
-        if (!_bra_compute_header_crc32(fn_len, fn, &me))
+        if (!_bra_compute_header_crc32(len, fn, &me))
             goto BRA_IO_FILE_CTX_PRINT_META_ENTRY_ERR;
 
         // miss to read file content if it is a file otherwise crc32 is already computed

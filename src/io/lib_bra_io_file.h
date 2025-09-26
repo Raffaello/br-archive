@@ -161,7 +161,7 @@ bool bra_io_file_write_footer(bra_io_file_t* f, const int64_t header_offset);
  *        the stream is advanced by data_size bytes (positioned at the entry's trailing CRC32).
  *        On error, logs and closes @p src via @ref bra_io_file_read_error().
  *
- * @param src[in.out]    input file wrapper (advanced by data_size on success; closed on error).
+ * @param src[in,out]    input file wrapper (advanced by data_size on success; closed on error).
  * @param data_size[in]  number of bytes to read from the current position.
  * @param me[in,out]     metadata entry whose crc32 field is updated (must not be @c NULL).
  * @retval true          on success

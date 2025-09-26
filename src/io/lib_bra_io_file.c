@@ -285,6 +285,23 @@ bool bra_io_file_write_footer(bra_io_file_t* f, const int64_t header_offset)
     return true;
 }
 
+bool bra_io_file_read_chunk(bra_io_file_t* src, void* buf, const size_t buf_size, bra_meta_entry_t* me)
+{
+    assert_bra_io_file_t(src);
+    assert(buf != NULL);
+    assert(buf_size > 0);
+    assert(me != NULL);
+
+    if (fread(buf, sizeof(char), buf_size, src->f) != buf_size)
+    {
+        bra_io_file_read_error(src);
+        return false;
+    }
+
+    me->crc32 = bra_crc32c(buf, buf_size, me->crc32);
+    return true;
+}
+
 bool bra_io_file_read_file_chunks(bra_io_file_t* src, const uint64_t data_size, bra_meta_entry_t* me)
 {
     assert_bra_io_file_t(src);
@@ -296,15 +313,10 @@ bool bra_io_file_read_file_chunks(bra_io_file_t* src, const uint64_t data_size, 
     {
         const uint64_t s = _bra_min(BRA_MAX_CHUNK_SIZE, data_size - i);
 
-        // read source chunk
-        if (fread(buf, sizeof(char), s, src->f) != s)
-        {
-            bra_io_file_read_error(src);
+        if (!bra_io_file_read_chunk(src, buf, s, me))
             return false;
-        }
 
-        me->crc32  = bra_crc32c(buf, s, me->crc32);
-        i         += s;
+        i += s;
     }
 
     return true;
@@ -323,14 +335,11 @@ bool bra_io_file_copy_file_chunks(bra_io_file_t* dst, bra_io_file_t* src, const 
         const uint64_t s = _bra_min(BRA_MAX_CHUNK_SIZE, data_size - i);
 
         // read source chunk
-        if (fread(buf, sizeof(char), s, src->f) != s)
+        if (!bra_io_file_read_chunk(src, buf, s, me))
         {
-            bra_io_file_read_error(src);
             bra_io_file_close(dst);
             return false;
         }
-
-        me->crc32 = bra_crc32c(buf, s, me->crc32);
 
         // write source chunk
         if (fwrite(buf, sizeof(char), s, dst->f) != s)

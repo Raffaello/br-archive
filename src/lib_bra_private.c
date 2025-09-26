@@ -1,5 +1,6 @@
 #include "lib_bra_private.h"
 
+#include <lib_bra_crc32c.h>
 #include <log/bra_log.h>
 
 #include <string.h>
@@ -63,4 +64,24 @@ void _bra_print_string_max_length(const char* buf, const int buf_length, const i
         bra_log_printf("%.*s...", max_length - 3, buf);
     else
         bra_log_printf("%*.*s", -max_length, buf_length, buf);
+}
+
+bool _bra_compute_header_crc32(const size_t filename_len, const char* filename, bra_meta_entry_t* me)
+{
+    assert(filename != NULL);
+    assert(me != NULL);
+
+    if (filename_len > UINT16_MAX || filename_len == 0)
+    {
+        bra_log_critical("filename '%s' too long or empty %zu", filename, filename_len);
+        return false;
+    }
+
+    const uint16_t filename_len_u16 = (uint16_t) filename_len;
+
+    me->crc32 = bra_crc32c(&me->attributes, sizeof(bra_attr_t), BRA_CRC32C_INIT);
+    me->crc32 = bra_crc32c(&filename_len_u16, sizeof(uint16_t), me->crc32);
+    me->crc32 = bra_crc32c(filename, filename_len, me->crc32);
+
+    return true;
 }

@@ -93,6 +93,7 @@ bool bra_meta_entry_file_init(bra_meta_entry_t* me, const uint64_t data_size);
  */
 bool bra_meta_entry_subdir_init(bra_meta_entry_t* me, const uint32_t parent_index);
 
+
 #ifdef __cplusplus
 }
 #endif

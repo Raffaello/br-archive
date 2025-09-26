@@ -756,12 +756,12 @@ bool bra_io_file_ctx_decode_and_write_to_disk(bra_io_file_ctx_t* ctx, bra_fs_ove
         goto BRA_IO_DECODE_ERR;
 
     // the full path name
-    const size_t fn_len = strlen(fn);
-    fn                  = _bra_io_file_ctx_reconstruct_meta_entry_name(ctx, &me, NULL);
+    fn = _bra_io_file_ctx_reconstruct_meta_entry_name(ctx, &me, NULL);
     if (fn == NULL)
         goto BRA_IO_DECODE_ERR;
 
-    bool skip_entry = false;
+    const size_t fn_len     = strlen(fn);
+    bool         skip_entry = false;
     if (!_bra_validate_filename(fn, fn_len))
         goto BRA_IO_DECODE_ERR;
 

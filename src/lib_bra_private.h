@@ -52,3 +52,14 @@ bool _bra_validate_filename(const char* fn, const size_t fn_size);
  * @param max_length    Field width; if buf_length > max_length, prints max_length-3 chars + "...".
  */
 void _bra_print_string_max_length(const char* buf, const int buf_length, const int max_length);
+
+/**
+ * @brief Compute the CRC32C checksum for the header of a metadata entry.
+ *
+ * @param filename_len Length of the filename.
+ * @param filename     Pointer to the filename string.
+ * @param me           Pointer to the metadata entry.
+ * @retval true
+ * @retval false
+ */
+bool _bra_compute_header_crc32(const size_t filename_len, const char* filename, bra_meta_entry_t* me);

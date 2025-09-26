@@ -156,6 +156,32 @@ bool bra_io_file_read_footer(bra_io_file_t* f, bra_io_footer_t* bf_out);
 bool bra_io_file_write_footer(bra_io_file_t* f, const int64_t header_offset);
 
 /**
+ * @brief Read a chunk of data from the source file.
+ *
+ * @param src      Source file wrapper.
+ * @param buf      Buffer to read data into.
+ * @param buf_size Size of the buffer.
+ * @param me       Metadata entry whose crc32 field is updated (must not be @c NULL).
+ * @retval true    On success.
+ * @retval false   On error. ( @p src is closed)
+ */
+bool bra_io_file_read_chunk(bra_io_file_t* src, void* buf, const size_t buf_size, bra_meta_entry_t* me);
+
+/**
+ * @brief Read data_size bytes from src in #BRA_MAX_CHUNK_SIZE chunks and update @p me->crc32.
+ *        The file must be positioned at the start of the entry's data. On success,
+ *        the stream is advanced by data_size bytes (positioned at the entry's trailing CRC32).
+ *        On error, logs and closes @p src via @ref bra_io_file_read_error().
+ *
+ * @param src[in,out]    input file wrapper (advanced by data_size on success; closed on error).
+ * @param data_size[in]  number of bytes to read from the current position.
+ * @param me[in,out]     metadata entry whose crc32 field is updated (must not be @c NULL).
+ * @retval true          on success
+ * @retval false         on error ( @p src is closed)
+ */
+bool bra_io_file_read_file_chunks(bra_io_file_t* src, const uint64_t data_size, bra_meta_entry_t* me);
+
+/**
  * @brief Copy from @p src to @p dst in chunks size of #BRA_MAX_CHUNK_SIZE for @p data_size bytes
  *        the files must be positioned at the correct read/write offsets.
  *        On failure closes both @p dst and @p src via @ref bra_io_file_close

@@ -311,7 +311,7 @@ TEST(test_bra_not_more_than_1_same_file)
 TEST(test_bra_unbra_all)
 {
     const std::string bra      = CMD_PREFIX + "bra -r";
-    const std::string unbra    = CMD_PREFIX + "unbra -l";
+    const std::string unbra    = CMD_PREFIX + "unbra -t";
     const std::string in_file  = "*";
     const std::string out_file = "./all.BRa";
 

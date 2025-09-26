@@ -622,12 +622,14 @@ bool bra_io_file_ctx_read_meta_entry(bra_io_file_ctx_t* ctx, bra_meta_entry_t* m
     buf[buf_size] = '\0';
 
     if (!bra_meta_entry_init(me, attr, buf, buf_size))
+    {
+        bra_log_error("unable to init meta entry for %s", buf);
         return false;
+    }
 
     // 4. entry data
     switch (BRA_ATTR_TYPE(me->attributes))
     {
-
     case BRA_ATTR_TYPE_SUBDIR:
     {
         assert(me->entry_data != NULL);

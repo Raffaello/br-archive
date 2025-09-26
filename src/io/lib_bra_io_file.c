@@ -359,5 +359,9 @@ bool bra_io_file_skip_data(bra_io_file_t* f, const uint64_t data_size)
 {
     assert_bra_io_file_t(f);
 
-    return bra_io_file_seek(f, data_size, SEEK_CUR);
+    const bool res = bra_io_file_seek(f, data_size, SEEK_CUR);
+    if (!res)
+        bra_io_file_seek_error(f);
+
+    return res;
 }

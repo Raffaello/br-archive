@@ -408,7 +408,7 @@ static inline bool _bra_io_file_ctx_compute_crc32(bra_io_file_ctx_t* ctx, const 
         break;
     }
 
-    return false;
+    return true;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -754,12 +754,12 @@ bool bra_io_file_ctx_decode_and_write_to_disk(bra_io_file_ctx_t* ctx, bra_fs_ove
         goto BRA_IO_DECODE_ERR;
 
     // the full path name
-    fn = _bra_io_file_ctx_reconstruct_meta_entry_name(ctx, &me, NULL);
+    const size_t fn_len = strlen(fn);
+    fn                  = _bra_io_file_ctx_reconstruct_meta_entry_name(ctx, &me, NULL);
     if (fn == NULL)
         goto BRA_IO_DECODE_ERR;
 
-    bool         skip_entry = false;
-    const size_t fn_len     = strlen(fn);
+    bool skip_entry = false;
     if (!_bra_validate_filename(fn, fn_len))
         goto BRA_IO_DECODE_ERR;
 
@@ -782,10 +782,8 @@ bool bra_io_file_ctx_decode_and_write_to_disk(bra_io_file_ctx_t* ctx, bra_fs_ove
 
             // skip file contents & crc32 too
             if (!bra_io_file_skip_data(&ctx->f, ds + sizeof(uint32_t)))
-            {
-                bra_io_file_seek_error(&ctx->f);
                 goto BRA_IO_DECODE_ERR;
-            }
+
             skip_entry = true;
         }
         else
@@ -905,10 +903,7 @@ bool bra_io_file_ctx_print_meta_entry(bra_io_file_ctx_t* ctx, const bool test_mo
     else
     {
         if (!bra_io_file_skip_data(&ctx->f, ds))
-        {
-            bra_io_file_seek_error(&ctx->f);
             goto BRA_IO_FILE_CTX_PRINT_META_ENTRY_ERR;
-        }
     }
 
     // read CRC32

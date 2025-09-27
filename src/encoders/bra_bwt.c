@@ -54,7 +54,7 @@ uint8_t* bra_bwt_encode(const uint8_t* buf, const size_t buf_size, size_t* prima
     for (size_t i = 0; i < buf_size; i++)
         suffix_ctx.index[i] = i;
 
-    // Sort all rotations lexicographically (TODO improve qsort avoiding to store data and length in each suffix)
+    // Sort all rotations lexicographically
     qsort_s(suffix_ctx.index, buf_size, sizeof(size_t), bwt_suffix_context_compare, &suffix_ctx);
 
     // Allocate output buffer

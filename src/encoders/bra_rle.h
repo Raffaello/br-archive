@@ -1,10 +1,5 @@
 #pragma once
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-
 #include <lib_bra_types.h>
 
 #include <stdint.h>
@@ -55,7 +50,3 @@ bool bra_decode_rle(bra_rle_chunk_t** cur_rle, uint8_t* buf, const size_t buf_si
  * @retval false if rle_head is NULL
  */
 bool bra_encode_rle_free_list(bra_rle_chunk_t** rle_head);
-
-#ifdef __cplusplus
-}
-#endif

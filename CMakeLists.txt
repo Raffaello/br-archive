@@ -58,6 +58,7 @@ target_sources(lib_bra
 
         src/encoders/bra_rle.c
         src/encoders/bra_bwt.c
+        src/encoders/bra_mtf.c
 )
 target_include_directories(lib_bra
     ### TODO: select what is public (at the moment looks everything except lib_bra_private.h)

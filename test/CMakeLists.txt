@@ -85,6 +85,8 @@ add_test(NAME test_bra_encoders.encode_decode_rle_3b COMMAND test_bra_encoders t
 add_test(NAME test_bra_encoders.encode_decode_bwt_1 COMMAND test_bra_encoders test_bra_encoders_encode_decode_bwt_1)
 add_test(NAME test_bra_encoders.encode_decode_bwt_2 COMMAND test_bra_encoders test_bra_encoders_encode_decode_bwt_2)
 
+add_test(NAME test_bra_encoders.encode_decode_mtf_1 COMMAND test_bra_encoders test_bra_encoders_encode_decode_mtf_1)
+
 #####################################################################################################
 
 add_executable(test_bra_crc32c test_bra_crc32c.cpp)

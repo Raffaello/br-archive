@@ -6,6 +6,7 @@ extern "C" {
 
 #include <encoders/bra_rle.h>
 #include <encoders/bra_bwt.h>
+#include <encoders/bra_mtf.h>
 
 #ifdef __cplusplus
 }
@@ -236,6 +237,23 @@ TEST(test_bra_encoders_encode_decode_bwt_2)
     return _test_bra_encoders_encode_decode_bwt(buf, buf_size, exp_buf, 9U);
 }
 
+TEST(test_bra_encoders_encode_decode_mtf_1)
+{
+    const uint8_t* buf       = (const uint8_t*) "BANANA";
+    const uint8_t  exp_buf[] = {'B', 'B', 'N', 1, 1, 1};
+    const size_t   buf_size  = strlen((const char*) buf);
+
+    uint8_t* out_buf = bra_mtf_encode(buf, buf_size);
+    ASSERT_TRUE(out_buf != nullptr);
+    ASSERT_EQ(memcmp(out_buf, exp_buf, buf_size), 0);
+
+    uint8_t* out_buf2 = bra_mtf_decode(out_buf, buf_size);
+    ASSERT_TRUE(out_buf2 != nullptr);
+    ASSERT_EQ(memcmp(out_buf2, buf, buf_size), 0);
+
+    return 0;
+}
+
 int main(int argc, char* argv[])
 {
     const std::map<std::string, std::function<int()>> m = {
@@ -243,8 +261,12 @@ int main(int argc, char* argv[])
         {TEST_FUNC(test_bra_encoders_encode_decode_rle_2)},
         {TEST_FUNC(test_bra_encoders_encode_decode_rle_3)},
         {TEST_FUNC(test_bra_encoders_encode_decode_rle_3b)},
+
         {TEST_FUNC(test_bra_encoders_encode_decode_bwt_1)},
         {TEST_FUNC(test_bra_encoders_encode_decode_bwt_2)},
+
+        {TEST_FUNC(test_bra_encoders_encode_decode_mtf_1)},
+
     };
 
     return test_main(argc, argv, m);

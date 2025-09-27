@@ -7,11 +7,11 @@
 #define BRA_BWT_ALPHABET 256
 
 // Simple suffix structure for comparison-based sorting
-typedef struct
+typedef struct bwt_suffix_t
 {
     size_t         index;
-    const uint8_t* data;
-    size_t         length;
+    const uint8_t* data;      // Aux var for qsort. TODO: this is a waste of memory, always the same for all suffixes.
+    size_t         length;    // Aux var for qsort. TODO: this is a waste of memory, always the same for all suffixes.
 } bwt_suffix_t;
 
 // Compare cyclic suffixes lexicographically
@@ -56,7 +56,7 @@ uint8_t* bra_bwt_encode(const uint8_t* buf, const size_t buf_size, size_t* prima
         suffixes[i].length = buf_size;
     }
 
-    // Sort all rotations lexicographically
+    // Sort all rotations lexicographically (TODO improve qsort avoiding to store data and length in each suffix)
     qsort(suffixes, buf_size, sizeof(bwt_suffix_t), bwt_suffix_compare);
 
     // Allocate output buffer
@@ -89,7 +89,6 @@ uint8_t* bra_bwt_decode(const uint8_t* buf, const size_t buf_size, const size_t 
     assert(buf != NULL);
     assert(buf_size > 0);
     assert(primary_index < buf_size);
-
 
     // Count character frequencies
     size_t count[BRA_BWT_ALPHABET] = {0};

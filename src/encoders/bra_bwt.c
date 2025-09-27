@@ -5,27 +5,27 @@
 #include <stdlib.h>
 #include <string.h>
 
-// Simple suffix structure for comparison-based sorting
-typedef struct bwt_suffix_t
+typedef struct bwt_suffix_ctx_t
 {
-    size_t         index;
-    const uint8_t* data;      // Aux var for qsort. TODO: this is a waste of memory, always the same for all suffixes.
-    size_t         length;    // Aux var for qsort. TODO: this is a waste of memory, always the same for all suffixes.
-} bwt_suffix_t;
+    size_t*        index;
+    const uint8_t* data;
+    const size_t   length;
 
-// Compare cyclic suffixes lexicographically
-static int bwt_suffix_compare(const void* a, const void* b)
+} bwt_suffix_ctx_t;
+
+//////////////////////////////////////////////////////////////////////////////////////////
+
+static int bwt_suffix_context_compare(void* context, const void* a, const void* b)
 {
-    const bwt_suffix_t* sa = (const bwt_suffix_t*) a;
-    const bwt_suffix_t* sb = (const bwt_suffix_t*) b;
+    const bwt_suffix_ctx_t* ctx = (const bwt_suffix_ctx_t*) context;
 
-    for (size_t i = 0; i < sa->length; i++)
+    const size_t sa = *(const size_t*) a;
+    const size_t sb = *(const size_t*) b;
+
+    for (size_t i = 0; i < ctx->length; ++i)
     {
-        size_t idx_a = (sa->index + i) % sa->length;
-        size_t idx_b = (sb->index + i) % sb->length;
-
-        uint8_t byte_a = sa->data[idx_a];
-        uint8_t byte_b = sb->data[idx_b];
+        const uint8_t byte_a = ctx->data[(sa + i) % ctx->length];
+        const uint8_t byte_b = ctx->data[(sb + i) % ctx->length];
 
         if (byte_a < byte_b)
             return -1;
@@ -36,6 +36,8 @@ static int bwt_suffix_compare(const void* a, const void* b)
     return 0;
 }
 
+/////////////////////////////////////////////////////////////////////////////////////////////
+
 uint8_t* bra_bwt_encode(const uint8_t* buf, const size_t buf_size, size_t* primary_index)
 {
     assert(buf != NULL);
@@ -43,43 +45,38 @@ uint8_t* bra_bwt_encode(const uint8_t* buf, const size_t buf_size, size_t* prima
     assert(primary_index != NULL);
 
     // Allocate suffix array for all rotations
-    bwt_suffix_t* suffixes = malloc(buf_size * sizeof(bwt_suffix_t));
-    if (!suffixes)
+    bwt_suffix_ctx_t suffix_ctx = {.index = NULL, .data = buf, .length = buf_size};
+    suffix_ctx.index            = malloc(buf_size * sizeof(size_t));
+    if (!suffix_ctx.index)
         return NULL;
 
     // Initialize suffix array with all possible rotations
     for (size_t i = 0; i < buf_size; i++)
-    {
-        suffixes[i].index  = i;
-        suffixes[i].data   = buf;
-        suffixes[i].length = buf_size;
-    }
+        suffix_ctx.index[i] = i;
 
     // Sort all rotations lexicographically (TODO improve qsort avoiding to store data and length in each suffix)
-    qsort(suffixes, buf_size, sizeof(bwt_suffix_t), bwt_suffix_compare);
+    qsort_s(suffix_ctx.index, buf_size, sizeof(size_t), bwt_suffix_context_compare, &suffix_ctx);
 
     // Allocate output buffer
     uint8_t* out_buf = (uint8_t*) malloc(buf_size);
     if (out_buf == NULL)
-    {
-        free(suffixes);
-        return NULL;
-    }
+        goto BRA_BWT_ENCODE_EXIT;
 
     // Generate BWT by taking the last character of each sorted rotation
     *primary_index = 0;
     for (size_t i = 0; i < buf_size; i++)
     {
         // Last character position in this rotation
-        size_t last_pos = (suffixes[i].index + buf_size - 1) % buf_size;
+        size_t last_pos = (suffix_ctx.index[i] + buf_size - 1) % buf_size;
         out_buf[i]      = buf[last_pos];
 
         // Track where the original string (rotation starting at 0) ended up
-        if (suffixes[i].index == 0)
+        if (suffix_ctx.index[i] == 0)
             *primary_index = i;
     }
 
-    free(suffixes);
+BRA_BWT_ENCODE_EXIT:
+    free(suffix_ctx.index);
     return out_buf;
 }
 
@@ -117,10 +114,7 @@ uint8_t* bra_bwt_decode(const uint8_t* buf, const size_t buf_size, const size_t 
     // Allocate output buffer
     uint8_t* out_buf = (uint8_t*) malloc(buf_size);
     if (out_buf == NULL)
-    {
-        free(transform);
-        return NULL;
-    }
+        goto BRA_BWT_DECODE_EXIT;
 
     // Follow the transform chain starting from primary index to reconstruct original string
     size_t index = primary_index;
@@ -130,6 +124,7 @@ uint8_t* bra_bwt_decode(const uint8_t* buf, const size_t buf_size, const size_t 
         out_buf[i] = buf[index];
     }
 
+BRA_BWT_DECODE_EXIT:
     free(transform);
     return out_buf;
 }

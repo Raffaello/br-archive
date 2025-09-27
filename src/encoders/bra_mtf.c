@@ -1,15 +1,14 @@
 #include <encoders/bra_mtf.h>
+#include <lib_bra_defs.h>
 
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
 
-#define BRA_MTF_ALPHABET_SIZE 256
-
 // Initialize MTF table with values 0-255
 static void mtf_init_table(uint8_t* table)
 {
-    for (int i = 0; i < BRA_MTF_ALPHABET_SIZE; i++)
+    for (int i = 0; i < BRA_ALPHABET_SIZE; i++)
         table[i] = (uint8_t) i;
 }
 
@@ -57,7 +56,7 @@ uint8_t* bra_mtf_encode(const uint8_t* buf, const size_t buf_size)
         return NULL;
 
     // Initialize MTF table (TODO this is a constant, pointless to reinit every time)
-    uint8_t mtf_table[BRA_MTF_ALPHABET_SIZE];
+    uint8_t mtf_table[BRA_ALPHABET_SIZE];
     mtf_init_table(mtf_table);
 
     // Encode each symbol
@@ -78,7 +77,7 @@ uint8_t* bra_mtf_decode(const uint8_t* buf, const size_t buf_size)
         return NULL;
 
     // Initialize MTF table (TODO this is a constant, pointless to reinit every time)
-    uint8_t mtf_table[BRA_MTF_ALPHABET_SIZE];
+    uint8_t mtf_table[BRA_ALPHABET_SIZE];
     mtf_init_table(mtf_table);
 
     // Decode each position

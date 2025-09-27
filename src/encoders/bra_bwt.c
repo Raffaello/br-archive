@@ -1,10 +1,9 @@
 #include <encoders/bra_bwt.h>
+#include <lib_bra_defs.h>
 
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
-
-#define BRA_BWT_ALPHABET 256
 
 // Simple suffix structure for comparison-based sorting
 typedef struct bwt_suffix_t
@@ -91,13 +90,13 @@ uint8_t* bra_bwt_decode(const uint8_t* buf, const size_t buf_size, const size_t 
     assert(primary_index < buf_size);
 
     // Count character frequencies
-    size_t count[BRA_BWT_ALPHABET] = {0};
+    size_t count[BRA_ALPHABET_SIZE] = {0};
     for (size_t i = 0; i < buf_size; i++)
         count[buf[i]]++;
 
     // Calculate first occurrence positions (cumulative counts)
-    size_t first_occurrence[BRA_BWT_ALPHABET] = {0};
-    for (int i = 1; i < BRA_BWT_ALPHABET; i++)
+    size_t first_occurrence[BRA_ALPHABET_SIZE] = {0};
+    for (int i = 1; i < BRA_ALPHABET_SIZE; i++)
         first_occurrence[i] = first_occurrence[i - 1] + count[i - 1];
 
     // Build transform array (maps last column positions to first column positions)
@@ -106,8 +105,8 @@ uint8_t* bra_bwt_decode(const uint8_t* buf, const size_t buf_size, const size_t 
         return NULL;
 
     // Create the transform mapping using first occurrence positions
-    size_t temp_first[BRA_BWT_ALPHABET];
-    memcpy(temp_first, first_occurrence, BRA_BWT_ALPHABET * sizeof(size_t));
+    size_t temp_first[BRA_ALPHABET_SIZE];
+    memcpy(temp_first, first_occurrence, BRA_ALPHABET_SIZE * sizeof(size_t));
 
     for (size_t i = 0; i < buf_size; i++)
     {

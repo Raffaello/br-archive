@@ -43,11 +43,11 @@ add_library(lib_bra STATIC src/lib_bra.c)
 target_sources(lib_bra
     PRIVATE
         src/lib_bra_private.c
-        src/lib_bra_crc32c.c
+
+        src/utils/bra_tree_dir.c
+        src/utils/lib_bra_crc32c.c
 
         src/log/bra_log.c
-
-        src/bra_tree_dir.c
 
         src/fs/bra_fs.cpp
         src/fs/bra_wildcards.cpp
@@ -57,6 +57,8 @@ target_sources(lib_bra
         src/io/lib_bra_io_file_ctx.c
 
         src/encoders/bra_rle.c
+        src/encoders/bra_bwt.c
+        src/encoders/bra_mtf.c
 )
 target_include_directories(lib_bra
     ### TODO: select what is public (at the moment looks everything except lib_bra_private.h)

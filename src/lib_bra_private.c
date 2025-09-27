@@ -1,6 +1,6 @@
 #include "lib_bra_private.h"
 
-#include <lib_bra_crc32c.h>
+#include <utils/lib_bra_crc32c.h>
 #include <log/bra_log.h>
 
 #include <string.h>

@@ -3,7 +3,7 @@
 #ifdef __cplusplus
 extern "C" {
 
-#include <lib_bra_crc32c.h>
+#include <utils/lib_bra_crc32c.h>
 }
 #endif
 

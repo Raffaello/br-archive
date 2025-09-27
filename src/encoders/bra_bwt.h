@@ -15,19 +15,19 @@
  * The BWT is reversible using the primary index, which indicates the position
  * of the original string in the sorted rotation matrix.
  *
- * @param buf Input data buffer to transform (must not be NULL)
+ * @param buf Input data buffer to transform (must not be @c NULL)
  * @param buf_size Size of input data in bytes (must be > 0)
- * @param primary_index Pointer to store primary index for decoding (must not be NULL)
- * @return Allocated output buffer containing BWT-transformed data, or NULL on failure
+ * @param primary_index Pointer to store primary index for decoding (must not be @c NULL)
+ * @return Allocated output buffer containing BWT-transformed data, or @c NULL on failure
  *
  * @note Caller is responsible for freeing the returned buffer.
  * @note Output size is always equal to input size.
- * @note Primary index is required for reversible decoding with bra_bwt_decode().
+ * @note Primary index is required for reversible decoding with @ref bra_bwt_decode().
  * @note Currently uses O(n² log n) comparison-based sorting.
  *
  * @todo Implement SA-IS algorithm to achieve O(n) time complexity.
  *
- * @warning Input buffer and primary_index must not be NULL.
+ * @warning Input buffer and primary_index must not be @c NULL.
  * @warning buf_size must be greater than 0.
  *
  * @example
@@ -49,18 +49,18 @@ uint8_t* bra_bwt_encode(const uint8_t* buf, const size_t buf_size, size_t* prima
  * following the transform chain that maps positions in the last column back
  * to the first column of the sorted rotation matrix.
  *
- * @param buf BWT-transformed data buffer (must not be NULL)
+ * @param buf BWT-transformed data buffer (must not be @c NULL)
  * @param buf_size Size of transformed data in bytes (must be > 0)
- * @param primary_index Primary index from bra_bwt_encode() (must be < buf_size)
- * @return Allocated output buffer containing original data, or NULL on failure
+ * @param primary_index Primary index from  @ref bra_bwt_encode() (must be < @p buf_size)
+ * @return Allocated output buffer containing original data, or @c NULL on failure
  *
  * @note Caller is responsible for freeing the returned buffer.
  * @note Output size is always equal to input size.
- * @note Primary index must match the value returned by bra_bwt_encode().
+ * @note Primary index must match the value returned by @ref bra_bwt_encode().
  *
- * @warning Input buffer must not be NULL.
+ * @warning Input buffer must not be @c NULL.
  * @warning buf_size must be greater than 0.
- * @warning primary_index must be less than buf_size.
+ * @warning primary_index must be less than @p buf_size.
  *
  * @example
  * @code

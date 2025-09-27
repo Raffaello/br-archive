@@ -1,3 +1,10 @@
+#if defined(linux) || defined(__BSD__)
+#define _GNU_SOURCE
+#define BRA_QSORT qsort_r
+#else
+#define BRA_QSORT qsort_s
+#endif
+
 #include <encoders/bra_bwt.h>
 #include <lib_bra_defs.h>
 
@@ -15,7 +22,11 @@ typedef struct bwt_suffix_ctx_t
 
 //////////////////////////////////////////////////////////////////////////////////////////
 
+#if defined(linux) || defined(__BSD__)
+static int bwt_suffix_context_compare(const void* a, const void* b, void* context)
+#else
 static int bwt_suffix_context_compare(void* context, const void* a, const void* b)
+#endif
 {
     const bwt_suffix_ctx_t* ctx = (const bwt_suffix_ctx_t*) context;
 
@@ -55,7 +66,7 @@ uint8_t* bra_bwt_encode(const uint8_t* buf, const size_t buf_size, size_t* prima
         suffix_ctx.index[i] = i;
 
     // Sort all rotations lexicographically
-    qsort_s(suffix_ctx.index, buf_size, sizeof(size_t), bwt_suffix_context_compare, &suffix_ctx);
+    BRA_QSORT(suffix_ctx.index, buf_size, sizeof(size_t), bwt_suffix_context_compare, &suffix_ctx);
 
     // Allocate output buffer
     uint8_t* out_buf = (uint8_t*) malloc(buf_size);

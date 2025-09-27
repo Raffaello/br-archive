@@ -198,16 +198,13 @@ TEST(test_bra_encoders_encode_decode_rle_3b)
     return 0;
 }
 
-TEST(test_bra_encoders_encode_decode_bwt_1)
+static int _test_bra_encoders_encode_decode_bwt(const uint8_t* buf, const size_t buf_size, const uint8_t* exp_buf, const size_t exp_primary_index)
 {
-    const uint8_t* buf      = (const uint8_t*) "BANANA";
-    const size_t   buf_size = 6;
-
-    size_t   primary_index = SIZE_MAX;
-    uint8_t* out_buf       = bra_bwt_encode(buf, buf_size, &primary_index);
+    size_t   primary_index;
+    uint8_t* out_buf = bra_bwt_encode(buf, buf_size, &primary_index);
     ASSERT_TRUE(out_buf != nullptr);
-    ASSERT_EQ(primary_index, 3U);
-    ASSERT_EQ(memcmp(out_buf, "NNBAAA", buf_size), 0);
+    ASSERT_EQ(primary_index, exp_primary_index);
+    ASSERT_EQ(memcmp(out_buf, exp_buf, buf_size), 0);
 
     uint8_t* out_buf2 = bra_bwt_decode(out_buf, buf_size, primary_index);
     ASSERT_TRUE(out_buf2 != nullptr);
@@ -217,29 +214,26 @@ TEST(test_bra_encoders_encode_decode_bwt_1)
         free(out_buf);
     if (out_buf2 != nullptr)
         free(out_buf2);
+
     return 0;
+}
+
+TEST(test_bra_encoders_encode_decode_bwt_1)
+{
+    const uint8_t* buf      = (const uint8_t*) "BANANA";
+    const uint8_t* exp_buf  = (const uint8_t*) "NNBAAA";
+    const size_t   buf_size = 6;
+
+    return _test_bra_encoders_encode_decode_bwt(buf, buf_size, exp_buf, 3U);
 }
 
 TEST(test_bra_encoders_encode_decode_bwt_2)
 {
     const uint8_t* buf      = (const uint8_t*) "The quick brown fox jumps over the lazy dog.";
+    const uint8_t* exp_buf  = (const uint8_t*) "kynxeserg.l i hhv otTu c uwd rfm ebp qjoooza";
     const size_t   buf_size = strlen((const char*) buf);
 
-    size_t   primary_index = SIZE_MAX;
-    uint8_t* out_buf       = bra_bwt_encode(buf, buf_size, &primary_index);
-    ASSERT_TRUE(out_buf != nullptr);
-    ASSERT_EQ(primary_index, 9U);
-    ASSERT_EQ(memcmp(out_buf, "kynxeserg.l i hhv otTu c uwd rfm ebp qjoooza", buf_size), 0);
-
-    uint8_t* out_buf2 = bra_bwt_decode(out_buf, buf_size, primary_index);
-    ASSERT_TRUE(out_buf2 != nullptr);
-    ASSERT_EQ(memcmp(out_buf2, buf, buf_size), 0);
-
-    if (out_buf != nullptr)
-        free(out_buf);
-    if (out_buf2 != nullptr)
-        free(out_buf2);
-    return 0;
+    return _test_bra_encoders_encode_decode_bwt(buf, buf_size, exp_buf, 9U);
 }
 
 int main(int argc, char* argv[])

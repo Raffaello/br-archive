@@ -220,6 +220,28 @@ TEST(test_bra_encoders_encode_decode_bwt_1)
     return 0;
 }
 
+TEST(test_bra_encoders_encode_decode_bwt_2)
+{
+    const uint8_t* buf      = (const uint8_t*) "The quick brown fox jumps over the lazy dog.";
+    const size_t   buf_size = strlen((const char*) buf);
+
+    size_t   primary_index = SIZE_MAX;
+    uint8_t* out_buf       = bra_bwt_encode(buf, buf_size, &primary_index);
+    ASSERT_TRUE(out_buf != nullptr);
+    ASSERT_EQ(primary_index, 9U);
+    ASSERT_EQ(memcmp(out_buf, "kynxeserg.l i hhv otTu c uwd rfm ebp qjoooza", buf_size), 0);
+
+    uint8_t* out_buf2 = bra_bwt_decode(out_buf, buf_size, primary_index);
+    ASSERT_TRUE(out_buf2 != nullptr);
+    ASSERT_EQ(memcmp(out_buf2, buf, buf_size), 0);
+
+    if (out_buf != nullptr)
+        free(out_buf);
+    if (out_buf2 != nullptr)
+        free(out_buf2);
+    return 0;
+}
+
 int main(int argc, char* argv[])
 {
     const std::map<std::string, std::function<int()>> m = {
@@ -228,6 +250,7 @@ int main(int argc, char* argv[])
         {TEST_FUNC(test_bra_encoders_encode_decode_rle_3)},
         {TEST_FUNC(test_bra_encoders_encode_decode_rle_3b)},
         {TEST_FUNC(test_bra_encoders_encode_decode_bwt_1)},
+        {TEST_FUNC(test_bra_encoders_encode_decode_bwt_2)},
     };
 
     return test_main(argc, argv, m);

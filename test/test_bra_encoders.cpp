@@ -15,6 +15,7 @@ extern "C" {
 #include <fs/bra_fs.hpp>
 
 #include <cstring>
+#include <cstdlib>
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -211,10 +212,8 @@ static int _test_bra_encoders_encode_decode_bwt(const uint8_t* buf, const size_t
     ASSERT_TRUE(out_buf2 != nullptr);
     ASSERT_EQ(memcmp(out_buf2, buf, buf_size), 0);
 
-    if (out_buf != nullptr)
-        free(out_buf);
-    if (out_buf2 != nullptr)
-        free(out_buf2);
+    free(out_buf);
+    free(out_buf2);
 
     return 0;
 }
@@ -250,6 +249,9 @@ TEST(test_bra_encoders_encode_decode_mtf_1)
     uint8_t* out_buf2 = bra_mtf_decode(out_buf, buf_size);
     ASSERT_TRUE(out_buf2 != nullptr);
     ASSERT_EQ(memcmp(out_buf2, buf, buf_size), 0);
+
+    free(out_buf2);
+    free(out_buf);
 
     return 0;
 }
@@ -293,16 +295,11 @@ TEST(test_bra_encoders_encode_decode_bwt_mtf_rle_1)
 
     ASSERT_TRUE(bra_encode_rle_free_list(&rle_head));
 
-    if (out_buf5 != nullptr)
-        free(out_buf5);
-    if (out_buf4 != nullptr)
-        free(out_buf4);
-    if (buf3 != nullptr)
-        free(buf3);
-    if (out_buf2 != nullptr)
-        free(out_buf2);
-    if (out_buf != nullptr)
-        free(out_buf);
+    free(out_buf5);
+    free(out_buf4);
+    free(buf3);
+    free(out_buf2);
+    free(out_buf);
 
     return 0;
 }

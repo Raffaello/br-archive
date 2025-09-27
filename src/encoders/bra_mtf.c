@@ -76,7 +76,7 @@ uint8_t* bra_mtf_decode(const uint8_t* buf, const size_t buf_size)
     if (!out_buf)
         return NULL;
 
-    // Initialize MTF table (TODO this is a constant, pointless to reinit every time)
+    // Initialize MTF table
     uint8_t mtf_table[BRA_ALPHABET_SIZE];
     mtf_init_table(mtf_table);
 

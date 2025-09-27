@@ -6,14 +6,14 @@
 #include <string.h>
 
 // Initialize MTF table with values 0-255
-static void mtf_init_table(uint8_t* table)
+static inline void mtf_init_table(uint8_t* table)
 {
     for (int i = 0; i < BRA_ALPHABET_SIZE; i++)
         table[i] = (uint8_t) i;
 }
 
 // Find position of value in table and move it to front
-static uint8_t mtf_encode_symbol(uint8_t* table, uint8_t symbol)
+static uint8_t mtf_encode_symbol(uint8_t* table, const uint8_t symbol)
 {
     uint8_t position = 0;
 
@@ -23,7 +23,7 @@ static uint8_t mtf_encode_symbol(uint8_t* table, uint8_t symbol)
 
     // Move symbol to front by shifting others right (TODO this is inefficient, doubly linked list would be better)
     uint8_t temp = table[position];
-    for (uint8_t i = position; i > 0; i--)
+    for (uint8_t i = position; i > 0; --i)
         table[i] = table[i - 1];
 
     table[0] = temp;
@@ -38,7 +38,7 @@ static void mtf_decode_symbol(uint8_t* table, uint8_t position)
     uint8_t temp = table[position];
 
     // Shift symbols to the right (TODO inefficient, doubly linked list would be better)
-    for (uint8_t i = position; i > 0; i--)
+    for (uint8_t i = position; i > 0; --i)
         table[i] = table[i - 1];
 
     // Move symbol to front
@@ -55,12 +55,12 @@ uint8_t* bra_mtf_encode(const uint8_t* buf, const size_t buf_size)
     if (!out_buf)
         return NULL;
 
-    // Initialize MTF table (TODO this is a constant, pointless to reinit every time)
+    // Initialize MTF table
     uint8_t mtf_table[BRA_ALPHABET_SIZE];
     mtf_init_table(mtf_table);
 
     // Encode each symbol
-    for (size_t i = 0; i < buf_size; i++)
+    for (size_t i = 0; i < buf_size; ++i)
         out_buf[i] = mtf_encode_symbol(mtf_table, buf[i]);
 
     return out_buf;
@@ -81,11 +81,11 @@ uint8_t* bra_mtf_decode(const uint8_t* buf, const size_t buf_size)
     mtf_init_table(mtf_table);
 
     // Decode each position
-    for (size_t i = 0; i < buf_size; i++)
+    for (size_t i = 0; i < buf_size; ++i)
     {
-        uint8_t position = buf[i];
-        out_buf[i]       = mtf_table[position];    // Get symbol at this position
-        mtf_decode_symbol(mtf_table, position);    // Move it to front
+        const uint8_t position = buf[i];
+        out_buf[i]             = mtf_table[position];    // Get symbol at this position
+        mtf_decode_symbol(mtf_table, position);          // Move it to front
     }
 
     return out_buf;

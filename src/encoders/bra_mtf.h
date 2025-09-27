@@ -6,7 +6,7 @@
 /**
  * @brief Encode data using Move-to-Front (MTF) algorithm.
  *
- * @todo improve the implementation
+ * @todo improve the implementation using double linked list for efficiency.
  *
  * The Move-to-Front algorithm maintains a list of all possible byte values
  * (0-255) and for each input symbol, outputs its current position in the list,

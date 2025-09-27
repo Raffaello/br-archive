@@ -4,8 +4,10 @@
 #include <io/lib_bra_io_file.h>
 #include <log/bra_log.h>
 #include <fs/bra_fs_c.h>
+
+#include <utils/bra_tree_dir.h>
+
 #include <lib_bra.h>
-#include <bra_tree_dir.h>
 
 #include <stdio.h>
 #include <stdlib.h>

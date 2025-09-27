@@ -278,8 +278,6 @@ TEST(test_bra_encoders_encode_decode_bwt_mtf_rle_1)
     ASSERT_TRUE(bra_encode_rle(out_buf2, buf_size, &num_rle_chunks, &rle_head));
     rle_list = rle_head;
 
-    printf("RLE chunks: %llu\n", num_rle_chunks);
-
     ////// decode //////
     ASSERT_TRUE(bra_decode_rle(&rle_list, buf3, buf_size, &buf_i));
     ASSERT_EQ(buf_i, buf_size);

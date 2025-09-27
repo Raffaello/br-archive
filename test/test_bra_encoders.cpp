@@ -1,8 +1,21 @@
 #include "bra_test.hpp"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <encoders/bra_rle.h>
+#include <encoders/bra_bwt.h>
+#include <encoders/bra_mtf.h>
+
+#ifdef __cplusplus
+}
+#endif
 
 #include <fs/bra_fs.hpp>
+
+#include <cstring>
+#include <cstdlib>
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -187,6 +200,110 @@ TEST(test_bra_encoders_encode_decode_rle_3b)
     return 0;
 }
 
+static int _test_bra_encoders_encode_decode_bwt(const uint8_t* buf, const size_t buf_size, const uint8_t* exp_buf, const size_t exp_primary_index)
+{
+    size_t   primary_index;
+    uint8_t* out_buf = bra_bwt_encode(buf, buf_size, &primary_index);
+    ASSERT_TRUE(out_buf != nullptr);
+    ASSERT_EQ(primary_index, exp_primary_index);
+    ASSERT_EQ(memcmp(out_buf, exp_buf, buf_size), 0);
+
+    uint8_t* out_buf2 = bra_bwt_decode(out_buf, buf_size, primary_index);
+    ASSERT_TRUE(out_buf2 != nullptr);
+    ASSERT_EQ(memcmp(out_buf2, buf, buf_size), 0);
+
+    free(out_buf);
+    free(out_buf2);
+
+    return 0;
+}
+
+TEST(test_bra_encoders_encode_decode_bwt_1)
+{
+    const uint8_t* buf      = (const uint8_t*) "BANANA";
+    const uint8_t* exp_buf  = (const uint8_t*) "NNBAAA";
+    const size_t   buf_size = 6;
+
+    return _test_bra_encoders_encode_decode_bwt(buf, buf_size, exp_buf, 3U);
+}
+
+TEST(test_bra_encoders_encode_decode_bwt_2)
+{
+    const uint8_t* buf      = (const uint8_t*) "The quick brown fox jumps over the lazy dog.";
+    const uint8_t* exp_buf  = (const uint8_t*) "kynxeserg.l i hhv otTu c uwd rfm ebp qjoooza";
+    const size_t   buf_size = strlen((const char*) buf);
+
+    return _test_bra_encoders_encode_decode_bwt(buf, buf_size, exp_buf, 9U);
+}
+
+TEST(test_bra_encoders_encode_decode_mtf_1)
+{
+    const uint8_t* buf       = (const uint8_t*) "BANANA";
+    const uint8_t  exp_buf[] = {'B', 'B', 'N', 1, 1, 1};
+    const size_t   buf_size  = strlen((const char*) buf);
+
+    uint8_t* out_buf = bra_mtf_encode(buf, buf_size);
+    ASSERT_TRUE(out_buf != nullptr);
+    ASSERT_EQ(memcmp(out_buf, exp_buf, buf_size), 0);
+
+    uint8_t* out_buf2 = bra_mtf_decode(out_buf, buf_size);
+    ASSERT_TRUE(out_buf2 != nullptr);
+    ASSERT_EQ(memcmp(out_buf2, buf, buf_size), 0);
+
+    free(out_buf2);
+    free(out_buf);
+
+    return 0;
+}
+
+TEST(test_bra_encoders_encode_decode_bwt_mtf_rle_1)
+{
+    const uint8_t* buf = (const uint8_t*) "BANANA";
+    // const uint8_t  exp_buf[] = {'B', 'B', 'N', 1, 1, 1};
+    const size_t buf_size = strlen((const char*) buf);
+
+    size_t   primary_index;
+    uint8_t* out_buf = bra_bwt_encode(buf, buf_size, &primary_index);
+    ASSERT_TRUE(out_buf != nullptr);
+
+    uint8_t* out_buf2 = bra_mtf_encode(out_buf, buf_size);
+    ASSERT_TRUE(out_buf2 != nullptr);
+
+
+    uint8_t*         buf3           = (uint8_t*) calloc(1, buf_size);
+    uint64_t         num_rle_chunks = 0;
+    bra_rle_chunk_t* rle_list       = nullptr;
+    bra_rle_chunk_t* rle_head       = nullptr;
+    size_t           buf_i          = 0;
+
+    ASSERT_TRUE(buf3 != nullptr);
+    ASSERT_TRUE(bra_encode_rle(out_buf2, buf_size, &num_rle_chunks, &rle_head));
+    rle_list = rle_head;
+
+    ////// decode //////
+    ASSERT_TRUE(bra_decode_rle(&rle_list, buf3, buf_size, &buf_i));
+    ASSERT_EQ(buf_i, buf_size);
+    ASSERT_EQ(memcmp(buf3, out_buf2, buf_size), 0);
+
+    uint8_t* out_buf4 = bra_mtf_decode(buf3, buf_size);
+    ASSERT_TRUE(out_buf4 != nullptr);
+    ASSERT_EQ(memcmp(out_buf4, out_buf, buf_size), 0);
+
+    uint8_t* out_buf5 = bra_bwt_decode(out_buf4, buf_size, primary_index);
+    ASSERT_TRUE(out_buf5 != nullptr);
+    ASSERT_EQ(memcmp(out_buf5, buf, buf_size), 0);
+
+    ASSERT_TRUE(bra_encode_rle_free_list(&rle_head));
+
+    free(out_buf5);
+    free(out_buf4);
+    free(buf3);
+    free(out_buf2);
+    free(out_buf);
+
+    return 0;
+}
+
 int main(int argc, char* argv[])
 {
     const std::map<std::string, std::function<int()>> m = {
@@ -194,6 +311,14 @@ int main(int argc, char* argv[])
         {TEST_FUNC(test_bra_encoders_encode_decode_rle_2)},
         {TEST_FUNC(test_bra_encoders_encode_decode_rle_3)},
         {TEST_FUNC(test_bra_encoders_encode_decode_rle_3b)},
+
+        {TEST_FUNC(test_bra_encoders_encode_decode_bwt_1)},
+        {TEST_FUNC(test_bra_encoders_encode_decode_bwt_2)},
+
+        {TEST_FUNC(test_bra_encoders_encode_decode_mtf_1)},
+
+        {TEST_FUNC(test_bra_encoders_encode_decode_bwt_mtf_rle_1)},
+
     };
 
     return test_main(argc, argv, m);

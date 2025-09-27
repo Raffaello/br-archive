@@ -7,7 +7,8 @@ extern "C" {
 
 #include <lib_bra_defs.h>
 #include <lib_bra_types.h>
-#include <lib_bra_crc32c.h>
+
+#include <utils/lib_bra_crc32c.h>
 
 #include <stdint.h>
 #include <stdbool.h>

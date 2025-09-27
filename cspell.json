@@ -22,6 +22,7 @@
         "MSVC",
         "msys",
         "msystem",
+        "sais",
         "setargv",
         "softprops",
         "STREQUAL",
@@ -33,8 +34,12 @@
         "wsetargv"
     ],
     "ignoreWords": [
+        "ANNBAA",
+        "NNBAAA",
         "fdata",
-        "ffunction"
+        "ffunction",
+        "kynxeserg",
+        "qjoooza"
     ],
     "import": []
 }

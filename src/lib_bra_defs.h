@@ -52,10 +52,10 @@
 #define BRA_ATTR_TYPE_SYM          2                                                                   //!< Symlink
 #define BRA_ATTR_TYPE_SUBDIR       3                                                                   //!< sub-dir, its base is an index of another dir/sub_dir previously encountered.
 
-#define BRA_ATTR_STORED (0 << 2)
+#define BRA_ATTR_TYPE_STORED (0 << 2)
 // #define BRA_ATTR_BWT_MTF_RLE      (1 << 2)
 // #define BRA_ATTR_BWT_MTD_RLE_LZ78 (2 << 2)
-#define BRA_ATTR_COMPRESSED (1 << 2)
+#define BRA_ATTR_TYPE_COMPRESSED (1 << 2)
 
 
 // #define BRA_ATTR_ERR  0xFF    //!< unknown or not implemented ATTR
@@ -76,6 +76,7 @@
 #error "unsupported platform" // maybe it could work anyway, but I did't test it.
 #endif
 
-#define BRA_MAX_PATH_LENGTH (UINT8_MAX + 1)    //!< capacity including trailing NUL; max on-disk name_size = UINT8_MAX (255).
+#define BRA_MAX_PATH_LENGTH (UINT8_MAX + 1)    //!< capacity including trailing @c '\\0'; max on-disk name_size = UINT8_MAX (255).
 #define BRA_MAX_CHUNK_SIZE  (256 * 1024)       //!< Use #BRA_MAX_CHUNK_SIZE for optimal I/O performance during file transfers (256KB).
 #define BRA_MAX_RLE_COUNTS  UINT8_MAX          //!< Maximum encoded count value (255) representing runs up to 256 bytes (count = run_length - 1).
+#define BRA_ALPHABET_SIZE   256                //!< Extended ASCII

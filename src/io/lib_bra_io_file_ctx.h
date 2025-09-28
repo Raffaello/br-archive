@@ -109,7 +109,7 @@ bool bra_io_file_ctx_write_meta_entry(bra_io_file_ctx_t* ctx, const bra_attr_t a
  * @retval true on success
  * @retval false on error (archive handle is closed)
  */
-bool bra_io_file_ctx_encode_and_write_to_disk(bra_io_file_ctx_t* ctx, const char* fn);
+bool bra_io_file_ctx_encode_and_write_to_disk(bra_io_file_ctx_t* ctx, const char* fn, const bool compress);
 
 /**
  * @brief Decode the current pointed internal file contained in @p ctx->f and write it to its relative path on disk.

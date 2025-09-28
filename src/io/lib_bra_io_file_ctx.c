@@ -137,9 +137,20 @@ static bool _bra_io_file_ctx_flush_entry_file(bra_io_file_ctx_t* ctx, bra_meta_e
     if (!bra_io_file_open(&f2, filename, "rb"))
         return false;
 
-    // TODO: need a better interface when compressing (encode interface)
-    if (!bra_io_file_copy_file_chunks(&ctx->f, &f2, mef->data_size, me))
+    switch (BRA_ATTR_COMP(me->attributes))
+    {
+    case BRA_ATTR_COMP_STORED:
+        if (!bra_io_file_copy_file_chunks(&ctx->f, &f2, mef->data_size, me))
+            return false;
+        break;
+    case BRA_ATTR_COMP_COMPRESSED:
+        if (!bra_io_file_compress_file_chunks(&ctx->f, &f2, mef->data_size, me))
+            return false;
+        break;
+    default:
+        bra_log_critical("invalid compression type for file: %u", BRA_ATTR_COMP(me->attributes));
         return false;
+    }
 
     bra_io_file_close(&f2);
     return true;
@@ -284,7 +295,6 @@ static bool _bra_io_file_ctx_write_meta_entry_file(bra_io_file_ctx_t* ctx, const
     if (!bra_meta_entry_file_init(me, ds))
         return false;
 
-    // write common meta data (attribute, filename, filename_size)
     if (!_bra_io_file_ctx_flush_entry_file(ctx, me, filename, filename_len))
         return false;
 
@@ -389,6 +399,7 @@ static inline bool _bra_io_file_ctx_compute_crc32(bra_io_file_ctx_t* ctx, const 
         const uint64_t ds = mef->data_size;
 
         me->crc32 = bra_crc32c(&mef->data_size, sizeof(uint64_t), me->crc32);
+
         if (!bra_io_file_read_file_chunks(&ctx->f, ds, me))
             return false;
     }
@@ -720,7 +731,7 @@ BRA_IO_WRITE_ERR:
     return false;
 }
 
-bool bra_io_file_ctx_encode_and_write_to_disk(bra_io_file_ctx_t* ctx, const char* fn)
+bool bra_io_file_ctx_encode_and_write_to_disk(bra_io_file_ctx_t* ctx, const char* fn, const bool compress)
 {
     assert_bra_io_file_cxt_t(ctx);
     assert(fn != NULL);
@@ -733,6 +744,18 @@ bool bra_io_file_ctx_encode_and_write_to_disk(bra_io_file_ctx_t* ctx, const char
         bra_log_error("%s has unknown attribute", fn);
         bra_io_file_close(&ctx->f);
         return false;
+    }
+
+    // NOTE just for dev purposes
+    // TODO: compress dir entries too?
+    // NOTE: for now is setting compression for everything but used only in files.
+    if (compress)
+    {
+        attributes = BRA_ATTR_SET_COMP(attributes, BRA_ATTR_COMP_COMPRESSED);
+    }
+    else
+    {
+        attributes = BRA_ATTR_SET_COMP(attributes, BRA_ATTR_COMP_STORED);
     }
 
     bra_log_printf("Archiving %-7s:  ", g_attr_type_names[BRA_ATTR_TYPE(attributes)]);
@@ -804,9 +827,23 @@ bool bra_io_file_ctx_decode_and_write_to_disk(bra_io_file_ctx_t* ctx, bra_fs_ove
             if (!bra_io_file_open(&f2, fn, "wb"))
                 goto BRA_IO_DECODE_ERR;
 
-            // TODO: copy only if not compression, need a better abstraction here (decode interface)
-            if (!bra_io_file_copy_file_chunks(&f2, &ctx->f, ds, &me))
+
+            switch (BRA_ATTR_COMP(me.attributes))
+            {
+            case BRA_ATTR_COMP_STORED:
+                if (!bra_io_file_copy_file_chunks(&f2, &ctx->f, ds, &me))
+                    goto BRA_IO_DECODE_ERR;
+                break;
+            case BRA_ATTR_COMP_COMPRESSED:
+                if (!bra_io_file_decompress_file_chunks(&f2, &ctx->f, ds, &me))
+                    goto BRA_IO_DECODE_ERR;
+                break;
+            default:
+                bra_log_critical("invalid compression type for file: %u", BRA_ATTR_COMP(me.attributes));
+                bra_io_file_close(&f2);
                 goto BRA_IO_DECODE_ERR;
+                break;
+            }
 
             bra_io_file_close(&f2);
         }
@@ -906,8 +943,25 @@ bool bra_io_file_ctx_print_meta_entry(bra_io_file_ctx_t* ctx, const bool test_mo
     }
     else
     {
-        if (!bra_io_file_skip_data(&ctx->f, ds))
+        switch (BRA_ATTR_COMP(me.attributes))
+        {
+        case BRA_ATTR_COMP_STORED:
+            if (!bra_io_file_skip_data(&ctx->f, ds))
+                goto BRA_IO_FILE_CTX_PRINT_META_ENTRY_ERR;
+            break;
+        case BRA_ATTR_COMP_COMPRESSED:
+        {
+            const size_t chunks = ds / BRA_MAX_CHUNK_SIZE + (ds % BRA_MAX_CHUNK_SIZE != 0 ? 1 : 0);
+            // have to skip the primary index to, but there is a primary index for each chunk.
+            if (!bra_io_file_skip_data(&ctx->f, ds + (sizeof(bra_bwt_index_t) * chunks)))
+                goto BRA_IO_FILE_CTX_PRINT_META_ENTRY_ERR;
+        }
+        break;
+        default:
+            bra_log_critical("invalid compression type for file: %u", BRA_ATTR_COMP(me.attributes));
             goto BRA_IO_FILE_CTX_PRINT_META_ENTRY_ERR;
+            break;
+        }
     }
 
     // read CRC32

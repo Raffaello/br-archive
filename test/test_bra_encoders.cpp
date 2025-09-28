@@ -200,10 +200,10 @@ TEST(test_bra_encoders_encode_decode_rle_3b)
     return 0;
 }
 
-static int _test_bra_encoders_encode_decode_bwt(const uint8_t* buf, const size_t buf_size, const uint8_t* exp_buf, const size_t exp_primary_index)
+static int _test_bra_encoders_encode_decode_bwt(const uint8_t* buf, const size_t buf_size, const uint8_t* exp_buf, const bra_bwt_index_t exp_primary_index)
 {
-    size_t   primary_index;
-    uint8_t* out_buf = bra_bwt_encode(buf, buf_size, &primary_index);
+    bra_bwt_index_t primary_index;
+    uint8_t*        out_buf = bra_bwt_encode(buf, buf_size, &primary_index);
     ASSERT_TRUE(out_buf != nullptr);
     ASSERT_EQ(primary_index, exp_primary_index);
     ASSERT_EQ(memcmp(out_buf, exp_buf, buf_size), 0);
@@ -262,8 +262,8 @@ TEST(test_bra_encoders_encode_decode_bwt_mtf_rle_1)
     // const uint8_t  exp_buf[] = {'B', 'B', 'N', 1, 1, 1};
     const size_t buf_size = strlen((const char*) buf);
 
-    size_t   primary_index;
-    uint8_t* out_buf = bra_bwt_encode(buf, buf_size, &primary_index);
+    bra_bwt_index_t primary_index;
+    uint8_t*        out_buf = bra_bwt_encode(buf, buf_size, &primary_index);
     ASSERT_TRUE(out_buf != nullptr);
 
     uint8_t* out_buf2 = bra_mtf_encode(out_buf, buf_size);

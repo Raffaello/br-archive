@@ -1,6 +1,7 @@
 #pragma once
 
-#include <stddef.h>
+#include <lib_bra_types.h>
+
 #include <stdint.h>
 
 /**
@@ -33,13 +34,13 @@
  * @example
  * @code
  * const uint8_t* input = (uint8_t*)"BANANA";
- * size_t primary_index;
+ * bra_bwt_index_t primary_index;
  * uint8_t* bwt_output = bra_bwt_encode(input, 6, &primary_index);
  * // bwt_output contains "NNBAAA", primary_index = 3
  * free(bwt_output);
  * @endcode
  */
-uint8_t* bra_bwt_encode(const uint8_t* buf, const size_t buf_size, size_t* primary_index);
+uint8_t* bra_bwt_encode(const uint8_t* buf, const bra_bwt_index_t buf_size, bra_bwt_index_t* primary_index);
 
 /**
  * @brief Decode BWT-transformed data back to original.
@@ -70,4 +71,4 @@ uint8_t* bra_bwt_encode(const uint8_t* buf, const size_t buf_size, size_t* prima
  * free(original);
  * @endcode
  */
-uint8_t* bra_bwt_decode(const uint8_t* buf, const size_t buf_size, const size_t primary_index);
+uint8_t* bra_bwt_decode(const uint8_t* buf, const bra_bwt_index_t buf_size, const bra_bwt_index_t primary_index);

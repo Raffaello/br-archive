@@ -41,6 +41,7 @@ private:
     int64_t                                m_header_offset     = -1;
     bool                                   m_sfx               = false;
     bool                                   m_recursive         = false;
+    bool                                   m_compress          = false;
     int                                    m_progress_width    = 0;
 
 
@@ -69,6 +70,7 @@ protected:
         // bra_log_printf("--test       | -t : test an existing archive.\n");
         bra_log_printf("--out        | -o : <output_filename> it takes the path of the output file.\n");
         bra_log_printf("                    If the extension %s is missing it will be automatically added.\n", BRA_FILE_EXT);
+        bra_log_printf("-c                : compress files (alpha version)\n");
     };
 
     int parseArgs_minArgc() const override { return 2; }
@@ -93,6 +95,8 @@ protected:
         {
             m_recursive = true;
         }
+        else if (s == "-c")
+            m_compress = true;
         else
             return nullopt;
 
@@ -280,7 +284,13 @@ protected:
         }
 
         const string fn = path.generic_string();
-        if (!bra_io_file_ctx_encode_and_write_to_disk(&m_ctx, fn.c_str()))
+        // TODO: add the argument for compression/store
+        // TODO: also do the automatic decision based on file type/size?
+        //       (e.g. do not compress very small files or already compressed files)
+        //       or if the compression is bigger than the original size.
+        //       This will be anyway part of the compression function.
+        //       By default should be compression enabled.
+        if (!bra_io_file_ctx_encode_and_write_to_disk(&m_ctx, fn.c_str(), m_compress))
             return false;
 
         return true;

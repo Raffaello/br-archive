@@ -361,6 +361,7 @@ bool bra_io_file_read_file_chunks(bra_io_file_t* src, const uint64_t data_size, 
                 return false;
             }
 
+            me->crc32 = bra_crc32c(&primary_index, sizeof(bra_bwt_index_t), me->crc32);
             me->crc32 = bra_crc32c(buf_bwt, s, me->crc32);
             free(buf_mtf);
             free(buf_bwt);
@@ -451,8 +452,6 @@ bool bra_io_file_compress_file_chunks(bra_io_file_t* dst, bra_io_file_t* src, co
             return false;
         }
 
-        // update CRC32
-        me->crc32 = bra_crc32c(buf, s, me->crc32);
 
         // compress BWT+MTF(+RLE)
         // TODO: do the version accepting a pre-allocated buffer
@@ -479,6 +478,10 @@ bool bra_io_file_compress_file_chunks(bra_io_file_t* dst, bra_io_file_t* src, co
             bra_log_error("unable to write primary index to %s", dst->fn);
             goto BRA_IO_FILE_COMPRESS_FILE_CHUNKS_ERR;
         }
+
+        // update CRC32
+        me->crc32 = bra_crc32c(&primary_index, sizeof(bra_bwt_index_t), me->crc32);
+        me->crc32 = bra_crc32c(buf, s, me->crc32);
 
         // write source chunk
         if (fwrite(buf_mtf, sizeof(char), s, dst->f) != s)
@@ -553,6 +556,7 @@ bool bra_io_file_decompress_file_chunks(bra_io_file_t* dst, bra_io_file_t* src, 
         }
 
         // update CRC32
+        me->crc32 = bra_crc32c(&primary_index, sizeof(bra_bwt_index_t), me->crc32);
         me->crc32 = bra_crc32c(buf_bwt, s, me->crc32);
 
         // write source chunk

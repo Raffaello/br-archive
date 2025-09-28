@@ -73,6 +73,7 @@ add_test(NAME test_bra.not_more_than_1_same_file     COMMAND test_bra test_bra_n
 add_test(NAME test_bra.bra_unbra_all                 COMMAND test_bra test_bra_unbra_all)
 
 add_test(NAME test_bra.bra_unbra_comp                 COMMAND test_bra test_bra_unbra_comp)
+add_test(NAME test_bra.bra_unbra_comp_2               COMMAND test_bra test_bra_unbra_comp_2)
 
 #####################################################################################################
 
@@ -131,7 +132,7 @@ foreach(tgt IN ITEMS bra unbra bra_sfx)
     )
 endforeach()
 
-foreach(fixture_i IN ITEMS test.txt)
+foreach(fixture_i IN ITEMS test.txt fixtures/lorem.txt)
             add_custom_command(TARGET test_bra POST_BUILD
                 COMMAND ${CMAKE_COMMAND} -E copy_if_different
                         ${CMAKE_CURRENT_SOURCE_DIR}/${fixture_i}

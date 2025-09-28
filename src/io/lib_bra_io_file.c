@@ -13,8 +13,9 @@
 #include <errno.h>
 #include <string.h>
 #include <stdlib.h>
-#include <stdint.h>    // UINT8_MAX, uint{8,32,64}_t
-#include <stdio.h>     // FILE, fopen/fread/fwrite
+#include <stdint.h>      // UINT8_MAX, uint{8,32,64}_t
+#include <stdio.h>       // FILE, fopen/fread/fwrite
+#include <inttypes.h>    // PRIu64
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -339,13 +340,13 @@ bool bra_io_file_read_file_chunks(bra_io_file_t* src, const uint64_t data_size, 
             uint8_t* buf_mtf = bra_mtf_decode((uint8_t*) buf, s);
             if (buf_mtf == NULL)
             {
-                bra_log_error("bra_mtf_decode() failed: %s (chunk: %llu)", src->fn, i);
+                bra_log_error("bra_mtf_decode() failed: %s (chunk: %" PRIu64 ")", src->fn, i);
                 return false;
             }
             uint8_t* buf_bwt = bra_bwt_decode((uint8_t*) buf_mtf, s, primary_index);
             if (buf_bwt == NULL)
             {
-                bra_log_error("bra_bwt_decode() failed: %s (chunk: %llu)", src->fn, i);
+                bra_log_error("bra_bwt_decode() failed: %s (chunk: %" PRIu64 ")", src->fn, i);
                 free(buf_mtf);
                 return false;
             }
@@ -445,14 +446,14 @@ bool bra_io_file_compress_file_chunks(bra_io_file_t* dst, bra_io_file_t* src, co
         buf_bwt              = bra_bwt_encode((uint8_t*) buf, s, &primary_index);
         if (buf_bwt == NULL)
         {
-            bra_log_error("bra_bwt_encode() failed: %s (chunk: %llu)", src->fn, i);
+            bra_log_error("bra_bwt_encode() failed: %s (chunk: %" PRIu64 ")", src->fn, i);
             goto BRA_IO_FILE_COMPRESS_FILE_CHUNKS_ERR;
         }
 
         buf_mtf = bra_mtf_encode(buf_bwt, s);
         if (buf_mtf == NULL)
         {
-            bra_log_error("bra_mtf_encode() failed: %s (chunk: %llu)", src->fn, i);
+            bra_log_error("bra_mtf_encode() failed: %s (chunk: %" PRIu64 ")", src->fn, i);
             goto BRA_IO_FILE_COMPRESS_FILE_CHUNKS_ERR;
         }
 
@@ -519,14 +520,14 @@ bool bra_io_file_decompress_file_chunks(bra_io_file_t* dst, bra_io_file_t* src, 
         buf_mtf = bra_mtf_decode((uint8_t*) buf, s);
         if (buf_mtf == NULL)
         {
-            bra_log_error("bra_mtf_decode() failed: %s (chunk: %llu)", src->fn, i);
+            bra_log_error("bra_mtf_decode() failed: %s (chunk: %" PRIu64 ")", src->fn, i);
             goto BRA_IO_FILE_DECOMPRESS_FILE_CHUNKS_ERR;
         }
 
         buf_bwt = bra_bwt_decode((uint8_t*) buf_mtf, s, primary_index);
         if (buf_bwt == NULL)
         {
-            bra_log_error("bra_bwt_decode() failed: %s (chunk: %llu)", src->fn, i);
+            bra_log_error("bra_bwt_decode() failed: %s (chunk: %" PRIu64 ")", src->fn, i);
             goto BRA_IO_FILE_DECOMPRESS_FILE_CHUNKS_ERR;
         }
 

@@ -161,11 +161,10 @@ bool bra_io_file_write_footer(bra_io_file_t* f, const int64_t header_offset);
  * @param src      Source file wrapper.
  * @param buf      Buffer to read data into.
  * @param buf_size Size of the buffer.
- * @param me       Metadata entry whose crc32 field is updated (must not be @c NULL).
  * @retval true    On success.
  * @retval false   On error. ( @p src is closed)
  */
-bool bra_io_file_read_chunk(bra_io_file_t* src, void* buf, const size_t buf_size, bra_meta_entry_t* me);
+bool bra_io_file_read_chunk(bra_io_file_t* src, void* buf, const size_t buf_size);
 
 /**
  * @brief Read data_size bytes from src in #BRA_MAX_CHUNK_SIZE chunks and update @p me->crc32.
@@ -205,6 +204,9 @@ bool bra_io_file_copy_file_chunks(bra_io_file_t* dst, bra_io_file_t* src, const 
  */
 bool bra_io_file_skip_data(bra_io_file_t* f, const uint64_t data_size);
 
+bool bra_io_file_compress_file_chunks(bra_io_file_t* dst, bra_io_file_t* src, const uint64_t data_size, bra_meta_entry_t* me);
+
+bool bra_io_file_decompress_file_chunks(bra_io_file_t* dst, bra_io_file_t* src, const uint64_t data_size, bra_meta_entry_t* me);
 
 #ifdef __cplusplus
 }

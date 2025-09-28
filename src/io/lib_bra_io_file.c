@@ -3,6 +3,9 @@
 #include <lib_bra.h>
 #include <lib_bra_private.h>
 
+#include <encoders/bra_bwt.h>
+#include <encoders/bra_mtf.h>
+
 #include <fs/bra_fs_c.h>
 #include <log/bra_log.h>
 
@@ -285,12 +288,11 @@ bool bra_io_file_write_footer(bra_io_file_t* f, const int64_t header_offset)
     return true;
 }
 
-bool bra_io_file_read_chunk(bra_io_file_t* src, void* buf, const size_t buf_size, bra_meta_entry_t* me)
+bool bra_io_file_read_chunk(bra_io_file_t* src, void* buf, const size_t buf_size)
 {
     assert_bra_io_file_t(src);
     assert(buf != NULL);
     assert(buf_size > 0);
-    assert(me != NULL);
 
     if (fread(buf, sizeof(char), buf_size, src->f) != buf_size)
     {
@@ -298,7 +300,6 @@ bool bra_io_file_read_chunk(bra_io_file_t* src, void* buf, const size_t buf_size
         return false;
     }
 
-    me->crc32 = bra_crc32c(buf, buf_size, me->crc32);
     return true;
 }
 
@@ -313,8 +314,23 @@ bool bra_io_file_read_file_chunks(bra_io_file_t* src, const uint64_t data_size, 
     {
         const uint64_t s = _bra_min(BRA_MAX_CHUNK_SIZE, data_size - i);
 
-        if (!bra_io_file_read_chunk(src, buf, s, me))
+        if (!bra_io_file_read_chunk(src, buf, s))
             return false;
+
+        // update CRC32
+        switch (BRA_ATTR_COMP(me->attributes))
+        {
+        case BRA_ATTR_COMP_STORED:
+            me->crc32 = bra_crc32c(buf, s, me->crc32);
+            break;
+        case BRA_ATTR_COMP_COMPRESSED:
+            // TODO: compute the CRC32 of the compressed data
+            bra_log_critical("bra_io_file_read_file_chunks(): list compressed files not supported yet");
+            break;
+        default:
+            bra_log_critical("invalid compression type for file: %u", BRA_ATTR_COMP(me->attributes));
+            return false;
+        }
 
         i += s;
     }
@@ -335,11 +351,14 @@ bool bra_io_file_copy_file_chunks(bra_io_file_t* dst, bra_io_file_t* src, const 
         const uint64_t s = _bra_min(BRA_MAX_CHUNK_SIZE, data_size - i);
 
         // read source chunk
-        if (!bra_io_file_read_chunk(src, buf, s, me))
+        if (!bra_io_file_read_chunk(src, buf, s))
         {
             bra_io_file_close(dst);
             return false;
         }
+
+        // update CRC32
+        me->crc32 = bra_crc32c(buf, s, me->crc32);
 
         // write source chunk
         if (fwrite(buf, sizeof(char), s, dst->f) != s)
@@ -364,4 +383,149 @@ bool bra_io_file_skip_data(bra_io_file_t* f, const uint64_t data_size)
         bra_io_file_seek_error(f);
 
     return res;
+}
+
+bool bra_io_file_compress_file_chunks(bra_io_file_t* dst, bra_io_file_t* src, const uint64_t data_size, bra_meta_entry_t* me)
+{
+    assert_bra_io_file_t(dst);
+    assert_bra_io_file_t(src);
+    assert(me != NULL);
+
+    char     buf[BRA_MAX_CHUNK_SIZE];
+    uint8_t* buf_bwt = NULL;
+    uint8_t* buf_mtf = NULL;
+
+    for (uint64_t i = 0; i < data_size;)
+    {
+        const uint64_t s = _bra_min(BRA_MAX_CHUNK_SIZE, data_size - i);
+
+        // read source chunk
+        if (!bra_io_file_read_chunk(src, buf, s))
+        {
+            bra_io_file_close(dst);
+            return false;
+        }
+
+        // update CRC32
+        me->crc32 = bra_crc32c(buf, s, me->crc32);
+
+        // compress BWT+MTF(+RLE)
+        // TODO: do the version accepting a pre-allocated buffer
+        //       as it is always the same size as the input doing in chunks will avoid to allocate/free
+        //       for each chunk.
+        size_t primary_index = 0;
+        buf_bwt              = bra_bwt_encode((uint8_t*) buf, s, &primary_index);
+        if (buf_bwt == NULL)
+        {
+            bra_log_error("bra_bwt_encode() failed: %s (chunk: %llu)", src->fn, i);
+            goto BRA_IO_FILE_COMPRESS_FILE_CHUNKS_ERR;
+        }
+
+        buf_mtf = bra_mtf_encode(buf_bwt, s);
+        if (buf_mtf == NULL)
+        {
+            bra_log_error("bra_mtf_encode() failed: %s (chunk: %llu)", src->fn, i);
+            goto BRA_IO_FILE_COMPRESS_FILE_CHUNKS_ERR;
+        }
+
+        // write primary index (this is part of the meta entry)
+        // TODO: do it as a meta entry data
+        if (!fwrite(&primary_index, sizeof(size_t), 1, dst->f))
+        {
+            bra_log_error("unable to write primary index to %s", dst->fn);
+            goto BRA_IO_FILE_COMPRESS_FILE_CHUNKS_ERR;
+        }
+
+        // write source chunk
+        if (fwrite(buf_mtf, sizeof(char), s, dst->f) != s)
+            goto BRA_IO_FILE_COMPRESS_FILE_CHUNKS_ERR;
+
+        free(buf_bwt);
+        buf_bwt = NULL;
+        free(buf_mtf);
+        buf_mtf = NULL;
+
+        i += s;
+    }
+
+    return true;
+
+BRA_IO_FILE_COMPRESS_FILE_CHUNKS_ERR:
+    if (buf_bwt != NULL)
+        free(buf_bwt);
+    if (buf_mtf != NULL)
+        free(buf_mtf);
+    bra_io_file_close(dst);
+    bra_io_file_close(src);
+    return false;
+}
+
+bool bra_io_file_decompress_file_chunks(bra_io_file_t* dst, bra_io_file_t* src, const uint64_t data_size, bra_meta_entry_t* me)
+{
+    assert_bra_io_file_t(dst);
+    assert_bra_io_file_t(src);
+    assert(me != NULL);
+
+    char     buf[BRA_MAX_CHUNK_SIZE];
+    uint8_t* buf_bwt = NULL;
+    uint8_t* buf_mtf = NULL;
+
+    for (uint64_t i = 0; i < data_size;)
+    {
+        const uint64_t s = _bra_min(BRA_MAX_CHUNK_SIZE, data_size - i);
+
+        // read primary index
+        size_t primary_index = 0;
+        if (!fread(&primary_index, sizeof(size_t), 1, src->f))
+        {
+            goto BRA_IO_FILE_DECOMPRESS_FILE_CHUNKS_ERR;
+        }
+
+        // read source chunk
+        if (!bra_io_file_read_chunk(src, buf, s))
+        {
+            goto BRA_IO_FILE_DECOMPRESS_FILE_CHUNKS_ERR;
+        }
+
+        // decompress MTF+BWT
+        buf_mtf = bra_mtf_decode((uint8_t*) buf, s);
+        if (buf_mtf == NULL)
+        {
+            bra_log_error("bra_mtf_decode() failed: %s (chunk: %llu)", src->fn, i);
+            goto BRA_IO_FILE_DECOMPRESS_FILE_CHUNKS_ERR;
+        }
+
+        buf_bwt = bra_bwt_decode((uint8_t*) buf_mtf, s, primary_index);
+        if (buf_bwt == NULL)
+        {
+            bra_log_error("bra_bwt_decode() failed: %s (chunk: %llu)", src->fn, i);
+            goto BRA_IO_FILE_DECOMPRESS_FILE_CHUNKS_ERR;
+        }
+
+        // update CRC32
+        me->crc32 = bra_crc32c(buf_bwt, s, me->crc32);
+
+        // write source chunk
+        if (fwrite(buf_bwt, sizeof(char), s, dst->f) != s)
+            goto BRA_IO_FILE_DECOMPRESS_FILE_CHUNKS_ERR;
+
+        free(buf_bwt);
+        buf_bwt = NULL;
+        free(buf_mtf);
+        buf_mtf = NULL;
+
+        i += s;
+    }
+
+    return true;
+
+BRA_IO_FILE_DECOMPRESS_FILE_CHUNKS_ERR:
+    if (buf_bwt != NULL)
+        free(buf_bwt);
+    if (buf_mtf != NULL)
+        free(buf_mtf);
+
+    bra_io_file_close(dst);
+    bra_io_file_close(src);
+    return false;
 }

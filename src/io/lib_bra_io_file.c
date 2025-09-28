@@ -331,12 +331,14 @@ bool bra_io_file_read_file_chunks(bra_io_file_t* src, const uint64_t data_size, 
             if (!fread(&primary_index, sizeof(bra_bwt_index_t), 1, src->f))    // read and ignore primary index
             {
                 bra_log_error("unable to read primary index from %s", src->fn);
+                bra_io_file_read_error(src);
                 return false;
             }
 
             if (primary_index >= s)
             {
                 bra_log_error("invalid primary index (%" PRIu32 ") for chunk size %" PRIu32 " in %s", primary_index, s, src->fn);
+                bra_io_file_read_error(src);
                 return false;
             }
 
@@ -347,12 +349,14 @@ bool bra_io_file_read_file_chunks(bra_io_file_t* src, const uint64_t data_size, 
             if (buf_mtf == NULL)
             {
                 bra_log_error("bra_mtf_decode() failed: %s (chunk: %" PRIu64 ")", src->fn, i);
+                bra_io_file_close(src);
                 return false;
             }
             uint8_t* buf_bwt = bra_bwt_decode((uint8_t*) buf_mtf, s, primary_index);
             if (buf_bwt == NULL)
             {
                 bra_log_error("bra_bwt_decode() failed: %s (chunk: %" PRIu64 ")", src->fn, i);
+                bra_io_file_close(src);
                 free(buf_mtf);
                 return false;
             }
@@ -433,6 +437,12 @@ bool bra_io_file_compress_file_chunks(bra_io_file_t* dst, bra_io_file_t* src, co
     for (uint64_t i = 0; i < data_size;)
     {
         const uint32_t s = _bra_min(BRA_MAX_CHUNK_SIZE, data_size - i);
+
+        // TODO: create a metafunction bra_io_file_process_file_chunks accepting the function to do the operation
+        //       copy, read, compress, decompress
+        //       this will avoid to duplicate the loop code.
+        bra_log_printf("%3u%%", (unsigned int) (i * 100 / data_size));
+        bra_log_printf("\b\b\b\b");
 
         // read source chunk
         if (!bra_io_file_read_chunk(src, buf, s))

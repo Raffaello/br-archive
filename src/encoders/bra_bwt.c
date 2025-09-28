@@ -33,7 +33,7 @@ static int bwt_suffix_context_compare(void* context, const void* a, const void* 
     const bra_bwt_index_t sa = *(const bra_bwt_index_t*) a;
     const bra_bwt_index_t sb = *(const bra_bwt_index_t*) b;
 
-    for (size_t i = 0; i < ctx->length; ++i)
+    for (bra_bwt_index_t i = 0; i < ctx->length; ++i)
     {
         const uint8_t byte_a = ctx->data[(sa + i) % ctx->length];
         const uint8_t byte_b = ctx->data[(sb + i) % ctx->length];
@@ -57,7 +57,7 @@ uint8_t* bra_bwt_encode(const uint8_t* buf, const bra_bwt_index_t buf_size, bra_
 
     // Allocate suffix array for all rotations
     bwt_suffix_ctx_t suffix_ctx = {.index = NULL, .data = buf, .length = buf_size};
-    suffix_ctx.index            = malloc(buf_size * sizeof(size_t));
+    suffix_ctx.index            = malloc(buf_size * sizeof(bra_bwt_index_t));
     if (!suffix_ctx.index)
         return NULL;
 

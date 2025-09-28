@@ -1,9 +1,8 @@
 #pragma once
 
-#include <stddef.h>
-#include <stdint.h>
-
 #include <lib_bra_types.h>
+
+#include <stdint.h>
 
 /**
  * @brief Encode data using Burrows-Wheeler Transform (BWT).

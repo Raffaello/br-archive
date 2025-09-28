@@ -459,7 +459,7 @@ bool bra_io_file_compress_file_chunks(bra_io_file_t* dst, bra_io_file_t* src, co
 
         // write primary index (this is part of the meta entry)
         // TODO: do it as a meta entry data
-        if (!fwrite(&primary_index, sizeof(size_t), 1, dst->f))
+        if (fwrite(&primary_index, sizeof(size_t), 1, dst->f) != 1)
         {
             bra_log_error("unable to write primary index to %s", dst->fn);
             goto BRA_IO_FILE_COMPRESS_FILE_CHUNKS_ERR;
@@ -505,7 +505,7 @@ bool bra_io_file_decompress_file_chunks(bra_io_file_t* dst, bra_io_file_t* src, 
 
         // read primary index
         size_t primary_index = 0;
-        if (!fread(&primary_index, sizeof(size_t), 1, src->f))
+        if (fread(&primary_index, sizeof(size_t), 1, src->f) != 1)
         {
             goto BRA_IO_FILE_DECOMPRESS_FILE_CHUNKS_ERR;
         }

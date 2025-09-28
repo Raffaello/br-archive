@@ -7,8 +7,9 @@
 #include <stdio.h>
 
 
-typedef uint8_t bra_attr_t;          //!< file attribute type
-typedef uint8_t bra_rle_counts_t;    //!< stored as run_length - 1 (0 => 1, 255 => 256)
+typedef uint8_t  bra_attr_t;          //!< file attribute type
+typedef uint8_t  bra_rle_counts_t;    //!< stored as run_length - 1 (0 => 1, 255 => 256)
+typedef uint32_t bra_bwt_index_t;     //!< index type used by BWT (should be at least 32 bits to support 4GB chunks)
 
 /**
  * @brief Define a file overwrite policy.

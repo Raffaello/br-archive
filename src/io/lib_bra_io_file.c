@@ -313,7 +313,7 @@ bool bra_io_file_read_file_chunks(bra_io_file_t* src, const uint64_t data_size, 
 
     for (uint64_t i = 0; i < data_size;)
     {
-        const uint64_t s = _bra_min(BRA_MAX_CHUNK_SIZE, data_size - i);
+        const uint32_t s = _bra_min(BRA_MAX_CHUNK_SIZE, data_size - i);
 
         // update CRC32
         switch (BRA_ATTR_COMP(me->attributes))
@@ -327,8 +327,8 @@ bool bra_io_file_read_file_chunks(bra_io_file_t* src, const uint64_t data_size, 
         case BRA_ATTR_COMP_COMPRESSED:
         {
             // TODO: review
-            size_t primary_index = 0;
-            if (!fread(&primary_index, sizeof(size_t), 1, src->f))    // read and ignore primary index
+            bra_bwt_index_t primary_index = 0;
+            if (!fread(&primary_index, sizeof(bra_bwt_index_t), 1, src->f))    // read and ignore primary index
             {
                 bra_log_error("unable to read primary index from %s", src->fn);
                 return false;
@@ -377,7 +377,7 @@ bool bra_io_file_copy_file_chunks(bra_io_file_t* dst, bra_io_file_t* src, const 
 
     for (uint64_t i = 0; i < data_size;)
     {
-        const uint64_t s = _bra_min(BRA_MAX_CHUNK_SIZE, data_size - i);
+        const uint32_t s = _bra_min(BRA_MAX_CHUNK_SIZE, data_size - i);
 
         // read source chunk
         if (!bra_io_file_read_chunk(src, buf, s))
@@ -426,7 +426,7 @@ bool bra_io_file_compress_file_chunks(bra_io_file_t* dst, bra_io_file_t* src, co
 
     for (uint64_t i = 0; i < data_size;)
     {
-        const uint64_t s = _bra_min(BRA_MAX_CHUNK_SIZE, data_size - i);
+        const uint32_t s = _bra_min(BRA_MAX_CHUNK_SIZE, data_size - i);
 
         // read source chunk
         if (!bra_io_file_read_chunk(src, buf, s))
@@ -442,8 +442,8 @@ bool bra_io_file_compress_file_chunks(bra_io_file_t* dst, bra_io_file_t* src, co
         // TODO: do the version accepting a pre-allocated buffer
         //       as it is always the same size as the input doing in chunks will avoid to allocate/free
         //       for each chunk.
-        size_t primary_index = 0;
-        buf_bwt              = bra_bwt_encode((uint8_t*) buf, s, &primary_index);
+        bra_bwt_index_t primary_index = 0;
+        buf_bwt                       = bra_bwt_encode((uint8_t*) buf, s, &primary_index);
         if (buf_bwt == NULL)
         {
             bra_log_error("bra_bwt_encode() failed: %s (chunk: %" PRIu64 ")", src->fn, i);
@@ -458,7 +458,7 @@ bool bra_io_file_compress_file_chunks(bra_io_file_t* dst, bra_io_file_t* src, co
         }
 
         // write primary index
-        if (fwrite(&primary_index, sizeof(size_t), 1, dst->f) != 1)
+        if (fwrite(&primary_index, sizeof(bra_bwt_index_t), 1, dst->f) != 1)
         {
             bra_log_error("unable to write primary index to %s", dst->fn);
             goto BRA_IO_FILE_COMPRESS_FILE_CHUNKS_ERR;
@@ -500,12 +500,18 @@ bool bra_io_file_decompress_file_chunks(bra_io_file_t* dst, bra_io_file_t* src, 
 
     for (uint64_t i = 0; i < data_size;)
     {
-        const uint64_t s = _bra_min(BRA_MAX_CHUNK_SIZE, data_size - i);
+        const uint32_t s = _bra_min(BRA_MAX_CHUNK_SIZE, data_size - i);
 
         // read primary index
-        size_t primary_index = 0;
-        if (fread(&primary_index, sizeof(size_t), 1, src->f) != 1)
+        bra_bwt_index_t primary_index = 0;
+        if (fread(&primary_index, sizeof(bra_bwt_index_t), 1, src->f) != 1)
         {
+            goto BRA_IO_FILE_DECOMPRESS_FILE_CHUNKS_ERR;
+        }
+
+        if (primary_index >= s)
+        {
+            bra_log_error("invalid primary index (%u) for chunk size %" PRIu32 " in %s", primary_index, s, src->fn);
             goto BRA_IO_FILE_DECOMPRESS_FILE_CHUNKS_ERR;
         }
 

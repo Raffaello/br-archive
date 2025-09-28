@@ -334,6 +334,12 @@ bool bra_io_file_read_file_chunks(bra_io_file_t* src, const uint64_t data_size, 
                 return false;
             }
 
+            if (primary_index >= s)
+            {
+                bra_log_error("invalid primary index (%" PRIu32 ") for chunk size %" PRIu32 " in %s", primary_index, s, src->fn);
+                return false;
+            }
+
             if (!bra_io_file_read_chunk(src, buf, s))
                 return false;
 

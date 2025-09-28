@@ -137,6 +137,7 @@ static bool _bra_io_file_ctx_flush_entry_file(bra_io_file_ctx_t* ctx, bra_meta_e
     if (!bra_io_file_open(&f2, filename, "rb"))
         return false;
 
+
     switch (BRA_ATTR_COMP(me->attributes))
     {
     case BRA_ATTR_COMP_STORED:
@@ -399,6 +400,7 @@ static inline bool _bra_io_file_ctx_compute_crc32(bra_io_file_ctx_t* ctx, const 
         const uint64_t ds = mef->data_size;
 
         me->crc32 = bra_crc32c(&mef->data_size, sizeof(uint64_t), me->crc32);
+
         if (!bra_io_file_read_file_chunks(&ctx->f, ds, me))
             return false;
     }
@@ -826,6 +828,7 @@ bool bra_io_file_ctx_decode_and_write_to_disk(bra_io_file_ctx_t* ctx, bra_fs_ove
             if (!bra_io_file_open(&f2, fn, "wb"))
                 goto BRA_IO_DECODE_ERR;
 
+
             switch (BRA_ATTR_COMP(me.attributes))
             {
             case BRA_ATTR_COMP_STORED:
@@ -941,8 +944,25 @@ bool bra_io_file_ctx_print_meta_entry(bra_io_file_ctx_t* ctx, const bool test_mo
     }
     else
     {
-        if (!bra_io_file_skip_data(&ctx->f, ds))
+        switch (BRA_ATTR_COMP(me.attributes))
+        {
+        case BRA_ATTR_COMP_STORED:
+            if (!bra_io_file_skip_data(&ctx->f, ds))
+                goto BRA_IO_FILE_CTX_PRINT_META_ENTRY_ERR;
+            break;
+        case BRA_ATTR_COMP_COMPRESSED:
+        {
+            size_t chunks = ds / BRA_MAX_CHUNK_SIZE + (ds % BRA_MAX_CHUNK_SIZE != 0 ? 1 : 0);
+            // have to skip the primary index to, but there is a primary index for each chunk.
+            if (!bra_io_file_skip_data(&ctx->f, ds + (sizeof(size_t) * chunks)))
+                goto BRA_IO_FILE_CTX_PRINT_META_ENTRY_ERR;
+        }
+        break;
+        default:
+            bra_log_critical("invalid compression type for file: %u", BRA_ATTR_COMP(me.attributes));
             goto BRA_IO_FILE_CTX_PRINT_META_ENTRY_ERR;
+            break;
+        }
     }
 
     // read CRC32

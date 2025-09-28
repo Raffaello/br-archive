@@ -314,19 +314,47 @@ bool bra_io_file_read_file_chunks(bra_io_file_t* src, const uint64_t data_size, 
     {
         const uint64_t s = _bra_min(BRA_MAX_CHUNK_SIZE, data_size - i);
 
-        if (!bra_io_file_read_chunk(src, buf, s))
-            return false;
-
         // update CRC32
         switch (BRA_ATTR_COMP(me->attributes))
         {
         case BRA_ATTR_COMP_STORED:
+            if (!bra_io_file_read_chunk(src, buf, s))
+                return false;
+
             me->crc32 = bra_crc32c(buf, s, me->crc32);
             break;
         case BRA_ATTR_COMP_COMPRESSED:
-            // TODO: compute the CRC32 of the compressed data
-            bra_log_critical("bra_io_file_read_file_chunks(): list compressed files not supported yet");
-            break;
+        {
+            // TODO: review
+            size_t primary_index = 0;
+            if (!fread(&primary_index, sizeof(size_t), 1, src->f))    // read and ignore primary index
+            {
+                bra_log_error("unable to read primary index from %s", src->fn);
+                return false;
+            }
+
+            if (!bra_io_file_read_chunk(src, buf, s))
+                return false;
+
+            uint8_t* buf_mtf = bra_mtf_decode((uint8_t*) buf, s);
+            if (buf_mtf == NULL)
+            {
+                bra_log_error("bra_mtf_decode() failed: %s (chunk: %llu)", src->fn, i);
+                return false;
+            }
+            uint8_t* buf_bwt = bra_bwt_decode((uint8_t*) buf_mtf, s, primary_index);
+            if (buf_bwt == NULL)
+            {
+                bra_log_error("bra_bwt_decode() failed: %s (chunk: %llu)", src->fn, i);
+                free(buf_mtf);
+                return false;
+            }
+
+            me->crc32 = bra_crc32c(buf_bwt, s, me->crc32);
+            free(buf_mtf);
+            free(buf_bwt);
+        }
+        break;
         default:
             bra_log_critical("invalid compression type for file: %u", BRA_ATTR_COMP(me->attributes));
             return false;

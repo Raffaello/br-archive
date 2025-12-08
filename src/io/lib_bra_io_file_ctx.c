@@ -103,7 +103,7 @@ static bool _bra_io_file_ctx_write_meta_entry_header(bra_io_file_ctx_t* ctx, con
     if (fwrite(filename, sizeof(char), filename_size, ctx->f.f) != filename_size)
         return false;
 
-    ++ctx->cur_files;    // all meta files are using this function, so best place to track an added file to the archive.
+    // ++ctx->cur_files;    // all meta files are using this function, so best place to track an added file to the archive.
     return true;
 }
 
@@ -125,7 +125,7 @@ static bool _bra_io_file_ctx_flush_entry_file(bra_io_file_ctx_t* ctx, bra_meta_e
     // write common meta data (attribute, filename, filename_size)
     const bra_attr_t attr_orig = me->attributes;
     const int64_t    me_pos    = bra_io_file_tell(&ctx->f);
-    if (me_pos < -1)
+    if (me_pos <= 0)
         return false;
 
     if (!_bra_io_file_ctx_write_meta_entry_header(ctx, me->attributes, me->name, me->name_size))
@@ -162,6 +162,7 @@ static bool _bra_io_file_ctx_flush_entry_file(bra_io_file_ctx_t* ctx, bra_meta_e
             // TODO: this is a quick fix after changed the metadata attribute
             //       later on refactor to avoid a recursive call.
             bra_io_file_close(&f2);
+            // --ctx->cur_files;
             return _bra_io_file_ctx_flush_entry_file(ctx, me, filename, filename_len);
         }
         break;

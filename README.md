@@ -34,7 +34,7 @@ an `.EXE` SFX will be generated for MS Windows oriented systems.
 an `.BRx` SFX will be generated for Linux oriented systems.
 
 
-## wildcard-expansions
+## Wildcard Expansions
 
 Currently supported wildcards: `*` and `?`.
 

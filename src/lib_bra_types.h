@@ -46,6 +46,14 @@ typedef struct bra_io_footer_t
     int64_t  header_offset;    //!< absolute offset of the header chunk from file start.
 } bra_io_footer_t;
 
+/**
+ * @brief BRa Chunk Header
+ */
+typedef struct bra_io_chunk_header_t
+{
+    bra_bwt_index_t primary_index;    // BWT primary index for reconstruction of the original data
+} bra_io_chunk_header_t;
+
 #pragma pack(pop)
 
 /**

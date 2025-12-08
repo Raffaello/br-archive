@@ -341,17 +341,17 @@ bool bra_io_file_read_file_chunks(bra_io_file_t* src, const uint64_t data_size, 
         case BRA_ATTR_COMP_COMPRESSED:
         {
             // TODO: review
-            bra_bwt_index_t primary_index = 0;
-            if (!fread(&primary_index, sizeof(bra_bwt_index_t), 1, src->f))    // read and ignore primary index
+            bra_io_chunk_header_t chunk_header = {.primary_index = 0};
+            if (!fread(&chunk_header, sizeof(bra_io_chunk_header_t), 1, src->f))    // read and ignore primary index
             {
                 bra_log_error("unable to read primary index from %s", src->fn);
                 bra_io_file_read_error(src);
                 return false;
             }
 
-            if (primary_index >= s)
+            if (chunk_header.primary_index >= s)
             {
-                bra_log_error("invalid primary index (%" PRIu32 ") for chunk size %" PRIu32 " in %s", primary_index, s, src->fn);
+                bra_log_error("invalid primary index (%" PRIu32 ") for chunk size %" PRIu32 " in %s", chunk_header.primary_index, s, src->fn);
                 bra_io_file_read_error(src);
                 return false;
             }
@@ -366,7 +366,7 @@ bool bra_io_file_read_file_chunks(bra_io_file_t* src, const uint64_t data_size, 
                 bra_io_file_close(src);
                 return false;
             }
-            uint8_t* buf_bwt = bra_bwt_decode((uint8_t*) buf_mtf, s, primary_index);
+            uint8_t* buf_bwt = bra_bwt_decode((uint8_t*) buf_mtf, s, chunk_header.primary_index);
             if (buf_bwt == NULL)
             {
                 bra_log_error("bra_bwt_decode() failed: %s (chunk: %" PRIu64 ")", src->fn, i);
@@ -375,7 +375,7 @@ bool bra_io_file_read_file_chunks(bra_io_file_t* src, const uint64_t data_size, 
                 return false;
             }
 
-            me->crc32 = bra_crc32c(&primary_index, sizeof(bra_bwt_index_t), me->crc32);
+            me->crc32 = bra_crc32c(&chunk_header.primary_index, sizeof(bra_bwt_index_t), me->crc32);
             me->crc32 = bra_crc32c(buf_bwt, s, me->crc32);
             free(buf_mtf);
             free(buf_bwt);
@@ -485,8 +485,9 @@ bool bra_io_file_compress_file_chunks(bra_io_file_t* dst, bra_io_file_t* src, co
         // TODO: do the version accepting a pre-allocated buffer
         //       as it is always the same size as the input doing in chunks will avoid to allocate/free
         //       for each chunk.
-        bra_bwt_index_t primary_index = 0;
-        buf_bwt                       = bra_bwt_encode((uint8_t*) buf, s, &primary_index);
+        // bra_bwt_index_t       primary_index = 0;
+        bra_io_chunk_header_t chunk_header = {.primary_index = 0};
+        buf_bwt                            = bra_bwt_encode((uint8_t*) buf, s, &chunk_header.primary_index);
         if (buf_bwt == NULL)
         {
             bra_log_error("bra_bwt_encode() failed: %s (chunk: %" PRIu64 ")", src->fn, i);
@@ -500,17 +501,15 @@ bool bra_io_file_compress_file_chunks(bra_io_file_t* dst, bra_io_file_t* src, co
             goto BRA_IO_FILE_COMPRESS_FILE_CHUNKS_ERR;
         }
 
-        // TODO: write chunk header when needed.
-
         // write primary index
-        if (fwrite(&primary_index, sizeof(bra_bwt_index_t), 1, tmpfile.f) != 1)
+        if (fwrite(&chunk_header, sizeof(chunk_header), 1, tmpfile.f) != 1)
         {
             bra_log_error("unable to write primary index to %s", tmpfile.fn);
             goto BRA_IO_FILE_COMPRESS_FILE_CHUNKS_ERR;
         }
 
         // update CRC32
-        me->crc32 = bra_crc32c(&primary_index, sizeof(bra_bwt_index_t), me->crc32);
+        me->crc32 = bra_crc32c(&chunk_header, sizeof(chunk_header), me->crc32);
         me->crc32 = bra_crc32c(buf, s, me->crc32);
 
         // write source chunk
@@ -525,7 +524,7 @@ bool bra_io_file_compress_file_chunks(bra_io_file_t* dst, bra_io_file_t* src, co
         i += s;
     }
 
-    // Check tmpfile is smaller than original file:
+    // Check if the tmpfile is smaller than original file:
     const int64_t tmpfile_size = bra_io_file_tell(&tmpfile);
     if (tmpfile_size < 0)
         goto BRA_IO_FILE_COMPRESS_FILE_CHUNKS_ERR;

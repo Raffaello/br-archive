@@ -1,6 +1,10 @@
 # BR-Archive
 
-BR-Archive (BRa) is an educational project to compress files with the `DEFLATE` algorithm and creating self-extracting-archives (SFX)
+BR-Archive (BRa) is an educational project to compress files with various algorithm and creating self-extracting-archives (SFX).
+
+The main compression algorithm will be the classical '90s, and later on looking to use the `asymmetric number system` technique. 
+
+----
 
 The Default extension for the archive format is `.BRa`
 
@@ -17,13 +21,12 @@ This lays the foundation for encoding, decoding, and self-extracting archives.
 The `lib-bra` is wanted to be in pure C.
 
 The only exception is for the `filesystem` module aspect that is using C++ `filesystem` module to have a simpler cross-os filesystem APIs.
- (do not want to implement for each specific OS).
- The `bra_fs` can be used directly in C++, but `lib-bra` is using the C wrapper `bra-fs_c`.
+> (Not interested for this project to implement FS primitives for each specific OS in plain C).
 
 
 ## Self-Extracting Archive
 
-The self extracting archive will be done in the following formats:
+The self extracting archive will be created in the following formats:
 
 ### PE/EXE
 

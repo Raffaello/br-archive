@@ -973,7 +973,7 @@ bool bra_io_file_ctx_print_meta_entry(bra_io_file_ctx_t* ctx, const bool test_mo
         {
             const size_t chunks = ds / BRA_MAX_CHUNK_SIZE + (ds % BRA_MAX_CHUNK_SIZE != 0 ? 1 : 0);
             // have to skip the primary index to, but there is a primary index for each chunk.
-            if (!bra_io_file_skip_data(&ctx->f, ds + (sizeof(bra_bwt_index_t) * chunks)))
+            if (!bra_io_file_skip_data(&ctx->f, ds + (sizeof(bra_io_chunk_header_t) * chunks)))
                 goto BRA_IO_FILE_CTX_PRINT_META_ENTRY_ERR;
         }
         break;

@@ -18,6 +18,7 @@
 #include <cstdint>
 #include <cstdio>
 
+/// \cond DO_NOT_DOCUMENT
 
 using namespace std;
 
@@ -404,3 +405,5 @@ int main(int argc, char* argv[])
 
     return bra_prog.run(argc, argv);
 }
+
+/// \endcond DO_NOT_DOCUMENT

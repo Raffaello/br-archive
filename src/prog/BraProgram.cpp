@@ -9,6 +9,8 @@
 
 #include <string>
 
+/// \cond DO_NOT_DOCUMENT
+
 #if defined(_WIN32)
 #if defined(__MINGW32__) || defined(__MINGW64__) || defined(__MSYS__)
 // Enable wildcard expansion on Windows MSYS2
@@ -193,3 +195,5 @@ int BraProgram::run(const int argc, const char* const argv[])
 
     return run_prog();
 }
+
+/// \endcond DO_NOT_DOCUMENT

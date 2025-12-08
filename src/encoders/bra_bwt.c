@@ -12,11 +12,14 @@
 #include <stdlib.h>
 #include <string.h>
 
+/**
+ * @brief BWT transform helper.
+ */
 typedef struct bwt_suffix_ctx_t
 {
-    bra_bwt_index_t*      index;
-    const uint8_t*        data;
-    const bra_bwt_index_t length;
+    bra_bwt_index_t*      index;     //!< index
+    const uint8_t*        data;      //!< data
+    const bra_bwt_index_t length;    //!< length
 
 } bwt_suffix_ctx_t;
 

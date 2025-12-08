@@ -1,5 +1,7 @@
 #pragma once
 
+/// \cond DO_NOT_DOCUMENT
+
 #include <lib_bra_defs.h>
 #include <lib_bra_types.h>
 #include <lib_bra.h>
@@ -61,3 +63,5 @@ public:
 
     int run(const int argc, const char* const argv[]);
 };
+
+/// \endcond DO_NOT_DOCUMENT

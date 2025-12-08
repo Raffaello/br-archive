@@ -31,6 +31,8 @@
 #define BRA_FALLTHROUGH /* fallthrough */
 #endif
 
+/// \cond DO_NOT_DOCUMENT
+
 //!< Enable printf-like format checking where supported
 #if defined(__clang__)
 #define BRA_FUNC_ATTR_FMT_PRINTF(fmt_idx, va_idx) __attribute__((format(printf, fmt_idx, va_idx)))
@@ -40,32 +42,34 @@
 #define BRA_FUNC_ATTR_FMT_PRINTF(fmt_idx, va_idx)
 #endif
 
+/// \endcond DO_NOT_DOCUMENT
+
 
 #define BRA_MAGIC        0x612D5242    //!< 0x61='a' 0x2D='-' 0x52='R' 0x42='B'
 #define BRA_FOOTER_MAGIC 0x782D5242    //!< 0x78='x' 0x2D='-' 0x52='R' 0x42='B'
 // #define BRA_ARCHIVE_VERSION  1             //!< the file archive version
-#define BRA_FILE_EXT         ".BRa"
-#define BRA_NAME             "BRa"
-#define BRA_SFX_FILENAME     "bra.sfx"    // @todo: generate it through cmake conf
-#define BRA_SFX_TMP_FILE_EXT ".tmp"
+#define BRA_FILE_EXT         ".BRa"       //!< File Extension
+#define BRA_NAME             "BRa"        //!< Program Default Name
+#define BRA_SFX_FILENAME     "bra.sfx"    //!< @todo: generate it through cmake conf
+#define BRA_SFX_TMP_FILE_EXT ".tmp"       //!< SFX Temporary file extension
 
-#define BRA_DIR_DELIM "/"
+#define BRA_DIR_DELIM "/"                 //!< default paths delimiter
 
 
 #define BRA_ATTR_TYPE_MASK         ((bra_attr_t) 0x03)                                                 //!< lower 2 bits encode the type
 #define BRA_ATTR_TYPE(x)           ((bra_attr_t) (x) & BRA_ATTR_TYPE_MASK)                             //!< first 2 bits
 #define BRA_ATTR_SET_TYPE(x, type) ((bra_attr_t) ((x) & ~BRA_ATTR_TYPE_MASK) | BRA_ATTR_TYPE(type))    //!< set first 2 bits.
-#define BRA_ATTR_TYPE_FILE         0                                                                   //!< Regular file.
-#define BRA_ATTR_TYPE_DIR          1                                                                   //!< Directory
-#define BRA_ATTR_TYPE_SYM          2                                                                   //!< Symlink
-#define BRA_ATTR_TYPE_SUBDIR       3                                                                   //!< sub-dir, its base is an index of another dir/sub_dir previously encountered.
+#define BRA_ATTR_TYPE_FILE         (0 << 0)                                                            //!< Regular file.
+#define BRA_ATTR_TYPE_DIR          (1 << 0)                                                            //!< Directory
+#define BRA_ATTR_TYPE_SYM          (2 << 0)                                                            //!< Symlink
+#define BRA_ATTR_TYPE_SUBDIR       (3 << 0)                                                            //!< sub-dir, its base is an index of another dir/sub_dir previously encountered.
 
 #define BRA_ATTR_COMP_MASK         ((bra_attr_t) 0x0C)                                                 //!< bits 2-3 encode the compression type
 #define BRA_ATTR_COMP(x)           ((bra_attr_t) (x) & BRA_ATTR_COMP_MASK)                             //!< bits 2-3
 #define BRA_ATTR_SET_COMP(x, comp) ((bra_attr_t) ((x) & ~BRA_ATTR_COMP_MASK) | BRA_ATTR_COMP(comp))    //!< set bits 2-3
-#define BRA_ATTR_COMP_STORED       (0 << 2)
-#define BRA_ATTR_COMP_COMPRESSED   (1 << 2)
-#define BRA_ATTR_COMP_RESERVED     (1 << 3)    // 3 bits reserved for future use (possibly compression types)
+#define BRA_ATTR_COMP_STORED       (0 << 2)                                                            //!< No compression.
+#define BRA_ATTR_COMP_COMPRESSED   (1 << 2)                                                            //!< Compressed.
+#define BRA_ATTR_COMP_RESERVED     (2 << 2)                                                            //!< 3 bit reserved for future use (possibly compression types)
 // #define BRA_ATTR_BWT_MTF_RLE      (1 << 2)
 // #define BRA_ATTR_BWT_MTD_RLE_LZ78 (2 << 2)
 
@@ -77,8 +81,8 @@
 #define BRA_PRINTF_FMT_FILENAME_MAX_LENGTH 50            //!< max filename length before being truncated
 #define BRA_PRINTF_FMT_FILENAME            "%-50.50s"    //!< printf-like format to print a filename.
 
-#define BRA_SFX_FILE_EXT_LIN ".brx"
-#define BRA_SFX_FILE_EXT_WIN ".exe"
+#define BRA_SFX_FILE_EXT_LIN ".brx"                      //!< bra sfx unix/linux extension.
+#define BRA_SFX_FILE_EXT_WIN ".exe"                      //!< bra sfx windows extension.
 
 #if defined(__APPLE__) || defined(__linux__) || defined(__unix__)
 #define BRA_SFX_FILE_EXT BRA_SFX_FILE_EXT_LIN

@@ -12,6 +12,7 @@
 #include <cstdio>
 #include <cstdint>
 
+/// \cond DO_NOT_DOCUMENT
 
 using namespace std;
 
@@ -19,6 +20,9 @@ namespace fs = std::filesystem;
 
 /////////////////////////////////////////////////////////////////////////
 
+/**
+ * @brief BraSfx program
+ */
 class BraSfx : public BraProgram
 {
 private:
@@ -115,3 +119,5 @@ int main(int argc, char* argv[])
     BraSfx bra_sfx;
     return bra_sfx.run(argc, argv);
 }
+
+/// \endcond DO_NOT_DOCUMENT

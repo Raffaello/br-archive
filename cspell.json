@@ -4,6 +4,7 @@
     "dictionaryDefinitions": [],
     "dictionaries": [],
     "words": [
+        "Bertini",
         "Castagnoli",
         "COMDAT",
         "cplusplus",
@@ -12,6 +13,7 @@
         "DCMAKE",
         "devel",
         "dowildcard",
+        "DOXYFILE",
         "endforeach",
         "endfunction",
         "fseeki",
@@ -22,6 +24,7 @@
         "MSVC",
         "msys",
         "msystem",
+        "Raffaello",
         "sais",
         "setargv",
         "softprops",

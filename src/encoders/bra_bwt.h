@@ -31,7 +31,6 @@
  * @warning Input buffer and primary_index must not be @c NULL.
  * @warning buf_size must be greater than 0.
  *
- * @example
  * @code
  * const uint8_t* input = (uint8_t*)"BANANA";
  * bra_bwt_index_t primary_index;
@@ -63,7 +62,6 @@ uint8_t* bra_bwt_encode(const uint8_t* buf, const bra_bwt_index_t buf_size, bra_
  * @warning buf_size must be greater than 0.
  * @warning primary_index must be less than @p buf_size.
  *
- * @example
  * @code
  * const uint8_t* bwt_data = (uint8_t*)"NNBAAA";
  * uint8_t* original = bra_bwt_decode(bwt_data, 6, 3);

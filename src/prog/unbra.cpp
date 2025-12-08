@@ -15,6 +15,7 @@
 
 #include <cstdint>
 
+/// \cond DO_NOT_DOCUMENT
 
 using namespace std;
 
@@ -23,6 +24,9 @@ namespace fs = std::filesystem;
 
 //////////////////////////////////////////////////////////////////////////
 
+/**
+ * @brief Unbra program
+ */
 class Unbra : public BraProgram
 {
 private:
@@ -256,3 +260,5 @@ int main(int argc, char* argv[])
 
     return unbra.run(argc, argv);
 }
+
+/// \endcond DO_NOT_DOCUMENT

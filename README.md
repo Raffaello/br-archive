@@ -4,7 +4,7 @@ BR-Archive (BRa) is an educational project to compress files with the `DEFLATE` 
 
 The Default extension for the archive format is `.BRa`
 
-Wildcard expansion rely on the shell or runtime;  see [Wildcard Expansions](#wildcard-expansions) below.
+Wildcard expansion rely on the shell or runtime;  see [Wildcard-Expansions](#wildcard-expansions) below.
 
 This lays the foundation for encoding, decoding, and self-extracting archives.
 
@@ -34,7 +34,7 @@ an `.EXE` SFX will be generated for MS Windows oriented systems.
 an `.BRx` SFX will be generated for Linux oriented systems.
 
 
-## Wildcard Expansions
+## Wildcard Expansions {#wildcard-expansions}
 
 Currently supported wildcards: `*` and `?`.
 

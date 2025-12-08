@@ -33,7 +33,7 @@ typedef struct bra_io_header_t
     // uint8_t  version;    //!< Archive format version
     // compression type ? (archive, best, fast, ... ??)
     // crc32 / md5 ?
-    uint32_t num_files;
+    uint32_t num_files;    //!< Number of files.
 
 } bra_io_header_t;
 
@@ -66,7 +66,7 @@ typedef struct bra_io_file_t
 typedef struct bra_meta_entry_t
 {
     // TODO: add CRC ... file permissions, etc... ?
-    bra_attr_t attributes;    //!< file attributes: #BRA_ATTR_TYPE_FILE, #BRA_ATTR_TYPE_DIR, #BRA_ATTR_TYPE_SYMLINK, #BRA_ATTR_TYPE_SUBDIR
+    bra_attr_t attributes;    //!< file attributes: #BRA_ATTR_TYPE_FILE, #BRA_ATTR_TYPE_DIR, #BRA_ATTR_TYPE_SYM, #BRA_ATTR_TYPE_SUBDIR
     uint8_t    name_size;     //!< length in bytes excluding the trailing NUL; [1..UINT8_MAX]
     char*      name;          //!< filename/dirname (owned; free via @ref bra_meta_entry_free)
     void*      entry_data;    //!< Type-specific entry data: file size for files, parent tree index for subdirs, @c NULL for dirs and symlinks. (owned; free via @ref bra_meta_entry_free)
@@ -104,11 +104,11 @@ typedef struct bra_rle_chunk_t
  */
 typedef struct bra_tree_node_t
 {
-    uint32_t                index;
-    char*                   dirname;
-    struct bra_tree_node_t* parent;
-    struct bra_tree_node_t* firstChild;
-    struct bra_tree_node_t* next;
+    uint32_t                index;         //!< index
+    char*                   dirname;       //!< dirname
+    struct bra_tree_node_t* parent;        //!< parent
+    struct bra_tree_node_t* firstChild;    //!< firstChild
+    struct bra_tree_node_t* next;          //!< next
 } bra_tree_node_t;
 
 /**
@@ -116,8 +116,8 @@ typedef struct bra_tree_node_t
  */
 typedef struct bra_tree_dir_t
 {
-    bra_tree_node_t* root;
-    uint32_t         num_nodes;
+    bra_tree_node_t* root;         //!< root
+    uint32_t         num_nodes;    //!< num_nodes
 } bra_tree_dir_t;
 
 /**
@@ -125,7 +125,7 @@ typedef struct bra_tree_dir_t
  */
 typedef struct bra_io_file_ctx_t
 {
-    bra_io_file_t    f;
+    bra_io_file_t    f;                //!< file handler
     uint32_t         num_files;        //!< num files to be written in the header.
     uint32_t         cur_files;        //!< entries written in this session; used to reconcile header on close
     char*            last_dir;         //!< the last encoded or decoded directory. used for files as they don't know where they belong.

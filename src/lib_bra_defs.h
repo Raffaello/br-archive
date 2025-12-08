@@ -1,3 +1,11 @@
+/**
+ * @file lib_bra_defs.h
+ * @author Raffaello Bertini (you@domain.com)
+ * @brief
+ * @internal
+ * @copyright Copyright (c) 2025
+ *
+ */
 #pragma once
 
 #include <stdint.h>    // for UINT8_MAX
@@ -23,7 +31,7 @@
 #define BRA_FALLTHROUGH /* fallthrough */
 #endif
 
-// Enable printf-like format checking where supported
+//!< Enable printf-like format checking where supported
 #if defined(__clang__)
 #define BRA_FUNC_ATTR_FMT_PRINTF(fmt_idx, va_idx) __attribute__((format(printf, fmt_idx, va_idx)))
 #elif defined(__GNUC__)

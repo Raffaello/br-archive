@@ -200,6 +200,20 @@ bool bra_io_file_open(bra_io_file_t* f, const char* fn, const char* mode)
     return true;
 }
 
+bool bra_io_file_tmp_open(bra_io_file_t* f)
+{
+    f->f  = tmpfile();
+    f->fn = _bra_strdup("");
+    if (f->f == NULL || f->fn == NULL)
+    {
+        bra_io_file_close(f);
+        bra_log_error("unable to create tmpfile");
+        return false;
+    }
+
+    return true;
+}
+
 void bra_io_file_close(bra_io_file_t* f)
 {
     assert(f != NULL);
@@ -435,6 +449,17 @@ bool bra_io_file_compress_file_chunks(bra_io_file_t* dst, bra_io_file_t* src, co
     uint8_t* buf_bwt = NULL;
     uint8_t* buf_mtf = NULL;
 
+    // NOTE: compress a file is done in a temporary file:
+    //      if it is smaller than the original file append it to the archive.
+    //      otherwise store the file only.
+    bra_io_file_t  tmpfile;
+    const uint32_t orig_crc32 = me->crc32;
+    if (!bra_io_file_tmp_open(&tmpfile))
+    {
+        bra_log_error("unable to compress file: %s", src->fn);
+        return false;
+    }
+
     for (uint64_t i = 0; i < data_size;)
     {
         const uint32_t s = _bra_min(BRA_MAX_CHUNK_SIZE, data_size - i);
@@ -448,6 +473,7 @@ bool bra_io_file_compress_file_chunks(bra_io_file_t* dst, bra_io_file_t* src, co
         // read source chunk
         if (!bra_io_file_read_chunk(src, buf, s))
         {
+            bra_io_file_close(&tmpfile);
             bra_io_file_close(dst);
             return false;
         }
@@ -472,10 +498,12 @@ bool bra_io_file_compress_file_chunks(bra_io_file_t* dst, bra_io_file_t* src, co
             goto BRA_IO_FILE_COMPRESS_FILE_CHUNKS_ERR;
         }
 
+        // TODO: write chunk header when needed.
+
         // write primary index
-        if (fwrite(&primary_index, sizeof(bra_bwt_index_t), 1, dst->f) != 1)
+        if (fwrite(&primary_index, sizeof(bra_bwt_index_t), 1, tmpfile.f) != 1)
         {
-            bra_log_error("unable to write primary index to %s", dst->fn);
+            bra_log_error("unable to write primary index to %s", tmpfile.fn);
             goto BRA_IO_FILE_COMPRESS_FILE_CHUNKS_ERR;
         }
 
@@ -484,7 +512,7 @@ bool bra_io_file_compress_file_chunks(bra_io_file_t* dst, bra_io_file_t* src, co
         me->crc32 = bra_crc32c(buf, s, me->crc32);
 
         // write source chunk
-        if (fwrite(buf_mtf, sizeof(char), s, dst->f) != s)
+        if (fwrite(buf_mtf, sizeof(char), s, tmpfile.f) != s)
             goto BRA_IO_FILE_COMPRESS_FILE_CHUNKS_ERR;
 
         free(buf_bwt);
@@ -495,9 +523,42 @@ bool bra_io_file_compress_file_chunks(bra_io_file_t* dst, bra_io_file_t* src, co
         i += s;
     }
 
-    return true;
+    // Check tmpfile is smaller than original file:
+    const int64_t tmpfile_size = bra_io_file_tell(&tmpfile);
+    if (tmpfile_size < 0)
+        goto BRA_IO_FILE_COMPRESS_FILE_CHUNKS_ERR;
+
+    bool res = true;
+    if ((uint64_t) tmpfile_size >= data_size)
+    {
+        bra_log_warn("Compressed file >= original file: store it instead (not implemented) %" PRId64 "/%" PRId64, tmpfile_size, data_size);
+        me->attributes = BRA_ATTR_SET_COMP(me->attributes, BRA_ATTR_COMP_STORED);
+        if (!bra_io_file_seek(src, 0, SEEK_SET))
+            goto BRA_IO_FILE_COMPRESS_FILE_CHUNKS_ERR;
+
+        me->crc32 = orig_crc32;
+        res       = bra_io_file_copy_file_chunks(dst, src, data_size, me);
+
+        // test
+        // if (!bra_io_file_seek(&tmpfile, 0, SEEK_SET))
+        //     goto BRA_IO_FILE_COMPRESS_FILE_CHUNKS_ERR;
+        // res = bra_io_file_copy_file_chunks(dst, &tmpfile, tmpfile_size, me);
+    }
+    else
+    {
+        if (!bra_io_file_seek(&tmpfile, 0, SEEK_SET))
+            goto BRA_IO_FILE_COMPRESS_FILE_CHUNKS_ERR;
+
+        const uint32_t crc32 = me->crc32;
+        res                  = bra_io_file_copy_file_chunks(dst, &tmpfile, tmpfile_size, me);
+        me->crc32            = crc32;    // TODO: this implies that the copy operation is wasting time computing a useless CRC32s
+    }
+
+    bra_io_file_close(&tmpfile);
+    return res;
 
 BRA_IO_FILE_COMPRESS_FILE_CHUNKS_ERR:
+    bra_io_file_close(&tmpfile);
     if (buf_bwt != NULL)
         free(buf_bwt);
     if (buf_mtf != NULL)

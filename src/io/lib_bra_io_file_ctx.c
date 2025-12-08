@@ -123,6 +123,11 @@ static bool _bra_io_file_ctx_flush_entry_file(bra_io_file_ctx_t* ctx, bra_meta_e
     me->crc32 = bra_crc32c(&mef->data_size, sizeof(uint64_t), me->crc32);
 
     // write common meta data (attribute, filename, filename_size)
+    const bra_attr_t attr_orig   = me->attributes;
+    const int64_t    me_attr_pos = bra_io_file_tell(&ctx->f);
+    if (me_attr_pos < -1)
+        return false;
+
     if (!_bra_io_file_ctx_write_meta_entry_header(ctx, me->attributes, me->name, me->name_size))
         return false;
 
@@ -131,7 +136,7 @@ static bool _bra_io_file_ctx_flush_entry_file(bra_io_file_ctx_t* ctx, bra_meta_e
     if (fwrite(&mef->data_size, sizeof(uint64_t), 1, ctx->f.f) != 1)
         return false;
 
-    // 4. file content
+    // file content
     bra_io_file_t f2;
     memset(&f2, 0, sizeof(bra_io_file_t));
     if (!bra_io_file_open(&f2, filename, "rb"))
@@ -146,6 +151,25 @@ static bool _bra_io_file_ctx_flush_entry_file(bra_io_file_ctx_t* ctx, bra_meta_e
     case BRA_ATTR_COMP_COMPRESSED:
         if (!bra_io_file_compress_file_chunks(&ctx->f, &f2, mef->data_size, me))
             return false;
+
+        if (attr_orig != me->attributes)
+        {
+            // updates meta data attributes
+            // TODO: this requires to recompute the whole crc32 ...
+            const int64_t cur_pos = bra_io_file_tell(&ctx->f);
+            if (cur_pos < 0)
+                return false;
+
+            if (!bra_io_file_seek(&ctx->f, me_attr_pos, SEEK_SET))
+                return false;
+
+            // 1. attributes
+            if (fwrite(&me->attributes, sizeof(bra_attr_t), 1, ctx->f.f) != 1)
+                return false;
+
+            if (!bra_io_file_seek(&ctx->f, cur_pos, SEEK_SET))
+                return false;
+        }
         break;
     default:
         bra_log_critical("invalid compression type for file: %u", BRA_ATTR_COMP(me->attributes));
@@ -923,7 +947,7 @@ bool bra_io_file_ctx_print_meta_entry(bra_io_file_ctx_t* ctx, const bool test_mo
         goto BRA_IO_FILE_CTX_PRINT_META_ENTRY_ERR;
 
     const uint64_t ds   = BRA_ATTR_TYPE(me.attributes) == BRA_ATTR_TYPE_FILE ? ((bra_meta_entry_file_t*) me.entry_data)->data_size : 0;
-    const char     attr = bra_format_meta_attributes(me.attributes);
+    const char     attr = bra_format_meta_attribute_types(me.attributes);
     size_t         len  = 0;
 
     fn = _bra_io_file_ctx_reconstruct_meta_entry_name(ctx, &me, &len);

@@ -25,15 +25,17 @@
 #define BRA_FALLTHROUGH           __attribute__((fallthrough))
 #elif defined(_WIN32) || defined(_WIN64)
 #define BRA_FUNC_ATTR_CONSTRUCTOR
-#define BRA_FALLTHROUGH /* fallthrough */
+#define BRA_FALLTHROUGH    //!< fallthrough
 #else
 #define BRA_FUNC_ATTR_CONSTRUCTOR
-#define BRA_FALLTHROUGH /* fallthrough */
+#define BRA_FALLTHROUGH    //!< fallthrough
 #endif
 
-/// \cond DO_NOT_DOCUMENT
 
-//!< Enable printf-like format checking where supported
+/**
+ * @brief printf-like format checking where supported
+ *
+ */
 #if defined(__clang__)
 #define BRA_FUNC_ATTR_FMT_PRINTF(fmt_idx, va_idx) __attribute__((format(printf, fmt_idx, va_idx)))
 #elif defined(__GNUC__)
@@ -41,8 +43,6 @@
 #else
 #define BRA_FUNC_ATTR_FMT_PRINTF(fmt_idx, va_idx)
 #endif
-
-/// \endcond DO_NOT_DOCUMENT
 
 
 #define BRA_MAGIC        0x612D5242    //!< 0x61='a' 0x2D='-' 0x52='R' 0x42='B'

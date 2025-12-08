@@ -1,7 +1,7 @@
 /**
  * @file lib_bra.h
  * @author Raffaello Bertini
- * @brief
+ * @brief BR‑Archive public C API
  */
 #pragma once
 

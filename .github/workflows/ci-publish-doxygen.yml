@@ -10,7 +10,7 @@ jobs:
             matrix:
                 build_type: [Debug]
         name: Build Doxygen
-        runs-on: latest
+        runs-on: ubuntu-latest
         steps:
             - uses: actions/checkout@v4
             - name: create build dir

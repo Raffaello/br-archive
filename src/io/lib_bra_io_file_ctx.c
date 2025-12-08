@@ -150,20 +150,23 @@ static bool _bra_io_file_ctx_flush_entry_file(bra_io_file_ctx_t* ctx, bra_meta_e
         break;
     case BRA_ATTR_COMP_COMPRESSED:
         if (!bra_io_file_compress_file_chunks(&ctx->f, &f2, mef->data_size, me))
-            return false;
-
-        if (attr_orig != me->attributes)
         {
-            // In this case it must be re-done fully due to the crc32
-            // The file hasn't be stored.
-            if (!bra_io_file_seek(&ctx->f, me_pos, SEEK_SET))
-                return false;
+            // check if it has failed do it to invalidate file compression rather than error
+            if (attr_orig != me->attributes)
+            {
+                // In this case it must be re-done fully due to the crc32
+                // The file hasn't be stored.
+                if (!bra_io_file_seek(&ctx->f, me_pos, SEEK_SET))
+                    return false;
 
-            // TODO: this is a quick fix after changed the metadata attribute
-            //       later on refactor to avoid a recursive call.
-            bra_io_file_close(&f2);
-            // --ctx->cur_files;
-            return _bra_io_file_ctx_flush_entry_file(ctx, me, filename, filename_len);
+                // TODO: this is a quick fix after changed the metadata attribute
+                //       later on refactor to avoid a recursive call.
+                bra_io_file_close(&f2);
+                // --ctx->cur_files;
+                return _bra_io_file_ctx_flush_entry_file(ctx, me, filename, filename_len);
+            }
+            else
+                return false;
         }
         break;
     default:

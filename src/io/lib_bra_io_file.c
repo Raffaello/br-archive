@@ -532,6 +532,7 @@ bool bra_io_file_compress_file_chunks(bra_io_file_t* dst, bra_io_file_t* src, co
     bool res = true;
     if ((uint64_t) tmpfile_size >= data_size)
     {
+        res            = false;
         me->attributes = BRA_ATTR_SET_COMP(me->attributes, BRA_ATTR_COMP_STORED);
     }
     else

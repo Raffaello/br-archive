@@ -375,7 +375,7 @@ bool bra_io_file_read_file_chunks(bra_io_file_t* src, const uint64_t data_size, 
                 return false;
             }
 
-            me->crc32 = bra_crc32c(&chunk_header.primary_index, sizeof(bra_bwt_index_t), me->crc32);
+            me->crc32 = bra_crc32c(&chunk_header, sizeof(bra_io_chunk_header_t), me->crc32);
             me->crc32 = bra_crc32c(buf_bwt, s, me->crc32);
             free(buf_mtf);
             free(buf_bwt);
@@ -573,15 +573,15 @@ bool bra_io_file_decompress_file_chunks(bra_io_file_t* dst, bra_io_file_t* src, 
         const uint32_t s = _bra_min(BRA_MAX_CHUNK_SIZE, data_size - i);
 
         // read primary index
-        bra_bwt_index_t primary_index = 0;
-        if (fread(&primary_index, sizeof(bra_bwt_index_t), 1, src->f) != 1)
+        bra_io_chunk_header_t chunk_header = {.primary_index = 0};
+        if (fread(&chunk_header, sizeof(chunk_header), 1, src->f) != 1)
         {
             goto BRA_IO_FILE_DECOMPRESS_FILE_CHUNKS_ERR;
         }
 
-        if (primary_index >= s)
+        if (chunk_header.primary_index >= s)
         {
-            bra_log_error("invalid primary index (%u) for chunk size %" PRIu32 " in %s", primary_index, s, src->fn);
+            bra_log_error("invalid primary index (%u) for chunk size %" PRIu32 " in %s", chunk_header.primary_index, s, src->fn);
             goto BRA_IO_FILE_DECOMPRESS_FILE_CHUNKS_ERR;
         }
 
@@ -599,7 +599,7 @@ bool bra_io_file_decompress_file_chunks(bra_io_file_t* dst, bra_io_file_t* src, 
             goto BRA_IO_FILE_DECOMPRESS_FILE_CHUNKS_ERR;
         }
 
-        buf_bwt = bra_bwt_decode((uint8_t*) buf_mtf, s, primary_index);
+        buf_bwt = bra_bwt_decode((uint8_t*) buf_mtf, s, chunk_header.primary_index);
         if (buf_bwt == NULL)
         {
             bra_log_error("bra_bwt_decode() failed: %s (chunk: %" PRIu64 ")", src->fn, i);
@@ -607,7 +607,7 @@ bool bra_io_file_decompress_file_chunks(bra_io_file_t* dst, bra_io_file_t* src, 
         }
 
         // update CRC32
-        me->crc32 = bra_crc32c(&primary_index, sizeof(bra_bwt_index_t), me->crc32);
+        me->crc32 = bra_crc32c(&chunk_header, sizeof(bra_io_chunk_header_t), me->crc32);
         me->crc32 = bra_crc32c(buf_bwt, s, me->crc32);
 
         // write source chunk

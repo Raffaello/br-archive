@@ -1,10 +1,8 @@
 /**
  * @file lib_bra_defs.h
- * @author Raffaello Bertini (you@domain.com)
- * @brief
+ * @author Raffaello Bertini
+ * @brief BR-Archive library definitions and constants
  * @internal
- * @copyright Copyright (c) 2025
- *
  */
 #pragma once
 

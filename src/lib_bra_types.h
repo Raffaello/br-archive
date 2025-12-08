@@ -104,11 +104,11 @@ typedef struct bra_rle_chunk_t
  */
 typedef struct bra_tree_node_t
 {
-    uint32_t                index;         //!< index
-    char*                   dirname;       //!< dirname
-    struct bra_tree_node_t* parent;        //!< parent
-    struct bra_tree_node_t* firstChild;    //!< firstChild
-    struct bra_tree_node_t* next;          //!< next
+    uint32_t                index;         //!< Archive index of this directory entry
+    char*                   dirname;       //!< Directory name (owned; freed with node)
+    struct bra_tree_node_t* parent;        //!< Parent directory node; @c NULL for root
+    struct bra_tree_node_t* firstChild;    //!< First child in sibling list; @c NULL if no children
+    struct bra_tree_node_t* next;          //!< Next sibling; @c NULL if last child
 } bra_tree_node_t;
 
 /**
@@ -116,8 +116,8 @@ typedef struct bra_tree_node_t
  */
 typedef struct bra_tree_dir_t
 {
-    bra_tree_node_t* root;         //!< root
-    uint32_t         num_nodes;    //!< num_nodes
+    bra_tree_node_t* root;         //!< Root directory node; @c NULL for empty tree
+    uint32_t         num_nodes;    //!< Total number of directory nodes in tree
 } bra_tree_dir_t;
 
 /**

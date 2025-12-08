@@ -34,7 +34,6 @@
 
 /**
  * @brief printf-like format checking where supported
- *
  */
 #if defined(__clang__)
 #define BRA_FUNC_ATTR_FMT_PRINTF(fmt_idx, va_idx) __attribute__((format(printf, fmt_idx, va_idx)))

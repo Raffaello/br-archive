@@ -68,6 +68,19 @@ char bra_format_meta_attribute_types(const bra_attr_t attributes)
     }
 }
 
+char bra_format_meta_attribute_compression(const bra_attr_t attributes)
+{
+    switch (BRA_ATTR_COMP(attributes))
+    {
+    case BRA_ATTR_COMP_STORED:
+        return 's';
+    case BRA_ATTR_COMP_COMPRESSED:
+        return 'c';
+    default:
+        return '?';
+    }
+}
+
 void bra_format_bytes(const size_t bytes, char buf[BRA_PRINTF_FMT_BYTES_BUF_SIZE])
 {
     static const size_t KB = 1024;

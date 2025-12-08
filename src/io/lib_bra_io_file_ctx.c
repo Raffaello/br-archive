@@ -940,16 +940,17 @@ bool bra_io_file_ctx_print_meta_entry(bra_io_file_ctx_t* ctx, const bool test_mo
     if (!bra_io_file_ctx_read_meta_entry(ctx, &me))
         goto BRA_IO_FILE_CTX_PRINT_META_ENTRY_ERR;
 
-    const uint64_t ds   = BRA_ATTR_TYPE(me.attributes) == BRA_ATTR_TYPE_FILE ? ((bra_meta_entry_file_t*) me.entry_data)->data_size : 0;
-    const char     attr = bra_format_meta_attribute_types(me.attributes);
-    size_t         len  = 0;
+    const uint64_t ds        = BRA_ATTR_TYPE(me.attributes) == BRA_ATTR_TYPE_FILE ? ((bra_meta_entry_file_t*) me.entry_data)->data_size : 0;
+    const char     attr_type = bra_format_meta_attribute_types(me.attributes);
+    const char     attr_comp = bra_format_meta_attribute_compression(me.attributes);
+    size_t         len       = 0;
 
     fn = _bra_io_file_ctx_reconstruct_meta_entry_name(ctx, &me, &len);
     if (fn == NULL)
         goto BRA_IO_FILE_CTX_PRINT_META_ENTRY_ERR;
 
     bra_format_bytes(ds, bytes);
-    bra_log_printf("|   %c  | %s | ", attr, bytes);
+    bra_log_printf("| %c|%c  | %s | ", attr_type, attr_comp, bytes);
     _bra_print_string_max_length(fn, (int) len, BRA_PRINTF_FMT_FILENAME_MAX_LENGTH);
 
     // skip data content

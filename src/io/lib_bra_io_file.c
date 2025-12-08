@@ -451,7 +451,10 @@ bool bra_io_file_compress_file_chunks(bra_io_file_t* dst, bra_io_file_t* src, co
 
     // NOTE: compress a file is done in a temporary file:
     //      if it is smaller than the original file append it to the archive.
-    //      otherwise store the file only.
+    //      otherwise change the attribute to store and redo the whole file
+    //      processing including metadata due to CRC32
+    // TODO: it could be improved a bit, but the CRC32 must be recomputed as
+    //       it is also taking into account the metadata entry
     bra_io_file_t tmpfile;
     if (!bra_io_file_tmp_open(&tmpfile))
     {
@@ -530,18 +533,7 @@ bool bra_io_file_compress_file_chunks(bra_io_file_t* dst, bra_io_file_t* src, co
     bool res = true;
     if ((uint64_t) tmpfile_size >= data_size)
     {
-        bra_log_warn("Compressed file >= original file: store it instead (not implemented) %" PRId64 "/%" PRId64, tmpfile_size, data_size);
         me->attributes = BRA_ATTR_SET_COMP(me->attributes, BRA_ATTR_COMP_STORED);
-        // if (!bra_io_file_seek(src, 0, SEEK_SET))
-        //     goto BRA_IO_FILE_COMPRESS_FILE_CHUNKS_ERR;
-
-        // me->crc32 = orig_crc32;
-        // res       = bra_io_file_copy_file_chunks(dst, src, data_size, me);
-
-        // test
-        // if (!bra_io_file_seek(&tmpfile, 0, SEEK_SET))
-        //     goto BRA_IO_FILE_COMPRESS_FILE_CHUNKS_ERR;
-        // res = bra_io_file_copy_file_chunks(dst, &tmpfile, tmpfile_size, me);
     }
     else
     {

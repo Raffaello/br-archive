@@ -159,6 +159,8 @@ static bool _bra_io_file_ctx_flush_entry_file(bra_io_file_ctx_t* ctx, bra_meta_e
             if (!bra_io_file_seek(&ctx->f, me_pos, SEEK_SET))
                 return false;
 
+            // TODO: this is a quick fix after changed the metadata attribute
+            //       later on refactor to avoid a recursive call.
             bra_io_file_close(&f2);
             return _bra_io_file_ctx_flush_entry_file(ctx, me, filename, filename_len);
         }

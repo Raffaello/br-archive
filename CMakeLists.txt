@@ -11,6 +11,9 @@ set(CMAKE_DEBUG_POSTFIX d)
 set(CMAKE_COMPILE_WARNING_AS_ERROR ON)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+option(BUILD_DOXYGEN "Generate Doxygen documentation" OFF)
+
+
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     add_compile_options(-Wall -Wextra -Wpedantic)
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
@@ -38,6 +41,10 @@ endfunction()
 ###########################################################
 
 configure_file(src/version.h.in src/version.h)
+
+if(BUILD_DOXYGEN)
+    add_subdirectory("doxygen")
+endif()
 
 add_library(lib_bra STATIC src/lib_bra.c)
 target_sources(lib_bra

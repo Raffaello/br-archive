@@ -128,8 +128,8 @@ bool bra_io_file_can_be_sfx(const char* fn);
  * Opens the specified file and initializes the file wrapper. On failure,
  * no cleanup is required as the wrapper is left in a safe state.
  *
- * @param f File wrapper to initialize (must not be NULL)
- * @param fn Filename to open (must not be NULL)
+ * @param f File wrapper to initialize (must not be @c NULL)
+ * @param fn Filename to open (must not be @c NULL)
  * @param mode File open mode (standard fopen modes: "r", "w", "rb", etc.)
  * @retval true On success - file is opened and wrapper is initialized
  * @retval false On error - wrapper is in safe state, no cleanup needed
@@ -142,12 +142,21 @@ bool bra_io_file_can_be_sfx(const char* fn);
 bool bra_io_file_open(bra_io_file_t* f, const char* fn, const char* mode);
 
 /**
+ * @brief Open a temporary file. It will be autodeleted when @ref bra_io_file_close.
+ *
+ * @param f  File wrapper to initialize (must not be NULL)
+ * @retval true On success - file is opened and wrapper is initialized
+ * @retval false On error - wrapper is in safe state, no cleanup needed
+ */
+bool bra_io_file_tmp_open(bra_io_file_t* f);
+
+/**
  * @brief Close the file and reset the wrapper.
  *
  * Closes the underlying file handle, frees any allocated memory, and resets
  * all wrapper fields to safe values. Safe to call multiple times.
  *
- * @param f File wrapper to close (must not be NULL)
+ * @param f File wrapper to close (must not be @c NULL)
  *
  * @note Idempotent - safe to call on already closed or uninitialized wrappers.
  * @note Always succeeds - no return value needed.
@@ -252,7 +261,7 @@ bool bra_io_file_read_chunk(bra_io_file_t* src, void* buf, const size_t buf_size
  * data integrity verification.
  *
  * @param src Source file wrapper positioned at start of data (must not be NULL)
- * @param data_size Total number of bytes to read (must be > 0)
+ * @param data_size Total number of bytes to read
  * @param me Metadata entry to update with CRC32 (must not be NULL)
  * @retval true On successful read of all data with CRC32 updated
  * @retval false On read error, EOF, or I/O failure
@@ -275,7 +284,7 @@ bool bra_io_file_read_file_chunks(bra_io_file_t* src, const uint64_t data_size, 
  *
  * @param dst Destination file wrapper positioned for writing (must not be NULL)
  * @param src Source file wrapper positioned for reading (must not be NULL)
- * @param data_size Total number of bytes to copy (must be > 0)
+ * @param data_size Total number of bytes to copy
  * @param me Metadata entry to update with CRC32 (must not be NULL)
  * @retval true On successful copy of all data with CRC32 updated
  * @retval false On read/write error or I/O failure
@@ -298,7 +307,7 @@ bool bra_io_file_copy_file_chunks(bra_io_file_t* dst, bra_io_file_t* src, const 
  * when the content is not needed.
  *
  * @param f File wrapper (must not be NULL and file must be open)
- * @param data_size Number of bytes to skip (must be > 0)
+ * @param data_size Number of bytes to skip
  * @retval true On successful position advance
  * @retval false On seek error or if skip would go past EOF
  *
@@ -318,7 +327,7 @@ bool bra_io_file_skip_data(bra_io_file_t* f, const uint64_t data_size);
  *
  * @param dst Destination file for compressed data (must not be NULL)
  * @param src Source file for original data (must not be NULL)
- * @param data_size Size of original data to compress (must be > 0)
+ * @param data_size Size of original data to compress
  * @param me Metadata entry to update with compression info (must not be NULL)
  * @retval true On successful compression and write
  * @retval false On compression error, read/write failure, or insufficient memory
@@ -341,7 +350,7 @@ bool bra_io_file_compress_file_chunks(bra_io_file_t* dst, bra_io_file_t* src, co
  *
  * @param dst Destination file for decompressed data (must not be NULL)
  * @param src Source file containing compressed data (must not be NULL)
- * @param data_size Size of compressed data to read (must be > 0)
+ * @param data_size Size of compressed data to reads
  * @param me Metadata entry with compression info and CRC32 (must not be NULL)
  * @retval true On successful decompression and CRC32 verification
  * @retval false On decompression error, CRC32 mismatch, or I/O failure

@@ -46,6 +46,14 @@ typedef struct bra_io_footer_t
     int64_t  header_offset;    //!< absolute offset of the header chunk from file start.
 } bra_io_footer_t;
 
+/**
+ * @brief BRa Chunk Header
+ */
+typedef struct bra_io_chunk_header_t
+{
+    bra_bwt_index_t primary_index;    // BWT primary index for reconstruction of the original data
+} bra_io_chunk_header_t;
+
 #pragma pack(pop)
 
 /**
@@ -125,9 +133,9 @@ typedef struct bra_tree_dir_t
  */
 typedef struct bra_io_file_ctx_t
 {
-    bra_io_file_t    f;                //!< file handler
-    uint32_t         num_files;        //!< num files to be written in the header.
-    uint32_t         cur_files;        //!< entries written in this session; used to reconcile header on close
+    bra_io_file_t f;            //!< file handler
+    uint32_t      num_files;    //!< num files to be written in the header.
+    // uint32_t         cur_files;        //!< entries written in this session; used to reconcile header on close
     char*            last_dir;         //!< the last encoded or decoded directory. used for files as they don't know where they belong.
     size_t           last_dir_size;    //!< length of last_dir in bytes;
     bra_tree_dir_t*  tree;             //!< directory tree used when encoding.

@@ -51,7 +51,7 @@ bool bra_has_sse42(void)
 #endif    // defined(__GNUC__) || defined(__clang__)
 }
 
-char bra_format_meta_attributes(const bra_attr_t attributes)
+char bra_format_meta_attribute_types(const bra_attr_t attributes)
 {
     switch (BRA_ATTR_TYPE(attributes))
     {
@@ -63,6 +63,19 @@ char bra_format_meta_attributes(const bra_attr_t attributes)
         return 'd';
     case BRA_ATTR_TYPE_SYM:
         return 's';
+    default:
+        return '?';
+    }
+}
+
+char bra_format_meta_attribute_compression(const bra_attr_t attributes)
+{
+    switch (BRA_ATTR_COMP(attributes))
+    {
+    case BRA_ATTR_COMP_STORED:
+        return 's';
+    case BRA_ATTR_COMP_COMPRESSED:
+        return 'c';
     default:
         return '?';
     }

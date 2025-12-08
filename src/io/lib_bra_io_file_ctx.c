@@ -103,7 +103,7 @@ static bool _bra_io_file_ctx_write_meta_entry_header(bra_io_file_ctx_t* ctx, con
     if (fwrite(filename, sizeof(char), filename_size, ctx->f.f) != filename_size)
         return false;
 
-    ++ctx->cur_files;    // all meta files are using this function, so best place to track an added file to the archive.
+    // ++ctx->cur_files;    // all meta files are using this function, so best place to track an added file to the archive.
     return true;
 }
 
@@ -123,6 +123,11 @@ static bool _bra_io_file_ctx_flush_entry_file(bra_io_file_ctx_t* ctx, bra_meta_e
     me->crc32 = bra_crc32c(&mef->data_size, sizeof(uint64_t), me->crc32);
 
     // write common meta data (attribute, filename, filename_size)
+    const bra_attr_t attr_orig = me->attributes;
+    const int64_t    me_pos    = bra_io_file_tell(&ctx->f);
+    if (me_pos <= 0)
+        return false;
+
     if (!_bra_io_file_ctx_write_meta_entry_header(ctx, me->attributes, me->name, me->name_size))
         return false;
 
@@ -131,7 +136,7 @@ static bool _bra_io_file_ctx_flush_entry_file(bra_io_file_ctx_t* ctx, bra_meta_e
     if (fwrite(&mef->data_size, sizeof(uint64_t), 1, ctx->f.f) != 1)
         return false;
 
-    // 4. file content
+    // file content
     bra_io_file_t f2;
     memset(&f2, 0, sizeof(bra_io_file_t));
     if (!bra_io_file_open(&f2, filename, "rb"))
@@ -145,7 +150,24 @@ static bool _bra_io_file_ctx_flush_entry_file(bra_io_file_ctx_t* ctx, bra_meta_e
         break;
     case BRA_ATTR_COMP_COMPRESSED:
         if (!bra_io_file_compress_file_chunks(&ctx->f, &f2, mef->data_size, me))
-            return false;
+        {
+            // check if it has failed do it to invalidate file compression rather than error
+            if (attr_orig != me->attributes)
+            {
+                // In this case it must be re-done fully due to the crc32
+                // The file hasn't be stored.
+                if (!bra_io_file_seek(&ctx->f, me_pos, SEEK_SET))
+                    return false;
+
+                // TODO: this is a quick fix after changed the metadata attribute
+                //       later on refactor to avoid a recursive call.
+                bra_io_file_close(&f2);
+                // --ctx->cur_files;
+                return _bra_io_file_ctx_flush_entry_file(ctx, me, filename, filename_len);
+            }
+            else
+                return false;
+        }
         break;
     default:
         bra_log_critical("invalid compression type for file: %u", BRA_ATTR_COMP(me->attributes));
@@ -922,16 +944,17 @@ bool bra_io_file_ctx_print_meta_entry(bra_io_file_ctx_t* ctx, const bool test_mo
     if (!bra_io_file_ctx_read_meta_entry(ctx, &me))
         goto BRA_IO_FILE_CTX_PRINT_META_ENTRY_ERR;
 
-    const uint64_t ds   = BRA_ATTR_TYPE(me.attributes) == BRA_ATTR_TYPE_FILE ? ((bra_meta_entry_file_t*) me.entry_data)->data_size : 0;
-    const char     attr = bra_format_meta_attributes(me.attributes);
-    size_t         len  = 0;
+    const uint64_t ds        = BRA_ATTR_TYPE(me.attributes) == BRA_ATTR_TYPE_FILE ? ((bra_meta_entry_file_t*) me.entry_data)->data_size : 0;
+    const char     attr_type = bra_format_meta_attribute_types(me.attributes);
+    const char     attr_comp = bra_format_meta_attribute_compression(me.attributes);
+    size_t         len       = 0;
 
     fn = _bra_io_file_ctx_reconstruct_meta_entry_name(ctx, &me, &len);
     if (fn == NULL)
         goto BRA_IO_FILE_CTX_PRINT_META_ENTRY_ERR;
 
     bra_format_bytes(ds, bytes);
-    bra_log_printf("|   %c  | %s | ", attr, bytes);
+    bra_log_printf("| %c|%c  | %s | ", attr_type, attr_comp, bytes);
     _bra_print_string_max_length(fn, (int) len, BRA_PRINTF_FMT_FILENAME_MAX_LENGTH);
 
     // skip data content
@@ -953,7 +976,7 @@ bool bra_io_file_ctx_print_meta_entry(bra_io_file_ctx_t* ctx, const bool test_mo
         {
             const size_t chunks = ds / BRA_MAX_CHUNK_SIZE + (ds % BRA_MAX_CHUNK_SIZE != 0 ? 1 : 0);
             // have to skip the primary index to, but there is a primary index for each chunk.
-            if (!bra_io_file_skip_data(&ctx->f, ds + (sizeof(bra_bwt_index_t) * chunks)))
+            if (!bra_io_file_skip_data(&ctx->f, ds + (sizeof(bra_io_chunk_header_t) * chunks)))
                 goto BRA_IO_FILE_CTX_PRINT_META_ENTRY_ERR;
         }
         break;

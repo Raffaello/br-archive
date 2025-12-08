@@ -40,12 +40,20 @@ bool bra_init(void);
 bool bra_has_sse42(void);
 
 /**
- * @brief Convert meta file @p attributes into a char.
+ * @brief Convert meta entry @p attributes types into a char.
  *
  * @param attributes
  * @return char
  */
-char bra_format_meta_attributes(const bra_attr_t attributes);
+char bra_format_meta_attribute_types(const bra_attr_t attributes);
+
+/**
+ * @brief Convert a meta entry @p attributes compression into a char.
+ *
+ * @param attributes
+ * @return char
+ */
+char bra_format_meta_attribute_compression(const bra_attr_t attributes);
 
 /**
  * @brief Convert @p bytes into a human readable string stored in @p buf.

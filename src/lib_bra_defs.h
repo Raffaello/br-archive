@@ -64,8 +64,8 @@
 #define BRA_ATTR_COMP_MASK         ((bra_attr_t) 0x0C)                                                 //!< bits 2-3 encode the compression type
 #define BRA_ATTR_COMP(x)           ((bra_attr_t) (x) & BRA_ATTR_COMP_MASK)                             //!< bits 2-3
 #define BRA_ATTR_SET_COMP(x, comp) ((bra_attr_t) ((x) & ~BRA_ATTR_COMP_MASK) | BRA_ATTR_COMP(comp))    //!< set bits 2-3
-#define BRA_ATTR_COMP_STORED       (0 << 2)                                                            //!< No compression.
-#define BRA_ATTR_COMP_COMPRESSED   (1 << 2)                                                            //!< Compressed.
+#define BRA_ATTR_COMP_STORED       (0 << 2)                                                            //!< No compression. No Chunk Header required.
+#define BRA_ATTR_COMP_COMPRESSED   (1 << 2)                                                            //!< Compressed. This must read a chunk header.
 #define BRA_ATTR_COMP_RESERVED     (2 << 2)                                                            //!< 3 bit reserved for future use (possibly compression types)
 // #define BRA_ATTR_BWT_MTF_RLE      (1 << 2)
 // #define BRA_ATTR_BWT_MTD_RLE_LZ78 (2 << 2)

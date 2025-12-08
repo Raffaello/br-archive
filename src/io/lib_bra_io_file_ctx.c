@@ -123,9 +123,9 @@ static bool _bra_io_file_ctx_flush_entry_file(bra_io_file_ctx_t* ctx, bra_meta_e
     me->crc32 = bra_crc32c(&mef->data_size, sizeof(uint64_t), me->crc32);
 
     // write common meta data (attribute, filename, filename_size)
-    const bra_attr_t attr_orig   = me->attributes;
-    const int64_t    me_attr_pos = bra_io_file_tell(&ctx->f);
-    if (me_attr_pos < -1)
+    const bra_attr_t attr_orig = me->attributes;
+    const int64_t    me_pos    = bra_io_file_tell(&ctx->f);
+    if (me_pos < -1)
         return false;
 
     if (!_bra_io_file_ctx_write_meta_entry_header(ctx, me->attributes, me->name, me->name_size))
@@ -154,21 +154,13 @@ static bool _bra_io_file_ctx_flush_entry_file(bra_io_file_ctx_t* ctx, bra_meta_e
 
         if (attr_orig != me->attributes)
         {
-            // updates meta data attributes
-            // TODO: this requires to recompute the whole crc32 ...
-            const int64_t cur_pos = bra_io_file_tell(&ctx->f);
-            if (cur_pos < 0)
+            // In this case it must be re-done fully due to the crc32
+            // The file hasn't be stored.
+            if (!bra_io_file_seek(&ctx->f, me_pos, SEEK_SET))
                 return false;
 
-            if (!bra_io_file_seek(&ctx->f, me_attr_pos, SEEK_SET))
-                return false;
-
-            // 1. attributes
-            if (fwrite(&me->attributes, sizeof(bra_attr_t), 1, ctx->f.f) != 1)
-                return false;
-
-            if (!bra_io_file_seek(&ctx->f, cur_pos, SEEK_SET))
-                return false;
+            bra_io_file_close(&f2);
+            return _bra_io_file_ctx_flush_entry_file(ctx, me, filename, filename_len);
         }
         break;
     default:

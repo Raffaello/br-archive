@@ -452,8 +452,7 @@ bool bra_io_file_compress_file_chunks(bra_io_file_t* dst, bra_io_file_t* src, co
     // NOTE: compress a file is done in a temporary file:
     //      if it is smaller than the original file append it to the archive.
     //      otherwise store the file only.
-    bra_io_file_t  tmpfile;
-    const uint32_t orig_crc32 = me->crc32;
+    bra_io_file_t tmpfile;
     if (!bra_io_file_tmp_open(&tmpfile))
     {
         bra_log_error("unable to compress file: %s", src->fn);
@@ -533,11 +532,11 @@ bool bra_io_file_compress_file_chunks(bra_io_file_t* dst, bra_io_file_t* src, co
     {
         bra_log_warn("Compressed file >= original file: store it instead (not implemented) %" PRId64 "/%" PRId64, tmpfile_size, data_size);
         me->attributes = BRA_ATTR_SET_COMP(me->attributes, BRA_ATTR_COMP_STORED);
-        if (!bra_io_file_seek(src, 0, SEEK_SET))
-            goto BRA_IO_FILE_COMPRESS_FILE_CHUNKS_ERR;
+        // if (!bra_io_file_seek(src, 0, SEEK_SET))
+        //     goto BRA_IO_FILE_COMPRESS_FILE_CHUNKS_ERR;
 
-        me->crc32 = orig_crc32;
-        res       = bra_io_file_copy_file_chunks(dst, src, data_size, me);
+        // me->crc32 = orig_crc32;
+        // res       = bra_io_file_copy_file_chunks(dst, src, data_size, me);
 
         // test
         // if (!bra_io_file_seek(&tmpfile, 0, SEEK_SET))

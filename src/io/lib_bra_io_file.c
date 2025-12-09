@@ -318,11 +318,8 @@ bool bra_io_file_read_chunk(bra_io_file_t* src, void* buf, const size_t buf_size
     return true;
 }
 
-bool bra_io_file_read_file_chunks(bra_io_file_t* src, const uint64_t data_size, bra_meta_entry_t* me)
+static inline bool bra_io_file_read_file_chunks_stored(bra_io_file_t* src, const uint64_t data_size, bra_meta_entry_t* me)
 {
-    assert_bra_io_file_t(src);
-    assert(me != NULL);
-
     char buf[BRA_MAX_CHUNK_SIZE];
 
     for (uint64_t i = 0; i < data_size;)
@@ -330,64 +327,145 @@ bool bra_io_file_read_file_chunks(bra_io_file_t* src, const uint64_t data_size, 
         const uint32_t s = _bra_min(BRA_MAX_CHUNK_SIZE, data_size - i);
 
         // update CRC32
-        switch (BRA_ATTR_COMP(me->attributes))
-        {
-        case BRA_ATTR_COMP_STORED:
-            if (!bra_io_file_read_chunk(src, buf, s))
-                return false;
-
-            me->crc32 = bra_crc32c(buf, s, me->crc32);
-            break;
-        case BRA_ATTR_COMP_COMPRESSED:
-        {
-            // TODO: review
-            bra_io_chunk_header_t chunk_header = {.primary_index = 0};
-            if (!fread(&chunk_header, sizeof(bra_io_chunk_header_t), 1, src->f))    // read and ignore primary index
-            {
-                bra_log_error("unable to read primary index from %s", src->fn);
-                bra_io_file_read_error(src);
-                return false;
-            }
-
-            if (chunk_header.primary_index >= s)
-            {
-                bra_log_error("invalid primary index (%" PRIu32 ") for chunk size %" PRIu32 " in %s", chunk_header.primary_index, s, src->fn);
-                bra_io_file_read_error(src);
-                return false;
-            }
-
-            if (!bra_io_file_read_chunk(src, buf, s))
-                return false;
-
-            uint8_t* buf_mtf = bra_mtf_decode((uint8_t*) buf, s);
-            if (buf_mtf == NULL)
-            {
-                bra_log_error("bra_mtf_decode() failed: %s (chunk: %" PRIu64 ")", src->fn, i);
-                bra_io_file_close(src);
-                return false;
-            }
-            uint8_t* buf_bwt = bra_bwt_decode((uint8_t*) buf_mtf, s, chunk_header.primary_index);
-            if (buf_bwt == NULL)
-            {
-                bra_log_error("bra_bwt_decode() failed: %s (chunk: %" PRIu64 ")", src->fn, i);
-                bra_io_file_close(src);
-                free(buf_mtf);
-                return false;
-            }
-
-            me->crc32 = bra_crc32c(&chunk_header, sizeof(bra_io_chunk_header_t), me->crc32);
-            me->crc32 = bra_crc32c(buf_bwt, s, me->crc32);
-            free(buf_mtf);
-            free(buf_bwt);
-        }
-        break;
-        default:
-            bra_log_critical("invalid compression type for file: %u", BRA_ATTR_COMP(me->attributes));
+        if (!bra_io_file_read_chunk(src, buf, s))
             return false;
-        }
+
+        me->crc32 = bra_crc32c(buf, s, me->crc32);
 
         i += s;
     }
+
+    return true;
+}
+
+static inline bool bra_io_file_read_file_chunks_compressed(bra_io_file_t* src, const uint64_t data_size, bra_meta_entry_t* me)
+{
+    uint8_t buf[BRA_MAX_CHUNK_SIZE];
+    uint8_t buf_mtf[BRA_MAX_CHUNK_SIZE];
+
+    for (uint64_t i = 0; i < data_size;)
+    {
+        const uint32_t s = _bra_min(BRA_MAX_CHUNK_SIZE, data_size - i);
+
+        bra_io_chunk_header_t chunk_header = {.primary_index = 0};
+        if (!fread(&chunk_header, sizeof(bra_io_chunk_header_t), 1, src->f))    // read and ignore primary index
+        {
+            bra_log_error("unable to read primary index from %s", src->fn);
+            bra_io_file_read_error(src);
+            return false;
+        }
+
+        if (chunk_header.primary_index >= s)
+        {
+            bra_log_error("invalid primary index (%" PRIu32 ") for chunk size %" PRIu32 " in %s", chunk_header.primary_index, s, src->fn);
+            bra_io_file_read_error(src);
+            return false;
+        }
+
+        if (!bra_io_file_read_chunk(src, buf, s))
+            return false;
+
+        // uint8_t* buf_mtf = bra_mtf_decode((uint8_t*) buf, s);
+        // if (buf_mtf == NULL)
+        // {
+        //     bra_log_error("bra_mtf_decode() failed: %s (chunk: %" PRIu64 ")", src->fn, i);
+        //     bra_io_file_close(src);
+        //     return false;
+        // }
+        bra_mtf_decode2((uint8_t*) buf, s, buf_mtf);
+
+        uint8_t* buf_bwt = bra_bwt_decode((uint8_t*) buf_mtf, s, chunk_header.primary_index);
+        if (buf_bwt == NULL)
+        {
+            bra_log_error("bra_bwt_decode() failed: %s (chunk: %" PRIu64 ")", src->fn, i);
+            bra_io_file_close(src);
+            // free(buf_mtf);
+            return false;
+        }
+
+        me->crc32 = bra_crc32c(&chunk_header, sizeof(bra_io_chunk_header_t), me->crc32);
+        me->crc32 = bra_crc32c(buf_bwt, s, me->crc32);
+        // free(buf_mtf);
+        free(buf_bwt);
+        i += s;
+    }
+
+    return true;
+}
+
+bool bra_io_file_read_file_chunks(bra_io_file_t* src, const uint64_t data_size, bra_meta_entry_t* me)
+{
+    assert_bra_io_file_t(src);
+    assert(me != NULL);
+
+    // char buf[BRA_MAX_CHUNK_SIZE];
+
+    // for (uint64_t i = 0; i < data_size;)
+    // {
+    //     const uint32_t s = _bra_min(BRA_MAX_CHUNK_SIZE, data_size - i);
+
+    // update CRC32
+    switch (BRA_ATTR_COMP(me->attributes))
+    {
+    case BRA_ATTR_COMP_STORED:
+        return bra_io_file_read_file_chunks_stored(src, data_size, me);
+        // if (!bra_io_file_read_chunk(src, buf, s))
+        //     return false;
+
+        // me->crc32 = bra_crc32c(buf, s, me->crc32);
+        break;
+    case BRA_ATTR_COMP_COMPRESSED:
+    {
+        // // TODO: review
+        // bra_io_chunk_header_t chunk_header = {.primary_index = 0};
+        // if (!fread(&chunk_header, sizeof(bra_io_chunk_header_t), 1, src->f))    // read and ignore primary index
+        // {
+        //     bra_log_error("unable to read primary index from %s", src->fn);
+        //     bra_io_file_read_error(src);
+        //     return false;
+        // }
+
+        // if (chunk_header.primary_index >= s)
+        // {
+        //     bra_log_error("invalid primary index (%" PRIu32 ") for chunk size %" PRIu32 " in %s", chunk_header.primary_index, s, src->fn);
+        //     bra_io_file_read_error(src);
+        //     return false;
+        // }
+
+        // if (!bra_io_file_read_chunk(src, buf, s))
+        //     return false;
+
+        // uint8_t* buf_mtf = bra_mtf_decode((uint8_t*) buf, s);
+        // if (buf_mtf == NULL)
+        // {
+        //     bra_log_error("bra_mtf_decode() failed: %s (chunk: %" PRIu64 ")", src->fn, i);
+        //     bra_io_file_close(src);
+        //     return false;
+        // }
+        // uint8_t* buf_bwt = bra_bwt_decode((uint8_t*) buf_mtf, s, chunk_header.primary_index);
+        // if (buf_bwt == NULL)
+        // {
+        //     bra_log_error("bra_bwt_decode() failed: %s (chunk: %" PRIu64 ")", src->fn, i);
+        //     bra_io_file_close(src);
+        //     free(buf_mtf);
+        //     return false;
+        // }
+
+        // me->crc32 = bra_crc32c(&chunk_header, sizeof(bra_io_chunk_header_t), me->crc32);
+        // me->crc32 = bra_crc32c(buf_bwt, s, me->crc32);
+        // free(buf_mtf);
+        // free(buf_bwt);
+
+        return bra_io_file_read_file_chunks_compressed(src, data_size, me);
+    }
+    break;
+    default:
+        bra_log_critical("invalid compression type for file: %u", BRA_ATTR_COMP(me->attributes));
+        return false;
+    }
+
+    // i += s;
+    // }
 
     return true;
 }

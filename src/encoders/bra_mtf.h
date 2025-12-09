@@ -45,3 +45,12 @@ uint8_t* bra_mtf_encode(const uint8_t* buf, const size_t buf_size);
  * @warning All input values must be valid positions (0-255).
  */
 uint8_t* bra_mtf_decode(const uint8_t* buf, const size_t buf_size);
+
+/**
+ * @brief
+ *
+ * @param buf
+ * @param buf_size
+ * @param out_buf
+ */
+void bra_mtf_decode2(const uint8_t* buf, const size_t buf_size, uint8_t* out_buf);

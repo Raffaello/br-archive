@@ -70,3 +70,5 @@ uint8_t* bra_bwt_encode(const uint8_t* buf, const bra_bwt_index_t buf_size, bra_
  * @endcode
  */
 uint8_t* bra_bwt_decode(const uint8_t* buf, const bra_bwt_index_t buf_size, const bra_bwt_index_t primary_index);
+
+void bra_bwt_decode2(const uint8_t* buf, const bra_bwt_index_t buf_size, const bra_bwt_index_t primary_index, bra_bwt_index_t* transform, uint8_t* out_buf);

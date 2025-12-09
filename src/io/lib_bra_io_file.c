@@ -340,8 +340,10 @@ static inline bool bra_io_file_read_file_chunks_stored(bra_io_file_t* src, const
 
 static inline bool bra_io_file_read_file_chunks_compressed(bra_io_file_t* src, const uint64_t data_size, bra_meta_entry_t* me)
 {
-    uint8_t buf[BRA_MAX_CHUNK_SIZE];
-    uint8_t buf_mtf[BRA_MAX_CHUNK_SIZE];
+    uint8_t         buf[BRA_MAX_CHUNK_SIZE];
+    uint8_t         buf_mtf[BRA_MAX_CHUNK_SIZE];
+    uint8_t         buf_bwt[BRA_MAX_CHUNK_SIZE];
+    bra_bwt_index_t buf_transform[BRA_MAX_CHUNK_SIZE];
 
     for (uint64_t i = 0; i < data_size;)
     {
@@ -374,19 +376,20 @@ static inline bool bra_io_file_read_file_chunks_compressed(bra_io_file_t* src, c
         // }
         bra_mtf_decode2((uint8_t*) buf, s, buf_mtf);
 
-        uint8_t* buf_bwt = bra_bwt_decode((uint8_t*) buf_mtf, s, chunk_header.primary_index);
-        if (buf_bwt == NULL)
-        {
-            bra_log_error("bra_bwt_decode() failed: %s (chunk: %" PRIu64 ")", src->fn, i);
-            bra_io_file_close(src);
-            // free(buf_mtf);
-            return false;
-        }
+        // uint8_t* buf_bwt = bra_bwt_decode((uint8_t*) buf_mtf, s, chunk_header.primary_index);
+        // if (buf_bwt == NULL)
+        // {
+        //     bra_log_error("bra_bwt_decode() failed: %s (chunk: %" PRIu64 ")", src->fn, i);
+        //     bra_io_file_close(src);
+        //     // free(buf_mtf);
+        //     return false;
+        // }
+        bra_bwt_decode2(buf, s, chunk_header.primary_index, buf_transform, buf_bwt);
 
         me->crc32 = bra_crc32c(&chunk_header, sizeof(bra_io_chunk_header_t), me->crc32);
         me->crc32 = bra_crc32c(buf_bwt, s, me->crc32);
         // free(buf_mtf);
-        free(buf_bwt);
+        // free(buf_bwt);
         i += s;
     }
 

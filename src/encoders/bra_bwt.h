@@ -71,4 +71,42 @@ uint8_t* bra_bwt_encode(const uint8_t* buf, const bra_bwt_index_t buf_size, bra_
  */
 uint8_t* bra_bwt_decode(const uint8_t* buf, const bra_bwt_index_t buf_size, const bra_bwt_index_t primary_index);
 
+/**
+ * @brief Decode BWT-transformed data back to original.
+ *
+ * Reverses the Burrows-Wheeler Transform using the first-last mapping property.
+ * Reconstructs the original data from the BWT output and primary index by
+ * following the transform chain that maps positions in the last column back
+ * to the first column of the sorted rotation matrix.
+ *
+ * @param buf BWT-transformed data buffer (must not be @c NULL)
+ * @param buf_size Size of transformed data in bytes (must be > 0)
+ * @param primary_index Primary index from  @ref bra_bwt_encode() (must be < @p buf_size)
+ * @param transform transform buffer to be passed as at least having @p buf_size num elements.
+ * @param out_buf Allocated output buffer containing original data of at least @p buf_size  size.
+ *
+ * @note Caller is responsible for freeing the returned buffer.
+ * @note Output size is always equal to input size.
+ * @note Primary index must match the value returned by @ref bra_bwt_encode().
+ *
+ * @warning Input buffer must not be @c NULL.
+ * @warning buf_size must be greater than 0.
+ * @warning primary_index must be less than @p buf_size.
+ *
+ * @code
+ * const uint8_t* bwt_data = (uint8_t*)"NNBAAA";
+ * uint8_t* original = bra_bwt_decode(bwt_data, 6, 3);
+ * // original contains "BANANA"
+ * free(original);
+ * @endcode
+ */
+
+/**
+ * @brief
+ *
+ * @param buf
+ * @param buf_size
+ * @param primary_index
+
+ */
 void bra_bwt_decode2(const uint8_t* buf, const bra_bwt_index_t buf_size, const bra_bwt_index_t primary_index, bra_bwt_index_t* transform, uint8_t* out_buf);

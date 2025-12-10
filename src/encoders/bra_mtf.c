@@ -76,6 +76,16 @@ uint8_t* bra_mtf_decode(const uint8_t* buf, const size_t buf_size)
     if (!out_buf)
         return NULL;
 
+    bra_mtf_decode2(buf, buf_size, out_buf);
+    return out_buf;
+}
+
+void bra_mtf_decode2(const uint8_t* buf, const size_t buf_size, uint8_t* out_buf)
+{
+    assert(buf != NULL);
+    assert(out_buf != NULL);
+    assert(buf_size > 0);
+
     // Initialize MTF table
     uint8_t mtf_table[BRA_ALPHABET_SIZE];
     mtf_init_table(mtf_table);
@@ -87,6 +97,4 @@ uint8_t* bra_mtf_decode(const uint8_t* buf, const size_t buf_size)
         out_buf[i]             = mtf_table[position];    // Get symbol at this position
         mtf_decode_symbol(mtf_table, position);          // Move it to front
     }
-
-    return out_buf;
 }

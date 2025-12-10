@@ -45,3 +45,16 @@ uint8_t* bra_mtf_encode(const uint8_t* buf, const size_t buf_size);
  * @warning All input values must be valid positions (0-255).
  */
 uint8_t* bra_mtf_decode(const uint8_t* buf, const size_t buf_size);
+
+/**
+ * @brief Decode MTF-encoded data back to original.
+ *
+ * Reverses the Move-to-Front transformation by maintaining the same symbol
+ * list and for each input position, outputting the symbol at that position,
+ * then moving it to the front of the list.
+ *
+ * @param buf       MTF-encoded data buffer (positions 0-255)
+ * @param buf_size  Size of encoded data in bytes (must be > 0)
+ * @param out_buf   Allocated output buffer with original data of size @p buf_size
+ */
+void bra_mtf_decode2(const uint8_t* buf, const size_t buf_size, uint8_t* out_buf);

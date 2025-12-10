@@ -100,6 +100,31 @@ uint8_t* bra_bwt_decode(const uint8_t* buf, const bra_bwt_index_t buf_size, cons
     assert(buf_size > 0);
     assert(primary_index < buf_size);
 
+    // Build transform array (maps last column positions to first column positions)
+    bra_bwt_index_t* transform = malloc(buf_size * sizeof(bra_bwt_index_t));
+    if (!transform)
+        return NULL;
+
+    // Allocate output buffer
+    uint8_t* out_buf = (uint8_t*) malloc(buf_size);
+    if (out_buf == NULL)
+        goto BRA_BWT_DECODE_EXIT;
+
+    bra_bwt_decode2(buf, buf_size, primary_index, transform, out_buf);
+
+BRA_BWT_DECODE_EXIT:
+    free(transform);
+    return out_buf;
+}
+
+void bra_bwt_decode2(const uint8_t* buf, const bra_bwt_index_t buf_size, const bra_bwt_index_t primary_index, bra_bwt_index_t* transform, uint8_t* out_buf)
+{
+    assert(buf != NULL);
+    assert(buf_size > 0);
+    assert(transform != NULL);
+    assert(out_buf != NULL);
+    assert(primary_index < buf_size);
+
     // Count character frequencies
     bra_bwt_index_t count[BRA_ALPHABET_SIZE] = {0};
     for (bra_bwt_index_t i = 0; i < buf_size; i++)
@@ -109,11 +134,6 @@ uint8_t* bra_bwt_decode(const uint8_t* buf, const bra_bwt_index_t buf_size, cons
     bra_bwt_index_t first_occurrence[BRA_ALPHABET_SIZE] = {0};
     for (bra_bwt_index_t i = 1; i < BRA_ALPHABET_SIZE; i++)
         first_occurrence[i] = first_occurrence[i - 1] + count[i - 1];
-
-    // Build transform array (maps last column positions to first column positions)
-    bra_bwt_index_t* transform = malloc(buf_size * sizeof(bra_bwt_index_t));
-    if (!transform)
-        return NULL;
 
     // Create the transform mapping using first occurrence positions
     bra_bwt_index_t temp_first[BRA_ALPHABET_SIZE];
@@ -125,11 +145,6 @@ uint8_t* bra_bwt_decode(const uint8_t* buf, const bra_bwt_index_t buf_size, cons
         transform[temp_first[c]++] = i;
     }
 
-    // Allocate output buffer
-    uint8_t* out_buf = (uint8_t*) malloc(buf_size);
-    if (out_buf == NULL)
-        goto BRA_BWT_DECODE_EXIT;
-
     // Follow the transform chain starting from primary index to reconstruct original string
     bra_bwt_index_t index = primary_index;
     for (bra_bwt_index_t i = 0; i < buf_size; i++)
@@ -137,8 +152,4 @@ uint8_t* bra_bwt_decode(const uint8_t* buf, const bra_bwt_index_t buf_size, cons
         index      = transform[index];
         out_buf[i] = buf[index];
     }
-
-BRA_BWT_DECODE_EXIT:
-    free(transform);
-    return out_buf;
 }

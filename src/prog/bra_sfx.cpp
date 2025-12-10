@@ -165,6 +165,10 @@ protected:
                 return 1;
         }
 
+        fs::current_path(cur_path, ec);
+        if (ec)
+            bra_log_warn("unable to change current directory to: %s", cur_path.string().c_str());
+
         if (!bra_io_file_ctx_close(&m_ctx))
             return 1;
 

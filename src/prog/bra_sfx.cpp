@@ -185,8 +185,6 @@ public:
 
 int main(int argc, char* argv[])
 {
-    // TODO: add output directory where to decode
-
     // The idea of the SFX is to have a footer at the end of the file
     // The footer contain the location where the embedded data is
     // so it can be extracted / dumped into a temporary file

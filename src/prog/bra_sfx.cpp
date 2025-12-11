@@ -4,7 +4,7 @@
 
 #include <log/bra_log.h>
 #include <version.h>
-#include <BraProgram.hpp>
+#include <BraProgramOutputArgTrait.hpp>
 
 #include <filesystem>
 #include <string>
@@ -23,7 +23,7 @@ namespace fs = std::filesystem;
 /**
  * @brief BraSfx program
  */
-class BraSfx : public BraProgram
+class BraSfx : public BraProgramOutputArgTrait
 {
 private:
     BraSfx(const BraSfx&)            = delete;
@@ -44,16 +44,17 @@ protected:
         bra_log_printf("  %s\n", fs::path(m_argv0).filename().string().c_str());
     };
 
-    // same as unbra
-    virtual void help_options() const override {};
+    // virtual void help_options() const override
+    // {
+    //     BraProgramOutputArgTrait::help_options();
+    // };
 
     int parseArgs_minArgc() const override { return 1; }
 
-    // same as unbra
-    std::optional<bool> parseArgs_option([[maybe_unused]] const int argc, [[maybe_unused]] const char* const argv[], [[maybe_unused]] int& i, [[maybe_unused]] const std::string& s) override
-    {
-        return nullopt;
-    }
+    // std::optional<bool> parseArgs_option(const int argc, const char* const argv[], int& i, const std::string& s) override
+    // {
+    //     return BraProgramOutputArgTrait::parseArgs_option(argc, argv, i, s);
+    // }
 
     bool parseArgs_file([[maybe_unused]] const std::filesystem::path& p) override
     {
@@ -68,7 +69,7 @@ protected:
             return false;
         }
 
-        return true;
+        return BraProgramOutputArgTrait::validateArgs();
     }
 
     int run_prog() override
@@ -84,12 +85,17 @@ protected:
 
         // extract payload, encoded data
         bra_log_printf("%s contains num files: %u\n", BRA_NAME, bh.num_files);
+        const int ret = BraProgramOutputArgTrait::run_prog();
+        if (ret != 0)
+            return ret;
+
         for (uint32_t i = 0; i < bh.num_files; i++)
         {
             if (!bra_io_file_ctx_decode_and_write_to_disk(&m_ctx, &m_overwrite_policy))
                 return 1;
         }
 
+        BraProgramOutputArgTrait::run_prog_end();
         if (!bra_io_file_ctx_close(&m_ctx))
             return 1;
 
@@ -106,8 +112,6 @@ public:
 
 int main(int argc, char* argv[])
 {
-    // TODO: add output directory where to decode
-
     // The idea of the SFX is to have a footer at the end of the file
     // The footer contain the location where the embedded data is
     // so it can be extracted / dumped into a temporary file

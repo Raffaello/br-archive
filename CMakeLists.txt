@@ -81,16 +81,20 @@ add_library(bra_prog STATIC src/prog/BraProgram.cpp)
 target_include_directories(bra_prog PUBLIC src/prog)
 target_link_libraries(bra_prog PUBLIC lib_bra)
 
+add_library(BraProgramOutputArgTrait STATIC src/prog/BraProgramOutputArgTrait.cpp)
+target_include_directories(BraProgramOutputArgTrait PUBLIC src/prog)
+target_link_libraries(BraProgramOutputArgTrait PUBLIC bra_prog)
+
 add_executable(bra src/prog/bra.cpp)
 target_link_libraries(bra PRIVATE bra_prog)
 win32_wildcard(bra)
 
 add_executable(unbra src/prog/unbra.cpp)
-target_link_libraries(unbra PRIVATE bra_prog)
+target_link_libraries(unbra PRIVATE BraProgramOutputArgTrait)
 win32_wildcard(unbra)
 
 add_executable(bra_sfx src/prog/bra_sfx.cpp)
-target_link_libraries(bra_sfx PRIVATE bra_prog)
+target_link_libraries(bra_sfx PRIVATE BraProgramOutputArgTrait)
 win32_wildcard(bra_sfx)
 target_compile_options(bra_sfx PRIVATE
     $<$<AND:$<CONFIG:Release>,$<COMPILE_LANG_AND_ID:CXX,GNU>>:-Os -ffunction-sections -fdata-sections>

@@ -18,9 +18,10 @@ This lays the foundation for encoding, decoding, and self-extracting archives.
 
 ## Library
 
-The `lib-bra` is wanted to be in pure C.
+It is mostly written in C with some exceptions for C++.
+final programs are in C++.
 
-The only exception is for the `filesystem` module aspect that is using C++ `filesystem` module to have a simpler cross-os filesystem APIs.
+The exception is for the `filesystem` module aspect that is using C++ `filesystem` module to have a simpler cross-os filesystem APIs.
 > (Not interested for this project to implement FS primitives for each specific OS in plain C).
 
 

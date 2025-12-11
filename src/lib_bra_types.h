@@ -51,7 +51,7 @@ typedef struct bra_io_footer_t
  */
 typedef struct bra_io_chunk_header_t
 {
-    bra_bwt_index_t primary_index;    // BWT primary index for reconstruction of the original data
+    bra_bwt_index_t primary_index;    //!< BWT primary index for reconstruction of the original data
 } bra_io_chunk_header_t;
 
 #pragma pack(pop)

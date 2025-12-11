@@ -58,7 +58,6 @@ protected:
     {
         bra_log_printf("--list       | -l : view archive content.\n");
         bra_log_printf("--test       | -t : test archive integrity (implies --list).\n");
-        // bra_log_printf("--output     | -o : output path: must be a directory relative to the current one (default: current directory).\n");
         BraProgramOutputArgTrait::help_options();
     };
 

@@ -4,7 +4,7 @@
 
 #include <log/bra_log.h>
 #include <version.h>
-#include <BraProgram.hpp>
+#include <BraProgramOutputArgTrait.hpp>
 
 #include <filesystem>
 #include <string>
@@ -23,15 +23,13 @@ namespace fs = std::filesystem;
 /**
  * @brief BraSfx program
  */
-class BraSfx : public BraProgram
+class BraSfx : public BraProgramOutputArgTrait
 {
 private:
     BraSfx(const BraSfx&)            = delete;
     BraSfx& operator=(const BraSfx&) = delete;
     BraSfx(BraSfx&&)                 = delete;
     BraSfx& operator=(BraSfx&&)      = delete;
-
-    fs::path m_output_path;
 
 protected:
     virtual void help_usage() const override
@@ -49,30 +47,15 @@ protected:
     // same as unbra
     virtual void help_options() const override
     {
-        bra_log_printf("--output | -o : output path must be a directory relative to the current one (default: current directory).\n");
+        BraProgramOutputArgTrait::help_options();
     };
 
     int parseArgs_minArgc() const override { return 1; }
 
     // same as unbra
-    std::optional<bool> parseArgs_option([[maybe_unused]] const int argc, [[maybe_unused]] const char* const argv[], [[maybe_unused]] int& i, [[maybe_unused]] const std::string& s) override
+    std::optional<bool> parseArgs_option(const int argc, const char* const argv[], int& i, const std::string& s) override
     {
-        if (s == "--output" || s == "-o")
-        {
-            if (i + 1 >= argc)
-            {
-                bra_log_error("missing argument for --output");
-                return false;
-            }
-
-            m_output_path = fs::path(argv[++i]);
-        }
-        else
-        {
-            return nullopt;
-        }
-
-        return true;
+        return BraProgramOutputArgTrait::parseArgs_option(argc, argv, i, s);
     }
 
     bool parseArgs_file([[maybe_unused]] const std::filesystem::path& p) override
@@ -88,41 +71,7 @@ protected:
             return false;
         }
 
-        if (m_output_path.empty())
-        {
-            std::error_code ec;
-            m_output_path = fs::current_path(ec);
-            if (ec)
-            {
-                bra_log_error("unable to get current directory");
-                return false;
-            }
-
-            if (!bra::fs::try_sanitize(m_output_path))
-            {
-                bra_log_error("invalid current path: '%s'", m_output_path.string().c_str());
-                return false;
-            }
-        }
-        else
-        {
-            if (!bra::fs::try_sanitize(m_output_path) || m_output_path.empty())
-            {
-                bra_log_error("invalid output path: '%s'", m_output_path.string().c_str());
-                return false;
-            }
-
-            if (bra::fs::dir_exists(m_output_path))
-            {
-                bra_log_warn("output path %s already exists.", m_output_path.string().c_str());
-            }
-        }
-
-#ifndef NDEBUG
-        bra_log_debug("output path: %s", m_output_path.string().c_str());
-#endif
-
-        return true;
+        return BraProgramOutputArgTrait::validateArgs();
     }
 
     int run_prog() override
@@ -138,26 +87,9 @@ protected:
 
         // extract payload, encoded data
         bra_log_printf("%s contains num files: %u\n", BRA_NAME, bh.num_files);
-        std::error_code ec;
-        if (!bra::fs::dir_exists(m_output_path))
-        {
-            bra_log_printf("Creating output path: %s\n", m_output_path.string().c_str());
-            if (!bra::fs::dir_make(m_output_path))
-                return 1;
-        }
-        const fs::path cur_path = fs::current_path(ec);
-        if (ec)
-        {
-            bra_log_error("unable to get current directory");
-            return 1;
-        }
-
-        fs::current_path(m_output_path, ec);
-        if (ec)
-        {
-            bra_log_error("unable to change current directory to: %s", m_output_path.string().c_str());
-            return 1;
-        }
+        const int ret = BraProgramOutputArgTrait::run_prog();
+        if (ret != 0)
+            return ret;
 
         for (uint32_t i = 0; i < bh.num_files; i++)
         {
@@ -165,10 +97,7 @@ protected:
                 return 1;
         }
 
-        fs::current_path(cur_path, ec);
-        if (ec)
-            bra_log_warn("unable to change current directory to: %s", cur_path.string().c_str());
-
+        BraProgramOutputArgTrait::run_prog_end();
         if (!bra_io_file_ctx_close(&m_ctx))
             return 1;
 

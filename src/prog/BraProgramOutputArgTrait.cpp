@@ -1,5 +1,8 @@
 #include "BraProgramOutputArgTrait.hpp"
 
+#include <log/bra_log.h>
+#include <fs/bra_fs.hpp>
+
 namespace fs = std::filesystem;
 
 /// \cond DO_NOT_DOCUMENT
@@ -7,7 +10,7 @@ namespace fs = std::filesystem;
 void BraProgramOutputArgTrait::help_options() const
 {
     bra_log_printf("--output | -o : output path must be a directory relative to the current one (default: current directory).\n");
-};
+}
 
 std::optional<bool> BraProgramOutputArgTrait::parseArgs_option(const int argc, const char* const argv[], int& i, const std::string& s)
 {
@@ -19,7 +22,7 @@ std::optional<bool> BraProgramOutputArgTrait::parseArgs_option(const int argc, c
             return false;
         }
 
-        m_output_path = std::filesystem::path(argv[++i]);
+        m_output_path = fs::path(argv[++i]);
     }
     else
     {
@@ -34,7 +37,7 @@ bool BraProgramOutputArgTrait::validateArgs()
     if (m_output_path.empty())
     {
         std::error_code ec;
-        m_output_path = std::filesystem::current_path(ec);
+        m_output_path = fs::current_path(ec);
         if (ec)
         {
             bra_log_error("unable to get current directory");

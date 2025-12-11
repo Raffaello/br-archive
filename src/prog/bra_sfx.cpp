@@ -44,19 +44,17 @@ protected:
         bra_log_printf("  %s\n", fs::path(m_argv0).filename().string().c_str());
     };
 
-    // same as unbra
-    virtual void help_options() const override
-    {
-        BraProgramOutputArgTrait::help_options();
-    };
+    // virtual void help_options() const override
+    // {
+    //     BraProgramOutputArgTrait::help_options();
+    // };
 
     int parseArgs_minArgc() const override { return 1; }
 
-    // same as unbra
-    std::optional<bool> parseArgs_option(const int argc, const char* const argv[], int& i, const std::string& s) override
-    {
-        return BraProgramOutputArgTrait::parseArgs_option(argc, argv, i, s);
-    }
+    // std::optional<bool> parseArgs_option(const int argc, const char* const argv[], int& i, const std::string& s) override
+    // {
+    //     return BraProgramOutputArgTrait::parseArgs_option(argc, argv, i, s);
+    // }
 
     bool parseArgs_file([[maybe_unused]] const std::filesystem::path& p) override
     {

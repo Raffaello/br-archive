@@ -7,6 +7,7 @@ extern "C" {
 #include <encoders/bra_rle.h>
 #include <encoders/bra_bwt.h>
 #include <encoders/bra_mtf.h>
+#include <encoders/bra_huffman.h>
 
 #ifdef __cplusplus
 }
@@ -304,6 +305,79 @@ TEST(test_bra_encoders_encode_decode_bwt_mtf_rle_1)
     return 0;
 }
 
+TEST(test_bra_encoders_encode_decode_huffman_1)
+{
+    const uint8_t* buf      = (const uint8_t*) "BANANA";
+    const size_t   buf_size = 6;
+
+    bra_huffman_chunk_t* huffman = bra_huffman_encode(buf, buf_size);
+    ASSERT_TRUE(huffman != nullptr);
+
+    ASSERT_EQ(huffman->orig_size, 6U);
+    ASSERT_EQ(huffman->size, 2U);
+    ASSERT_EQ(huffman->lengths[0], 0U);
+    ASSERT_EQ(huffman->lengths['B'], 2U);    // 3 because the least repeated symbol
+    ASSERT_EQ(huffman->lengths['A'], 1U);    // 1 because the most repeated symbol
+    ASSERT_EQ(huffman->lengths['N'], 2U);
+    ASSERT_EQ(huffman->data[0], 155);
+    ASSERT_EQ(huffman->data[1], 0);    // only 1 bit is used here, other are just padding
+
+    uint32_t out_size;
+    uint8_t* out_buf = bra_huffman_decode(huffman, &out_size);
+    ASSERT_TRUE(out_buf != nullptr);
+    ASSERT_EQ(out_size, buf_size);
+    ASSERT_EQ(memcmp(buf, out_buf, buf_size), 0);
+
+    bra_huffman_free(huffman);
+    free(out_buf);
+    return 0;
+}
+
+TEST(test_bra_encoders_encode_decode_huffman_2)
+{
+    const uint8_t* buf      = (const uint8_t*) "AAAAAAAA";
+    const size_t   buf_size = 8;
+
+    // first time just encode 'AAAAA'
+    bra_huffman_chunk_t* huffman = bra_huffman_encode(buf, 5);
+    ASSERT_TRUE(huffman != nullptr);
+
+    ASSERT_EQ(huffman->orig_size, 5U);
+    ASSERT_EQ(huffman->size, 1U);
+    ASSERT_EQ(huffman->lengths[0], 0U);
+    ASSERT_EQ(huffman->lengths['A'], 1U);    // 1 because the most repeated symbol
+    ASSERT_EQ(huffman->data[0], 0);
+
+    uint32_t out_size;
+    uint8_t* out_buf = bra_huffman_decode(huffman, &out_size);
+    ASSERT_TRUE(out_buf != nullptr);
+    ASSERT_EQ(out_size, 5U);
+    ASSERT_EQ(memcmp(buf, out_buf, 5), 0);
+
+    bra_huffman_free(huffman);
+    free(out_buf);
+
+    // now the whole buffer
+    huffman = bra_huffman_encode(buf, buf_size);
+    ASSERT_TRUE(huffman != nullptr);
+
+    ASSERT_EQ(huffman->orig_size, buf_size);
+    ASSERT_EQ(huffman->size, 1U);
+    ASSERT_EQ(huffman->lengths[0], 0U);
+    ASSERT_EQ(huffman->lengths['A'], 1U);    // 1 because the most repeated symbol
+    ASSERT_EQ(huffman->data[0], 0);
+
+    // uint32_t out_size;
+    out_buf = bra_huffman_decode(huffman, &out_size);
+    ASSERT_TRUE(out_buf != nullptr);
+    ASSERT_EQ(out_size, buf_size);
+    ASSERT_EQ(memcmp(buf, out_buf, 5), 0);
+
+    bra_huffman_free(huffman);
+    free(out_buf);
+    return 0;
+}
+
 int main(int argc, char* argv[])
 {
     const std::map<std::string, std::function<int()>> m = {
@@ -319,6 +393,8 @@ int main(int argc, char* argv[])
 
         {TEST_FUNC(test_bra_encoders_encode_decode_bwt_mtf_rle_1)},
 
+        {TEST_FUNC(test_bra_encoders_encode_decode_huffman_1)},
+        {TEST_FUNC(test_bra_encoders_encode_decode_huffman_2)},
     };
 
     return test_main(argc, argv, m);

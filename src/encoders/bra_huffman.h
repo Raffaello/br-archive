@@ -13,7 +13,7 @@ typedef struct bra_huffman_chunk_t
     //       but otherwise need 2 byte for each symbol,
     //       and if more than 128 make no sense in the other way around ...
     //       so... trade-off
-    uint32_t orig_size;    // orig data size (used for decoding)
+    uint32_t orig_size;    //!< orig data size (used for decoding)
     uint32_t size;         //!< size
     uint8_t* data;         //!< data
 } bra_huffman_chunk_t;

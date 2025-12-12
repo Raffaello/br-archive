@@ -6,6 +6,9 @@
 #include <string.h>
 #include <assert.h>
 
+/**
+ * @brief bra_huffman_node_t
+ */
 typedef struct bra_huffman_node_t
 {
     uint8_t                    symbol;    //!< symbol
@@ -15,7 +18,7 @@ typedef struct bra_huffman_node_t
 } bra_huffman_node_t;
 
 /**
- * @brief .
+ * @brief minHeapNode_t
  */
 typedef struct minHeapNode_t
 {

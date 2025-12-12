@@ -257,6 +257,33 @@ TEST(test_bra_encoders_encode_decode_mtf_1)
     return 0;
 }
 
+TEST(test_bra_encoders_encode_decode_bwt_mtf_1)
+{
+    const uint8_t* buf      = (const uint8_t*) "BANANA";
+    const size_t   buf_size = strlen((const char*) buf);
+
+    bra_bwt_index_t primary_index;
+    uint8_t*        out_buf = bra_bwt_encode(buf, buf_size, &primary_index);
+    ASSERT_TRUE(out_buf != nullptr);
+
+    uint8_t* out_buf2 = bra_mtf_encode(out_buf, buf_size);
+    ASSERT_TRUE(out_buf2 != nullptr);
+
+    uint8_t* out_buf4 = bra_mtf_decode(out_buf2, buf_size);
+    ASSERT_TRUE(out_buf4 != nullptr);
+
+    uint8_t* out_buf5 = bra_bwt_decode(out_buf4, buf_size, primary_index);
+    ASSERT_TRUE(out_buf5 != nullptr);
+
+    ASSERT_TRUE(memcmp(buf, out_buf5, buf_size) == 0);
+
+    free(out_buf5);
+    free(out_buf4);
+    free(out_buf2);
+    free(out_buf);
+    return 0;
+}
+
 TEST(test_bra_encoders_encode_decode_bwt_mtf_rle_1)
 {
     const uint8_t* buf = (const uint8_t*) "BANANA";
@@ -378,6 +405,43 @@ TEST(test_bra_encoders_encode_decode_huffman_2)
     return 0;
 }
 
+TEST(test_bra_encoders_encode_decode_bwt_mtf_huffman_1)
+{
+    const uint8_t* buf      = (const uint8_t*) "BANANA";
+    const size_t   buf_size = strlen((const char*) buf);
+
+    bra_bwt_index_t primary_index;
+    uint8_t*        out_buf = bra_bwt_encode(buf, buf_size, &primary_index);
+    ASSERT_TRUE(out_buf != nullptr);
+
+    uint8_t* out_buf2 = bra_mtf_encode(out_buf, buf_size);
+    ASSERT_TRUE(out_buf2 != nullptr);
+
+    bra_huffman_chunk_t* huffman = bra_huffman_encode(out_buf2, buf_size);
+    ASSERT_TRUE(huffman != nullptr);
+
+    uint32_t out_size = 0;
+    uint8_t* out_buf3 = bra_huffman_decode(&huffman->meta, huffman->meta.encoded_size, huffman->data, &out_size);
+    ASSERT_TRUE(out_buf3 != nullptr);
+    ASSERT_EQ(out_size, buf_size);
+
+    uint8_t* out_buf4 = bra_mtf_decode(out_buf3, out_size);
+    ASSERT_TRUE(out_buf4 != nullptr);
+
+    uint8_t* out_buf5 = bra_bwt_decode(out_buf4, out_size, primary_index);
+    ASSERT_TRUE(out_buf5 != nullptr);
+
+    ASSERT_TRUE(memcmp(buf, out_buf5, out_size) == 0);
+
+    free(out_buf5);
+    free(out_buf4);
+    free(out_buf3);
+    bra_huffman_free(huffman);
+    free(out_buf2);
+    free(out_buf);
+    return 0;
+}
+
 int main(int argc, char* argv[])
 {
     const std::map<std::string, std::function<int()>> m = {
@@ -391,10 +455,14 @@ int main(int argc, char* argv[])
 
         {TEST_FUNC(test_bra_encoders_encode_decode_mtf_1)},
 
+        {TEST_FUNC(test_bra_encoders_encode_decode_bwt_mtf_1)},
+
         {TEST_FUNC(test_bra_encoders_encode_decode_bwt_mtf_rle_1)},
 
         {TEST_FUNC(test_bra_encoders_encode_decode_huffman_1)},
         {TEST_FUNC(test_bra_encoders_encode_decode_huffman_2)},
+
+        {TEST_FUNC(test_bra_encoders_encode_decode_bwt_mtf_huffman_1)},
     };
 
     return test_main(argc, argv, m);

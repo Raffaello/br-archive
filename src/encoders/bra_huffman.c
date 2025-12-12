@@ -261,8 +261,8 @@ bra_huffman_chunk_t* bra_huffman_encode(const uint8_t* buf, const uint32_t buf_s
         return NULL;
     }
 
-    output->size = 0;
-    output->data = NULL;
+    output->meta.encoded_size = 0;
+    output->data              = NULL;
 
     // 1. count frequencies
     for (uint32_t i = 0; i < buf_size; ++i)
@@ -293,18 +293,18 @@ bra_huffman_chunk_t* bra_huffman_encode(const uint8_t* buf, const uint32_t buf_s
     // 3. Generate codes
     uint8_t codes[BRA_ALPHABET_SIZE][BRA_ALPHABET_SIZE];
     // uint8_t lengths[BRA_ALPHABET_SIZE] = {0};
-    memset(output->lengths, 0, BRA_ALPHABET_SIZE * sizeof(uint8_t));
+    memset(output->meta.lengths, 0, BRA_ALPHABET_SIZE * sizeof(uint8_t));
     uint8_t code[BRA_ALPHABET_SIZE];
-    bra_huffman_generate_codes(root, codes, output->lengths, code, 0);
+    bra_huffman_generate_codes(root, codes, output->meta.lengths, code, 0);
 
     // 4. calculate output size
     uint32_t bit_count = 0;
     for (uint32_t i = 0; i < buf_size; ++i)
-        bit_count += output->lengths[buf[i]];
+        bit_count += output->meta.lengths[buf[i]];
 
-    output->orig_size = buf_size;
-    output->size      = (bit_count + 7) / 8;    // Code lengths + packed data
-    output->data      = malloc(output->size);
+    output->meta.orig_size    = buf_size;
+    output->meta.encoded_size = (bit_count + 7) / 8;    // Code lengths + packed data
+    output->data              = malloc(output->meta.encoded_size);
     if (output->data == NULL)
     {
         bra_log_error("unable to encode huffman");
@@ -320,7 +320,7 @@ bra_huffman_chunk_t* bra_huffman_encode(const uint8_t* buf, const uint32_t buf_s
     for (uint32_t i = 0; i < buf_size; ++i)
     {
         const uint8_t symbol = buf[i];
-        for (int j = 0; j < output->lengths[symbol]; ++j)
+        for (int j = 0; j < output->meta.lengths[symbol]; ++j)
         {
             if (codes[symbol][j] > 0)
             {
@@ -343,20 +343,19 @@ bra_huffman_chunk_t* bra_huffman_encode(const uint8_t* buf, const uint32_t buf_s
     return output;
 }
 
-uint8_t* bra_huffman_decode(const bra_huffman_chunk_t* chunk, uint32_t* out_size)
+uint8_t* bra_huffman_decode(const bra_huffman_t* meta, const uint32_t data_size, const uint8_t* data, uint32_t* out_size)
 {
-    assert(chunk != NULL);
+    assert(meta != NULL);
+    assert(data != NULL);
     assert(out_size != NULL);
 
     *out_size                = 0;
-    bra_huffman_node_t* root = bra_huffman_tree_build_from_lengths(chunk->lengths);
+    bra_huffman_node_t* root = bra_huffman_tree_build_from_lengths(meta->lengths);
     if (root == NULL)
         return NULL;
 
     // Decode data
-    const uint8_t* data_ptr  = chunk->data;
-    uint32_t       data_size = chunk->size;
-    uint8_t*       decoded   = (uint8_t*) malloc(data_size * 8);    // Overestimate size
+    uint8_t* decoded = (uint8_t*) malloc(data_size * 8);    // Overestimate size
     if (decoded == NULL)
     {
         bra_log_error("unable to decode huffman");
@@ -368,7 +367,7 @@ uint8_t* bra_huffman_decode(const bra_huffman_chunk_t* chunk, uint32_t* out_size
     bra_huffman_node_t* cur         = root;
     for (uint32_t i = 0; i < data_size; ++i)
     {
-        const uint8_t byte = data_ptr[i];
+        const uint8_t byte = data[i];
         for (int bit = 7; bit >= 0; bit--)
         {
             int bit_val = (byte >> bit) & 1;
@@ -378,7 +377,7 @@ uint8_t* bra_huffman_decode(const bra_huffman_chunk_t* chunk, uint32_t* out_size
                 // Leaf node
                 decoded[decoded_idx++] = cur->symbol;
                 cur                    = root;
-                if (decoded_idx == chunk->orig_size)
+                if (decoded_idx == meta->orig_size)
                     break;
             }
         }

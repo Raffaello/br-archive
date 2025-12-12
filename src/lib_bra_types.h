@@ -7,9 +7,26 @@
 #include <stdio.h>
 
 
-typedef uint8_t  bra_attr_t;          //!< file attribute type
-typedef uint8_t  bra_rle_counts_t;    //!< stored as run_length - 1 (0 => 1, 255 => 256)
-typedef uint32_t bra_bwt_index_t;     //!< index type used by BWT (should be at least 32 bits to support 4GB chunks)
+typedef uint8_t bra_attr_t;          //!< file attribute type
+typedef uint8_t bra_rle_counts_t;    //!< stored as run_length - 1 (0 => 1, 255 => 256)
+
+typedef uint32_t bra_bwt_index_t;    //!< index type used by BWT (should be at least 32 bits to support 4GB chunks)
+
+/**
+ * @brief bra_huffman_t
+ *
+ */
+typedef struct bra_huffman_t
+{
+    uint8_t lengths[BRA_ALPHABET_SIZE];    //!< huffman symbol frequencies
+    // NOTE: not ok, if 2 symbols are encoded make no sense to store 256,
+    //       but otherwise need 2 byte for each symbol,
+    //       and if more than 128 make no sense in the other way around ...
+    //       so... trade-off
+    // NOTE: this also implies to require a minimum file size of more than the alphabet size (> 256), otherwise store it directly
+    uint32_t orig_size;       //!< orig data size (used for decoding) (TODO: this should be redundant, or replace with bits padding)
+    uint32_t encoded_size;    //!< how many bytes are encoded.
+} bra_huffman_t;
 
 /**
  * @brief Define a file overwrite policy.
@@ -52,6 +69,8 @@ typedef struct bra_io_footer_t
 typedef struct bra_io_chunk_header_t
 {
     bra_bwt_index_t primary_index;    //!< BWT primary index for reconstruction of the original data
+    bra_huffman_t   huffman;          //!< huffman meta data for huffman tree reconstruction.
+
 } bra_io_chunk_header_t;
 
 #pragma pack(pop)

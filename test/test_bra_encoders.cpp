@@ -313,17 +313,17 @@ TEST(test_bra_encoders_encode_decode_huffman_1)
     bra_huffman_chunk_t* huffman = bra_huffman_encode(buf, buf_size);
     ASSERT_TRUE(huffman != nullptr);
 
-    ASSERT_EQ(huffman->orig_size, 6U);
-    ASSERT_EQ(huffman->size, 2U);
-    ASSERT_EQ(huffman->lengths[0], 0U);
-    ASSERT_EQ(huffman->lengths['B'], 2U);    // 3 because the least repeated symbol
-    ASSERT_EQ(huffman->lengths['A'], 1U);    // 1 because the most repeated symbol
-    ASSERT_EQ(huffman->lengths['N'], 2U);
+    ASSERT_EQ(huffman->meta.orig_size, 6U);
+    ASSERT_EQ(huffman->meta.encoded_size, 2U);
+    ASSERT_EQ(huffman->meta.lengths[0], 0U);
+    ASSERT_EQ(huffman->meta.lengths['B'], 2U);    // 3 because the least repeated symbol
+    ASSERT_EQ(huffman->meta.lengths['A'], 1U);    // 1 because the most repeated symbol
+    ASSERT_EQ(huffman->meta.lengths['N'], 2U);
     ASSERT_EQ(huffman->data[0], 155);
     ASSERT_EQ(huffman->data[1], 0);    // only 1 bit is used here, other are just padding
 
     uint32_t out_size;
-    uint8_t* out_buf = bra_huffman_decode(huffman, &out_size);
+    uint8_t* out_buf = bra_huffman_decode(&huffman->meta, huffman->meta.encoded_size, huffman->data, &out_size);
     ASSERT_TRUE(out_buf != nullptr);
     ASSERT_EQ(out_size, buf_size);
     ASSERT_EQ(memcmp(buf, out_buf, buf_size), 0);
@@ -342,14 +342,14 @@ TEST(test_bra_encoders_encode_decode_huffman_2)
     bra_huffman_chunk_t* huffman = bra_huffman_encode(buf, 5);
     ASSERT_TRUE(huffman != nullptr);
 
-    ASSERT_EQ(huffman->orig_size, 5U);
-    ASSERT_EQ(huffman->size, 1U);
-    ASSERT_EQ(huffman->lengths[0], 0U);
-    ASSERT_EQ(huffman->lengths['A'], 1U);    // 1 because the most repeated symbol
+    ASSERT_EQ(huffman->meta.orig_size, 5U);
+    ASSERT_EQ(huffman->meta.encoded_size, 1U);
+    ASSERT_EQ(huffman->meta.lengths[0], 0U);
+    ASSERT_EQ(huffman->meta.lengths['A'], 1U);    // 1 because the most repeated symbol
     ASSERT_EQ(huffman->data[0], 0);
 
     uint32_t out_size;
-    uint8_t* out_buf = bra_huffman_decode(huffman, &out_size);
+    uint8_t* out_buf = bra_huffman_decode(&huffman->meta, huffman->meta.encoded_size, huffman->data, &out_size);
     ASSERT_TRUE(out_buf != nullptr);
     ASSERT_EQ(out_size, 5U);
     ASSERT_EQ(memcmp(buf, out_buf, 5), 0);
@@ -361,14 +361,14 @@ TEST(test_bra_encoders_encode_decode_huffman_2)
     huffman = bra_huffman_encode(buf, buf_size);
     ASSERT_TRUE(huffman != nullptr);
 
-    ASSERT_EQ(huffman->orig_size, buf_size);
-    ASSERT_EQ(huffman->size, 1U);
-    ASSERT_EQ(huffman->lengths[0], 0U);
-    ASSERT_EQ(huffman->lengths['A'], 1U);    // 1 because the most repeated symbol
+    ASSERT_EQ(huffman->meta.orig_size, buf_size);
+    ASSERT_EQ(huffman->meta.encoded_size, 1U);
+    ASSERT_EQ(huffman->meta.lengths[0], 0U);
+    ASSERT_EQ(huffman->meta.lengths['A'], 1U);    // 1 because the most repeated symbol
     ASSERT_EQ(huffman->data[0], 0);
 
     // uint32_t out_size;
-    out_buf = bra_huffman_decode(huffman, &out_size);
+    out_buf = bra_huffman_decode(&huffman->meta, huffman->meta.encoded_size, huffman->data, &out_size);
     ASSERT_TRUE(out_buf != nullptr);
     ASSERT_EQ(out_size, buf_size);
     ASSERT_EQ(memcmp(buf, out_buf, 5), 0);

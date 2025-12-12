@@ -5,6 +5,7 @@
 
 #include <encoders/bra_bwt.h>
 #include <encoders/bra_mtf.h>
+#include <encoders/bra_huffman.h>
 
 #include <fs/bra_fs_c.h>
 #include <log/bra_log.h>
@@ -448,9 +449,10 @@ bool bra_io_file_compress_file_chunks(bra_io_file_t* dst, bra_io_file_t* src, co
     assert_bra_io_file_t(src);
     assert(me != NULL);
 
-    char     buf[BRA_MAX_CHUNK_SIZE];
-    uint8_t* buf_bwt = NULL;
-    uint8_t* buf_mtf = NULL;
+    char                 buf[BRA_MAX_CHUNK_SIZE];
+    uint8_t*             buf_bwt     = NULL;
+    uint8_t*             buf_mtf     = NULL;
+    bra_huffman_chunk_t* buf_huffman = NULL;
 
     // NOTE: compress a file is done in a temporary file:
     //      if it is smaller than the original file append it to the archive.
@@ -488,7 +490,6 @@ bool bra_io_file_compress_file_chunks(bra_io_file_t* dst, bra_io_file_t* src, co
         // TODO: do the version accepting a pre-allocated buffer
         //       as it is always the same size as the input doing in chunks will avoid to allocate/free
         //       for each chunk.
-        // bra_bwt_index_t       primary_index = 0;
         bra_io_chunk_header_t chunk_header = {.primary_index = 0};
         buf_bwt                            = bra_bwt_encode((uint8_t*) buf, s, &chunk_header.primary_index);
         if (buf_bwt == NULL)
@@ -504,7 +505,17 @@ bool bra_io_file_compress_file_chunks(bra_io_file_t* dst, bra_io_file_t* src, co
             goto BRA_IO_FILE_COMPRESS_FILE_CHUNKS_ERR;
         }
 
-        // write primary index
+        // huffman encoding
+        buf_huffman = bra_huffman_encode(buf_mtf, s);
+        if (buf_huffman == NULL)
+        {
+            bra_log_error("bra_huffman_encode() failed: %s (chunk: %" PRIu64 ")", src->fn, i);
+            goto BRA_IO_FILE_COMPRESS_FILE_CHUNKS_ERR;
+        }
+
+        chunk_header.huffman = buf_huffman->meta;
+
+        // write chunk header
         if (fwrite(&chunk_header, sizeof(chunk_header), 1, tmpfile.f) != 1)
         {
             bra_log_error("unable to write primary index to %s", tmpfile.fn);
@@ -516,13 +527,15 @@ bool bra_io_file_compress_file_chunks(bra_io_file_t* dst, bra_io_file_t* src, co
         me->crc32 = bra_crc32c(buf, s, me->crc32);
 
         // write source chunk
-        if (fwrite(buf_mtf, sizeof(char), s, tmpfile.f) != s)
+        if (fwrite(buf_huffman, sizeof(char), s, tmpfile.f) != s)
             goto BRA_IO_FILE_COMPRESS_FILE_CHUNKS_ERR;
 
         free(buf_bwt);
         buf_bwt = NULL;
         free(buf_mtf);
         buf_mtf = NULL;
+        bra_huffman_free(buf_huffman);
+        buf_huffman = NULL;
 
         i += s;
     }
@@ -557,6 +570,9 @@ BRA_IO_FILE_COMPRESS_FILE_CHUNKS_ERR:
         free(buf_bwt);
     if (buf_mtf != NULL)
         free(buf_mtf);
+
+    bra_huffman_free(buf_huffman);
+
     bra_io_file_close(dst);
     bra_io_file_close(src);
     return false;
@@ -572,27 +588,34 @@ bool bra_io_file_decompress_file_chunks(bra_io_file_t* dst, bra_io_file_t* src, 
     uint8_t         buf_bwt[BRA_MAX_CHUNK_SIZE];
     uint8_t         buf_mtf[BRA_MAX_CHUNK_SIZE];
     bra_bwt_index_t buf_trans[BRA_MAX_CHUNK_SIZE];
+    uint8_t*        buf_huffman = NULL;
 
     for (uint64_t i = 0; i < data_size;)
     {
-        const uint32_t s = _bra_min(BRA_MAX_CHUNK_SIZE, data_size - i);
-
-        // read primary index
+        // read chunk header
         bra_io_chunk_header_t chunk_header = {.primary_index = 0};
         if (fread(&chunk_header, sizeof(chunk_header), 1, src->f) != 1)
+            goto BRA_IO_FILE_DECOMPRESS_FILE_CHUNKS_ERR;
+
+        // read source chunk
+        if (!bra_io_file_read_chunk(src, buf, chunk_header.huffman.encoded_size))
         {
             goto BRA_IO_FILE_DECOMPRESS_FILE_CHUNKS_ERR;
         }
 
+        // decode huffman
+        uint32_t s  = 0;
+        buf_huffman = bra_huffman_decode(&chunk_header.huffman, chunk_header.huffman.encoded_size, buf, &s);
+        if (buf_huffman == NULL)
+        {
+            bra_log_error("unable to decode huffman file: %s ", src->fn);
+            goto BRA_IO_FILE_DECOMPRESS_FILE_CHUNKS_ERR;
+        }
+
+        // const uint32_t s = _bra_min(BRA_MAX_CHUNK_SIZE, data_size - i);
         if (chunk_header.primary_index >= s)
         {
             bra_log_error("invalid primary index (%u) for chunk size %" PRIu32 " in %s", chunk_header.primary_index, s, src->fn);
-            goto BRA_IO_FILE_DECOMPRESS_FILE_CHUNKS_ERR;
-        }
-
-        // read source chunk
-        if (!bra_io_file_read_chunk(src, buf, s))
-        {
             goto BRA_IO_FILE_DECOMPRESS_FILE_CHUNKS_ERR;
         }
 
@@ -616,5 +639,8 @@ bool bra_io_file_decompress_file_chunks(bra_io_file_t* dst, bra_io_file_t* src, 
 BRA_IO_FILE_DECOMPRESS_FILE_CHUNKS_ERR:
     bra_io_file_close(dst);
     bra_io_file_close(src);
+    if (buf_huffman != NULL)
+        free(buf_huffman);
+
     return false;
 }

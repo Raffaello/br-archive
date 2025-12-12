@@ -560,14 +560,14 @@ bool bra_io_file_compress_file_chunks(bra_io_file_t* dst, bra_io_file_t* src, co
         goto BRA_IO_FILE_COMPRESS_FILE_CHUNKS_ERR;
 
     bool res = true;
-#if 0
+    // #if 0
     if ((uint64_t) tmpfile_size >= data_size)
     {
         res            = false;
         me->attributes = BRA_ATTR_SET_COMP(me->attributes, BRA_ATTR_COMP_STORED);
     }
     else
-#endif
+    // #endif
     {
         if (!bra_io_file_seek(&tmpfile, 0, SEEK_SET))
             goto BRA_IO_FILE_COMPRESS_FILE_CHUNKS_ERR;

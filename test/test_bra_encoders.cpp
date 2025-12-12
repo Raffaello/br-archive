@@ -284,6 +284,27 @@ TEST(test_bra_encoders_encode_decode_bwt_mtf_1)
     return 0;
 }
 
+TEST(test_bra_encoders_decode_mtf_bwt_1)
+{
+    constexpr auto buf_size      = 6;
+    uint8_t        encoded_mtf[] = {0x4E, 0x00, 0x43, 0x43, 0x00, 0x00};
+    uint8_t        encoded_bwt[] = {0x4E, 0x4E, 0x42, 0x41, 0x41, 0x41};
+
+    uint8_t* out_buf = bra_mtf_decode(encoded_mtf, buf_size);
+    ASSERT_TRUE(out_buf != nullptr);
+    ASSERT_EQ(memcmp(out_buf, encoded_bwt, buf_size), 0);
+
+    uint8_t* out_buf2 = bra_bwt_decode(out_buf, buf_size, 3);
+    ASSERT_TRUE(out_buf2 != nullptr);
+
+    ASSERT_EQ(memcmp(out_buf2, "BANANA", buf_size), 0);
+
+    free(out_buf2);
+    free(out_buf);
+
+    return 0;
+}
+
 TEST(test_bra_encoders_encode_decode_bwt_mtf_rle_1)
 {
     const uint8_t* buf = (const uint8_t*) "BANANA";
@@ -405,6 +426,39 @@ TEST(test_bra_encoders_encode_decode_huffman_2)
     return 0;
 }
 
+TEST(test_bra_encoders_encode_decode_huffman_3)
+{
+    constexpr uint32_t buf_size      = 6;
+    uint8_t            encoded_mtf[] = {0x4E, 0x00, 0x43, 0x43, 0x00, 0x00};
+    // uint8_t        encoded_bwt[] = {0x4E, 0x4E, 0x42, 0x41, 0x41, 0x41};
+
+    bra_huffman_chunk_t* huffman = bra_huffman_encode(encoded_mtf, buf_size);
+    ASSERT_TRUE(huffman != nullptr);
+    ASSERT_TRUE(huffman->meta.lengths[0] > 0);
+    ASSERT_EQ(huffman->meta.orig_size, buf_size);
+    ASSERT_EQ(huffman->meta.encoded_size, 2U);
+
+    uint32_t out_size = 0;
+    uint8_t* out_buf  = bra_huffman_decode(&huffman->meta, huffman->meta.encoded_size, huffman->data, &out_size);
+    ASSERT_TRUE(out_buf != nullptr);
+    ASSERT_EQ(out_size, buf_size);
+    ASSERT_EQ(memcmp(out_buf, encoded_mtf, buf_size), 0);
+
+    // uint8_t* out_buf = bra_mtf_decode(encoded_mtf, buf_size);
+    // ASSERT_TRUE(out_buf != nullptr);
+    // ASSERT_EQ(memcmp(out_buf, encoded_bwt, buf_size), 0);
+
+    // uint8_t* out_buf2 = bra_bwt_decode(out_buf, buf_size, 3);
+    // ASSERT_TRUE(out_buf2 != nullptr);
+
+    // ASSERT_EQ(memcmp(out_buf2, "BANANA", buf_size), 0);
+
+    // free(out_buf2);
+    free(out_buf);
+
+    return 0;
+}
+
 TEST(test_bra_encoders_encode_decode_bwt_mtf_huffman_1)
 {
     const uint8_t* buf      = (const uint8_t*) "BANANA";
@@ -416,6 +470,13 @@ TEST(test_bra_encoders_encode_decode_bwt_mtf_huffman_1)
 
     uint8_t* out_buf2 = bra_mtf_encode(out_buf, buf_size);
     ASSERT_TRUE(out_buf2 != nullptr);
+    for (size_t i = 0; i < buf_size; ++i)
+        printf("'\\%02X'", out_buf[i]);
+    printf("\n");
+    for (size_t i = 0; i < buf_size; ++i)
+        printf("'\\%02X'", out_buf2[i]);
+    printf("\n%d\n", primary_index);
+
 
     bra_huffman_chunk_t* huffman = bra_huffman_encode(out_buf2, buf_size);
     ASSERT_TRUE(huffman != nullptr);
@@ -457,10 +518,13 @@ int main(int argc, char* argv[])
 
         {TEST_FUNC(test_bra_encoders_encode_decode_bwt_mtf_1)},
 
+        {TEST_FUNC(test_bra_encoders_decode_mtf_bwt_1)},
+
         {TEST_FUNC(test_bra_encoders_encode_decode_bwt_mtf_rle_1)},
 
         {TEST_FUNC(test_bra_encoders_encode_decode_huffman_1)},
         {TEST_FUNC(test_bra_encoders_encode_decode_huffman_2)},
+        {TEST_FUNC(test_bra_encoders_encode_decode_huffman_3)},
 
         {TEST_FUNC(test_bra_encoders_encode_decode_bwt_mtf_huffman_1)},
     };

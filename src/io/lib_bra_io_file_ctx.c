@@ -120,7 +120,6 @@ static bool _bra_io_file_ctx_flush_entry_file(bra_io_file_ctx_t* ctx, bra_meta_e
     const bra_meta_entry_file_t* mef = (const bra_meta_entry_file_t*) me->entry_data;
     if (!_bra_compute_header_crc32(filename_len, filename, me))
         return false;
-    me->crc32 = bra_crc32c(&mef->data_size, sizeof(uint64_t), me->crc32);
 
     // write common meta data (attribute, filename, filename_size)
     const bra_attr_t attr_orig = me->attributes;
@@ -133,6 +132,7 @@ static bool _bra_io_file_ctx_flush_entry_file(bra_io_file_ctx_t* ctx, bra_meta_e
 
     // 3. file size
     assert(mef != NULL);
+    me->crc32 = bra_crc32c(&mef->data_size, sizeof(uint64_t), me->crc32);
     if (fwrite(&mef->data_size, sizeof(uint64_t), 1, ctx->f.f) != 1)
         return false;
 
@@ -145,6 +145,9 @@ static bool _bra_io_file_ctx_flush_entry_file(bra_io_file_ctx_t* ctx, bra_meta_e
     switch (BRA_ATTR_COMP(me->attributes))
     {
     case BRA_ATTR_COMP_STORED:
+        // me->crc32 = bra_crc32c(&mef->data_size, sizeof(uint64_t), me->crc32);
+        // if (fwrite(&mef->data_size, sizeof(uint64_t), 1, ctx->f.f) != 1)
+        //     return false;
         if (!bra_io_file_copy_file_chunks(&ctx->f, &f2, mef->data_size, me))
             return false;
         break;
@@ -418,11 +421,9 @@ static inline bool _bra_io_file_ctx_compute_crc32(bra_io_file_ctx_t* ctx, const 
     {
         const bra_meta_entry_file_t* mef = (const bra_meta_entry_file_t*) me->entry_data;
         assert(mef != NULL);
-        const uint64_t ds = mef->data_size;
 
         me->crc32 = bra_crc32c(&mef->data_size, sizeof(uint64_t), me->crc32);
-
-        if (!bra_io_file_read_file_chunks(&ctx->f, ds, me))
+        if (!bra_io_file_read_file_chunks(&ctx->f, mef->data_size, me))
             return false;
     }
     break;

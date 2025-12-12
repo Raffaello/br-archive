@@ -612,7 +612,6 @@ bool bra_io_file_decompress_file_chunks(bra_io_file_t* dst, bra_io_file_t* src, 
             goto BRA_IO_FILE_DECOMPRESS_FILE_CHUNKS_ERR;
         }
 
-        // const uint32_t s = _bra_min(BRA_MAX_CHUNK_SIZE, data_size - i);
         if (chunk_header.primary_index >= s)
         {
             bra_log_error("invalid primary index (%u) for chunk size %" PRIu32 " in %s", chunk_header.primary_index, s, src->fn);
@@ -620,8 +619,10 @@ bool bra_io_file_decompress_file_chunks(bra_io_file_t* dst, bra_io_file_t* src, 
         }
 
         // decompress MTF+BWT
-        bra_mtf_decode2(buf, s, buf_mtf);
+        bra_mtf_decode2(buf_huffman, s, buf_mtf);
         bra_bwt_decode2(buf_mtf, s, chunk_header.primary_index, buf_trans, buf_bwt);
+        free(buf_huffman);
+        buf_huffman = NULL;
 
         // update CRC32
         me->crc32 = bra_crc32c(&chunk_header, sizeof(bra_io_chunk_header_t), me->crc32);

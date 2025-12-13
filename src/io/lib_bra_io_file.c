@@ -127,16 +127,28 @@ static inline bool bra_io_file_read_file_chunks_compressed(bra_io_file_t* src, c
         if (!bra_io_file_read_chunk_header(src, &chunk_header))
             return false;
 
+        // sanity check
+        if (chunk_header.huffman.encoded_size > BRA_MAX_CHUNK_SIZE)
+        {
+            bra_log_error("encoded chunk size (%" PRIu32 ") exceeds maximum (%" PRIu32 ") in %s",
+                          chunk_header.huffman.encoded_size,
+                          (uint32_t) BRA_MAX_CHUNK_SIZE,
+                          src->fn);
+            bra_io_file_read_error(src);
+            return false;
+        }
+
         // read source chunk
         if (!bra_io_file_read_chunk(src, buf, chunk_header.huffman.encoded_size))
             return false;
 
         // decode huffman
         uint32_t s  = 0;
-        buf_huffman = bra_huffman_decode(&chunk_header.huffman, chunk_header.huffman.encoded_size, buf, &s);
+        buf_huffman = bra_huffman_decode(&chunk_header.huffman, buf, &s);
         if (buf_huffman == NULL)
         {
             bra_log_error("unable to decode huffman file: %s ", src->fn);
+            bra_io_file_read_error(src);
             return false;
         }
 
@@ -547,7 +559,7 @@ bool bra_io_file_compress_file_chunks(bra_io_file_t* dst, bra_io_file_t* src, co
         chunk_header.huffman = buf_huffman->meta;
 
         // update CRC32 (It will be computed when appending the encoded data to the archive instead...)
-        // TOOD: it might be better to compute the CRC32 on the original data.
+        // TODO: it might be better to compute the CRC32 on the original data.
         //       so when testing/decompressing it will be checked with the original data and not the one compressed.
         //       it would be more reliable but this need to be addressed separately.
         // me->crc32 = bra_crc32c(&chunk_header, sizeof(chunk_header), me->crc32);
@@ -568,7 +580,7 @@ bool bra_io_file_compress_file_chunks(bra_io_file_t* dst, bra_io_file_t* src, co
         buf_bwt = NULL;
         free(buf_mtf);
         buf_mtf = NULL;
-        bra_huffman_free(buf_huffman);
+        bra_huffman_chunk_free(buf_huffman);
         buf_huffman = NULL;
 
         i += s;
@@ -612,7 +624,7 @@ BRA_IO_FILE_COMPRESS_FILE_CHUNKS_ERR:
     if (buf_mtf != NULL)
         free(buf_mtf);
 
-    bra_huffman_free(buf_huffman);
+    bra_huffman_chunk_free(buf_huffman);
 
     bra_io_file_close(dst);
     bra_io_file_close(src);
@@ -638,13 +650,23 @@ bool bra_io_file_decompress_file_chunks(bra_io_file_t* dst, bra_io_file_t* src, 
         if (!bra_io_file_read_chunk_header(src, &chunk_header))
             goto BRA_IO_FILE_DECOMPRESS_FILE_CHUNKS_ERR;
 
+        // sanity check
+        if (chunk_header.huffman.encoded_size > BRA_MAX_CHUNK_SIZE)
+        {
+            bra_log_error("encoded chunk size (%" PRIu32 ") exceeds maximum (%" PRIu32 ") in %s",
+                          chunk_header.huffman.encoded_size,
+                          (uint32_t) BRA_MAX_CHUNK_SIZE,
+                          src->fn);
+            return false;
+        }
+
         // read source chunk
         if (!bra_io_file_read_chunk(src, buf, chunk_header.huffman.encoded_size))
             goto BRA_IO_FILE_DECOMPRESS_FILE_CHUNKS_ERR;
 
         // decode huffman
         uint32_t s  = 0;
-        buf_huffman = bra_huffman_decode(&chunk_header.huffman, chunk_header.huffman.encoded_size, buf, &s);
+        buf_huffman = bra_huffman_decode(&chunk_header.huffman, buf, &s);
         if (buf_huffman == NULL)
         {
             bra_log_error("unable to decode huffman file: %s ", src->fn);

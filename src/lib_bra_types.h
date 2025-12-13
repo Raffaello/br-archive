@@ -18,13 +18,12 @@ typedef uint32_t bra_bwt_index_t;    //!< index type used by BWT (should be at l
  */
 typedef struct bra_huffman_t
 {
-    uint8_t lengths[BRA_ALPHABET_SIZE];    //!< huffman symbol frequencies
+    uint8_t lengths[BRA_ALPHABET_SIZE];    //!< Huffman code lengths per symbol (0 = symbol not present)
     // NOTE: not ok, if 2 symbols are encoded make no sense to store 256,
     //       but otherwise need 2 byte for each symbol,
     //       and if more than 128 make no sense in the other way around ...
-    //       so... trade-off
-    // NOTE: this also implies to require a minimum file size of more than the alphabet size (> 256), otherwise store it directly
-    uint32_t orig_size;       //!< orig data size (used for decoding) (TODO: this should be redundant, or replace with bits padding)
+    // NOTE: this also implies to require a minimum file size of more than the alphabet size (> 256B), otherwise store it directly
+    uint32_t orig_size;       //!< orig data size (used for decoding) (TODO: this should be redundant, or replace with num bits padding, 1 byte instead of 4)
     uint32_t encoded_size;    //!< how many bytes are encoded.
 } bra_huffman_t;
 

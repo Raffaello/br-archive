@@ -87,17 +87,23 @@ static bra_huffman_node_t* bra_minHeap_extractMin(minHeapNode_t** head)
     return node;
 }
 
-static void bra_minHeap_insert(minHeapNode_t** head, bra_huffman_node_t* node)
+static bool bra_minHeap_insert(minHeapNode_t** head, bra_huffman_node_t* node)
 {
     assert(head != NULL);
     assert(node != NULL);
 
     minHeapNode_t* new_node = bra_minHeapNode_create(node);
+    if (new_node == NULL)
+    {
+        bra_log_error("unable to create huffman new node");
+        return false;
+    }
+
     if (*head == NULL || (*head)->node->freq > node->freq)
     {
         new_node->next = *head;
         *head          = new_node;
-        return;
+        return true;
     }
 
     minHeapNode_t* cur = *head;
@@ -108,6 +114,7 @@ static void bra_minHeap_insert(minHeapNode_t** head, bra_huffman_node_t* node)
 
     new_node->next = cur->next;
     cur->next      = new_node;
+    return true;
 }
 
 static bra_huffman_node_t* bra_huffman_tree_build(uint32_t freq[BRA_ALPHABET_SIZE])
@@ -126,7 +133,8 @@ static bra_huffman_node_t* bra_huffman_tree_build(uint32_t freq[BRA_ALPHABET_SIZ
                 return NULL;
             }
 
-            bra_minHeap_insert(&minHeap, n);
+            if (!bra_minHeap_insert(&minHeap, n))
+                return NULL;
         }
     }
 
@@ -143,7 +151,8 @@ static bra_huffman_node_t* bra_huffman_tree_build(uint32_t freq[BRA_ALPHABET_SIZ
         bra_huffman_node_t* n = bra_huffman_create_node(0, l->freq + r->freq);
         n->left               = l;
         n->right              = r;
-        bra_minHeap_insert(&minHeap, n);
+        if (!bra_minHeap_insert(&minHeap, n))
+            return NULL;
     }
 
     return bra_minHeap_extractMin(&minHeap);
@@ -252,10 +261,6 @@ static bra_huffman_node_t* bra_huffman_tree_build_from_lengths(const uint8_t len
                 if (n == NULL)
                     goto BRA_HUFFMAN_DECODE_ERROR;
 
-                // if (cur->left == NULL)
-                //     cur->left = n;
-                // else
-                //     cur->right = n;
                 if (bit == 0)
                     cur->left = n;
                 else
@@ -287,26 +292,6 @@ static bra_huffman_node_t* bra_huffman_tree_build_from_lengths(const uint8_t len
                     }
                     cur = cur->right;
                 }
-
-                // if (cur->left == NULL)
-                // {
-                //     bra_huffman_node_t* n = bra_huffman_create_node(0, 0);
-                //     if (n == NULL)
-                //         goto BRA_HUFFMAN_DECODE_ERROR;
-
-                // cur->left = n;
-                // cur       = cur->left;
-                // }
-                // else if (cur->right == NULL)
-                // {
-                //     bra_huffman_node_t* n = bra_huffman_create_node(0, 0);
-                //     if (n == NULL)
-                //         goto BRA_HUFFMAN_DECODE_ERROR;
-
-                // cur->right = n;
-                // cur        = cur->right;
-                // }
-                // else cur = cur->right;
             }
         }
     }
@@ -345,6 +330,7 @@ bra_huffman_chunk_t* bra_huffman_encode(const uint8_t* buf, const uint32_t buf_s
     bra_huffman_node_t* root = bra_huffman_tree_build(freq);
     if (root == NULL)
     {
+        // TODO: add a test case for this
         bra_log_error("unable to huffman encode");
         free(output);
         return NULL;
@@ -417,7 +403,7 @@ bra_huffman_chunk_t* bra_huffman_encode(const uint8_t* buf, const uint32_t buf_s
     return output;
 }
 
-uint8_t* bra_huffman_decode(const bra_huffman_t* meta, const uint32_t data_size, const uint8_t* data, uint32_t* out_size)
+uint8_t* bra_huffman_decode(const bra_huffman_t* meta, const uint8_t* data, uint32_t* out_size)
 {
     assert(meta != NULL);
     assert(data != NULL);
@@ -429,7 +415,9 @@ uint8_t* bra_huffman_decode(const bra_huffman_t* meta, const uint32_t data_size,
         return NULL;
 
     // Decode data
-    uint8_t* decoded = (uint8_t*) malloc(data_size * 8);    // Overestimate size
+    const uint32_t data_size = meta->encoded_size;
+    // uint8_t*       decoded   = (uint8_t*) malloc(data_size * 8);    // Overestimate size
+    uint8_t* decoded = (uint8_t*) malloc(meta->orig_size);
     if (decoded == NULL)
     {
         bra_log_error("unable to decode huffman");
@@ -444,33 +432,53 @@ uint8_t* bra_huffman_decode(const bra_huffman_t* meta, const uint32_t data_size,
         const uint8_t byte = data[i];
         for (int bit = 7; bit >= 0; bit--)
         {
-            int bit_val = (byte >> bit) & 1;
-            cur         = bit_val == 0 ? cur->left : cur->right;
+            const uint8_t bit_val = (byte >> bit) & 1;
+            cur                   = bit_val == 0 ? cur->left : cur->right;
+
+            // sanity check
+            if (cur == NULL)
+            {
+                bra_log_error("huffman decode error: invalid code sequence");
+                goto BRA_HUFFMAN_DECODE_ERROR;
+            }
+
             if (cur->left == NULL && cur->right == NULL)
             {
                 // Leaf node
                 decoded[decoded_idx++] = cur->symbol;
                 cur                    = root;
-                if (decoded_idx == meta->orig_size)
+                // NOTE: this is required to skip the eventual padding bits
+                if (decoded_idx >= meta->orig_size)
                     break;
             }
         }
     }
 
     bra_huffman_tree_free(&root);
-    uint8_t* output = realloc(decoded, decoded_idx);
-    if (output == NULL)
+    if (decoded_idx != meta->orig_size)
     {
-        bra_log_error("unable to realloc huffman decoded data");
-        free(decoded);
-        return NULL;
+        bra_log_error("huffman decode error: decoded data:%u - original_data:%u", decoded_idx, meta->orig_size);
+        goto BRA_HUFFMAN_DECODE_ERROR;
     }
 
+    // uint8_t* output = realloc(decoded, decoded_idx);
+    // if (output == NULL)
+    // {
+    //     bra_log_error("unable to realloc huffman decoded data");
+    //     goto BRA_HUFFMAN_DECODE_ERROR;
+    // }
+
     *out_size = decoded_idx;
-    return output;    // Caller must free
+    // return output;    // Caller must free
+    return decoded;
+
+BRA_HUFFMAN_DECODE_ERROR:
+    bra_huffman_tree_free(&root);
+    free(decoded);
+    return NULL;
 }
 
-void bra_huffman_free(bra_huffman_chunk_t* chunk)
+void bra_huffman_chunk_free(bra_huffman_chunk_t* chunk)
 {
     if (chunk == NULL)
         return;

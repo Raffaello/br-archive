@@ -371,12 +371,12 @@ TEST(test_bra_encoders_encode_decode_huffman_1)
     ASSERT_EQ(huffman->data[1], 0);    // only 1 bit is used here, other are just padding
 
     uint32_t out_size;
-    uint8_t* out_buf = bra_huffman_decode(&huffman->meta, huffman->meta.encoded_size, huffman->data, &out_size);
+    uint8_t* out_buf = bra_huffman_decode(&huffman->meta, huffman->data, &out_size);
     ASSERT_TRUE(out_buf != nullptr);
     ASSERT_EQ(out_size, buf_size);
     ASSERT_EQ(memcmp(buf, out_buf, buf_size), 0);
 
-    bra_huffman_free(huffman);
+    bra_huffman_chunk_free(huffman);
     free(out_buf);
     return 0;
 }
@@ -397,12 +397,12 @@ TEST(test_bra_encoders_encode_decode_huffman_2)
     ASSERT_EQ(huffman->data[0], 0);
 
     uint32_t out_size;
-    uint8_t* out_buf = bra_huffman_decode(&huffman->meta, huffman->meta.encoded_size, huffman->data, &out_size);
+    uint8_t* out_buf = bra_huffman_decode(&huffman->meta, huffman->data, &out_size);
     ASSERT_TRUE(out_buf != nullptr);
     ASSERT_EQ(out_size, 5U);
     ASSERT_EQ(memcmp(buf, out_buf, 5), 0);
 
-    bra_huffman_free(huffman);
+    bra_huffman_chunk_free(huffman);
     free(out_buf);
 
     // now the whole buffer
@@ -416,12 +416,12 @@ TEST(test_bra_encoders_encode_decode_huffman_2)
     ASSERT_EQ(huffman->data[0], 0);
 
     // uint32_t out_size;
-    out_buf = bra_huffman_decode(&huffman->meta, huffman->meta.encoded_size, huffman->data, &out_size);
+    out_buf = bra_huffman_decode(&huffman->meta, huffman->data, &out_size);
     ASSERT_TRUE(out_buf != nullptr);
     ASSERT_EQ(out_size, buf_size);
-    ASSERT_EQ(memcmp(buf, out_buf, 5), 0);
+    ASSERT_EQ(memcmp(buf, out_buf, buf_size), 0);
 
-    bra_huffman_free(huffman);
+    bra_huffman_chunk_free(huffman);
     free(out_buf);
     return 0;
 }
@@ -430,7 +430,6 @@ TEST(test_bra_encoders_encode_decode_huffman_3)
 {
     constexpr uint32_t buf_size      = 6;
     uint8_t            encoded_mtf[] = {0x4E, 0x00, 0x43, 0x43, 0x00, 0x00};
-    // uint8_t        encoded_bwt[] = {0x4E, 0x4E, 0x42, 0x41, 0x41, 0x41};
 
     bra_huffman_chunk_t* huffman = bra_huffman_encode(encoded_mtf, buf_size);
     ASSERT_TRUE(huffman != nullptr);
@@ -439,21 +438,12 @@ TEST(test_bra_encoders_encode_decode_huffman_3)
     ASSERT_EQ(huffman->meta.encoded_size, 2U);
 
     uint32_t out_size = 0;
-    uint8_t* out_buf  = bra_huffman_decode(&huffman->meta, huffman->meta.encoded_size, huffman->data, &out_size);
+    uint8_t* out_buf  = bra_huffman_decode(&huffman->meta, huffman->data, &out_size);
     ASSERT_TRUE(out_buf != nullptr);
     ASSERT_EQ(out_size, buf_size);
     ASSERT_EQ(memcmp(out_buf, encoded_mtf, buf_size), 0);
 
-    // uint8_t* out_buf = bra_mtf_decode(encoded_mtf, buf_size);
-    // ASSERT_TRUE(out_buf != nullptr);
-    // ASSERT_EQ(memcmp(out_buf, encoded_bwt, buf_size), 0);
-
-    // uint8_t* out_buf2 = bra_bwt_decode(out_buf, buf_size, 3);
-    // ASSERT_TRUE(out_buf2 != nullptr);
-
-    // ASSERT_EQ(memcmp(out_buf2, "BANANA", buf_size), 0);
-
-    // free(out_buf2);
+    bra_huffman_chunk_free(huffman);
     free(out_buf);
 
     return 0;
@@ -470,19 +460,12 @@ TEST(test_bra_encoders_encode_decode_bwt_mtf_huffman_1)
 
     uint8_t* out_buf2 = bra_mtf_encode(out_buf, buf_size);
     ASSERT_TRUE(out_buf2 != nullptr);
-    for (size_t i = 0; i < buf_size; ++i)
-        printf("'\\%02X'", out_buf[i]);
-    printf("\n");
-    for (size_t i = 0; i < buf_size; ++i)
-        printf("'\\%02X'", out_buf2[i]);
-    printf("\n%d\n", primary_index);
-
 
     bra_huffman_chunk_t* huffman = bra_huffman_encode(out_buf2, buf_size);
     ASSERT_TRUE(huffman != nullptr);
 
     uint32_t out_size = 0;
-    uint8_t* out_buf3 = bra_huffman_decode(&huffman->meta, huffman->meta.encoded_size, huffman->data, &out_size);
+    uint8_t* out_buf3 = bra_huffman_decode(&huffman->meta, huffman->data, &out_size);
     ASSERT_TRUE(out_buf3 != nullptr);
     ASSERT_EQ(out_size, buf_size);
 
@@ -497,7 +480,7 @@ TEST(test_bra_encoders_encode_decode_bwt_mtf_huffman_1)
     free(out_buf5);
     free(out_buf4);
     free(out_buf3);
-    bra_huffman_free(huffman);
+    bra_huffman_chunk_free(huffman);
     free(out_buf2);
     free(out_buf);
     return 0;

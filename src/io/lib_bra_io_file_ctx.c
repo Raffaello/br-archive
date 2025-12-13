@@ -348,6 +348,8 @@ static bool _bra_io_file_ctx_write_meta_entry_dir_subdir(bra_io_file_ctx_t* ctx,
     if (BRA_ATTR_TYPE(attributes) != BRA_ATTR_TYPE_SUBDIR && BRA_ATTR_TYPE(attributes) != BRA_ATTR_TYPE_DIR)
         return false;
 
+    // Dir & subdirs are always only stored
+    attributes            = BRA_ATTR_SET_COMP(attributes, BRA_ATTR_COMP_STORED);
     bra_tree_node_t* node = bra_tree_dir_add(ctx->tree, dirname);
     if (node == NULL)
     {
@@ -769,10 +771,8 @@ bool bra_io_file_ctx_encode_and_write_to_disk(bra_io_file_ctx_t* ctx, const char
         return false;
     }
 
-    // NOTE just for dev purposes
-    // TODO: compress dir entries too?
-    // NOTE: for now is setting compression for everything but used only in files.
-    if (compress)
+    // NOTE: compression is used only in files.
+    if (compress && BRA_ATTR_TYPE(attributes) == BRA_ATTR_TYPE_FILE)
     {
         attributes = BRA_ATTR_SET_COMP(attributes, BRA_ATTR_COMP_COMPRESSED);
     }

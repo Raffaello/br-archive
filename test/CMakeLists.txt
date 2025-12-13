@@ -74,6 +74,7 @@ add_test(NAME test_bra.bra_unbra_all                 COMMAND test_bra test_bra_u
 
 add_test(NAME test_bra.bra_unbra_comp                 COMMAND test_bra test_bra_unbra_comp)
 add_test(NAME test_bra.bra_unbra_comp_2               COMMAND test_bra test_bra_unbra_comp_2)
+add_test(NAME test_bra.bra_unbra_comp_2b               COMMAND test_bra test_bra_unbra_comp_2b)
 
 #####################################################################################################
 
@@ -90,7 +91,18 @@ add_test(NAME test_bra_encoders.encode_decode_bwt_2 COMMAND test_bra_encoders te
 
 add_test(NAME test_bra_encoders.encode_decode_mtf_1 COMMAND test_bra_encoders test_bra_encoders_encode_decode_mtf_1)
 
+add_test(NAME test_bra_encoders.encode_decode_bwt_mtf_1 COMMAND test_bra_encoders test_bra_encoders_encode_decode_bwt_mtf_1)
+
+add_test(NAME test_bra_encoders.test_bra_encoders_decode_mtf_bwt_1 COMMAND test_bra_encoders test_bra_encoders_decode_mtf_bwt_1)
+
 add_test(NAME test_bra_encoders.encode_decode_bwt_mtf_rle_1 COMMAND test_bra_encoders test_bra_encoders_encode_decode_bwt_mtf_rle_1)
+
+add_test(NAME test_bra_encoders.encode_decode_huffman_1 COMMAND test_bra_encoders test_bra_encoders_encode_decode_huffman_1)
+add_test(NAME test_bra_encoders.encode_decode_huffman_2 COMMAND test_bra_encoders test_bra_encoders_encode_decode_huffman_2)
+add_test(NAME test_bra_encoders.encode_decode_huffman_3 COMMAND test_bra_encoders test_bra_encoders_encode_decode_huffman_3)
+add_test(NAME test_bra_encoders.encode_decode_huffman_4 COMMAND test_bra_encoders test_bra_encoders_encode_decode_huffman_4)
+
+add_test(NAME test_bra_encoders.test_bra_encoders_encode_decode_bwt_mtf_huffman_1 COMMAND test_bra_encoders test_bra_encoders_encode_decode_bwt_mtf_huffman_1)
 
 
 #####################################################################################################

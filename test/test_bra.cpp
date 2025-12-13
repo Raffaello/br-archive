@@ -372,6 +372,31 @@ int test_bra_unbra_comp_2()
     return 0;
 }
 
+int test_bra_unbra_comp_2b()
+{
+    const std::string bra      = CMD_PREFIX + "bra -c";
+    const std::string unbra    = CMD_PREFIX + "unbra";
+    const std::string in_file  = "fixtures/lorem.txt";
+    const std::string out_file = "lorem.BRa";
+
+    if (fs::exists("2b"))
+        fs::remove_all("2b");
+
+    if (fs::exists(out_file))
+        fs::remove(out_file);
+
+    ASSERT_FALSE(fs::exists(out_file));
+
+    ASSERT_EQ(call_system(bra + " -o " + out_file + " " + in_file), 0);
+    ASSERT_TRUE(fs::exists(out_file));
+    ASSERT_EQ(call_system(unbra + " -l " + out_file), 0);
+    ASSERT_EQ(call_system(unbra + " -y -o 2b " + out_file), 0);
+    ASSERT_TRUE(fs::exists("2b/" + in_file));
+    fs::remove_all("2b");
+
+    return 0;
+}
+
 int main(int argc, char* argv[])
 {
     const std::map<std::string, std::function<int()>> m = {
@@ -388,6 +413,7 @@ int main(int argc, char* argv[])
         {TEST_FUNC(test_bra_unbra_all)},
         {TEST_FUNC(test_bra_unbra_comp)},
         {TEST_FUNC(test_bra_unbra_comp_2)},
+        {TEST_FUNC(test_bra_unbra_comp_2b)},
     };
 
     return test_main(argc, argv, m);

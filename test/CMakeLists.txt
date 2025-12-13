@@ -74,6 +74,7 @@ add_test(NAME test_bra.bra_unbra_all                 COMMAND test_bra test_bra_u
 
 add_test(NAME test_bra.bra_unbra_comp                 COMMAND test_bra test_bra_unbra_comp)
 add_test(NAME test_bra.bra_unbra_comp_2               COMMAND test_bra test_bra_unbra_comp_2)
+add_test(NAME test_bra.bra_unbra_comp_2b               COMMAND test_bra test_bra_unbra_comp_2b)
 
 #####################################################################################################
 

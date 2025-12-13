@@ -101,7 +101,7 @@ static void bra_minHeap_insert(minHeapNode_t** head, bra_huffman_node_t* node)
     }
 
     minHeapNode_t* cur = *head;
-    while (cur->next != NULL && cur->next->node->freq <= node->freq)
+    while (cur->next != NULL && cur->next->node->freq < node->freq)
     {
         cur = cur->next;
     }
@@ -183,9 +183,54 @@ static void bra_huffman_generate_codes(bra_huffman_node_t* root, uint8_t codes[B
     bra_huffman_generate_codes(root->right, codes, lengths, code, len + 1);
 }
 
+/**
+ * @brief Compute canonical Huffman codes from code lengths
+ * @param lengths Input code lengths for each symbol
+ * @param codes Output canonical codes (bit arrays)
+ */
+static void bra_huffman_compute_canonical_codes(const uint8_t lengths[BRA_ALPHABET_SIZE], uint8_t codes[BRA_ALPHABET_SIZE][BRA_ALPHABET_SIZE])
+{
+    // Count symbols per length
+    uint32_t count[BRA_ALPHABET_SIZE + 1] = {0};
+    for (int i = 0; i < BRA_ALPHABET_SIZE; ++i)
+    {
+        if (lengths[i] > 0)
+            ++count[lengths[i]];
+    }
+
+    // Compute starting code for each length
+    uint32_t code = 0;
+    count[0]      = 0;    // Length 0 not used
+    for (int len = 1; len <= BRA_ALPHABET_SIZE; ++len)
+    {
+        code          <<= 1;
+        uint32_t temp   = count[len];
+        count[len]      = code;
+        code           += temp;
+    }
+
+    // Assign codes to symbols in order
+    for (int i = 0; i < BRA_ALPHABET_SIZE; ++i)
+    {
+        if (lengths[i] > 0)
+        {
+            uint32_t c = count[lengths[i]]++;
+            for (int j = lengths[i] - 1; j >= 0; --j)
+            {
+                codes[i][j]   = c & 1;
+                c           >>= 1;
+            }
+        }
+    }
+}
+
 static bra_huffman_node_t* bra_huffman_tree_build_from_lengths(const uint8_t lengths[BRA_ALPHABET_SIZE])
 {
     assert(lengths != NULL);
+
+    // Compute canonical codes
+    uint8_t codes[BRA_ALPHABET_SIZE][BRA_ALPHABET_SIZE];
+    bra_huffman_compute_canonical_codes(lengths, codes);
 
     bra_huffman_node_t* root = bra_huffman_create_node(0, 0);
     if (root == NULL)
@@ -196,10 +241,10 @@ static bra_huffman_node_t* bra_huffman_tree_build_from_lengths(const uint8_t len
         if (lengths[i] == 0)
             continue;
 
-
         bra_huffman_node_t* cur = root;
         for (int j = 0; j < lengths[i]; ++j)
         {
+            const uint8_t bit = codes[i][j];
             if (j == lengths[i] - 1)
             {
                 // Last bit, assign symbol
@@ -207,33 +252,61 @@ static bra_huffman_node_t* bra_huffman_tree_build_from_lengths(const uint8_t len
                 if (n == NULL)
                     goto BRA_HUFFMAN_DECODE_ERROR;
 
-                if (cur->left == NULL)
+                // if (cur->left == NULL)
+                //     cur->left = n;
+                // else
+                //     cur->right = n;
+                if (bit == 0)
                     cur->left = n;
                 else
                     cur->right = n;
             }
             else
             {
-                if (cur->left == NULL)
+                if (bit == 0)
                 {
-                    bra_huffman_node_t* n = bra_huffman_create_node(0, 0);
-                    if (n == NULL)
-                        goto BRA_HUFFMAN_DECODE_ERROR;
+                    if (cur->left == NULL)
+                    {
+                        bra_huffman_node_t* n = bra_huffman_create_node(0, 0);
+                        if (n == NULL)
+                            goto BRA_HUFFMAN_DECODE_ERROR;
 
-                    cur->left = n;
-                    cur       = cur->left;
+                        cur->left = n;
+                    }
+                    cur = cur->left;
                 }
-                else if (cur->right == NULL)
+                else    // bit == 1
                 {
-                    bra_huffman_node_t* n = bra_huffman_create_node(0, 0);
-                    if (n == NULL)
-                        goto BRA_HUFFMAN_DECODE_ERROR;
+                    if (cur->right == NULL)
+                    {
+                        bra_huffman_node_t* n = bra_huffman_create_node(0, 0);
+                        if (n == NULL)
+                            goto BRA_HUFFMAN_DECODE_ERROR;
 
-                    cur->right = n;
-                    cur        = cur->right;
-                }
-                else
+                        cur->right = n;
+                    }
                     cur = cur->right;
+                }
+
+                // if (cur->left == NULL)
+                // {
+                //     bra_huffman_node_t* n = bra_huffman_create_node(0, 0);
+                //     if (n == NULL)
+                //         goto BRA_HUFFMAN_DECODE_ERROR;
+
+                // cur->left = n;
+                // cur       = cur->left;
+                // }
+                // else if (cur->right == NULL)
+                // {
+                //     bra_huffman_node_t* n = bra_huffman_create_node(0, 0);
+                //     if (n == NULL)
+                //         goto BRA_HUFFMAN_DECODE_ERROR;
+
+                // cur->right = n;
+                // cur        = cur->right;
+                // }
+                // else cur = cur->right;
             }
         }
     }
@@ -296,6 +369,7 @@ bra_huffman_chunk_t* bra_huffman_encode(const uint8_t* buf, const uint32_t buf_s
     memset(output->meta.lengths, 0, BRA_ALPHABET_SIZE * sizeof(uint8_t));
     uint8_t code[BRA_ALPHABET_SIZE];
     bra_huffman_generate_codes(root, codes, output->meta.lengths, code, 0);
+    bra_huffman_compute_canonical_codes(output->meta.lengths, codes);
 
     // 4. calculate output size
     uint32_t bit_count = 0;

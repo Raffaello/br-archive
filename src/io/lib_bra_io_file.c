@@ -127,7 +127,7 @@ static inline bool bra_io_file_read_file_chunks_compressed(bra_io_file_t* src, c
         if (!bra_io_file_read_chunk_header(src, &chunk_header))
             return false;
 
-        // sanity check
+        // sanity checks
         if (chunk_header.huffman.encoded_size > BRA_MAX_CHUNK_SIZE)
         {
             bra_log_error("encoded chunk size (%" PRIu32 ") exceeds maximum (%" PRIu32 ") in %s",
@@ -137,6 +137,17 @@ static inline bool bra_io_file_read_file_chunks_compressed(bra_io_file_t* src, c
             bra_io_file_read_error(src);
             return false;
         }
+
+        if (chunk_header.huffman.orig_size > BRA_MAX_CHUNK_SIZE)
+        {
+            bra_log_error("decoded chunk size (%" PRIu32 ") exceeds maximum (%" PRIu32 ") in %s",
+                          chunk_header.huffman.orig_size,
+                          (uint32_t) BRA_MAX_CHUNK_SIZE,
+                          src->fn);
+            bra_io_file_read_error(src);
+            return false;
+        }
+        // ----
 
         // read source chunk
         if (!bra_io_file_read_chunk(src, buf, chunk_header.huffman.encoded_size))
@@ -592,14 +603,12 @@ bool bra_io_file_compress_file_chunks(bra_io_file_t* dst, bra_io_file_t* src, co
         goto BRA_IO_FILE_COMPRESS_FILE_CHUNKS_ERR;
 
     bool res = true;
-    // #if 0
     if ((uint64_t) tmpfile_size >= data_size)
     {
         res            = false;
         me->attributes = BRA_ATTR_SET_COMP(me->attributes, BRA_ATTR_COMP_STORED);
     }
     else
-    // #endif
     {
         if (!bra_io_file_seek(&tmpfile, 0, SEEK_SET))
             goto BRA_IO_FILE_COMPRESS_FILE_CHUNKS_ERR;
@@ -650,13 +659,24 @@ bool bra_io_file_decompress_file_chunks(bra_io_file_t* dst, bra_io_file_t* src, 
         if (!bra_io_file_read_chunk_header(src, &chunk_header))
             goto BRA_IO_FILE_DECOMPRESS_FILE_CHUNKS_ERR;
 
-        // sanity check
+        // sanity checks
         if (chunk_header.huffman.encoded_size > BRA_MAX_CHUNK_SIZE)
         {
             bra_log_error("encoded chunk size (%" PRIu32 ") exceeds maximum (%" PRIu32 ") in %s",
                           chunk_header.huffman.encoded_size,
                           (uint32_t) BRA_MAX_CHUNK_SIZE,
                           src->fn);
+            return false;
+        }
+        // ---
+
+        if (chunk_header.huffman.orig_size > BRA_MAX_CHUNK_SIZE)
+        {
+            bra_log_error("decoded chunk size (%" PRIu32 ") exceeds maximum (%" PRIu32 ") in %s",
+                          chunk_header.huffman.orig_size,
+                          (uint32_t) BRA_MAX_CHUNK_SIZE,
+                          src->fn);
+            bra_io_file_read_error(src);
             return false;
         }
 

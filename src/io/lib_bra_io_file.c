@@ -660,16 +660,22 @@ bool bra_io_file_decompress_file_chunks(bra_io_file_t* dst, bra_io_file_t* src, 
         // decompress MTF+BWT
         bra_mtf_decode2(buf_huffman, s, buf_mtf);
         bra_bwt_decode2(buf_mtf, s, chunk_header.primary_index, buf_trans, buf_bwt);
-        free(buf_huffman);
-        buf_huffman = NULL;
 
-        // update CRC32
-        me->crc32 = bra_crc32c(&chunk_header, sizeof(bra_io_chunk_header_t), me->crc32);
-        me->crc32 = bra_crc32c(buf_bwt, s, me->crc32);
 
         // write source chunk
         if (fwrite(buf_bwt, sizeof(char), s, dst->f) != s)
             goto BRA_IO_FILE_DECOMPRESS_FILE_CHUNKS_ERR;
+
+        // update CRC32
+        // TODO: this is the same as the test function.
+        // TODO2: actually the test function is basically a copy of this function
+        //        without the above write, so those can be joined into 1 function with a bool test argument for instance.
+        me->crc32 = bra_crc32c(&chunk_header, sizeof(bra_io_chunk_header_t), me->crc32);
+        // me->crc32 = bra_crc32c(buf_bwt, s, me->crc32);
+        me->crc32 = bra_crc32c(buf, chunk_header.huffman.encoded_size, me->crc32);
+
+        free(buf_huffman);
+        buf_huffman = NULL;
 
         i += s;
     }

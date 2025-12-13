@@ -124,18 +124,14 @@ static inline bool bra_io_file_read_file_chunks_compressed(bra_io_file_t* src, c
     for (uint64_t i = 0; i < data_size;)
     {
         bra_io_chunk_header_t chunk_header = {.primary_index = 0};
-        if (!fread(&chunk_header, sizeof(bra_io_chunk_header_t), 1, src->f))    // read and ignore primary index
-        {
-            bra_log_error("unable to read primary index from %s", src->fn);
-            bra_io_file_read_error(src);
+        if (!bra_io_file_read_chunk_header(src, &chunk_header))
             return false;
-        }
 
         // read source chunk
         if (!bra_io_file_read_chunk(src, buf, chunk_header.huffman.encoded_size))
             return false;
 
-        // read huffman
+        // decode huffman
         uint32_t s  = 0;
         buf_huffman = bra_huffman_decode(&chunk_header.huffman, chunk_header.huffman.encoded_size, buf, &s);
         if (buf_huffman == NULL)
@@ -157,12 +153,15 @@ static inline bool bra_io_file_read_file_chunks_compressed(bra_io_file_t* src, c
         bra_mtf_decode2((uint8_t*) buf_huffman, s, buf_mtf);
         bra_bwt_decode2(buf_mtf, s, chunk_header.primary_index, buf_transform, buf_bwt);
 
+        // TODO: it would be better on the uncompressed data to compute CRC32.
+        //       this must be reviewed.
+        me->crc32 = bra_crc32c(&chunk_header, sizeof(bra_io_chunk_header_t), me->crc32);
+        me->crc32 = bra_crc32c(buf, chunk_header.huffman.encoded_size, me->crc32);
+
         free(buf_huffman);
         buf_huffman = NULL;
 
-        me->crc32  = bra_crc32c(&chunk_header, sizeof(bra_io_chunk_header_t), me->crc32);
-        me->crc32  = bra_crc32c(buf_bwt, s, me->crc32);
-        i         += s;
+        i += s;
     }
 
     return true;
@@ -394,6 +393,21 @@ bool bra_io_file_read_chunk(bra_io_file_t* src, void* buf, const size_t buf_size
     return true;
 }
 
+bool bra_io_file_read_chunk_header(bra_io_file_t* src, bra_io_chunk_header_t* chunk_header)
+{
+    assert_bra_io_file_t(src);
+    assert(chunk_header != NULL);
+
+    if (!fread(chunk_header, sizeof(bra_io_chunk_header_t), 1, src->f))
+    {
+        bra_log_error("unable to read chunk header from %s", src->fn);
+        bra_io_file_read_error(src);
+        return false;
+    }
+
+    return true;
+}
+
 bool bra_io_file_read_file_chunks(bra_io_file_t* src, const uint64_t data_size, bra_meta_entry_t* me)
 {
     assert_bra_io_file_t(src);
@@ -475,6 +489,9 @@ bool bra_io_file_compress_file_chunks(bra_io_file_t* dst, bra_io_file_t* src, co
     //      processing including metadata due to CRC32
     // TODO: it could be improved a bit, but the CRC32 must be recomputed as
     //       it is also taking into account the metadata entry
+    // TODO: CRC32 should be done after the archiving/storing/compression operation on the whole entry.
+    //       as it is a merely a footer so compute it only at the very end when adding it to the archive.
+    //       This implies to do the same for the store counterpart.
     bra_io_file_t tmpfile;
     if (!bra_io_file_tmp_open(&tmpfile))
     {
@@ -500,7 +517,7 @@ bool bra_io_file_compress_file_chunks(bra_io_file_t* dst, bra_io_file_t* src, co
             return false;
         }
 
-        // compress BWT+MTF(+RLE)
+        // compress BWT+MTF(+RLE)+huffman
         // TODO: do the version accepting a pre-allocated buffer
         //       as it is always the same size as the input doing in chunks will avoid to allocate/free
         //       for each chunk.
@@ -529,12 +546,15 @@ bool bra_io_file_compress_file_chunks(bra_io_file_t* dst, bra_io_file_t* src, co
 
         chunk_header.huffman = buf_huffman->meta;
 
-        // update CRC32
-        me->crc32 = bra_crc32c(&chunk_header, sizeof(chunk_header), me->crc32);
-        me->crc32 = bra_crc32c(buf_huffman->data, chunk_header.huffman.encoded_size, me->crc32);
+        // update CRC32 (It will be computed when appending the encoded data to the archive instead...)
+        // TOOD: it might be better to compute the CRC32 on the original data.
+        //       so when testing/decompressing it will be checked with the original data and not the one compressed.
+        //       it would be more reliable but this need to be addressed separately.
+        // me->crc32 = bra_crc32c(&chunk_header, sizeof(chunk_header), me->crc32);
+        // me->crc32 = bra_crc32c(buf_huffman->data, chunk_header.huffman.encoded_size, me->crc32);
 
         // write chunk header
-        if (fwrite(&chunk_header, sizeof(chunk_header), 1, tmpfile.f) != 1)
+        if (fwrite(&chunk_header, sizeof(bra_io_chunk_header_t), 1, tmpfile.f) != 1)
         {
             bra_log_error("unable to write primary index to %s", tmpfile.fn);
             goto BRA_IO_FILE_COMPRESS_FILE_CHUNKS_ERR;
@@ -572,10 +592,14 @@ bool bra_io_file_compress_file_chunks(bra_io_file_t* dst, bra_io_file_t* src, co
         if (!bra_io_file_seek(&tmpfile, 0, SEEK_SET))
             goto BRA_IO_FILE_COMPRESS_FILE_CHUNKS_ERR;
 
-        const uint32_t crc32 = me->crc32;
-        res                  = bra_io_file_copy_file_chunks(dst, &tmpfile, tmpfile_size, me);
-        me->crc32            = crc32;    // TODO: this implies that the copy operation is wasting time computing a useless CRC32s
-                                         //       do a faster append file operation instead of copy file chunks
+        // update file size
+        bra_meta_entry_file_t* mef = (bra_meta_entry_file_t*) me->entry_data;
+        mef->data_size             = tmpfile_size;
+        me->crc32                  = bra_crc32c(&mef->data_size, sizeof(uint64_t), me->crc32);
+        if (fwrite(&mef->data_size, sizeof(uint64_t), 1, dst->f) != 1)
+            goto BRA_IO_FILE_COMPRESS_FILE_CHUNKS_ERR;
+
+        res = bra_io_file_copy_file_chunks(dst, &tmpfile, tmpfile_size, me);
     }
 
     bra_io_file_close(&tmpfile);
@@ -611,7 +635,7 @@ bool bra_io_file_decompress_file_chunks(bra_io_file_t* dst, bra_io_file_t* src, 
     {
         // read chunk header
         bra_io_chunk_header_t chunk_header = {.primary_index = 0};
-        if (fread(&chunk_header, sizeof(chunk_header), 1, src->f) != 1)
+        if (!bra_io_file_read_chunk_header(src, &chunk_header))
             goto BRA_IO_FILE_DECOMPRESS_FILE_CHUNKS_ERR;
 
         // read source chunk

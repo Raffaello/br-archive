@@ -132,9 +132,9 @@ static bool _bra_io_file_ctx_flush_entry_file(bra_io_file_ctx_t* ctx, bra_meta_e
 
     // 3. file size
     assert(mef != NULL);
-    me->crc32 = bra_crc32c(&mef->data_size, sizeof(uint64_t), me->crc32);
-    if (fwrite(&mef->data_size, sizeof(uint64_t), 1, ctx->f.f) != 1)
-        return false;
+    // me->crc32 = bra_crc32c(&mef->data_size, sizeof(uint64_t), me->crc32);
+    // if (fwrite(&mef->data_size, sizeof(uint64_t), 1, ctx->f.f) != 1)
+    //     return false;
 
     // file content
     bra_io_file_t f2;
@@ -145,9 +145,9 @@ static bool _bra_io_file_ctx_flush_entry_file(bra_io_file_ctx_t* ctx, bra_meta_e
     switch (BRA_ATTR_COMP(me->attributes))
     {
     case BRA_ATTR_COMP_STORED:
-        // me->crc32 = bra_crc32c(&mef->data_size, sizeof(uint64_t), me->crc32);
-        // if (fwrite(&mef->data_size, sizeof(uint64_t), 1, ctx->f.f) != 1)
-        //     return false;
+        me->crc32 = bra_crc32c(&mef->data_size, sizeof(uint64_t), me->crc32);
+        if (fwrite(&mef->data_size, sizeof(uint64_t), 1, ctx->f.f) != 1)
+            return false;
         if (!bra_io_file_copy_file_chunks(&ctx->f, &f2, mef->data_size, me))
             return false;
         break;
@@ -975,9 +975,14 @@ bool bra_io_file_ctx_print_meta_entry(bra_io_file_ctx_t* ctx, const bool test_mo
             break;
         case BRA_ATTR_COMP_COMPRESSED:
         {
-            const size_t chunks = ds / BRA_MAX_CHUNK_SIZE + (ds % BRA_MAX_CHUNK_SIZE != 0 ? 1 : 0);
+            // read chunk header
+            // bra_io_chunk_header_t chunk_header;
+            // if (!bra_io_file_read_chunk_header(ctx->f, &chunk_header))
+            //     goto BRA_IO_FILE_CTX_PRINT_META_ENTRY_ERR;
+
+            // const size_t chunks = ds / BRA_MAX_CHUNK_SIZE + (ds % BRA_MAX_CHUNK_SIZE != 0 ? 1 : 0);
             // have to skip the primary index to, but there is a primary index for each chunk.
-            if (!bra_io_file_skip_data(&ctx->f, ds + (sizeof(bra_io_chunk_header_t) * chunks)))
+            if (!bra_io_file_skip_data(&ctx->f, ds /*+ (sizeof(bra_io_chunk_header_t) * chunks)*/))
                 goto BRA_IO_FILE_CTX_PRINT_META_ENTRY_ERR;
         }
         break;

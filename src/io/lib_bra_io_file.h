@@ -253,6 +253,16 @@ bool bra_io_file_write_footer(bra_io_file_t* f, const int64_t header_offset);
 bool bra_io_file_read_chunk(bra_io_file_t* src, void* buf, const size_t buf_size);
 
 /**
+ * @brief Read a chunk header. This is only present in compressed chunk.
+ *
+ * @param src
+ * @param chunk_header
+ * @retval true
+ * @retval false
+ */
+bool bra_io_file_read_chunk_header(bra_io_file_t* src, bra_io_chunk_header_t* chunk_header);
+
+/**
  * @brief Read file data in chunks and update CRC32.
  *
  * Reads the specified amount of data from the current file position in

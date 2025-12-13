@@ -449,6 +449,15 @@ TEST(test_bra_encoders_encode_decode_huffman_3)
     return 0;
 }
 
+TEST(test_bra_encoders_encode_decode_huffman_4)
+{
+    uint8_t              buf[1]  = {0};
+    bra_huffman_chunk_t* huffman = bra_huffman_encode(buf, 0);
+    ASSERT_TRUE(huffman == nullptr);
+
+    return 0;
+}
+
 TEST(test_bra_encoders_encode_decode_bwt_mtf_huffman_1)
 {
     const uint8_t* buf      = (const uint8_t*) "BANANA";
@@ -508,6 +517,7 @@ int main(int argc, char* argv[])
         {TEST_FUNC(test_bra_encoders_encode_decode_huffman_1)},
         {TEST_FUNC(test_bra_encoders_encode_decode_huffman_2)},
         {TEST_FUNC(test_bra_encoders_encode_decode_huffman_3)},
+        {TEST_FUNC(test_bra_encoders_encode_decode_huffman_4)},
 
         {TEST_FUNC(test_bra_encoders_encode_decode_bwt_mtf_huffman_1)},
     };

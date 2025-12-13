@@ -330,23 +330,9 @@ bra_huffman_chunk_t* bra_huffman_encode(const uint8_t* buf, const uint32_t buf_s
     bra_huffman_node_t* root = bra_huffman_tree_build(freq);
     if (root == NULL)
     {
-        // TODO: add a test case for this
         bra_log_error("unable to huffman encode");
         free(output);
         return NULL;
-        // output->data = malloc(buf_size);
-        // if (output->data == NULL)
-        // {
-        //     bra_log_error("unable to encode huffman");
-        //     free(output);
-        //     return NULL;
-        // }
-
-        // output->size = buf_size;
-        // memset(output->lengths, 0, 256);
-        // output->data[buf[0]] = 1;
-        // memcpy(output->data, buf, buf_size);
-        // return output;
     }
 
     // 3. Generate codes
@@ -416,8 +402,7 @@ uint8_t* bra_huffman_decode(const bra_huffman_t* meta, const uint8_t* data, uint
 
     // Decode data
     const uint32_t data_size = meta->encoded_size;
-    // uint8_t*       decoded   = (uint8_t*) malloc(data_size * 8);    // Overestimate size
-    uint8_t* decoded = (uint8_t*) malloc(meta->orig_size);
+    uint8_t*       decoded   = (uint8_t*) malloc(meta->orig_size);
     if (decoded == NULL)
     {
         bra_log_error("unable to decode huffman");
@@ -461,15 +446,7 @@ uint8_t* bra_huffman_decode(const bra_huffman_t* meta, const uint8_t* data, uint
         goto BRA_HUFFMAN_DECODE_ERROR;
     }
 
-    // uint8_t* output = realloc(decoded, decoded_idx);
-    // if (output == NULL)
-    // {
-    //     bra_log_error("unable to realloc huffman decoded data");
-    //     goto BRA_HUFFMAN_DECODE_ERROR;
-    // }
-
     *out_size = decoded_idx;
-    // return output;    // Caller must free
     return decoded;
 
 BRA_HUFFMAN_DECODE_ERROR:

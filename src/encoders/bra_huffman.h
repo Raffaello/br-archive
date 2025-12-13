@@ -20,7 +20,7 @@ typedef struct bra_huffman_chunk_t
  *
  * @param buf      the buffer to encode
  * @param buf_size the buffer size in bytes.
- * @return bra_huffman_t* Huffman encoded data and metadata. The caller must free it with @ref bra_huffman_chunk_free
+ * @return bra_huffman_chunk_t* Huffman encoded data and metadata. The caller must free it with @ref bra_huffman_chunk_free
  */
 bra_huffman_chunk_t* bra_huffman_encode(const uint8_t* buf, const uint32_t buf_size);
 

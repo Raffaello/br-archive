@@ -364,8 +364,8 @@ TEST(test_bra_encoders_encode_decode_huffman_1)
     ASSERT_EQ(huffman->meta.orig_size, 6U);
     ASSERT_EQ(huffman->meta.encoded_size, 2U);
     ASSERT_EQ(huffman->meta.lengths[0], 0U);
-    ASSERT_EQ(huffman->meta.lengths['B'], 2U);    // 3 because the least repeated symbol
-    ASSERT_EQ(huffman->meta.lengths['A'], 1U);    // 1 because the most repeated symbol
+    ASSERT_EQ(huffman->meta.lengths['B'], 2U);    // least repeated symbol
+    ASSERT_EQ(huffman->meta.lengths['A'], 1U);    // most repeated symbol
     ASSERT_EQ(huffman->meta.lengths['N'], 2U);
     ASSERT_EQ(huffman->data[0], 155);
     ASSERT_EQ(huffman->data[1], 0);    // only 1 bit is used here, other are just padding

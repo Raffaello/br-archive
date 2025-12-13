@@ -163,7 +163,6 @@ static inline bool bra_io_file_read_file_chunks_compressed(bra_io_file_t* src, c
             return false;
         }
 
-        // const uint32_t s = _bra_min(BRA_MAX_CHUNK_SIZE, data_size - i);
         if (chunk_header.primary_index >= s)
         {
             free(buf_huffman);
@@ -666,7 +665,7 @@ bool bra_io_file_decompress_file_chunks(bra_io_file_t* dst, bra_io_file_t* src, 
                           chunk_header.huffman.encoded_size,
                           (uint32_t) BRA_MAX_CHUNK_SIZE,
                           src->fn);
-            return false;
+            goto BRA_IO_FILE_DECOMPRESS_FILE_CHUNKS_ERR;
         }
         // ---
 
@@ -676,8 +675,7 @@ bool bra_io_file_decompress_file_chunks(bra_io_file_t* dst, bra_io_file_t* src, 
                           chunk_header.huffman.orig_size,
                           (uint32_t) BRA_MAX_CHUNK_SIZE,
                           src->fn);
-            bra_io_file_read_error(src);
-            return false;
+            goto BRA_IO_FILE_DECOMPRESS_FILE_CHUNKS_ERR;
         }
 
         // read source chunk

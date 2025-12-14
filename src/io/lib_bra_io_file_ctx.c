@@ -229,7 +229,7 @@ static bool _bra_io_file_ctx_write_meta_entry_dir_subdir(bra_io_file_ctx_t* ctx,
         return false;
 
     ctx->last_dir_size = strlen(ctx->last_dir);
-    if (!bra_io_file_ctx_flush_entry_dir_subdir(&ctx->f, me, ctx->last_dir_node->parent->index))
+    if (!bra_io_file_meta_entry_flush_entry_subdir(&ctx->f, me, ctx->last_dir_node->parent->index))
         return false;
 
     return true;

@@ -163,7 +163,7 @@ bool bra_io_file_meta_entry_flush_entry_file(bra_io_file_t* f, bra_meta_entry_t*
     return true;
 }
 
-bool bra_io_file_ctx_flush_entry_dir(bra_io_file_t* f, const bra_meta_entry_t* me)
+bool bra_io_file_meta_entry_flush_entry_dir(bra_io_file_t* f, const bra_meta_entry_t* me)
 {
     assert_bra_io_file_t(f);
     assert(me != NULL);
@@ -180,7 +180,7 @@ bool bra_io_file_ctx_flush_entry_dir(bra_io_file_t* f, const bra_meta_entry_t* m
     return true;
 }
 
-bool bra_io_file_ctx_flush_entry_dir_subdir(bra_io_file_t* f, const bra_meta_entry_t* me, const uint32_t parent_index)
+bool bra_io_file_meta_entry_flush_entry_subdir(bra_io_file_t* f, const bra_meta_entry_t* me, const uint32_t parent_index)
 {
     assert_bra_io_file_t(f);
     assert(me != NULL);
@@ -188,10 +188,10 @@ bool bra_io_file_ctx_flush_entry_dir_subdir(bra_io_file_t* f, const bra_meta_ent
     switch (BRA_ATTR_TYPE(me->attributes))
     {
     case BRA_ATTR_TYPE_DIR:
-        return bra_io_file_ctx_flush_entry_dir(f, me);
+        return bra_io_file_meta_entry_flush_entry_dir(f, me);
     case BRA_ATTR_TYPE_SUBDIR:
     {
-        if (!bra_io_file_ctx_flush_entry_dir(f, me))
+        if (!bra_io_file_meta_entry_flush_entry_dir(f, me))
             return false;
 
         // TODO: i don't remember why i can't set the subdir parent_index. If i do it won't work anymore.

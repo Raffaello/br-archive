@@ -1,10 +1,12 @@
 #include <io/lib_bra_io_file_ctx.h>
+#include <io/lib_bra_io_file.h>
+#include <io/lib_bra_io_file_chunks.h>
+
 #include <lib_bra_defs.h>
 #include <lib_bra_private.h>
-#include <io/lib_bra_io_file.h>
+
 #include <log/bra_log.h>
 #include <fs/bra_fs_c.h>
-
 #include <utils/bra_tree_dir.h>
 
 #include <lib_bra.h>
@@ -148,11 +150,11 @@ static bool _bra_io_file_ctx_flush_entry_file(bra_io_file_ctx_t* ctx, bra_meta_e
         me->crc32 = bra_crc32c(&mef->data_size, sizeof(uint64_t), me->crc32);
         if (fwrite(&mef->data_size, sizeof(uint64_t), 1, ctx->f.f) != 1)
             return false;
-        if (!bra_io_file_copy_file_chunks(&ctx->f, &f2, mef->data_size, me))
+        if (!bra_io_file_chunks_copy_file(&ctx->f, &f2, mef->data_size, me))
             return false;
         break;
     case BRA_ATTR_COMP_COMPRESSED:
-        if (!bra_io_file_compress_file_chunks(&ctx->f, &f2, mef->data_size, me))
+        if (!bra_io_file_chunks_compress_file(&ctx->f, &f2, mef->data_size, me))
         {
             // check if it has failed do it to invalidate file compression rather than error
             if (attr_orig != me->attributes)
@@ -425,7 +427,7 @@ static inline bool _bra_io_file_ctx_compute_crc32(bra_io_file_ctx_t* ctx, const 
         assert(mef != NULL);
 
         me->crc32 = bra_crc32c(&mef->data_size, sizeof(uint64_t), me->crc32);
-        if (!bra_io_file_read_file_chunks(&ctx->f, mef->data_size, me))
+        if (!bra_io_file_chunks_read_file(&ctx->f, mef->data_size, me))
             return false;
     }
     break;
@@ -854,11 +856,11 @@ bool bra_io_file_ctx_decode_and_write_to_disk(bra_io_file_ctx_t* ctx, bra_fs_ove
             switch (BRA_ATTR_COMP(me.attributes))
             {
             case BRA_ATTR_COMP_STORED:
-                if (!bra_io_file_copy_file_chunks(&f2, &ctx->f, ds, &me))
+                if (!bra_io_file_chunks_copy_file(&f2, &ctx->f, ds, &me))
                     goto BRA_IO_DECODE_ERR;
                 break;
             case BRA_ATTR_COMP_COMPRESSED:
-                if (!bra_io_file_decompress_file_chunks(&f2, &ctx->f, ds, &me))
+                if (!bra_io_file_chunks_decompress_file(&f2, &ctx->f, ds, &me))
                     goto BRA_IO_DECODE_ERR;
                 break;
             default:
@@ -978,7 +980,7 @@ bool bra_io_file_ctx_print_meta_entry(bra_io_file_ctx_t* ctx, const bool test_mo
         {
             // read chunk header
             // bra_io_chunk_header_t chunk_header;
-            // if (!bra_io_file_read_chunk_header(ctx->f, &chunk_header))
+            // if (!bra_io_file_chunks_read_chunk_header(ctx->f, &chunk_header))
             //     goto BRA_IO_FILE_CTX_PRINT_META_ENTRY_ERR;
 
             // const size_t chunks = ds / BRA_MAX_CHUNK_SIZE + (ds % BRA_MAX_CHUNK_SIZE != 0 ? 1 : 0);

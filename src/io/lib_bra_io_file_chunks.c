@@ -3,7 +3,6 @@
 #include <lib_bra_private.h>
 #include <lib_bra_defs.h>
 
-#include <io/lib_bra_io_chunk_header.h>    // todo incorporate it in here
 #include <io/lib_bra_io_file.h>
 #include <log/bra_log.h>
 #include <utils/lib_bra_crc32c.h>
@@ -18,6 +17,23 @@
 #include <assert.h>
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+static bool bra_io_file_chunks_header_validate(const bra_io_chunk_header_t* chunk_header)
+{
+    if (chunk_header == NULL)
+        return false;
+
+    if (chunk_header->huffman.encoded_size > BRA_MAX_CHUNK_SIZE)
+        return false;
+    if (chunk_header->huffman.orig_size > BRA_MAX_CHUNK_SIZE)
+        return false;
+    if (chunk_header->huffman.encoded_size == 0)
+        return false;
+    if (chunk_header->huffman.orig_size == 0)
+        return false;
+
+    return true;
+}
 
 static inline bool bra_io_file_read_file_chunks_stored(bra_io_file_t* src, const uint64_t data_size, bra_meta_entry_t* me)
 {
@@ -54,7 +70,7 @@ static inline bool bra_io_file_read_file_chunks_compressed(bra_io_file_t* src, c
         if (!bra_io_file_chunks_read_header(src, &chunk_header))
             return false;
 
-        if (!bra_io_chunk_header_validate(&chunk_header))
+        if (!bra_io_file_chunks_header_validate(&chunk_header))
         {
             bra_log_error("chunk header in %s is not valid", src->fn);
             goto BRA_IO_FILE_READ_FILE_CHUNKS_COMPRESSED_ERROR;
@@ -358,7 +374,7 @@ bool bra_io_file_chunks_decompress_file(bra_io_file_t* dst, bra_io_file_t* src, 
         if (!bra_io_file_chunks_read_header(src, &chunk_header))
             goto BRA_IO_FILE_DECOMPRESS_FILE_CHUNKS_ERR;
 
-        if (!bra_io_chunk_header_validate(&chunk_header))
+        if (!bra_io_file_chunks_header_validate(&chunk_header))
         {
             bra_log_error("chunk header not valid in %s", src->fn);
             goto BRA_IO_FILE_DECOMPRESS_FILE_CHUNKS_ERR;

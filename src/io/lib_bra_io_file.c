@@ -12,7 +12,6 @@
 #include <stdlib.h>
 #include <stdint.h>    // UINT8_MAX, uint{8,32,64}_t
 #include <stdio.h>     // FILE, fopen/fread/fwrite
-// #include <inttypes.h>    // PRIu64
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 

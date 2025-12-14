@@ -6,7 +6,6 @@
 #include <stdint.h>
 #include <stddef.h>
 
-
 /**
  * @brief Read a chunk header from the file. This is only present in compressed chunks.
  *        The chunk header is present in every chunk.

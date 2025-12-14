@@ -134,6 +134,8 @@ static bra_huffman_node_t* bra_huffman_tree_build(uint32_t freq[BRA_ALPHABET_SIZ
     assert(freq != NULL);
 
     bra_huffman_node_t* n       = NULL;
+    bra_huffman_node_t* l       = NULL;
+    bra_huffman_node_t* r       = NULL;
     minHeapNode_t*      minHeap = NULL;
     for (int i = 0; i < BRA_ALPHABET_SIZE; ++i)
     {
@@ -155,15 +157,11 @@ static bra_huffman_node_t* bra_huffman_tree_build(uint32_t freq[BRA_ALPHABET_SIZ
 
     while (minHeap->next != NULL)
     {
-        n                     = NULL;
-        bra_huffman_node_t* l = bra_minHeap_extractMin(&minHeap);
-        bra_huffman_node_t* r = bra_minHeap_extractMin(&minHeap);
+        n = NULL;
+        l = bra_minHeap_extractMin(&minHeap);
+        r = bra_minHeap_extractMin(&minHeap);
         if (l == NULL || r == NULL)
-        {
-            bra_huffman_tree_free(&l);
-            bra_huffman_tree_free(&r);
             goto BRA_HUFFMAN_TREE_BUILD_ERROR;
-        }
 
         n = bra_huffman_create_node(0, l->freq + r->freq);
         if (n == NULL)
@@ -171,6 +169,7 @@ static bra_huffman_node_t* bra_huffman_tree_build(uint32_t freq[BRA_ALPHABET_SIZ
 
         n->left  = l;
         n->right = r;
+        l = r = NULL;
         if (!bra_minHeap_insert(&minHeap, n))
             goto BRA_HUFFMAN_TREE_BUILD_ERROR;
     }
@@ -180,6 +179,8 @@ static bra_huffman_node_t* bra_huffman_tree_build(uint32_t freq[BRA_ALPHABET_SIZ
 BRA_HUFFMAN_TREE_BUILD_ERROR:
     bra_log_error("unable to build huffman tree");
     bra_huffman_tree_free(&n);
+    bra_huffman_tree_free(&l);
+    bra_huffman_tree_free(&r);
     bra_minHeap_clear(&minHeap);
     return NULL;
 }

@@ -247,61 +247,6 @@ static bool _bra_io_file_ctx_write_meta_entry_dir_subdir(bra_io_file_ctx_t* ctx,
     return true;
 }
 
-/**
- * @brief TODO review it is pointless to have it in file_ctx
- *
- * @param ctx
- * @param filename_len
- * @param filename
- * @param me
- * @return true
- * @return false
- */
-static inline bool _bra_io_file_ctx_compute_crc32(bra_io_file_ctx_t* ctx, const size_t filename_len, const char* filename, bra_meta_entry_t* me)
-{
-    assert_bra_io_file_cxt_t(ctx);
-    assert(filename_len > 0 && filename_len <= UINT16_MAX);
-    assert(filename != NULL);
-    assert(me != NULL);
-
-    if (!_bra_validate_filename(filename, filename_len))
-        return false;
-
-    if (!_bra_compute_header_crc32(filename_len, filename, me))
-        return false;
-
-    switch (BRA_ATTR_TYPE(me->attributes))
-    {
-    case BRA_ATTR_TYPE_FILE:
-    {
-        const bra_meta_entry_file_t* mef = (const bra_meta_entry_file_t*) me->entry_data;
-        assert(mef != NULL);
-
-        me->crc32 = bra_crc32c(&mef->data_size, sizeof(uint64_t), me->crc32);
-        if (!bra_io_file_chunks_read_file(&ctx->f, mef->data_size, me))
-            return false;
-    }
-    break;
-    case BRA_ATTR_TYPE_SUBDIR:
-    {
-        const bra_meta_entry_subdir_t* mes = me->entry_data;
-        me->crc32                          = bra_crc32c(&mes->parent_index, sizeof(uint32_t), me->crc32);
-    }
-        BRA_FALLTHROUGH;
-    // [[fallthrough]];
-    case BRA_ATTR_TYPE_DIR:
-        break;
-    case BRA_ATTR_TYPE_SYM:
-        bra_log_critical("SYMLINK NOT IMPLEMENTED YET");
-    // fallthrough
-    default:
-        return false;
-        break;
-    }
-
-    return true;
-}
-
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
 bool bra_io_file_ctx_open(bra_io_file_ctx_t* ctx, const char* fn, const char* mode)
@@ -810,7 +755,7 @@ bool bra_io_file_ctx_print_meta_entry(bra_io_file_ctx_t* ctx, const bool test_mo
     if (test_mode)
     {
         // perform CRC checks
-        if (!_bra_io_file_ctx_compute_crc32(ctx, len, fn, &me))
+        if (!bra_io_file_meta_entry_compute_crc32(&ctx->f, len, fn, &me))
             goto BRA_IO_FILE_CTX_PRINT_META_ENTRY_ERR;
     }
     else

@@ -190,3 +190,48 @@ bool bra_io_file_meta_entry_flush_entry_subdir(bra_io_file_t* f, const bra_meta_
 
     return bra_io_file_meta_entry_write_subdir_entry(f, me);
 }
+
+bool bra_io_file_meta_entry_compute_crc32(bra_io_file_t* f, const size_t filename_len, const char* filename, bra_meta_entry_t* me)
+{
+    assert_bra_io_file_t(f);
+    assert(filename_len > 0 && filename_len <= UINT16_MAX);
+    assert(filename != NULL);
+    assert(me != NULL);
+
+    if (!_bra_validate_filename(filename, filename_len))
+        return false;
+
+    if (!_bra_compute_header_crc32(filename_len, filename, me))
+        return false;
+
+    switch (BRA_ATTR_TYPE(me->attributes))
+    {
+    case BRA_ATTR_TYPE_FILE:
+    {
+        const bra_meta_entry_file_t* mef = (const bra_meta_entry_file_t*) me->entry_data;
+        assert(mef != NULL);
+
+        me->crc32 = bra_crc32c(&mef->data_size, sizeof(uint64_t), me->crc32);
+        if (!bra_io_file_chunks_read_file(f, mef->data_size, me))
+            return false;
+    }
+    break;
+    case BRA_ATTR_TYPE_SUBDIR:
+    {
+        const bra_meta_entry_subdir_t* mes = me->entry_data;
+        me->crc32                          = bra_crc32c(&mes->parent_index, sizeof(uint32_t), me->crc32);
+    }
+        BRA_FALLTHROUGH;
+    // [[fallthrough]];
+    case BRA_ATTR_TYPE_DIR:
+        break;
+    case BRA_ATTR_TYPE_SYM:
+        bra_log_critical("SYMLINK NOT IMPLEMENTED YET");
+        BRA_FALLTHROUGH;
+        // fallthrough
+    default:
+        return false;
+    }
+
+    return true;
+}

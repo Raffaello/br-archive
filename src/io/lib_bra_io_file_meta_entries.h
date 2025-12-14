@@ -89,3 +89,15 @@ bool bra_io_file_meta_entry_flush_entry_dir(bra_io_file_t* f, const bra_meta_ent
  * @return false
  */
 bool bra_io_file_meta_entry_flush_entry_subdir(bra_io_file_t* f, const bra_meta_entry_t* me);
+
+/**
+ * @brief
+ *
+ * @param f
+ * @param filename_len
+ * @param filename
+ * @param me
+ * @return true
+ * @return false
+ */
+bool bra_io_file_meta_entry_compute_crc32(bra_io_file_t* f, const size_t filename_len, const char* filename, bra_meta_entry_t* me);

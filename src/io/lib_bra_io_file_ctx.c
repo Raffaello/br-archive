@@ -120,7 +120,6 @@ static bool _bra_io_file_ctx_flush_entry_file(bra_io_file_ctx_t* ctx, bra_meta_e
     const bra_meta_entry_file_t* mef = (const bra_meta_entry_file_t*) me->entry_data;
     if (!_bra_compute_header_crc32(filename_len, filename, me))
         return false;
-    me->crc32 = bra_crc32c(&mef->data_size, sizeof(uint64_t), me->crc32);
 
     // write common meta data (attribute, filename, filename_size)
     const bra_attr_t attr_orig = me->attributes;
@@ -133,8 +132,9 @@ static bool _bra_io_file_ctx_flush_entry_file(bra_io_file_ctx_t* ctx, bra_meta_e
 
     // 3. file size
     assert(mef != NULL);
-    if (fwrite(&mef->data_size, sizeof(uint64_t), 1, ctx->f.f) != 1)
-        return false;
+    // me->crc32 = bra_crc32c(&mef->data_size, sizeof(uint64_t), me->crc32);
+    // if (fwrite(&mef->data_size, sizeof(uint64_t), 1, ctx->f.f) != 1)
+    //     return false;
 
     // file content
     bra_io_file_t f2;
@@ -145,6 +145,9 @@ static bool _bra_io_file_ctx_flush_entry_file(bra_io_file_ctx_t* ctx, bra_meta_e
     switch (BRA_ATTR_COMP(me->attributes))
     {
     case BRA_ATTR_COMP_STORED:
+        me->crc32 = bra_crc32c(&mef->data_size, sizeof(uint64_t), me->crc32);
+        if (fwrite(&mef->data_size, sizeof(uint64_t), 1, ctx->f.f) != 1)
+            return false;
         if (!bra_io_file_copy_file_chunks(&ctx->f, &f2, mef->data_size, me))
             return false;
         break;
@@ -345,6 +348,8 @@ static bool _bra_io_file_ctx_write_meta_entry_dir_subdir(bra_io_file_ctx_t* ctx,
     if (BRA_ATTR_TYPE(attributes) != BRA_ATTR_TYPE_SUBDIR && BRA_ATTR_TYPE(attributes) != BRA_ATTR_TYPE_DIR)
         return false;
 
+    // Dir & subdirs are always only stored
+    attributes            = BRA_ATTR_SET_COMP(attributes, BRA_ATTR_COMP_STORED);
     bra_tree_node_t* node = bra_tree_dir_add(ctx->tree, dirname);
     if (node == NULL)
     {
@@ -418,11 +423,9 @@ static inline bool _bra_io_file_ctx_compute_crc32(bra_io_file_ctx_t* ctx, const 
     {
         const bra_meta_entry_file_t* mef = (const bra_meta_entry_file_t*) me->entry_data;
         assert(mef != NULL);
-        const uint64_t ds = mef->data_size;
 
         me->crc32 = bra_crc32c(&mef->data_size, sizeof(uint64_t), me->crc32);
-
-        if (!bra_io_file_read_file_chunks(&ctx->f, ds, me))
+        if (!bra_io_file_read_file_chunks(&ctx->f, mef->data_size, me))
             return false;
     }
     break;
@@ -768,10 +771,8 @@ bool bra_io_file_ctx_encode_and_write_to_disk(bra_io_file_ctx_t* ctx, const char
         return false;
     }
 
-    // NOTE just for dev purposes
-    // TODO: compress dir entries too?
-    // NOTE: for now is setting compression for everything but used only in files.
-    if (compress)
+    // NOTE: compression is used only in files.
+    if (compress && BRA_ATTR_TYPE(attributes) == BRA_ATTR_TYPE_FILE)
     {
         attributes = BRA_ATTR_SET_COMP(attributes, BRA_ATTR_COMP_COMPRESSED);
     }
@@ -830,6 +831,7 @@ bool bra_io_file_ctx_decode_and_write_to_disk(bra_io_file_ctx_t* ctx, bra_fs_ove
             bra_log_printf("Skipping file:   " BRA_PRINTF_FMT_FILENAME, fn);
 
             // skip file contents & crc32 too
+            // NOTE: the sizeof(uint32_t) is for the CRC32
             if (!bra_io_file_skip_data(&ctx->f, ds + sizeof(uint32_t)))
                 goto BRA_IO_DECODE_ERR;
 
@@ -848,7 +850,6 @@ bool bra_io_file_ctx_decode_and_write_to_disk(bra_io_file_ctx_t* ctx, bra_fs_ove
             //       So, no need to create the parent directory for each file each time.
             if (!bra_io_file_open(&f2, fn, "wb"))
                 goto BRA_IO_DECODE_ERR;
-
 
             switch (BRA_ATTR_COMP(me.attributes))
             {
@@ -897,7 +898,8 @@ bool bra_io_file_ctx_decode_and_write_to_disk(bra_io_file_ctx_t* ctx, bra_fs_ove
     break;
     case BRA_ATTR_TYPE_SYM:
         bra_log_critical("SYMLINK NOT IMPLEMENTED YET");
-    // fallthrough
+        // fallthrough
+        BRA_FALLTHROUGH;
     default:
         goto BRA_IO_DECODE_ERR;
         break;
@@ -974,9 +976,14 @@ bool bra_io_file_ctx_print_meta_entry(bra_io_file_ctx_t* ctx, const bool test_mo
             break;
         case BRA_ATTR_COMP_COMPRESSED:
         {
-            const size_t chunks = ds / BRA_MAX_CHUNK_SIZE + (ds % BRA_MAX_CHUNK_SIZE != 0 ? 1 : 0);
+            // read chunk header
+            // bra_io_chunk_header_t chunk_header;
+            // if (!bra_io_file_read_chunk_header(ctx->f, &chunk_header))
+            //     goto BRA_IO_FILE_CTX_PRINT_META_ENTRY_ERR;
+
+            // const size_t chunks = ds / BRA_MAX_CHUNK_SIZE + (ds % BRA_MAX_CHUNK_SIZE != 0 ? 1 : 0);
             // have to skip the primary index to, but there is a primary index for each chunk.
-            if (!bra_io_file_skip_data(&ctx->f, ds + (sizeof(bra_io_chunk_header_t) * chunks)))
+            if (!bra_io_file_skip_data(&ctx->f, ds /*+ (sizeof(bra_io_chunk_header_t) * chunks)*/))
                 goto BRA_IO_FILE_CTX_PRINT_META_ENTRY_ERR;
         }
         break;

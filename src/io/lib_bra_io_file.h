@@ -239,7 +239,7 @@ bool bra_io_file_write_footer(bra_io_file_t* f, const int64_t header_offset);
  * Reads exactly buf_size bytes from the current file position into the
  * provided buffer. Used for reading fixed-size data blocks.
  *
- * @param src Source file wrapper (must not be NULL and file must be open)
+ * @param src Source file wrapper (must not be @c NULL and file must be open)
  * @param buf Buffer to read data into (must not be NULL and have buf_size capacity)
  * @param buf_size Number of bytes to read (must be > 0)
  * @retval true On successful read of all requested bytes
@@ -251,6 +251,20 @@ bool bra_io_file_write_footer(bra_io_file_t* f, const int64_t header_offset);
  * @warning Buffer must have at least buf_size bytes available.
  */
 bool bra_io_file_read_chunk(bra_io_file_t* src, void* buf, const size_t buf_size);
+
+/**
+ * @brief Read a chunk header from the file. This is only present in compressed chunks.
+ *        The chunk header is present in every chunk.
+ *
+ * @param src Source file wrapper (must not be @c NULL and file must be open)
+ * @param chunk_header the chunk header to be populated with the data read from disk.
+ * @retval true On successful read of all requested bytes
+ * @retval false On read error, EOF before reading all bytes, or I/O error
+ *
+ * @note On error, source file is automatically closed.
+ * @note Partial reads are considered errors.
+ */
+bool bra_io_file_read_chunk_header(bra_io_file_t* src, bra_io_chunk_header_t* chunk_header);
 
 /**
  * @brief Read file data in chunks and update CRC32.
@@ -286,6 +300,7 @@ bool bra_io_file_read_file_chunks(bra_io_file_t* src, const uint64_t data_size, 
  * @param src Source file wrapper positioned for reading (must not be NULL)
  * @param data_size Total number of bytes to copy
  * @param me Metadata entry to update with CRC32 (must not be NULL)
+ *
  * @retval true On successful copy of all data with CRC32 updated
  * @retval false On read/write error or I/O failure
  *

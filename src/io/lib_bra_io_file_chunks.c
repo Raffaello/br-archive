@@ -4,6 +4,7 @@
 #include <lib_bra_defs.h>
 
 #include <io/lib_bra_io_file.h>
+#include <io/lib_bra_io_file_meta_entries.h>
 #include <log/bra_log.h>
 #include <utils/lib_bra_crc32c.h>
 

@@ -1,6 +1,7 @@
 #include <io/lib_bra_io_file_ctx.h>
 #include <io/lib_bra_io_file.h>
 #include <io/lib_bra_io_file_chunks.h>
+#include <io/lib_bra_io_file_meta_entries.h>
 
 #include <lib_bra_defs.h>
 #include <lib_bra_private.h>
@@ -228,16 +229,6 @@ static bool _bra_io_file_ctx_flush_entry_dir_subdir(bra_io_file_ctx_t* ctx, cons
         bra_log_critical("invalid attribute type for dir/subdir: %u", BRA_ATTR_TYPE(me->attributes));
         return false;
     }
-
-    return true;
-}
-
-static bool _bra_io_file_ctx_read_meta_entry_subdir(bra_io_file_ctx_t* ctx, bra_meta_entry_t* me)
-{
-    // read parent index
-    bra_meta_entry_subdir_t* mes = me->entry_data;
-    if (fread(&mes->parent_index, sizeof(uint32_t), 1, ctx->f.f) != 1)
-        return false;
 
     return true;
 }
@@ -659,7 +650,7 @@ bool bra_io_file_ctx_read_meta_entry(bra_io_file_ctx_t* ctx, bra_meta_entry_t* m
         assert(me->entry_data != NULL);
         if (!bra_meta_entry_subdir_init(me, 0))
             goto BRA_IO_READ_ERR;
-        if (!_bra_io_file_ctx_read_meta_entry_subdir(ctx, me))
+        if (!bra_io_file_read_meta_entry_subdir(&ctx->f, me))
             goto BRA_IO_READ_ERR;
 
         ctx->last_dir_node = bra_tree_dir_insert_at_parent(ctx->tree, ((bra_meta_entry_subdir_t*) me->entry_data)->parent_index, me->name);

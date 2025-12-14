@@ -79,4 +79,4 @@ bool bra_io_file_meta_entry_flush_entry_dir(bra_io_file_t* f, const bra_meta_ent
  * @return true
  * @return false
  */
-bool bra_io_file_meta_entry_flush_entry_subdir(bra_io_file_t* f, const bra_meta_entry_t* me, const uint32_t parent_index);
+bool bra_io_file_meta_entry_flush_entry_subdir(bra_io_file_t* f, const bra_meta_entry_t* me);

@@ -72,7 +72,7 @@ bool bra_io_file_meta_entry_read_subdir_entry(bra_io_file_t* f, bra_meta_entry_t
 
     // read parent index
     bra_meta_entry_subdir_t* mes = me->entry_data;
-    return bra_io_file_read(f, &mes->parent_index, sizeof(uint32_t));
+    return bra_io_file_read(f, &mes->parent_index, sizeof(bra_meta_entry_subdir_t));
 }
 
 // bool bra_io_file_meta_entry_write_subdir_entry(bra_io_file_t* f, const bra_meta_entry_t* me)
@@ -180,35 +180,17 @@ bool bra_io_file_meta_entry_flush_entry_dir(bra_io_file_t* f, const bra_meta_ent
     return true;
 }
 
-bool bra_io_file_meta_entry_flush_entry_subdir(bra_io_file_t* f, const bra_meta_entry_t* me, const uint32_t parent_index)
+bool bra_io_file_meta_entry_flush_entry_subdir(bra_io_file_t* f, const bra_meta_entry_t* me)
 {
     assert_bra_io_file_t(f);
     assert(me != NULL);
 
-    switch (BRA_ATTR_TYPE(me->attributes))
-    {
-    case BRA_ATTR_TYPE_DIR:
-        return bra_io_file_meta_entry_flush_entry_dir(f, me);
-    case BRA_ATTR_TYPE_SUBDIR:
-    {
-        if (!bra_io_file_meta_entry_flush_entry_dir(f, me))
-            return false;
-
-        // TODO: i don't remember why i can't set the subdir parent_index. If i do it won't work anymore.
-        //       so saving it only, but the subdir parent index in the me struct is not changed..
-        //       i don't remember why.
-        bra_meta_entry_subdir_t mes;    // = (bra_meta_entry_subdir_t*) me;
-        mes.parent_index = parent_index;
-        // if (!bra_io_file_meta_entry_write_subdir_entry(f, me))
-        if (!bra_io_file_write(f, &mes, sizeof(bra_meta_entry_subdir_t)))
-            return false;
-    }
-    break;
-
-    default:
-        bra_log_critical("invalid attribute type for dir/subdir: %u", BRA_ATTR_TYPE(me->attributes));
+    if (BRA_ATTR_TYPE(me->attributes) != BRA_ATTR_TYPE_SUBDIR)
         return false;
-    }
 
-    return true;
+    if (!bra_io_file_meta_entry_flush_entry_dir(f, me))
+        return false;
+
+    bra_meta_entry_subdir_t* mes = (bra_meta_entry_subdir_t*) me->entry_data;
+    return bra_io_file_write(f, mes, sizeof(bra_meta_entry_subdir_t));
 }

@@ -229,8 +229,20 @@ static bool _bra_io_file_ctx_write_meta_entry_dir_subdir(bra_io_file_ctx_t* ctx,
         return false;
 
     ctx->last_dir_size = strlen(ctx->last_dir);
-    if (!bra_io_file_meta_entry_flush_entry_subdir(&ctx->f, me, ctx->last_dir_node->parent->index))
+    switch (BRA_ATTR_TYPE(me->attributes))
+    {
+    case BRA_ATTR_TYPE_DIR:
+        if (!bra_io_file_meta_entry_flush_entry_dir(&ctx->f, me))
+            return false;
+        break;
+    case BRA_ATTR_TYPE_SUBDIR:
+        if (!bra_io_file_meta_entry_flush_entry_subdir(&ctx->f, me))
+            return false;
+        break;
+    default:
+        bra_log_critical("invalid attribute type for dir/subdir: %u", BRA_ATTR_TYPE(me->attributes));
         return false;
+    }
 
     return true;
 }

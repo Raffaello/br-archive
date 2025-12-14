@@ -32,11 +32,8 @@ static int _bra_io_file_magic_is_elf(bra_io_file_t* f)
 
     // 0x7F,'E','L','F'
     uint8_t magic[MAGIC_SIZE];
-    if (fread(magic, sizeof(uint8_t), MAGIC_SIZE, f->f) != MAGIC_SIZE)
-    {
-        bra_io_file_read_error(f);
+    if (!bra_io_file_read(f, magic, MAGIC_SIZE))
         return -1;
-    }
 
     return magic[0] == 0x7F && magic[1] == 'E' && magic[2] == 'L' && magic[3] == 'F' ? 1 : 0;
 }
@@ -53,12 +50,8 @@ static int _bra_io_file_magic_is_pe_exe(bra_io_file_t* f)
 
     // 'M' 'Z'
     uint8_t magic[MAGIC_SIZE];
-    if (fread(magic, sizeof(uint8_t), MAGIC_SIZE, f->f) != MAGIC_SIZE)
-    {
-    _BRA_IO_FILE_MAGIC_IS_PE_EXE_READ_ERROR:
-        bra_io_file_read_error(f);
+    if (!bra_io_file_read(f, magic, MAGIC_SIZE))
         return -1;
-    }
 
     if (magic[0] != 'M' || magic[1] != 'Z')
         return 0;
@@ -72,8 +65,8 @@ static int _bra_io_file_magic_is_pe_exe(bra_io_file_t* f)
     }
 
     uint32_t pe_offset;
-    if (fread(&pe_offset, sizeof(uint32_t), 1, f->f) != 1)
-        goto _BRA_IO_FILE_MAGIC_IS_PE_EXE_READ_ERROR;
+    if (!bra_io_file_read(f, &pe_offset, sizeof(uint32_t)))
+        return -1;
 
     if (pe_offset < 0x40)    // DOS header is at least 64 bytes
         return 0;
@@ -82,8 +75,8 @@ static int _bra_io_file_magic_is_pe_exe(bra_io_file_t* f)
         goto _BRA_IO_FILE_MAGIC_IS_PE_EXE_SEEK_ERROR;
 
     uint8_t pe_magic[PE_MAGIC_SIZE];
-    if (fread(pe_magic, sizeof(uint8_t), PE_MAGIC_SIZE, f->f) != PE_MAGIC_SIZE)
-        goto _BRA_IO_FILE_MAGIC_IS_PE_EXE_READ_ERROR;
+    if (!bra_io_file_read(f, pe_magic, PE_MAGIC_SIZE))
+        return -1;
 
     return pe_magic[0] == 'P' && pe_magic[1] == 'E' && pe_magic[2] == '\0' && pe_magic[3] == '\0' ? 1 : 0;
 }
@@ -257,17 +250,44 @@ int64_t bra_io_file_tell(bra_io_file_t* f)
 #endif
 }
 
+bool bra_io_file_read(bra_io_file_t* src, void* buf, const size_t buf_size)
+{
+    assert_bra_io_file_t(src);
+    assert(buf != NULL);
+    assert(buf_size > 0);
+
+    if (fread(buf, sizeof(char), buf_size, src->f) != buf_size)
+    {
+        bra_io_file_read_error(src);
+        return false;
+    }
+
+    return true;
+}
+
+bool bra_io_file_write(bra_io_file_t* dst, void* buf, const size_t buf_size)
+{
+    assert_bra_io_file_t(dst);
+    assert(buf != NULL);
+    assert(buf_size > 0);
+
+    if (fwrite(buf, sizeof(char), buf_size, dst->f) != buf_size)
+    {
+        bra_io_file_write_error(dst);
+        return false;
+    }
+
+    return true;
+}
+
 bool bra_io_file_read_footer(bra_io_file_t* f, bra_io_footer_t* bf_out)
 {
     assert_bra_io_file_t(f);
     assert(bf_out != NULL);
 
     memset(bf_out, 0, sizeof(bra_io_footer_t));
-    if (fread(bf_out, sizeof(bra_io_footer_t), 1, f->f) != 1)
-    {
-        bra_io_file_read_error(f);
+    if (!bra_io_file_read(f, bf_out, sizeof(bra_io_footer_t)))
         return false;
-    }
 
     // check footer magic
     if (bf_out->magic != BRA_FOOTER_MAGIC || bf_out->header_offset <= 0)
@@ -290,11 +310,12 @@ bool bra_io_file_write_footer(bra_io_file_t* f, const int64_t header_offset)
         .header_offset = header_offset,
     };
 
-    if (fwrite(&bf, sizeof(bra_io_footer_t), 1, f->f) != 1)
-    {
-        bra_io_file_write_error(f);
+    // if (fwrite(&bf, sizeof(bra_io_footer_t), 1, f->f) != 1)
+    if (!bra_io_file_write(f, &bf, sizeof(bra_io_footer_t)))
+        // {
+        // bra_io_file_write_error(f);
         return false;
-    }
+    // }
 
     return true;
 }

@@ -196,6 +196,42 @@ bool bra_io_file_seek(bra_io_file_t* f, const int64_t offs, const int origin);
  */
 int64_t bra_io_file_tell(bra_io_file_t* f);
 
+
+/**
+ * @brief Read of data from a file.
+ *
+ * Reads exactly @p buf_size bytes from the current file position into the
+ * provided buffer. Used for reading fixed-size data blocks.
+ *
+ * @param src Source file wrapper (must not be @c NULL and file must be open)
+ * @param buf Buffer to read data into (must not be @c NULL and have @p buf_size capacity)
+ * @param buf_size Number of bytes to read (must be > 0)
+ * @retval true On successful read of all requested bytes
+ * @retval false On read error, EOF before reading all bytes, or I/O error
+ *
+ * @note On error, source file is automatically closed.
+ * @note Partial reads are considered errors.
+ *
+ * @warning Buffer must have at least buf_size bytes available.
+ */
+bool bra_io_file_read(bra_io_file_t* src, void* buf, const size_t buf_size);
+
+/**
+ * @brief Write data into a file.
+ *
+ * Writes exactly @p buf_size bytes from the current file position into the
+ * provided buffer. Used for writing fixed-size data blocks.
+ *
+ * @param dst Destination file wrapper (must not be @c NULL and file must be open)
+ * @param buf Buffer to be written into @p dst (must not be @c NULL and have @p buf_size capacity)
+ * @param buf_size Number of bytes to write (must be > 0)
+ * @retval true On successful write of all requested bytes
+ * @retval false  On write errors
+ *
+ * @note  On error, @p dst file is automatically closed.
+ */
+bool bra_io_file_write(bra_io_file_t* dst, void* buf, const size_t buf_size);
+
 /**
  * @brief Read the archive footer from the file.
  *

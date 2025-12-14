@@ -28,7 +28,7 @@ static inline bool bra_io_file_read_file_chunks_stored(bra_io_file_t* src, const
         const uint32_t s = _bra_min(BRA_MAX_CHUNK_SIZE, data_size - i);
 
         // read source chunk
-        if (!bra_io_file_chunks_read(src, buf, s))
+        if (!bra_io_file_read(src, buf, s))
             return false;
 
         // update CRC32
@@ -61,7 +61,7 @@ static inline bool bra_io_file_read_file_chunks_compressed(bra_io_file_t* src, c
         }
 
         // read source chunk
-        if (!bra_io_file_chunks_read(src, buf, chunk_header.huffman.encoded_size))
+        if (!bra_io_file_read(src, buf, chunk_header.huffman.encoded_size))
             return false;
 
         // decode huffman
@@ -138,21 +138,6 @@ bool bra_io_file_chunks_write_chunk_header(bra_io_file_t* dst, const bra_io_chun
     return true;
 }
 
-bool bra_io_file_chunks_read(bra_io_file_t* src, void* buf, const size_t buf_size)
-{
-    assert_bra_io_file_t(src);
-    assert(buf != NULL);
-    assert(buf_size > 0);
-
-    if (fread(buf, sizeof(char), buf_size, src->f) != buf_size)
-    {
-        bra_io_file_read_error(src);
-        return false;
-    }
-
-    return true;
-}
-
 bool bra_io_file_chunks_read_file(bra_io_file_t* src, const uint64_t data_size, bra_meta_entry_t* me)
 {
     assert_bra_io_file_t(src);
@@ -183,7 +168,7 @@ bool bra_io_file_chunks_copy_file(bra_io_file_t* dst, bra_io_file_t* src, const 
         const uint32_t s = _bra_min(BRA_MAX_CHUNK_SIZE, data_size - i);
 
         // read source chunk
-        if (!bra_io_file_chunks_read(src, buf, s))
+        if (!bra_io_file_read(src, buf, s))
         {
             bra_io_file_close(dst);
             return false;
@@ -244,7 +229,7 @@ bool bra_io_file_chunks_compress_file(bra_io_file_t* dst, bra_io_file_t* src, co
         bra_log_printf("\b\b\b\b");
 
         // read source chunk
-        if (!bra_io_file_chunks_read(src, buf, s))
+        if (!bra_io_file_read(src, buf, s))
         {
             bra_io_file_close(&tmpfile);
             bra_io_file_close(dst);
@@ -288,11 +273,8 @@ bool bra_io_file_chunks_compress_file(bra_io_file_t* dst, bra_io_file_t* src, co
         // me->crc32 = bra_crc32c(buf_huffman->data, chunk_header.huffman.encoded_size, me->crc32);
 
         // write chunk header
-        if (fwrite(&chunk_header, sizeof(bra_io_chunk_header_t), 1, tmpfile.f) != 1)
-        {
-            bra_io_file_write_error(&tmpfile);
+        if (!bra_io_file_chunks_write_chunk_header(&tmpfile, &chunk_header))
             goto BRA_IO_FILE_COMPRESS_FILE_CHUNKS_ERR;
-        }
 
         // write source chunk
         if (fwrite(buf_huffman->data, sizeof(char), buf_huffman->meta.encoded_size, tmpfile.f) != buf_huffman->meta.encoded_size)
@@ -383,7 +365,7 @@ bool bra_io_file_chunks_decompress_file(bra_io_file_t* dst, bra_io_file_t* src, 
         }
 
         // read source chunk
-        if (!bra_io_file_chunks_read(src, buf, chunk_header.huffman.encoded_size))
+        if (!bra_io_file_read(src, buf, chunk_header.huffman.encoded_size))
             goto BRA_IO_FILE_DECOMPRESS_FILE_CHUNKS_ERR;
 
         // decode huffman

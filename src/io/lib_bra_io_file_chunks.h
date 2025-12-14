@@ -20,7 +20,7 @@
  */
 bool bra_io_file_chunks_read_chunk_header(bra_io_file_t* src, bra_io_chunk_header_t* chunk_header);
 
-/**
+/*
  * @brief Write a chunk header to the file. This is only present in compressed chunks.
  *        The chunk header is present in every chunk.
  *
@@ -33,24 +33,6 @@ bool bra_io_file_chunks_read_chunk_header(bra_io_file_t* src, bra_io_chunk_heade
  */
 bool bra_io_file_chunks_write_chunk_header(bra_io_file_t* dst, const bra_io_chunk_header_t* chunk_header);
 
-/**
- * @brief Read a chunk of data from the file.
- *
- * Reads exactly buf_size bytes from the current file position into the
- * provided buffer. Used for reading fixed-size data blocks.
- *
- * @param src Source file wrapper (must not be @c NULL and file must be open)
- * @param buf Buffer to read data into (must not be NULL and have buf_size capacity)
- * @param buf_size Number of bytes to read (must be > 0)
- * @retval true On successful read of all requested bytes
- * @retval false On read error, EOF before reading all bytes, or I/O error
- *
- * @note On error, source file is automatically closed.
- * @note Partial reads are considered errors.
- *
- * @warning Buffer must have at least buf_size bytes available.
- */
-bool bra_io_file_chunks_read(bra_io_file_t* src, void* buf, const size_t buf_size);
 
 /**
  * @brief Read file data in chunks and update CRC32.

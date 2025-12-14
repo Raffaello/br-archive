@@ -21,6 +21,19 @@
 bool bra_io_file_chunks_read_chunk_header(bra_io_file_t* src, bra_io_chunk_header_t* chunk_header);
 
 /**
+ * @brief Write a chunk header to the file. This is only present in compressed chunks.
+ *        The chunk header is present in every chunk.
+ *
+ * @param dst  Destination file wrapper (must be not @c NULL and file must be open)
+ * @param chunk_header the chunk header to be written into @p dst
+ * @retval true On successful write.
+ * @retval false On write error
+ *
+ * @note On error, @p dst is automatically closed.
+ */
+bool bra_io_file_chunks_write_chunk_header(bra_io_file_t* dst, const bra_io_chunk_header_t* chunk_header);
+
+/**
  * @brief Read a chunk of data from the file.
  *
  * Reads exactly buf_size bytes from the current file position into the

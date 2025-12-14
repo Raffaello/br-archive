@@ -123,6 +123,21 @@ bool bra_io_file_chunks_read_chunk_header(bra_io_file_t* src, bra_io_chunk_heade
     return true;
 }
 
+bool bra_io_file_chunks_write_chunk_header(bra_io_file_t* dst, const bra_io_chunk_header_t* chunk_header)
+{
+    assert_bra_io_file_t(dst);
+    assert(chunk_header != NULL);
+
+    if (fwrite(chunk_header, sizeof(bra_io_chunk_header_t), 1, dst->f) != 1)
+    {
+        bra_log_error("unable to write chunk header to %s", dst->fn);
+        bra_io_file_write_error(dst);
+        return false;
+    }
+
+    return true;
+}
+
 bool bra_io_file_chunks_read(bra_io_file_t* src, void* buf, const size_t buf_size)
 {
     assert_bra_io_file_t(src);

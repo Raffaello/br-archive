@@ -46,7 +46,16 @@ bool bra_io_file_meta_entry_write_file_entry(bra_io_file_t* f, const bra_meta_en
  * @return false
  */
 bool bra_io_file_meta_entry_read_subdir_entry(bra_io_file_t* f, bra_meta_entry_t* me);
-// bool bra_io_file_meta_entry_write_subdir_entry(bra_io_file_t* f, const bra_meta_entry_t* me);
+
+/**
+ * @brief
+ *
+ * @param f
+ * @param me
+ * @return true
+ * @return false
+ */
+bool bra_io_file_meta_entry_write_subdir_entry(bra_io_file_t* f, const bra_meta_entry_t* me);
 
 /**
  * @brief

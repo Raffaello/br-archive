@@ -75,19 +75,19 @@ bool bra_io_file_meta_entry_read_subdir_entry(bra_io_file_t* f, bra_meta_entry_t
     return bra_io_file_read(f, &mes->parent_index, sizeof(bra_meta_entry_subdir_t));
 }
 
-// bool bra_io_file_meta_entry_write_subdir_entry(bra_io_file_t* f, const bra_meta_entry_t* me)
-// {
-//     assert_bra_io_file_t(f);
-//     assert(me != NULL);
-//     assert(me->entry_data != NULL);
+bool bra_io_file_meta_entry_write_subdir_entry(bra_io_file_t* f, const bra_meta_entry_t* me)
+{
+    assert_bra_io_file_t(f);
+    assert(me != NULL);
+    assert(me->entry_data != NULL);
 
-// if (BRA_ATTR_TYPE(me->attributes) != BRA_ATTR_TYPE_SUBDIR)
-//     return false;
+    if (BRA_ATTR_TYPE(me->attributes) != BRA_ATTR_TYPE_SUBDIR)
+        return false;
 
-// // read parent index
-// bra_meta_entry_subdir_t* mes = me->entry_data;
-// return bra_io_file_write(f, &mes->parent_index, sizeof(uint32_t));
-// }
+    // read parent index
+    bra_meta_entry_subdir_t* mes = me->entry_data;
+    return bra_io_file_write(f, &mes->parent_index, sizeof(uint32_t));
+}
 
 bool bra_io_file_meta_entry_flush_entry_file(bra_io_file_t* f, bra_meta_entry_t* me, const char* filename, const size_t filename_len)
 {
@@ -185,12 +185,8 @@ bool bra_io_file_meta_entry_flush_entry_subdir(bra_io_file_t* f, const bra_meta_
     assert_bra_io_file_t(f);
     assert(me != NULL);
 
-    if (BRA_ATTR_TYPE(me->attributes) != BRA_ATTR_TYPE_SUBDIR)
-        return false;
-
     if (!bra_io_file_meta_entry_flush_entry_dir(f, me))
         return false;
 
-    bra_meta_entry_subdir_t* mes = (bra_meta_entry_subdir_t*) me->entry_data;
-    return bra_io_file_write(f, mes, sizeof(bra_meta_entry_subdir_t));
+    return bra_io_file_meta_entry_write_subdir_entry(f, me);
 }

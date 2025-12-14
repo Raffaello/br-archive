@@ -240,7 +240,7 @@ static bool _bra_io_file_ctx_write_meta_entry_dir_subdir(bra_io_file_ctx_t* ctx,
             return false;
         break;
     default:
-        bra_log_critical("invalid attribute type for dir/subdir: %u", BRA_ATTR_TYPE(me->attributes));
+        bra_log_critical("invalid attribute type: %u", BRA_ATTR_TYPE(me->attributes));
         return false;
     }
 

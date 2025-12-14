@@ -70,7 +70,7 @@ bool bra_io_file_meta_entry_read_subdir_entry(bra_io_file_t* f, bra_meta_entry_t
         return false;
 
     bra_meta_entry_subdir_t* mes = me->entry_data;
-    return bra_io_file_read(f, &mes->parent_index, sizeof(bra_meta_entry_subdir_t));
+    return bra_io_file_read(f, &mes->parent_index, sizeof(uint32_t));
 }
 
 bool bra_io_file_meta_entry_write_subdir_entry(bra_io_file_t* f, const bra_meta_entry_t* me)
@@ -129,7 +129,7 @@ bool bra_io_file_meta_entry_flush_entry_file(bra_io_file_t* f, bra_meta_entry_t*
             goto BRA_IO_FILE_META_ENTRY_FLUSH_ENTRY_FILE_ERROR;
 
         if (!bra_io_file_chunks_copy_file(f, &f2, mef->data_size, me))
-            return false;
+            goto BRA_IO_FILE_META_ENTRY_FLUSH_ENTRY_FILE_ERROR;
         break;
     case BRA_ATTR_COMP_COMPRESSED:
         if (!bra_io_file_chunks_compress_file(f, &f2, mef->data_size, me))
@@ -140,7 +140,7 @@ bool bra_io_file_meta_entry_flush_entry_file(bra_io_file_t* f, bra_meta_entry_t*
                 // In this case it must be re-done fully due to the crc32
                 // The file hasn't be stored.
                 if (!bra_io_file_seek(f, me_pos, SEEK_SET))
-                    return false;
+                    goto BRA_IO_FILE_META_ENTRY_FLUSH_ENTRY_FILE_ERROR;
 
                 // TODO: this is a quick fix after changed the metadata attribute
                 //       later on refactor to avoid a recursive call.
@@ -149,7 +149,7 @@ bool bra_io_file_meta_entry_flush_entry_file(bra_io_file_t* f, bra_meta_entry_t*
                 return bra_io_file_meta_entry_flush_entry_file(f, me, filename, filename_len);
             }
             else
-                return false;
+                goto BRA_IO_FILE_META_ENTRY_FLUSH_ENTRY_FILE_ERROR;
         }
         break;
     default:

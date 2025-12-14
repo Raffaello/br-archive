@@ -196,7 +196,6 @@ bool bra_io_file_seek(bra_io_file_t* f, const int64_t offs, const int origin);
  */
 int64_t bra_io_file_tell(bra_io_file_t* f);
 
-
 /**
  * @brief Read of data from a file.
  *

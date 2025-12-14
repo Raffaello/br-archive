@@ -323,7 +323,7 @@ bool bra_io_file_chunks_compress_file(bra_io_file_t* dst, bra_io_file_t* src, co
         bra_meta_entry_file_t* mef = (bra_meta_entry_file_t*) me->entry_data;
         mef->data_size             = tmpfile_size;
         me->crc32                  = bra_crc32c(&mef->data_size, sizeof(uint64_t), me->crc32);
-        if (!bra_io_file_write_meta_entry_file(dst, me))
+        if (!bra_io_file_meta_entry_write_file_entry(dst, me))
             goto BRA_IO_FILE_COMPRESS_FILE_CHUNKS_ERR;
 
         res = bra_io_file_chunks_copy_file(dst, &tmpfile, tmpfile_size, me);

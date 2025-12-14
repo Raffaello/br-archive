@@ -831,6 +831,7 @@ bool bra_io_file_ctx_decode_and_write_to_disk(bra_io_file_ctx_t* ctx, bra_fs_ove
             bra_log_printf("Skipping file:   " BRA_PRINTF_FMT_FILENAME, fn);
 
             // skip file contents & crc32 too
+            // NOTE: the sizeof(uint32_t) is for the CRC32
             if (!bra_io_file_skip_data(&ctx->f, ds + sizeof(uint32_t)))
                 goto BRA_IO_DECODE_ERR;
 
@@ -849,7 +850,6 @@ bool bra_io_file_ctx_decode_and_write_to_disk(bra_io_file_ctx_t* ctx, bra_fs_ove
             //       So, no need to create the parent directory for each file each time.
             if (!bra_io_file_open(&f2, fn, "wb"))
                 goto BRA_IO_DECODE_ERR;
-
 
             switch (BRA_ATTR_COMP(me.attributes))
             {
@@ -898,7 +898,8 @@ bool bra_io_file_ctx_decode_and_write_to_disk(bra_io_file_ctx_t* ctx, bra_fs_ove
     break;
     case BRA_ATTR_TYPE_SYM:
         bra_log_critical("SYMLINK NOT IMPLEMENTED YET");
-    // fallthrough
+        // fallthrough
+        BRA_FALLTHROUGH;
     default:
         goto BRA_IO_DECODE_ERR;
         break;

@@ -101,10 +101,11 @@ static inline bool bra_io_file_read_file_chunks_stored(bra_io_file_t* src, const
     {
         const uint32_t s = _bra_min(BRA_MAX_CHUNK_SIZE, data_size - i);
 
-        // update CRC32
+        // read source chunk
         if (!bra_io_file_read_chunk(src, buf, s))
             return false;
 
+        // update CRC32
         me->crc32 = bra_crc32c(buf, s, me->crc32);
 
         i += s;

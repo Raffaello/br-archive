@@ -51,7 +51,7 @@ static inline bool bra_io_file_read_file_chunks_compressed(bra_io_file_t* src, c
     for (uint64_t i = 0; i < data_size;)
     {
         bra_io_chunk_header_t chunk_header = {.primary_index = 0};
-        if (!bra_io_file_chunks_read_chunk_header(src, &chunk_header))
+        if (!bra_io_file_chunks_read_header(src, &chunk_header))
             return false;
 
         if (!bra_io_chunk_header_validate(&chunk_header))
@@ -108,7 +108,7 @@ BRA_IO_FILE_READ_FILE_CHUNKS_COMPRESSED_ERROR:
 
 /////////////////////////////////////////////////////////////////////////
 
-bool bra_io_file_chunks_read_chunk_header(bra_io_file_t* src, bra_io_chunk_header_t* chunk_header)
+bool bra_io_file_chunks_read_header(bra_io_file_t* src, bra_io_chunk_header_t* chunk_header)
 {
     assert_bra_io_file_t(src);
     assert(chunk_header != NULL);
@@ -123,7 +123,7 @@ bool bra_io_file_chunks_read_chunk_header(bra_io_file_t* src, bra_io_chunk_heade
     return true;
 }
 
-bool bra_io_file_chunks_write_chunk_header(bra_io_file_t* dst, const bra_io_chunk_header_t* chunk_header)
+bool bra_io_file_chunks_write_header(bra_io_file_t* dst, const bra_io_chunk_header_t* chunk_header)
 {
     assert_bra_io_file_t(dst);
     assert(chunk_header != NULL);
@@ -273,7 +273,7 @@ bool bra_io_file_chunks_compress_file(bra_io_file_t* dst, bra_io_file_t* src, co
         // me->crc32 = bra_crc32c(buf_huffman->data, chunk_header.huffman.encoded_size, me->crc32);
 
         // write chunk header
-        if (!bra_io_file_chunks_write_chunk_header(&tmpfile, &chunk_header))
+        if (!bra_io_file_chunks_write_header(&tmpfile, &chunk_header))
             goto BRA_IO_FILE_COMPRESS_FILE_CHUNKS_ERR;
 
         // write source chunk
@@ -355,7 +355,7 @@ bool bra_io_file_chunks_decompress_file(bra_io_file_t* dst, bra_io_file_t* src, 
     {
         // read chunk header
         bra_io_chunk_header_t chunk_header = {.primary_index = 0};
-        if (!bra_io_file_chunks_read_chunk_header(src, &chunk_header))
+        if (!bra_io_file_chunks_read_header(src, &chunk_header))
             goto BRA_IO_FILE_DECOMPRESS_FILE_CHUNKS_ERR;
 
         if (!bra_io_chunk_header_validate(&chunk_header))

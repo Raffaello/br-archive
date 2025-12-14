@@ -18,7 +18,7 @@
  * @note On error, source file is automatically closed.
  * @note Partial reads are considered errors.
  */
-bool bra_io_file_chunks_read_chunk_header(bra_io_file_t* src, bra_io_chunk_header_t* chunk_header);
+bool bra_io_file_chunks_read_header(bra_io_file_t* src, bra_io_chunk_header_t* chunk_header);
 
 /*
  * @brief Write a chunk header to the file. This is only present in compressed chunks.
@@ -31,8 +31,7 @@ bool bra_io_file_chunks_read_chunk_header(bra_io_file_t* src, bra_io_chunk_heade
  *
  * @note On error, @p dst is automatically closed.
  */
-bool bra_io_file_chunks_write_chunk_header(bra_io_file_t* dst, const bra_io_chunk_header_t* chunk_header);
-
+bool bra_io_file_chunks_write_header(bra_io_file_t* dst, const bra_io_chunk_header_t* chunk_header);
 
 /**
  * @brief Read file data in chunks and update CRC32.

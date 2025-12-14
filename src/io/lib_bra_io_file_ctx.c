@@ -980,7 +980,7 @@ bool bra_io_file_ctx_print_meta_entry(bra_io_file_ctx_t* ctx, const bool test_mo
         {
             // read chunk header
             // bra_io_chunk_header_t chunk_header;
-            // if (!bra_io_file_chunks_read_chunk_header(ctx->f, &chunk_header))
+            // if (!bra_io_file_chunks_read_header(ctx->f, &chunk_header))
             //     goto BRA_IO_FILE_CTX_PRINT_META_ENTRY_ERR;
 
             // const size_t chunks = ds / BRA_MAX_CHUNK_SIZE + (ds % BRA_MAX_CHUNK_SIZE != 0 ? 1 : 0);

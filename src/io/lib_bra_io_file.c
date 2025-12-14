@@ -310,12 +310,8 @@ bool bra_io_file_write_footer(bra_io_file_t* f, const int64_t header_offset)
         .header_offset = header_offset,
     };
 
-    // if (fwrite(&bf, sizeof(bra_io_footer_t), 1, f->f) != 1)
     if (!bra_io_file_write(f, &bf, sizeof(bra_io_footer_t)))
-        // {
-        // bra_io_file_write_error(f);
         return false;
-    // }
 
     return true;
 }

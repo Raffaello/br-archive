@@ -325,7 +325,7 @@ static bra_huffman_node_t* bra_huffman_tree_build_from_lengths(const uint8_t len
                 {
                     if (cur->right == NULL)
                     {
-                        bra_huffman_node_t* n = bra_huffman_create_node(0, 0);
+                        n = bra_huffman_create_node(0, 0);
                         if (n == NULL)
                             goto BRA_HUFFMAN_DECODE_ERROR;
 

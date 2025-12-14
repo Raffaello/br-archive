@@ -148,7 +148,7 @@ static bool _bra_io_file_ctx_flush_entry_file(bra_io_file_ctx_t* ctx, bra_meta_e
     {
     case BRA_ATTR_COMP_STORED:
         me->crc32 = bra_crc32c(&mef->data_size, sizeof(uint64_t), me->crc32);
-        if (fwrite(&mef->data_size, sizeof(uint64_t), 1, ctx->f.f) != 1)
+        if (!bra_io_file_write_meta_entry_file(&ctx->f, me))
             return false;
         if (!bra_io_file_chunks_copy_file(&ctx->f, &f2, mef->data_size, me))
             return false;
@@ -228,22 +228,6 @@ static bool _bra_io_file_ctx_flush_entry_dir_subdir(bra_io_file_ctx_t* ctx, cons
         bra_log_critical("invalid attribute type for dir/subdir: %u", BRA_ATTR_TYPE(me->attributes));
         return false;
     }
-
-    return true;
-}
-
-static bool _bra_io_file_ctx_read_meta_entry_file(bra_io_file_ctx_t* ctx, bra_meta_entry_t* me)
-{
-    assert_bra_io_file_cxt_t(ctx);
-    assert(me != NULL);
-    assert(me->entry_data != NULL);
-
-    if (BRA_ATTR_TYPE(me->attributes) != BRA_ATTR_TYPE_FILE)
-        return false;
-
-    bra_meta_entry_file_t* mef = me->entry_data;
-    if (fread(&mef->data_size, sizeof(uint64_t), 1, ctx->f.f) != 1)
-        return false;
 
     return true;
 }
@@ -697,7 +681,7 @@ bool bra_io_file_ctx_read_meta_entry(bra_io_file_ctx_t* ctx, bra_meta_entry_t* m
 
         if (!bra_meta_entry_file_init(me, 0))
             goto BRA_IO_READ_ERR;
-        if (!_bra_io_file_ctx_read_meta_entry_file(ctx, me))
+        if (!bra_io_file_read_meta_entry_file(&ctx->f, me))
             goto BRA_IO_READ_ERR;
     }
     break;

@@ -13,7 +13,6 @@
 
 #include <inttypes.h>
 #include <stdlib.h>
-#include <stdio.h>
 #include <assert.h>
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -129,10 +128,9 @@ bool bra_io_file_chunks_read_header(bra_io_file_t* src, bra_io_chunk_header_t* c
     assert_bra_io_file_t(src);
     assert(chunk_header != NULL);
 
-    if (fread(chunk_header, sizeof(bra_io_chunk_header_t), 1, src->f) != 1)
+    if (!bra_io_file_read(src, chunk_header, sizeof(bra_io_chunk_header_t)))
     {
         bra_log_error("unable to read chunk header from %s", src->fn);
-        bra_io_file_read_error(src);
         return false;
     }
 
@@ -144,10 +142,9 @@ bool bra_io_file_chunks_write_header(bra_io_file_t* dst, const bra_io_chunk_head
     assert_bra_io_file_t(dst);
     assert(chunk_header != NULL);
 
-    if (fwrite(chunk_header, sizeof(bra_io_chunk_header_t), 1, dst->f) != 1)
+    if (!bra_io_file_write(dst, chunk_header, sizeof(bra_io_chunk_header_t)))
     {
         bra_log_error("unable to write chunk header to %s", dst->fn);
-        bra_io_file_write_error(dst);
         return false;
     }
 
@@ -194,9 +191,8 @@ bool bra_io_file_chunks_copy_file(bra_io_file_t* dst, bra_io_file_t* src, const 
         me->crc32 = bra_crc32c(buf, s, me->crc32);
 
         // write source chunk
-        if (fwrite(buf, sizeof(char), s, dst->f) != s)
+        if (!bra_io_file_write(dst, buf, s))
         {
-            bra_io_file_write_error(dst);
             bra_io_file_close(src);
             return false;
         }
@@ -293,11 +289,8 @@ bool bra_io_file_chunks_compress_file(bra_io_file_t* dst, bra_io_file_t* src, co
             goto BRA_IO_FILE_COMPRESS_FILE_CHUNKS_ERR;
 
         // write source chunk
-        if (fwrite(buf_huffman->data, sizeof(char), buf_huffman->meta.encoded_size, tmpfile.f) != buf_huffman->meta.encoded_size)
-        {
-            bra_io_file_write_error(&tmpfile);
+        if (!bra_io_file_write(&tmpfile, buf_huffman->data, buf_huffman->meta.encoded_size))
             goto BRA_IO_FILE_COMPRESS_FILE_CHUNKS_ERR;
-        }
 
         free(buf_bwt);
         buf_bwt = NULL;
@@ -329,11 +322,8 @@ bool bra_io_file_chunks_compress_file(bra_io_file_t* dst, bra_io_file_t* src, co
         bra_meta_entry_file_t* mef = (bra_meta_entry_file_t*) me->entry_data;
         mef->data_size             = tmpfile_size;
         me->crc32                  = bra_crc32c(&mef->data_size, sizeof(uint64_t), me->crc32);
-        if (fwrite(&mef->data_size, sizeof(uint64_t), 1, dst->f) != 1)
-        {
-            bra_io_file_write_error(dst);
+        if (!bra_io_file_write_meta_entry_file(dst, me))
             goto BRA_IO_FILE_COMPRESS_FILE_CHUNKS_ERR;
-        }
 
         res = bra_io_file_chunks_copy_file(dst, &tmpfile, tmpfile_size, me);
     }
@@ -404,11 +394,8 @@ bool bra_io_file_chunks_decompress_file(bra_io_file_t* dst, bra_io_file_t* src, 
         bra_bwt_decode2(buf_mtf, s, chunk_header.primary_index, buf_trans, buf_bwt);
 
         // write source chunk
-        if (fwrite(buf_bwt, sizeof(char), s, dst->f) != s)
-        {
-            bra_io_file_write_error(dst);
+        if (!bra_io_file_write(dst, buf_bwt, s))
             goto BRA_IO_FILE_DECOMPRESS_FILE_CHUNKS_ERR;
-        }
 
         // update CRC32
         // TODO: this is the same as the test function.

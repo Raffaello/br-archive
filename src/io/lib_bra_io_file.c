@@ -265,7 +265,7 @@ bool bra_io_file_read(bra_io_file_t* src, void* buf, const size_t buf_size)
     return true;
 }
 
-bool bra_io_file_write(bra_io_file_t* dst, void* buf, const size_t buf_size)
+bool bra_io_file_write(bra_io_file_t* dst, const void* buf, const size_t buf_size)
 {
     assert_bra_io_file_t(dst);
     assert(buf != NULL);
@@ -325,4 +325,36 @@ bool bra_io_file_skip_data(bra_io_file_t* f, const uint64_t data_size)
         bra_io_file_seek_error(f);
 
     return res;
+}
+
+bool bra_io_file_read_meta_entry_file(bra_io_file_t* f, bra_meta_entry_t* me)
+{
+    assert_bra_io_file_t(f);
+    assert(me != NULL);
+    assert(me->entry_data != NULL);
+
+    if (BRA_ATTR_TYPE(me->attributes) != BRA_ATTR_TYPE_FILE)
+        return false;
+
+    bra_meta_entry_file_t* mef = me->entry_data;
+    if (!bra_io_file_read(f, &mef->data_size, sizeof(uint64_t)))
+        return false;
+
+    return true;
+}
+
+bool bra_io_file_write_meta_entry_file(bra_io_file_t* f, const bra_meta_entry_t* me)
+{
+    assert_bra_io_file_t(f);
+    assert(me != NULL);
+    assert(me->entry_data != NULL);
+
+    if (BRA_ATTR_TYPE(me->attributes) != BRA_ATTR_TYPE_FILE)
+        return false;
+
+    bra_meta_entry_file_t* mef = me->entry_data;
+    if (!bra_io_file_write(f, &mef->data_size, sizeof(uint64_t)))
+        return false;
+
+    return true;
 }

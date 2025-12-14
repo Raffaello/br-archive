@@ -62,6 +62,7 @@ target_sources(lib_bra
 
         src/io/lib_bra_io_file.c
         src/io/lib_bra_io_file_ctx.c
+        src/io/lib_bra_io_chunk_header.c
 
         src/encoders/bra_rle.c
         src/encoders/bra_bwt.c

@@ -1,4 +1,5 @@
 #include <io/lib_bra_io_file.h>
+#include <io/lib_bra_io_chunk_header.h>
 
 #include <lib_bra.h>
 #include <lib_bra_private.h>
@@ -128,27 +129,11 @@ static inline bool bra_io_file_read_file_chunks_compressed(bra_io_file_t* src, c
         if (!bra_io_file_read_chunk_header(src, &chunk_header))
             return false;
 
-        // sanity checks
-        if (chunk_header.huffman.encoded_size > BRA_MAX_CHUNK_SIZE)
+        if (!bra_io_chunk_header_validate(&chunk_header))
         {
-            bra_log_error("encoded chunk size (%" PRIu32 ") exceeds maximum (%" PRIu32 ") in %s",
-                          chunk_header.huffman.encoded_size,
-                          (uint32_t) BRA_MAX_CHUNK_SIZE,
-                          src->fn);
-            bra_io_file_read_error(src);
-            return false;
+            bra_log_error("chunk header in %s is not valid", src->fn);
+            goto BRA_IO_FILE_READ_FILE_CHUNKS_COMPRESSED_ERROR;
         }
-
-        if (chunk_header.huffman.orig_size > BRA_MAX_CHUNK_SIZE)
-        {
-            bra_log_error("decoded chunk size (%" PRIu32 ") exceeds maximum (%" PRIu32 ") in %s",
-                          chunk_header.huffman.orig_size,
-                          (uint32_t) BRA_MAX_CHUNK_SIZE,
-                          src->fn);
-            bra_io_file_read_error(src);
-            return false;
-        }
-        // ----
 
         // read source chunk
         if (!bra_io_file_read_chunk(src, buf, chunk_header.huffman.encoded_size))
@@ -160,17 +145,13 @@ static inline bool bra_io_file_read_file_chunks_compressed(bra_io_file_t* src, c
         if (buf_huffman == NULL)
         {
             bra_log_error("unable to decode huffman file: %s ", src->fn);
-            bra_io_file_read_error(src);
-            return false;
+            goto BRA_IO_FILE_READ_FILE_CHUNKS_COMPRESSED_ERROR;
         }
 
         if (chunk_header.primary_index >= s)
         {
-            free(buf_huffman);
-            buf_huffman = NULL;
             bra_log_error("invalid primary index (%" PRIu32 ") for chunk size %" PRIu32 " in %s", chunk_header.primary_index, s, src->fn);
-            bra_io_file_read_error(src);
-            return false;
+            goto BRA_IO_FILE_READ_FILE_CHUNKS_COMPRESSED_ERROR;
         }
 
         bra_mtf_decode2((uint8_t*) buf_huffman, s, buf_mtf);
@@ -188,6 +169,16 @@ static inline bool bra_io_file_read_file_chunks_compressed(bra_io_file_t* src, c
     }
 
     return true;
+
+BRA_IO_FILE_READ_FILE_CHUNKS_COMPRESSED_ERROR:
+    if (buf_huffman != NULL)
+    {
+        free(buf_huffman);
+        buf_huffman = NULL;
+    }
+
+    bra_io_file_close(src);
+    return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -421,7 +412,7 @@ bool bra_io_file_read_chunk_header(bra_io_file_t* src, bra_io_chunk_header_t* ch
     assert_bra_io_file_t(src);
     assert(chunk_header != NULL);
 
-    if (!fread(chunk_header, sizeof(bra_io_chunk_header_t), 1, src->f))
+    if (fread(chunk_header, sizeof(bra_io_chunk_header_t), 1, src->f) != 1)
     {
         bra_log_error("unable to read chunk header from %s", src->fn);
         bra_io_file_read_error(src);
@@ -579,13 +570,16 @@ bool bra_io_file_compress_file_chunks(bra_io_file_t* dst, bra_io_file_t* src, co
         // write chunk header
         if (fwrite(&chunk_header, sizeof(bra_io_chunk_header_t), 1, tmpfile.f) != 1)
         {
-            bra_log_error("unable to write primary index to %s", tmpfile.fn);
+            bra_io_file_write_error(&tmpfile);
             goto BRA_IO_FILE_COMPRESS_FILE_CHUNKS_ERR;
         }
 
         // write source chunk
         if (fwrite(buf_huffman->data, sizeof(char), buf_huffman->meta.encoded_size, tmpfile.f) != buf_huffman->meta.encoded_size)
+        {
+            bra_io_file_write_error(&tmpfile);
             goto BRA_IO_FILE_COMPRESS_FILE_CHUNKS_ERR;
+        }
 
         free(buf_bwt);
         buf_bwt = NULL;
@@ -618,7 +612,10 @@ bool bra_io_file_compress_file_chunks(bra_io_file_t* dst, bra_io_file_t* src, co
         mef->data_size             = tmpfile_size;
         me->crc32                  = bra_crc32c(&mef->data_size, sizeof(uint64_t), me->crc32);
         if (fwrite(&mef->data_size, sizeof(uint64_t), 1, dst->f) != 1)
+        {
+            bra_io_file_write_error(dst);
             goto BRA_IO_FILE_COMPRESS_FILE_CHUNKS_ERR;
+        }
 
         res = bra_io_file_copy_file_chunks(dst, &tmpfile, tmpfile_size, me);
     }
@@ -659,23 +656,9 @@ bool bra_io_file_decompress_file_chunks(bra_io_file_t* dst, bra_io_file_t* src, 
         if (!bra_io_file_read_chunk_header(src, &chunk_header))
             goto BRA_IO_FILE_DECOMPRESS_FILE_CHUNKS_ERR;
 
-        // sanity checks
-        if (chunk_header.huffman.encoded_size > BRA_MAX_CHUNK_SIZE)
+        if (!bra_io_chunk_header_validate(&chunk_header))
         {
-            bra_log_error("encoded chunk size (%" PRIu32 ") exceeds maximum (%" PRIu32 ") in %s",
-                          chunk_header.huffman.encoded_size,
-                          (uint32_t) BRA_MAX_CHUNK_SIZE,
-                          src->fn);
-            goto BRA_IO_FILE_DECOMPRESS_FILE_CHUNKS_ERR;
-        }
-        // ---
-
-        if (chunk_header.huffman.orig_size > BRA_MAX_CHUNK_SIZE)
-        {
-            bra_log_error("decoded chunk size (%" PRIu32 ") exceeds maximum (%" PRIu32 ") in %s",
-                          chunk_header.huffman.orig_size,
-                          (uint32_t) BRA_MAX_CHUNK_SIZE,
-                          src->fn);
+            bra_log_error("chunk header not valid in %s", src->fn);
             goto BRA_IO_FILE_DECOMPRESS_FILE_CHUNKS_ERR;
         }
 
@@ -702,10 +685,12 @@ bool bra_io_file_decompress_file_chunks(bra_io_file_t* dst, bra_io_file_t* src, 
         bra_mtf_decode2(buf_huffman, s, buf_mtf);
         bra_bwt_decode2(buf_mtf, s, chunk_header.primary_index, buf_trans, buf_bwt);
 
-
         // write source chunk
         if (fwrite(buf_bwt, sizeof(char), s, dst->f) != s)
+        {
+            bra_io_file_write_error(dst);
             goto BRA_IO_FILE_DECOMPRESS_FILE_CHUNKS_ERR;
+        }
 
         // update CRC32
         // TODO: this is the same as the test function.

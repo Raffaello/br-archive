@@ -267,6 +267,7 @@ static bra_huffman_node_t* bra_huffman_tree_build_from_lengths(const uint8_t len
     uint8_t codes[BRA_ALPHABET_SIZE][BRA_ALPHABET_SIZE];
     bra_huffman_compute_canonical_codes(lengths, codes);
 
+    bra_huffman_node_t* n    = NULL;
     bra_huffman_node_t* root = bra_huffman_create_node(0, 0);
     if (root == NULL)
         goto BRA_HUFFMAN_DECODE_ERROR;
@@ -283,7 +284,7 @@ static bra_huffman_node_t* bra_huffman_tree_build_from_lengths(const uint8_t len
             if (j == lengths[i] - 1)
             {
                 // Last bit, assign symbol
-                bra_huffman_node_t* n = bra_huffman_create_node(i, 0);
+                n = bra_huffman_create_node(i, 0);
                 if (n == NULL)
                     goto BRA_HUFFMAN_DECODE_ERROR;
 
@@ -301,6 +302,8 @@ static bra_huffman_node_t* bra_huffman_tree_build_from_lengths(const uint8_t len
 
                     cur->right = n;
                 }
+
+                n = NULL;
             }
             else
             {
@@ -308,11 +311,12 @@ static bra_huffman_node_t* bra_huffman_tree_build_from_lengths(const uint8_t len
                 {
                     if (cur->left == NULL)
                     {
-                        bra_huffman_node_t* n = bra_huffman_create_node(0, 0);
+                        n = bra_huffman_create_node(0, 0);
                         if (n == NULL)
                             goto BRA_HUFFMAN_DECODE_ERROR;
 
                         cur->left = n;
+                        n         = NULL;
                     }
                     cur = cur->left;
                 }
@@ -325,6 +329,7 @@ static bra_huffman_node_t* bra_huffman_tree_build_from_lengths(const uint8_t len
                             goto BRA_HUFFMAN_DECODE_ERROR;
 
                         cur->right = n;
+                        n          = NULL;
                     }
                     cur = cur->right;
                 }
@@ -336,6 +341,7 @@ static bra_huffman_node_t* bra_huffman_tree_build_from_lengths(const uint8_t len
 
 BRA_HUFFMAN_DECODE_ERROR:
     bra_log_error("unable to rebuild huffman tree");
+    bra_huffman_tree_free(&n);
     bra_huffman_tree_free(&root);
     return NULL;
 }

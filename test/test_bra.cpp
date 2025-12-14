@@ -391,7 +391,7 @@ int test_bra_unbra_comp_2b()
     ASSERT_TRUE(fs::exists(out_file));
     ASSERT_EQ(call_system(unbra + " -l " + out_file), 0);
     ASSERT_EQ(call_system(unbra + " -y -o 2b " + out_file), 0);
-    ASSERT_TRUE(fs::exists("2b/" + in_file));
+    ASSERT_TRUE(fs::exists(fs::path("2b") / in_file));
     fs::remove_all("2b");
 
     return 0;

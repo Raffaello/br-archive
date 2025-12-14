@@ -13,21 +13,6 @@ typedef uint8_t bra_rle_counts_t;    //!< stored as run_length - 1 (0 => 1, 255 
 typedef uint32_t bra_bwt_index_t;    //!< index type used by BWT (should be at least 32 bits to support 4GB chunks)
 
 /**
- * @brief bra_huffman_t
- *
- */
-typedef struct bra_huffman_t
-{
-    uint8_t lengths[BRA_ALPHABET_SIZE];    //!< Huffman code lengths per symbol (0 = symbol not present)
-    // NOTE: not ok, if 2 symbols are encoded make no sense to store 256,
-    //       but otherwise need 2 byte for each symbol,
-    //       and if more than 128 make no sense in the other way around ...
-    // NOTE: this also implies to require a minimum file size of more than the alphabet size (> 256B), otherwise store it directly
-    uint32_t orig_size;       //!< orig data size (used for decoding) (TODO: this should be redundant, or replace with num bits padding, 1 byte instead of 4)
-    uint32_t encoded_size;    //!< how many bytes are encoded.
-} bra_huffman_t;
-
-/**
  * @brief Define a file overwrite policy.
  */
 typedef enum bra_fs_overwrite_policy_e
@@ -61,6 +46,16 @@ typedef struct bra_io_footer_t
     uint32_t magic;            //!< 'BR-x'
     int64_t  header_offset;    //!< absolute offset of the header chunk from file start.
 } bra_io_footer_t;
+
+/**
+ * @brief bra_huffman_t
+ */
+typedef struct bra_huffman_t
+{
+    uint8_t  lengths[BRA_ALPHABET_SIZE];    //!< Huffman canonical code lengths per symbol (0 = symbol not present)
+    uint32_t orig_size;                     //!< orig data size (used for decoding) (TODO: this should be redundant, or replace with num bits padding, 1 byte instead of 4)
+    uint32_t encoded_size;                  //!< how many bytes are encoded.
+} bra_huffman_t;
 
 /**
  * @brief BRa Chunk Header

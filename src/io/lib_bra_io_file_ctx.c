@@ -768,6 +768,7 @@ bool bra_io_file_ctx_print_meta_entry(bra_io_file_ctx_t* ctx, const bool test_mo
             break;
         case BRA_ATTR_COMP_COMPRESSED:
         {
+            // TODO: commented code to be review as a per CRC32
             // read chunk header
             // bra_io_chunk_header_t chunk_header;
             // if (!bra_io_file_chunks_read_header(ctx->f, &chunk_header))

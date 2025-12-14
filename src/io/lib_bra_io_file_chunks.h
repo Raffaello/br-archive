@@ -20,7 +20,7 @@
  */
 bool bra_io_file_chunks_read_header(bra_io_file_t* src, bra_io_chunk_header_t* chunk_header);
 
-/*
+/**
  * @brief Write a chunk header to the file. This is only present in compressed chunks.
  *        The chunk header is present in every chunk.
  *
@@ -113,7 +113,7 @@ bool bra_io_file_chunks_compress_file(bra_io_file_t* dst, bra_io_file_t* src, co
  *
  * @param dst Destination file for decompressed data (must not be NULL)
  * @param src Source file containing compressed data (must not be NULL)
- * @param data_size Size of compressed data to reads
+ * @param data_size Size of compressed data to read
  * @param me Metadata entry with compression info and CRC32 (must not be NULL)
  * @retval true On successful decompression and CRC32 verification
  * @retval false On decompression error, CRC32 mismatch, or I/O failure

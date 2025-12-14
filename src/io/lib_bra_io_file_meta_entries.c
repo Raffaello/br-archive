@@ -14,22 +14,21 @@
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-bool bra_io_file_meta_entry_write_common_header(bra_io_file_t* f, const bra_attr_t attr, const char* filename, const uint8_t filename_size)
+bool bra_io_file_meta_entry_write_common_header(bra_io_file_t* f, const bra_meta_entry_t* me)
 {
     assert_bra_io_file_t(f);
-    assert(filename != NULL);
-    assert(filename_size > 0);
+    assert(me != NULL);
 
     // 1. attributes
-    if (!bra_io_file_write(f, &attr, sizeof(bra_attr_t)))
+    if (!bra_io_file_write(f, &me->attributes, sizeof(bra_attr_t)))
         return false;
 
     // 2. filename size
-    if (!bra_io_file_write(f, &filename_size, sizeof(uint8_t)))
+    if (!bra_io_file_write(f, &me->name_size, sizeof(uint8_t)))
         return false;
 
     // 3. filename
-    if (!bra_io_file_write(f, filename, filename_size))
+    if (!bra_io_file_write(f, me->name, me->name_size))
         return false;
 
     return true;
@@ -70,7 +69,6 @@ bool bra_io_file_meta_entry_read_subdir_entry(bra_io_file_t* f, bra_meta_entry_t
     if (BRA_ATTR_TYPE(me->attributes) != BRA_ATTR_TYPE_SUBDIR)
         return false;
 
-    // read parent index
     bra_meta_entry_subdir_t* mes = me->entry_data;
     return bra_io_file_read(f, &mes->parent_index, sizeof(bra_meta_entry_subdir_t));
 }
@@ -84,7 +82,6 @@ bool bra_io_file_meta_entry_write_subdir_entry(bra_io_file_t* f, const bra_meta_
     if (BRA_ATTR_TYPE(me->attributes) != BRA_ATTR_TYPE_SUBDIR)
         return false;
 
-    // read parent index
     bra_meta_entry_subdir_t* mes = me->entry_data;
     return bra_io_file_write(f, &mes->parent_index, sizeof(uint32_t));
 }
@@ -109,7 +106,7 @@ bool bra_io_file_meta_entry_flush_entry_file(bra_io_file_t* f, bra_meta_entry_t*
     if (me_pos <= 0)
         return false;
 
-    if (!bra_io_file_meta_entry_write_common_header(f, me->attributes, me->name, me->name_size))
+    if (!bra_io_file_meta_entry_write_common_header(f, me))
         return false;
 
     // 3. file size
@@ -129,7 +126,8 @@ bool bra_io_file_meta_entry_flush_entry_file(bra_io_file_t* f, bra_meta_entry_t*
     case BRA_ATTR_COMP_STORED:
         me->crc32 = bra_crc32c(&mef->data_size, sizeof(uint64_t), me->crc32);
         if (!bra_io_file_meta_entry_write_file_entry(f, me))
-            return false;
+            goto BRA_IO_FILE_META_ENTRY_FLUSH_ENTRY_FILE_ERROR;
+
         if (!bra_io_file_chunks_copy_file(f, &f2, mef->data_size, me))
             return false;
         break;
@@ -156,11 +154,15 @@ bool bra_io_file_meta_entry_flush_entry_file(bra_io_file_t* f, bra_meta_entry_t*
         break;
     default:
         bra_log_critical("invalid compression type for file: %u", BRA_ATTR_COMP(me->attributes));
-        return false;
+        goto BRA_IO_FILE_META_ENTRY_FLUSH_ENTRY_FILE_ERROR;
     }
 
     bra_io_file_close(&f2);
     return true;
+
+BRA_IO_FILE_META_ENTRY_FLUSH_ENTRY_FILE_ERROR:
+    bra_io_file_close(&f2);
+    return false;
 }
 
 bool bra_io_file_meta_entry_flush_entry_dir(bra_io_file_t* f, const bra_meta_entry_t* me)
@@ -174,7 +176,7 @@ bool bra_io_file_meta_entry_flush_entry_dir(bra_io_file_t* f, const bra_meta_ent
         BRA_ATTR_TYPE(me->attributes) != BRA_ATTR_TYPE_SUBDIR)
         return false;
 
-    if (!bra_io_file_meta_entry_write_common_header(f, me->attributes, me->name, me->name_size))
+    if (!bra_io_file_meta_entry_write_common_header(f, me))
         return false;
 
     return true;

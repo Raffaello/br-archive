@@ -216,10 +216,10 @@ int64_t bra_io_file_tell(bra_io_file_t* f);
 bool bra_io_file_read(bra_io_file_t* src, void* buf, const size_t buf_size);
 
 /**
- * @brief Write data into a file.
+ * @brief Write data to a file.
  *
- * Writes exactly @p buf_size bytes from the current file position into the
- * provided buffer. Used for writing fixed-size data blocks.
+ * Writes exactly @p buf_size bytes from the provided buffer to the file
+ * at the current file position. Used for writing fixed-size data blocks.
  *
  * @param dst Destination file wrapper (must not be @c NULL and file must be open)
  * @param buf Buffer to be written into @p dst (must not be @c NULL and have @p buf_size capacity)

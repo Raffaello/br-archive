@@ -184,7 +184,7 @@ static inline bool bra_io_file_read_file_chunks_compressed(bra_io_file_t* src, c
         free(buf_huffman);
         buf_huffman = NULL;
 
-        i += s;
+        i += chunk_header.huffman.encoded_size + sizeof(bra_io_chunk_header_t);
     }
 
     return true;
@@ -718,7 +718,7 @@ bool bra_io_file_decompress_file_chunks(bra_io_file_t* dst, bra_io_file_t* src, 
         free(buf_huffman);
         buf_huffman = NULL;
 
-        i += s;
+        i += chunk_header.huffman.encoded_size + sizeof(bra_io_chunk_header_t);
     }
 
     return true;

@@ -123,6 +123,8 @@ else()
     message(STATUS "Skipping test_bra_crc32c.sse42_* tests: not an x86_64/AMD64/i386 architecture")
 endif()
 
+add_test(NAME test_bra_crc32c.combine               COMMAND test_bra_crc32c test_bra_crc32c_combine)
+
 #####################################################################################################
 
 

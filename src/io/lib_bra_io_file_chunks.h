@@ -52,9 +52,11 @@ bool bra_io_file_chunks_write_header(bra_io_file_t* dst, const bra_io_chunk_head
  * @note CRC32 is calculated incrementally for memory efficiency.
  * @note After success, file is positioned at trailing CRC32 location.
  *
- * @see bra_io_file_chunks_copy_file
+ * @see bra_io_file_chunks_store_file
  */
 bool bra_io_file_chunks_read_file(bra_io_file_t* src, const uint64_t data_size, bra_meta_entry_t* me);
+
+bool bra_io_file_chunks_copy_file(bra_io_file_t* dst, bra_io_file_t* src, const uint64_t data_size, bra_meta_entry_t* me);
 
 /**
  * @brief Copy data between files in chunks with CRC32 calculation.
@@ -79,7 +81,7 @@ bool bra_io_file_chunks_read_file(bra_io_file_t* src, const uint64_t data_size, 
  * @see bra_io_file_chunks_read_file
  * @see bra_io_file_chunks_compress_file
  */
-bool bra_io_file_chunks_copy_file(bra_io_file_t* dst, bra_io_file_t* src, const uint64_t data_size, bra_meta_entry_t* me);
+bool bra_io_file_chunks_store_file(bra_io_file_t* dst, bra_io_file_t* src, const uint64_t data_size, bra_meta_entry_t* me);
 
 /**
  * @brief Compress and copy file data in chunks.
@@ -100,7 +102,7 @@ bool bra_io_file_chunks_copy_file(bra_io_file_t* dst, bra_io_file_t* src, const 
  * @note CRC32 is calculated on original (uncompressed) data.
  *
  * @see bra_io_file_chunks_decompress_file
- * @see bra_io_file_chunks_copy_file
+ * @see bra_io_file_chunks_store_file
  */
 bool bra_io_file_chunks_compress_file(bra_io_file_t* dst, bra_io_file_t* src, const uint64_t data_size, bra_meta_entry_t* me);
 
@@ -123,6 +125,6 @@ bool bra_io_file_chunks_compress_file(bra_io_file_t* dst, bra_io_file_t* src, co
  * @note CRC32 verification ensures data integrity after decompression.
  *
  * @see bra_io_file_chunks_compress_file
- * @see bra_io_file_chunks_copy_file
+ * @see bra_io_file_chunks_store_file
  */
 bool bra_io_file_chunks_decompress_file(bra_io_file_t* dst, bra_io_file_t* src, const uint64_t data_size, bra_meta_entry_t* me);

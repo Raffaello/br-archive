@@ -49,6 +49,9 @@ uint32_t bra_crc32c_sse42(const void* data, const uint64_t length, const uint32_
  */
 uint32_t bra_crc32c(const void* data, const uint64_t length, const uint32_t previous_crc);
 
+
+uint32_t bra_crc32c_combine(uint32_t crc32a, uint32_t crc32b, uint32_t len_b);
+
 /**
  * @brief Set the CRC32C implementation to use SSE4.2 intrinsics or not.
  *

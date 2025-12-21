@@ -646,7 +646,7 @@ bool bra_io_file_ctx_decode_and_write_to_disk(bra_io_file_ctx_t* ctx, bra_fs_ove
             switch (BRA_ATTR_COMP(me.attributes))
             {
             case BRA_ATTR_COMP_STORED:
-                if (!bra_io_file_chunks_copy_file(&f2, &ctx->f, ds, &me))
+                if (!bra_io_file_chunks_store_file(&f2, &ctx->f, ds, &me))
                     goto BRA_IO_DECODE_ERR;
                 break;
             case BRA_ATTR_COMP_COMPRESSED:

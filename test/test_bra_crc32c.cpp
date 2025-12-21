@@ -118,8 +118,8 @@ TEST(test_bra_crc32c_combine2)
                               std::istreambuf_iterator<char>());
     f.close();
 
-    const int           buf_size  = content.size();
     constexpr const int buf_split = 50;
+    const int           buf_size  = content.size();
     const char*         buf       = content.data();
 
     ASSERT_TRUE(buf_size > buf_split);

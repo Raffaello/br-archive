@@ -7,6 +7,10 @@ extern "C" {
 }
 #endif
 
+#include <fstream>
+#include <string>
+#include <iterator>
+
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -93,6 +97,43 @@ TEST(test_bra_crc32c_consistency)
     return 0;
 }
 
+TEST(test_bra_crc32c_combine)
+{
+    const uint32_t crc1     = bra_crc32c(data2, 6, BRA_CRC32C_INIT);
+    const uint32_t crc2     = bra_crc32c(&data2[6], 6, BRA_CRC32C_INIT);
+    const uint32_t crc      = bra_crc32c(data2, 12, BRA_CRC32C_INIT);
+    const uint32_t crc_comb = bra_crc32c_combine(crc1, crc2, 6);
+
+    ASSERT_EQ(crc, crc_comb);
+    return 0;
+}
+
+TEST(test_bra_crc32c_combine2)
+{
+    std::ifstream f("fixtures/lorem.txt");
+    ASSERT_TRUE(f.is_open());
+
+    // Read entire file into a single string
+    const std::string content((std::istreambuf_iterator<char>(f)),
+                              std::istreambuf_iterator<char>());
+    f.close();
+
+    constexpr const uint64_t buf_split = 50;
+    const uint64_t           buf_size  = content.size();
+    const char*              buf       = content.data();
+
+    ASSERT_TRUE(buf_size > buf_split);
+
+    const uint32_t crc      = bra_crc32c(buf, buf_size, BRA_CRC32C_INIT);
+    const uint32_t crc1     = bra_crc32c(buf, buf_split, BRA_CRC32C_INIT);
+    const uint32_t crc2     = bra_crc32c(&buf[buf_split], buf_size - buf_split, BRA_CRC32C_INIT);
+    const uint32_t crc_comb = bra_crc32c_combine(crc1, crc2, static_cast<uint32_t>(buf_size - buf_split));
+
+    ASSERT_EQ(crc, crc_comb);
+
+    return 0;
+}
+
 int main(int argc, char* argv[])
 {
     const std::map<std::string, std::function<int()>> m = {
@@ -102,6 +143,8 @@ int main(int argc, char* argv[])
         {TEST_FUNC(test_bra_crc32c_sse42_compute_crc32)},
         {TEST_FUNC(test_bra_crc32c_sse42_empty_input)},
         {TEST_FUNC(test_bra_crc32c_consistency)},
+        {TEST_FUNC(test_bra_crc32c_combine)},
+        {TEST_FUNC(test_bra_crc32c_combine2)},
     };
 
     return test_main(argc, argv, m);

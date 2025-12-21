@@ -25,6 +25,8 @@
 // #define BRA_CRC32C_POLY     0x1EDC6F41u    // CRC-32C (Castagnoli) polynomial
 #define BRA_CRC32C_POLY 0x82F63B78u    // reflected CRC-32C (Castagnoli)
 
+#define GF2_DIM 32                     //!< dimension of GF(2) vectors (length of CRC)
+
 typedef uint32_t (*bra_crc32_f)(const void* data, const uint64_t length, const uint32_t previous_crc);
 
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -68,7 +70,33 @@ static const uint32_t crc32c_table[256] = {
     0xF36E6F75, 0x0105EC76, 0x12551F82, 0xE03E9C81, 0x34F4F86A, 0xC69F7B69, 0xD5CF889D, 0x27A40B9E,
     0x79B737BA, 0x8BDCB4B9, 0x988C474D, 0x6AE7C44E, 0xBE2DA0A5, 0x4C4623A6, 0x5F16D052, 0xAD7D5351
 };
+
 // clang-format on
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+static uint32_t gf2_matrix_times(uint32_t* mat, uint32_t vec)
+{
+    uint32_t sum = 0;
+
+    while (vec != 0)
+    {
+        if (vec & 1)
+            sum ^= *mat;
+        vec >>= 1;
+        mat++;
+    }
+
+    return sum;
+}
+
+static void gf2_matrix_square(uint32_t* square, uint32_t* mat)
+{
+    for (int n = 0; n < GF2_DIM; n++)
+        square[n] = gf2_matrix_times(mat, mat[n]);
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // Default implementation using lookup table
 BRA_TARGET_DEFAULT uint32_t bra_crc32c_table(const void* data, const uint64_t length, const uint32_t previous_crc)
@@ -148,6 +176,58 @@ BRA_TARGET_SSE42 uint32_t bra_crc32c_sse42(const void* data, const uint64_t leng
 uint32_t bra_crc32c(const void* data, const uint64_t length, const uint32_t previous_crc)
 {
     return g_bra_crc32c_f(data, length, previous_crc);
+}
+
+uint32_t bra_crc32c_combine(uint32_t crc32a, uint32_t crc32b, uint32_t len_b)
+{
+    if (len_b == 0)
+        return crc32a;
+
+    uint32_t row;
+    uint32_t even[GF2_DIM]; /* even-power-of-two zeros operator */
+    uint32_t odd[GF2_DIM];  /* odd-power-of-two zeros operator */
+
+    /* put operator for one zero bit in odd */
+    odd[0] = BRA_CRC32C_POLY;    // 0x82F63B78u;    // 0xedb88320UL;          /* CRC-32 polynomial */
+    row    = 1;
+    for (int n = 1; n < GF2_DIM; n++)
+    {
+        odd[n]   = row;
+        row    <<= 1;
+    }
+
+    /* put operator for two zero bits in even */
+    gf2_matrix_square(even, odd);
+
+    /* put operator for four zero bits in odd */
+    gf2_matrix_square(odd, even);
+
+    /* apply len_b zeros to crc32a (first square will put the operator for one
+       zero byte, eight zero bits, in even) */
+    do
+    {
+        /* apply zeros operator for this bit of len_b */
+        gf2_matrix_square(even, odd);
+        if (len_b & 1)
+            crc32a = gf2_matrix_times(even, crc32a);
+        len_b >>= 1;
+
+        /* if no more bits set, then done */
+        if (len_b == 0)
+            break;
+
+        /* another iteration of the loop with odd and even swapped */
+        gf2_matrix_square(odd, even);
+        if (len_b & 1)
+            crc32a = gf2_matrix_times(odd, crc32a);
+        len_b >>= 1;
+
+        /* if no more bits set, then done */
+    }
+    while (len_b != 0);
+
+    /* return combined crc */
+    return crc32a ^ crc32b;
 }
 
 void bra_crc32c_use_sse42(const bool use_sse42)

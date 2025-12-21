@@ -111,9 +111,6 @@ bool bra_io_file_meta_entry_flush_entry_file(bra_io_file_t* f, bra_meta_entry_t*
 
     // 3. file size
     assert(mef != NULL);
-    // me->crc32 = bra_crc32c(&mef->data_size, sizeof(uint64_t), me->crc32);
-    // if (fwrite(&mef->data_size, sizeof(uint64_t), 1, ctx->f.f) != 1)
-    //     return false;
 
     // file content
     bra_io_file_t f2;
@@ -128,7 +125,7 @@ bool bra_io_file_meta_entry_flush_entry_file(bra_io_file_t* f, bra_meta_entry_t*
         if (!bra_io_file_meta_entry_write_file_entry(f, me))
             goto BRA_IO_FILE_META_ENTRY_FLUSH_ENTRY_FILE_ERROR;
 
-        if (!bra_io_file_chunks_copy_file(f, &f2, mef->data_size, me))
+        if (!bra_io_file_chunks_store_file(f, &f2, mef->data_size, me))
             goto BRA_IO_FILE_META_ENTRY_FLUSH_ENTRY_FILE_ERROR;
         break;
     case BRA_ATTR_COMP_COMPRESSED:

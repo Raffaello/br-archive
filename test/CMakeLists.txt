@@ -123,6 +123,9 @@ else()
     message(STATUS "Skipping test_bra_crc32c.sse42_* tests: not an x86_64/AMD64/i386 architecture")
 endif()
 
+add_test(NAME test_bra_crc32c.combine               COMMAND test_bra_crc32c test_bra_crc32c_combine)
+add_test(NAME test_bra_crc32c.combine2              COMMAND test_bra_crc32c test_bra_crc32c_combine2)
+
 #####################################################################################################
 
 
@@ -166,3 +169,9 @@ add_custom_command(TARGET test_bra_fs POST_BUILD
         ${CMAKE_CURRENT_BINARY_DIR}/${fixture_i}
 )
 endforeach()
+
+add_custom_command(TARGET test_bra_crc32c POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different
+        ${CMAKE_CURRENT_SOURCE_DIR}/fixtures
+        ${CMAKE_CURRENT_BINARY_DIR}/fixtures
+)

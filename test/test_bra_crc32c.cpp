@@ -118,16 +118,16 @@ TEST(test_bra_crc32c_combine2)
                               std::istreambuf_iterator<char>());
     f.close();
 
-    constexpr const int buf_split = 50;
-    const int           buf_size  = content.size();
-    const char*         buf       = content.data();
+    constexpr const uint64_t buf_split = 50;
+    const uint64_t           buf_size  = content.size();
+    const char*              buf       = content.data();
 
     ASSERT_TRUE(buf_size > buf_split);
 
     const uint32_t crc      = bra_crc32c(buf, buf_size, BRA_CRC32C_INIT);
     const uint32_t crc1     = bra_crc32c(buf, buf_split, BRA_CRC32C_INIT);
     const uint32_t crc2     = bra_crc32c(&buf[buf_split], buf_size - buf_split, BRA_CRC32C_INIT);
-    const uint32_t crc_comb = bra_crc32c_combine(crc1, crc2, buf_size - buf_split);
+    const uint32_t crc_comb = bra_crc32c_combine(crc1, crc2, static_cast<uint32_t>(buf_size - buf_split));
 
     ASSERT_EQ(crc, crc_comb);
 

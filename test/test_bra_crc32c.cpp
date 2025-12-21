@@ -7,7 +7,9 @@ extern "C" {
 }
 #endif
 
-#include <cstdio>
+#include <fstream>
+#include <string>
+#include <iterator>
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -108,23 +110,19 @@ TEST(test_bra_crc32c_combine)
 
 TEST(test_bra_crc32c_combine2)
 {
-    FILE* f = fopen("fixtures/lorem.txt", "rb");
-    ASSERT_TRUE(f != nullptr);
+    std::ifstream f("fixtures/lorem.txt");
+    ASSERT_TRUE(f.is_open());
 
-    constexpr const int buf_size  = 3048;
+    // Read entire file into a single string
+    const std::string content((std::istreambuf_iterator<char>(f)),
+                              std::istreambuf_iterator<char>());
+    f.close();
+
+    const int           buf_size  = content.size();
     constexpr const int buf_split = 50;
-    char                buf[buf_size];
+    const char*         buf       = content.data();
 
-    size_t res = fread(buf, buf_size, 1, f);
-    if (res == 0)
-    {
-        ASSERT_EQ(ferror(f), 0);
-    }
-    else
-    {
-        ASSERT_EQ(res, 1U);
-    }
-    fclose(f);
+    ASSERT_TRUE(buf_size > buf_split);
 
     const uint32_t crc      = bra_crc32c(buf, buf_size, BRA_CRC32C_INIT);
     const uint32_t crc1     = bra_crc32c(buf, buf_split, BRA_CRC32C_INIT);

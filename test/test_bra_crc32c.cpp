@@ -114,7 +114,16 @@ TEST(test_bra_crc32c_combine2)
     constexpr const int buf_size  = 3048;
     constexpr const int buf_split = 50;
     char                buf[buf_size];
-    ASSERT_EQ(fread(buf, buf_size, 1, f), 1U);
+
+    size_t res = fread(buf, buf_size, 1, f);
+    if (res == 0)
+    {
+        ASSERT_EQ(ferror(f), 0);
+    }
+    else
+    {
+        ASSERT_EQ(res, 1U);
+    }
     fclose(f);
 
     const uint32_t crc      = bra_crc32c(buf, buf_size, BRA_CRC32C_INIT);

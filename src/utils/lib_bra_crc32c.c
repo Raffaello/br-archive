@@ -71,16 +71,13 @@ static const uint32_t crc32c_table[256] = {
     0x79B737BA, 0x8BDCB4B9, 0x988C474D, 0x6AE7C44E, 0xBE2DA0A5, 0x4C4623A6, 0x5F16D052, 0xAD7D5351
 };
 
-/* Precomputed x^(8 * 2^i) mod CRC32C polynomial (reflected) */
-// static const uint32_t crc32c_pow[32] = {}
-
 // clang-format on
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-static unsigned long gf2_matrix_times(unsigned long* mat, unsigned long vec)
+static uint32_t gf2_matrix_times(uint32_t* mat, uint32_t vec)
 {
-    unsigned long sum = 0;
+    uint32_t sum = 0;
 
     while (vec != 0)
     {
@@ -93,7 +90,7 @@ static unsigned long gf2_matrix_times(unsigned long* mat, unsigned long vec)
     return sum;
 }
 
-static void gf2_matrix_square(unsigned long* square, unsigned long* mat)
+static void gf2_matrix_square(uint32_t* square, uint32_t* mat)
 {
     for (int n = 0; n < GF2_DIM; n++)
         square[n] = gf2_matrix_times(mat, mat[n]);
@@ -186,9 +183,9 @@ uint32_t bra_crc32c_combine(uint32_t crc32a, uint32_t crc32b, uint32_t len_b)
     if (len_b == 0)
         return crc32a;
 
-    unsigned long row;
-    unsigned long even[GF2_DIM]; /* even-power-of-two zeros operator */
-    unsigned long odd[GF2_DIM];  /* odd-power-of-two zeros operator */
+    uint32_t row;
+    uint32_t even[GF2_DIM]; /* even-power-of-two zeros operator */
+    uint32_t odd[GF2_DIM];  /* odd-power-of-two zeros operator */
 
     /* put operator for one zero bit in odd */
     odd[0] = BRA_CRC32C_POLY;    // 0x82F63B78u;    // 0xedb88320UL;          /* CRC-32 polynomial */

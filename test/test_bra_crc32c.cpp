@@ -95,15 +95,33 @@ TEST(test_bra_crc32c_consistency)
 
 TEST(test_bra_crc32c_combine)
 {
-    const char* str1 = "Hello ";
-    const char* str2 = "World!";
-
-    const uint32_t crc1     = bra_crc32c(str1, 6, BRA_CRC32C_INIT);
-    const uint32_t crc2     = bra_crc32c(str2, 6, BRA_CRC32C_INIT);
-    const uint32_t crc      = bra_crc32c(str2, 6, bra_crc32c(str1, 6, BRA_CRC32C_INIT));
+    const uint32_t crc1     = bra_crc32c(data2, 6, BRA_CRC32C_INIT);
+    const uint32_t crc2     = bra_crc32c(&data2[6], 6, BRA_CRC32C_INIT);
+    const uint32_t crc      = bra_crc32c(data2, 12, BRA_CRC32C_INIT);
     const uint32_t crc_comb = bra_crc32c_combine(crc1, crc2, 6);
 
     ASSERT_EQ(crc, crc_comb);
+    return 0;
+}
+
+TEST(test_bra_crc32c_combine2)
+{
+    FILE* f = fopen("fixtures/lorem.txt", "rb");
+    ASSERT_TRUE(f != nullptr);
+
+    constexpr const int buf_size  = 3048;
+    constexpr const int buf_split = 50;
+    char                buf[buf_size];
+    ASSERT_EQ(fread(buf, buf_size, 1, f), 1U);
+    fclose(f);
+
+    const uint32_t crc      = bra_crc32c(buf, buf_size, BRA_CRC32C_INIT);
+    const uint32_t crc1     = bra_crc32c(buf, buf_split, BRA_CRC32C_INIT);
+    const uint32_t crc2     = bra_crc32c(&buf[buf_split], buf_size - buf_split, BRA_CRC32C_INIT);
+    const uint32_t crc_comb = bra_crc32c_combine(crc1, crc2, buf_size - buf_split);
+
+    ASSERT_EQ(crc, crc_comb);
+
     return 0;
 }
 
@@ -117,6 +135,7 @@ int main(int argc, char* argv[])
         {TEST_FUNC(test_bra_crc32c_sse42_empty_input)},
         {TEST_FUNC(test_bra_crc32c_consistency)},
         {TEST_FUNC(test_bra_crc32c_combine)},
+        {TEST_FUNC(test_bra_crc32c_combine2)},
     };
 
     return test_main(argc, argv, m);

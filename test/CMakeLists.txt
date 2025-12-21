@@ -124,6 +124,7 @@ else()
 endif()
 
 add_test(NAME test_bra_crc32c.combine               COMMAND test_bra_crc32c test_bra_crc32c_combine)
+add_test(NAME test_bra_crc32c.combine2              COMMAND test_bra_crc32c test_bra_crc32c_combine2)
 
 #####################################################################################################
 

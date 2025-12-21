@@ -169,3 +169,9 @@ add_custom_command(TARGET test_bra_fs POST_BUILD
         ${CMAKE_CURRENT_BINARY_DIR}/${fixture_i}
 )
 endforeach()
+
+add_custom_command(TARGET test_bra_crc32c POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different
+        ${CMAKE_CURRENT_SOURCE_DIR}/fixtures
+        ${CMAKE_CURRENT_BINARY_DIR}/fixtures
+)

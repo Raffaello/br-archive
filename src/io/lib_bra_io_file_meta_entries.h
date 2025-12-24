@@ -6,7 +6,7 @@
 #include <stdbool.h>
 
 /**
- * @brief write the common meta entry data.
+ * @brief write the common meta entry header data.
  *
  * @param f the target file
  * @param me the meta entry to write to @p f

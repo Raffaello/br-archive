@@ -23,10 +23,10 @@
 #define BRA_FALLTHROUGH           __attribute__((fallthrough))
 #elif defined(_WIN32) || defined(_WIN64)
 #define BRA_FUNC_ATTR_CONSTRUCTOR
-#define BRA_FALLTHROUGH    //!< fallthrough
+#define BRA_FALLTHROUGH /*!< fallthrough */
 #else
 #define BRA_FUNC_ATTR_CONSTRUCTOR
-#define BRA_FALLTHROUGH    //!< fallthrough
+#define BRA_FALLTHROUGH /*!< fallthrough */
 #endif
 
 

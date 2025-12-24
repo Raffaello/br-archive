@@ -763,15 +763,11 @@ bool bra_io_file_ctx_print_meta_entry(bra_io_file_ctx_t* ctx, const bool test_mo
         switch (BRA_ATTR_COMP(me.attributes))
         {
         case BRA_ATTR_COMP_STORED:
+            // fallthrough
+        case BRA_ATTR_COMP_COMPRESSED:
             if (!bra_io_file_skip_data(&ctx->f, ds))
                 goto BRA_IO_FILE_CTX_PRINT_META_ENTRY_ERR;
             break;
-        case BRA_ATTR_COMP_COMPRESSED:
-        {
-            if (!bra_io_file_skip_data(&ctx->f, ds))
-                goto BRA_IO_FILE_CTX_PRINT_META_ENTRY_ERR;
-        }
-        break;
         default:
             bra_log_critical("invalid compression type for file: %u", BRA_ATTR_COMP(me.attributes));
             goto BRA_IO_FILE_CTX_PRINT_META_ENTRY_ERR;

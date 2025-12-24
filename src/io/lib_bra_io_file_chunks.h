@@ -99,7 +99,7 @@ bool bra_io_file_chunks_copy_file(bra_io_file_t* dst, bra_io_file_t* src, const 
  * @note Both files advance by data_size bytes on success.
  * @note On error, both files are automatically closed via @ref bra_io_file_close().
  * @note CRC32 is calculated during the copy operation for efficiency.
- * @note Memory usage is limited to BRA_MAX_CHUNK_SIZE regardless of data_size.
+ * @note Memory usage is limited to #BRA_MAX_CHUNK_SIZE regardless of data_size.
  *
  * @see bra_io_file_chunks_read_file
  * @see bra_io_file_chunks_compress_file

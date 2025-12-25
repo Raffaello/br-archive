@@ -166,6 +166,13 @@ bool bra_io_file_chunks_read_file_compressed(bra_io_file_t* src, const uint64_t 
         i += chunk_header.huffman.encoded_size + sizeof(bra_io_chunk_header_t);
     }
 
+    // safety check
+    if (file_orig_size <= data_size)
+    {
+        bra_log_error("corrupted file entry: %s", me->name);
+        return false;
+    }
+
     me->_compression_ratio = (float) ((double) data_size / (double) file_orig_size);
     return true;
 

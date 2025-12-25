@@ -279,18 +279,18 @@ bool bra_io_file_chunks_decompress_file(bra_io_file_t* dst, bra_io_file_t* src, 
     assert_bra_io_file_t(src);
     assert(me != NULL);
 
-    if (dst != NULL)
-    {
-        if (dst->f == NULL || dst->fn == NULL)
-            goto BRA_IO_FILE_DECOMPRESS_FILE_CHUNKS_ERR;
-    }
-
     uint8_t         buf[BRA_MAX_CHUNK_SIZE];
     uint8_t         buf_bwt[BRA_MAX_CHUNK_SIZE];
     uint8_t         buf_mtf[BRA_MAX_CHUNK_SIZE];
     bra_bwt_index_t buf_trans[BRA_MAX_CHUNK_SIZE];
     uint8_t*        buf_huffman    = NULL;
     uint64_t        file_orig_size = 0;
+
+    if (dst != NULL)
+    {
+        if (dst->f == NULL || dst->fn == NULL)
+            goto BRA_IO_FILE_DECOMPRESS_FILE_CHUNKS_ERR;
+    }
 
     for (uint64_t i = 0; i < data_size;)
     {

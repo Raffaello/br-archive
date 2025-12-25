@@ -88,6 +88,8 @@ bool bra_io_file_chunks_copy_file(bra_io_file_t* dst, bra_io_file_t* src, const 
  * chunks while calculating CRC32 checksum. Both files must be positioned
  * at the correct read/write offsets before calling.
  *
+ * @todo REMOVE and just have 1 copy file function with bool compute_crc32 (this is also used to decompress)
+ *
  * @param dst Destination file wrapper positioned for writing (must not be @c NULL)
  * @param src Source file wrapper positioned for reading (must not be @c NULL)
  * @param data_size Total number of bytes to copy

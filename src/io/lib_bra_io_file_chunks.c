@@ -341,7 +341,7 @@ bool bra_io_file_chunks_compress_file(bra_io_file_t* dst, bra_io_file_t* src, co
 
         res = bra_io_file_chunks_copy_file(dst, &tmpfile, tmpfile_size);
 
-        // bra_log_printf("%.2f%%", (double) tmpfile_size / (double) data_size * 100.0);
+        // bra_log_printf("%.1f%%", (double) tmpfile_size / (double) data_size * 100.0);
     }
 
     bra_io_file_close(&tmpfile);

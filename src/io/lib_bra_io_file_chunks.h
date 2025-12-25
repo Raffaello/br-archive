@@ -74,7 +74,7 @@ bool bra_io_file_chunks_read_file(bra_io_file_t* src, const uint64_t data_size, 
  * @param src Source file wrapper positioned at start of data (must not be @c NULL)
  * @param data_size Total number of bytes to read
  * @param me Metadata entry to update with CRC32 (must not be @c NULL)
- * @param decode if @c true it will compute the CRC32 (nothing else to decode)
+ * @param decode if @c true, read the data and compute CRC32; if @c false, read the data without computing CRC32
  * @retval true true On successful read of all data with CRC32 updated
  * @retval false  On read error, EOF, or I/O failure
  */

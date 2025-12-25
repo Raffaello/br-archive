@@ -53,7 +53,7 @@ typedef struct bra_io_footer_t
 typedef struct bra_huffman_t
 {
     uint8_t  lengths[BRA_ALPHABET_SIZE];    //!< Huffman canonical code lengths per symbol (0 = symbol not present)
-    uint32_t orig_size;                     //!< orig data size (used for decoding) (TODO: this should be redundant, or replace with num bits padding, 1 byte instead of 4)
+    uint32_t orig_size;                     //!< orig data size. Used for decoding and allocating buffers
     uint32_t encoded_size;                  //!< how many bytes are encoded.
 } bra_huffman_t;
 
@@ -86,7 +86,7 @@ typedef struct bra_io_file_t
  */
 typedef struct bra_meta_entry_t
 {
-    // TODO: add CRC ... file permissions, etc... ?
+    // TODO: file permissions, etc... ?
     bra_attr_t attributes;    //!< file attributes: #BRA_ATTR_TYPE_FILE, #BRA_ATTR_TYPE_DIR, #BRA_ATTR_TYPE_SYM, #BRA_ATTR_TYPE_SUBDIR
     uint8_t    name_size;     //!< length in bytes excluding the trailing NUL; [1..UINT8_MAX]
     char*      name;          //!< filename/dirname (owned; free via @ref bra_meta_entry_free)

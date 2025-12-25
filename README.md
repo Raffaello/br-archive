@@ -1,8 +1,12 @@
 # BR-Archive
 
-BR-Archive (BRa) is an educational project to compress files with various algorithm and creating self-extracting-archives (SFX).
+BR-Archive (BRa) is an educational project to compress files with various algorithms and creating self-extracting-archives (SFX).
 
-The main compression algorithm will be the classical '90s, and later on looking to use the `asymmetric number system` technique. 
+The main compression algorithm will be the classical '90s, and later on looking to use the `asymmetric number system` technique.
+
+> It is focusing mostly on the compression algorithms and not in a better architecture or structure of the project,
+> lacking some of better software engineering aspects.
+> So expects to have some technical and architectural debt as it is mostly a free time for fun project.
 
 ----
 

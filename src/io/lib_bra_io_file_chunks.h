@@ -60,55 +60,13 @@ bool bra_io_file_chunks_write_header(bra_io_file_t* dst, const bra_io_chunk_head
 bool bra_io_file_chunks_read_file(bra_io_file_t* src, const uint64_t data_size, bra_meta_entry_t* me, const bool decode);
 
 /**
- * @brief Read file data in chunks and update CRC32 if @p decode is true.
- *
- * Reads the specified amount of data from the current file position in
- * #BRA_MAX_CHUNK_SIZE chunks, updating the CRC32 checksum in the metadata
- * entry. Used for processing large files efficiently while maintaining
- * data integrity verification.
- *
- * @see bra_io_file_skip_data if @p decode is false as it is faster and more efficient if just want to skip data.
- *
- * @note use @ref bra_io_file_chunks_read_file if don't know if it is a stored or compressed file.
- *
- * @param src Source file wrapper positioned at start of data (must not be @c NULL)
- * @param data_size Total number of bytes to read
- * @param me Metadata entry to update with CRC32 (must not be @c NULL)
- * @param decode if @c true, read the data and compute CRC32; if @c false, read the data without computing CRC32
- * @retval true  On successful read of all data (CRC32 updated only if decode is true)
- * @retval false On read error, EOF, or I/O failure
- */
-bool bra_io_file_chunks_read_file_stored(bra_io_file_t* src, const uint64_t data_size, bra_meta_entry_t* me, const bool decode);
-
-/**
- * @brief Read file data in chunks and update CRC32 if @p decode is true.
- *
- * Reads the specified amount of data from the current file position in
- * #BRA_MAX_CHUNK_SIZE chunks, updating the CRC32 checksum in the metadata
- * entry. Used for processing large files efficiently while maintaining
- * data integrity verification.
- *
- * @see bra_io_file_skip_data if @p decode is false as it is faster and more efficient if just want to skip data.
- *
- * @note use @ref bra_io_file_chunks_read_file if don't know if it is a stored or compressed file.
- *
- * @param src Source file wrapper positioned at start of data (must not be @c NULL)
- * @param data_size Total number of bytes to read
- * @param me Metadata entry to update with CRC32 (must not be @c NULL)
- * @param decode if @c true it will decode to compute the CRC32; if @c false, skip decoding and accumulate size metadata for compression ratio calculation only.
- * @retval true On successful read of all data (CRC32 updated only if decode is true; otherwise, compression ratio metadata accumulated)
- * @retval false  On read error, EOF, or I/O failure
- */
-bool bra_io_file_chunks_read_file_compressed(bra_io_file_t* src, const uint64_t data_size, bra_meta_entry_t* me, const bool decode);
-
-/**
  * @brief Copy data between files in chunks, optionally computing CRC32.
  *
  * Efficiently copies data from source to destination in #BRA_MAX_CHUNK_SIZE
  * chunks. Both files must be positioned
  * at the correct read/write offsets before calling.
  *
- * @param dst Destination file wrapper positioned for writing (must not be @c NULL)
+ * @param dst Destination file wrapper positioned for writing; if @c NULL it won't save
  * @param src Source file wrapper positioned for reading (must not be @c NULL)
  * @param data_size Total number of bytes to copy
  * @param me meta entry (can be @c NULL if @p compute_crc32 is @c false)
@@ -156,10 +114,11 @@ bool bra_io_file_chunks_compress_file(bra_io_file_t* dst, bra_io_file_t* src, co
  * specified in the metadata entry, and writes the original data to the
  * destination file. Verifies data integrity using stored CRC32.
  *
- * @param dst Destination file for decompressed data (must not be @c NULL)
+ * @param dst Destination file for decompressed data (if @c NULL will be in test mode with @p decode true)
  * @param src Source file containing compressed data (must not be @c NULL)
  * @param data_size Size of compressed data to read
- * @param me Metadata entry with compression info and CRC32 (must not be NULL)
+ * @param me Metadata entry with compression info and CRC32 (must not be @c NULL)
+ * @param decode if @c true it will decode and compute the CRC32; if @c false, skip decoding and accumulate size metadata for compression ratio calculation only.
  * @retval true On successful decompression and CRC32 verification
  * @retval false On decompression error, CRC32 mismatch, or I/O failure
  *
@@ -170,4 +129,4 @@ bool bra_io_file_chunks_compress_file(bra_io_file_t* dst, bra_io_file_t* src, co
  * @see bra_io_file_chunks_compress_file
  * @see bra_io_file_chunks_copy_file
  */
-bool bra_io_file_chunks_decompress_file(bra_io_file_t* dst, bra_io_file_t* src, const uint64_t data_size, bra_meta_entry_t* me);
+bool bra_io_file_chunks_decompress_file(bra_io_file_t* dst, bra_io_file_t* src, const uint64_t data_size, bra_meta_entry_t* me, const bool decode);

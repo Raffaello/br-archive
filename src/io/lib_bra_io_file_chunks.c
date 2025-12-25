@@ -35,7 +35,54 @@ static bool bra_io_file_chunks_header_validate(const bra_io_chunk_header_t* chun
     return true;
 }
 
-static inline bool bra_io_file_read_file_chunks_stored(bra_io_file_t* src, const uint64_t data_size, bra_meta_entry_t* me)
+/////////////////////////////////////////////////////////////////////////
+
+bool bra_io_file_chunks_read_header(bra_io_file_t* src, bra_io_chunk_header_t* chunk_header)
+{
+    assert_bra_io_file_t(src);
+    assert(chunk_header != NULL);
+
+    if (!bra_io_file_read(src, chunk_header, sizeof(bra_io_chunk_header_t)))
+    {
+        bra_log_error("unable to read chunk header from %s", src->fn);
+        return false;
+    }
+
+    return true;
+}
+
+bool bra_io_file_chunks_write_header(bra_io_file_t* dst, const bra_io_chunk_header_t* chunk_header)
+{
+    assert_bra_io_file_t(dst);
+    assert(chunk_header != NULL);
+
+    if (!bra_io_file_write(dst, chunk_header, sizeof(bra_io_chunk_header_t)))
+    {
+        bra_log_error("unable to write chunk header to %s", dst->fn);
+        return false;
+    }
+
+    return true;
+}
+
+bool bra_io_file_chunks_read_file(bra_io_file_t* src, const uint64_t data_size, bra_meta_entry_t* me, const bool decode)
+{
+    assert_bra_io_file_t(src);
+    assert(me != NULL);
+
+    switch (BRA_ATTR_COMP(me->attributes))
+    {
+    case BRA_ATTR_COMP_STORED:
+        return bra_io_file_chunks_read_file_stored(src, data_size, me, decode);
+    case BRA_ATTR_COMP_COMPRESSED:
+        return bra_io_file_chunks_read_file_compressed(src, data_size, me, decode);
+    default:
+        bra_log_critical("invalid compression type for file: %u", BRA_ATTR_COMP(me->attributes));
+        return false;
+    }
+}
+
+bool bra_io_file_chunks_read_file_stored(bra_io_file_t* src, const uint64_t data_size, bra_meta_entry_t* me, const bool decode)
 {
     char buf[BRA_MAX_CHUNK_SIZE];
 
@@ -47,8 +94,11 @@ static inline bool bra_io_file_read_file_chunks_stored(bra_io_file_t* src, const
         if (!bra_io_file_read(src, buf, s))
             return false;
 
-        // update CRC32
-        me->crc32 = bra_crc32c(buf, s, me->crc32);
+        if (decode)
+        {
+            // update CRC32
+            me->crc32 = bra_crc32c(buf, s, me->crc32);
+        }
 
         i += s;
     }
@@ -56,8 +106,11 @@ static inline bool bra_io_file_read_file_chunks_stored(bra_io_file_t* src, const
     return true;
 }
 
-static inline bool bra_io_file_read_file_chunks_compressed(bra_io_file_t* src, const uint64_t data_size, bra_meta_entry_t* me, const bool decode)
+bool bra_io_file_chunks_read_file_compressed(bra_io_file_t* src, const uint64_t data_size, bra_meta_entry_t* me, const bool decode)
 {
+    // TODO: it could be reduce the number of buffers in use
+    //       with a ping-pong technique
+
     uint8_t         buf[BRA_MAX_CHUNK_SIZE];
     uint8_t         buf_mtf[BRA_MAX_CHUNK_SIZE];
     uint8_t         buf_bwt[BRA_MAX_CHUNK_SIZE];
@@ -103,8 +156,6 @@ static inline bool bra_io_file_read_file_chunks_compressed(bra_io_file_t* src, c
             bra_mtf_decode2((uint8_t*) buf_huffman, s, buf_mtf);
             bra_bwt_decode2(buf_mtf, s, chunk_header.primary_index, buf_transform, buf_bwt);
 
-            // TODO: it would be better on the uncompressed data to compute CRC32.
-            //       this must be reviewed.
             me->crc32 = bra_crc32c(&chunk_header, sizeof(bra_io_chunk_header_t), me->crc32);
             me->crc32 = bra_crc32c(buf_bwt, s, me->crc32);
 
@@ -127,53 +178,6 @@ BRA_IO_FILE_READ_FILE_CHUNKS_COMPRESSED_ERROR:
 
     bra_io_file_close(src);
     return false;
-}
-
-/////////////////////////////////////////////////////////////////////////
-
-bool bra_io_file_chunks_read_header(bra_io_file_t* src, bra_io_chunk_header_t* chunk_header)
-{
-    assert_bra_io_file_t(src);
-    assert(chunk_header != NULL);
-
-    if (!bra_io_file_read(src, chunk_header, sizeof(bra_io_chunk_header_t)))
-    {
-        bra_log_error("unable to read chunk header from %s", src->fn);
-        return false;
-    }
-
-    return true;
-}
-
-bool bra_io_file_chunks_write_header(bra_io_file_t* dst, const bra_io_chunk_header_t* chunk_header)
-{
-    assert_bra_io_file_t(dst);
-    assert(chunk_header != NULL);
-
-    if (!bra_io_file_write(dst, chunk_header, sizeof(bra_io_chunk_header_t)))
-    {
-        bra_log_error("unable to write chunk header to %s", dst->fn);
-        return false;
-    }
-
-    return true;
-}
-
-bool bra_io_file_chunks_read_file(bra_io_file_t* src, const uint64_t data_size, bra_meta_entry_t* me, const bool decode)
-{
-    assert_bra_io_file_t(src);
-    assert(me != NULL);
-
-    switch (BRA_ATTR_COMP(me->attributes))
-    {
-    case BRA_ATTR_COMP_STORED:
-        return bra_io_file_read_file_chunks_stored(src, data_size, me);
-    case BRA_ATTR_COMP_COMPRESSED:
-        return bra_io_file_read_file_chunks_compressed(src, data_size, me, decode);
-    default:
-        bra_log_critical("invalid compression type for file: %u", BRA_ATTR_COMP(me->attributes));
-        return false;
-    }
 }
 
 bool bra_io_file_chunks_copy_file(bra_io_file_t* dst, bra_io_file_t* src, const uint64_t data_size, bra_meta_entry_t* me, const bool compute_crc32)

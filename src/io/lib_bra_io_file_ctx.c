@@ -767,7 +767,7 @@ bool bra_io_file_ctx_print_meta_entry(bra_io_file_ctx_t* ctx, const bool test_mo
                 goto BRA_IO_FILE_CTX_PRINT_META_ENTRY_ERR;
             break;
         case BRA_ATTR_COMP_COMPRESSED:
-            if (!bra_io_file_chunks_read_file(&ctx->f, ds, &me, false))
+            if (!bra_io_file_chunks_read_file_compressed(&ctx->f, ds, &me, false))
                 goto BRA_IO_FILE_CTX_PRINT_META_ENTRY_ERR;
             break;
         default:

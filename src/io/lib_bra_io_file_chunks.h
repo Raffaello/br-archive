@@ -41,9 +41,6 @@ bool bra_io_file_chunks_write_header(bra_io_file_t* dst, const bra_io_chunk_head
  * entry. Used for processing large files efficiently while maintaining
  * data integrity verification.
  *
- * @todo: this function should be split for stored file and compressed file
- *        as the check for stored compressed file is checked multiple time in the function calls chain.
- *
  * @param src Source file wrapper positioned at start of data (must not be @c NULL)
  * @param data_size Total number of bytes to read
  * @param me Metadata entry to update with CRC32 (must not be @c NULL)
@@ -57,8 +54,52 @@ bool bra_io_file_chunks_write_header(bra_io_file_t* dst, const bra_io_chunk_head
  * @note After success, file is positioned at trailing CRC32 location.
  *
  * @see bra_io_file_chunks_copy_file
+ * @see bra_io_file_chunks_read_file_stored
+ * @see bra_io_file_chunks_read_file_compressed
  */
 bool bra_io_file_chunks_read_file(bra_io_file_t* src, const uint64_t data_size, bra_meta_entry_t* me, const bool decode);
+
+/**
+ * @brief Read file data in chunks and update CRC32 if @p decode is true.
+ *
+ * Reads the specified amount of data from the current file position in
+ * #BRA_MAX_CHUNK_SIZE chunks, updating the CRC32 checksum in the metadata
+ * entry. Used for processing large files efficiently while maintaining
+ * data integrity verification.
+ *
+ * @see bra_io_file_skip_data if @p decode is false as it is faster and more efficient if just want to skip data.
+ *
+ * @note use @ref bra_io_file_chunks_read_file if don't know if it is a stored or compressed file.
+ *
+ * @param src Source file wrapper positioned at start of data (must not be @c NULL)
+ * @param data_size Total number of bytes to read
+ * @param me Metadata entry to update with CRC32 (must not be @c NULL)
+ * @param decode if the file is compressed it will decode to compute the CRC32
+ * @retval true true On successful read of all data with CRC32 updated
+ * @retval false  On read error, EOF, or I/O failure
+ */
+bool bra_io_file_chunks_read_file_stored(bra_io_file_t* src, const uint64_t data_size, bra_meta_entry_t* me, const bool decode);
+
+/**
+ * @brief Read file data in chunks and update CRC32 if @p decode is true.
+ *
+ * Reads the specified amount of data from the current file position in
+ * #BRA_MAX_CHUNK_SIZE chunks, updating the CRC32 checksum in the metadata
+ * entry. Used for processing large files efficiently while maintaining
+ * data integrity verification.
+ *
+ * @see bra_io_file_skip_data if @p decode is false as it is faster and more efficient if just want to skip data.
+ *
+ * @note use @ref bra_io_file_chunks_read_file if don't know if it is a stored or compressed file.
+ *
+ * @param src Source file wrapper positioned at start of data (must not be @c NULL)
+ * @param data_size Total number of bytes to read
+ * @param me Metadata entry to update with CRC32 (must not be @c NULL)
+ * @param decode if the file is compressed it will decode to compute the CRC32
+ * @retval true true On successful read of all data with CRC32 updated
+ * @retval false  On read error, EOF, or I/O failure
+ */
+bool bra_io_file_chunks_read_file_compressed(bra_io_file_t* src, const uint64_t data_size, bra_meta_entry_t* me, const bool decode);
 
 /**
  * @brief Copy data between files in chunks, optionally computing CRC32.

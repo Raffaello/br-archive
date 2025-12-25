@@ -125,7 +125,7 @@ bool bra_io_file_meta_entry_flush_entry_file(bra_io_file_t* f, bra_meta_entry_t*
         if (!bra_io_file_meta_entry_write_file_entry(f, me))
             goto BRA_IO_FILE_META_ENTRY_FLUSH_ENTRY_FILE_ERROR;
 
-        if (!bra_io_file_chunks_store_file(f, &f2, mef->data_size, me))
+        if (!bra_io_file_chunks_copy_file(f, &f2, mef->data_size, me, true))
             goto BRA_IO_FILE_META_ENTRY_FLUSH_ENTRY_FILE_ERROR;
         break;
     case BRA_ATTR_COMP_COMPRESSED:

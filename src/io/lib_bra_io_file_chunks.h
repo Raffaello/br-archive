@@ -66,6 +66,8 @@ bool bra_io_file_chunks_read_file(bra_io_file_t* src, const uint64_t data_size, 
  * @param dst Destination file wrapper positioned for writing (must not be @c NULL)
  * @param src Source file wrapper positioned for reading (must not be @c NULL)
  * @param data_size Total number of bytes to copy
+ * @param me meta entry
+ * @param compute_crc32 if true compute the crc32 while copying the @p src to @p dst.
  *
  * @retval true On successful copy of all data
  * @retval false On read/write error or I/O failure
@@ -74,39 +76,10 @@ bool bra_io_file_chunks_read_file(bra_io_file_t* src, const uint64_t data_size, 
  * @note On error, both files are automatically closed via @ref bra_io_file_close().
  * @note Memory usage is limited to #BRA_MAX_CHUNK_SIZE regardless of data_size.
  *
- * @see bra_io_file_chunks_store_file
  * @see bra_io_file_chunks_read_file
  * @see bra_io_file_chunks_compress_file
  */
-bool bra_io_file_chunks_copy_file(bra_io_file_t* dst, bra_io_file_t* src, const uint64_t data_size);
-
-/**
- * @brief Copy data between files in chunks with CRC32 calculation.
- *        Used to store a file in the archive.
- *
- * Efficiently copies data from source to destination in #BRA_MAX_CHUNK_SIZE
- * chunks while calculating CRC32 checksum. Both files must be positioned
- * at the correct read/write offsets before calling.
- *
- * @todo REMOVE and just have 1 copy file function with bool compute_crc32 (this is also used to decompress)
- *
- * @param dst Destination file wrapper positioned for writing (must not be @c NULL)
- * @param src Source file wrapper positioned for reading (must not be @c NULL)
- * @param data_size Total number of bytes to copy
- * @param me Metadata entry to update with CRC32 (must not be @c NULL)
- *
- * @retval true On successful copy of all data with CRC32 updated
- * @retval false On read/write error or I/O failure
- *
- * @note Both files advance by data_size bytes on success.
- * @note On error, both files are automatically closed via @ref bra_io_file_close().
- * @note CRC32 is calculated during the copy operation for efficiency.
- * @note Memory usage is limited to #BRA_MAX_CHUNK_SIZE regardless of data_size.
- *
- * @see bra_io_file_chunks_read_file
- * @see bra_io_file_chunks_compress_file
- */
-bool bra_io_file_chunks_store_file(bra_io_file_t* dst, bra_io_file_t* src, const uint64_t data_size, bra_meta_entry_t* me);
+bool bra_io_file_chunks_copy_file(bra_io_file_t* dst, bra_io_file_t* src, const uint64_t data_size, bra_meta_entry_t* me, const bool compute_crc32);
 
 /**
  * @brief Compress and copy file data in chunks.

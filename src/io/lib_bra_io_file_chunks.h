@@ -67,7 +67,7 @@ bool bra_io_file_chunks_read_file(bra_io_file_t* src, const uint64_t data_size, 
  * @param src Source file wrapper positioned for reading (must not be @c NULL)
  * @param data_size Total number of bytes to copy
  * @param me meta entry (can be @c NULL if @p compute_crc32 is @c false)
- * @param compute_crc32 if true compute the crc32 while copying the @p src to @p dst.
+ * @param compute_crc32 If @c true, compute CRC32 while copying and update @p me->crc32 field.
  *
  * @retval true On successful copy of all data
  * @retval false On read/write error or I/O failure

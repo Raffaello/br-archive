@@ -73,7 +73,7 @@ bool bra_io_file_chunks_read_file(bra_io_file_t* src, const uint64_t data_size, 
     switch (BRA_ATTR_COMP(me->attributes))
     {
     case BRA_ATTR_COMP_STORED:
-        return bra_io_file_chunks_read_file_stored(src, data_size, me, decode);
+        return bra_io_file_chunks_copy_file(NULL, src, data_size, me, decode);
     case BRA_ATTR_COMP_COMPRESSED:
         return bra_io_file_chunks_decompress_file(NULL, src, data_size, me, decode);
     default:
@@ -82,41 +82,20 @@ bool bra_io_file_chunks_read_file(bra_io_file_t* src, const uint64_t data_size, 
     }
 }
 
-bool bra_io_file_chunks_read_file_stored(bra_io_file_t* src, const uint64_t data_size, bra_meta_entry_t* me, const bool decode)
-{
-    char buf[BRA_MAX_CHUNK_SIZE];
-
-    for (uint64_t i = 0; i < data_size;)
-    {
-        const uint32_t s = _bra_min(BRA_MAX_CHUNK_SIZE, data_size - i);
-
-        // read source chunk
-        if (!bra_io_file_read(src, buf, s))
-            return false;
-
-        if (decode)
-        {
-            // update CRC32
-            me->crc32 = bra_crc32c(buf, s, me->crc32);
-        }
-
-        i += s;
-    }
-
-    return true;
-}
-
 bool bra_io_file_chunks_copy_file(bra_io_file_t* dst, bra_io_file_t* src, const uint64_t data_size, bra_meta_entry_t* me, const bool compute_crc32)
 {
-    assert_bra_io_file_t(dst);
     assert_bra_io_file_t(src);
+
+    if (dst != NULL)
+    {
+        if (dst->f == NULL || dst->fn == NULL)
+            goto BRA_IO_FILE_CHUNKS_COPY_FILE_ERROR;
+    }
 
     if (compute_crc32 && me == NULL)
     {
         bra_log_critical("can't compute crc32: me is null");
-        bra_io_file_close(src);
-        bra_io_file_close(dst);
-        return false;
+        goto BRA_IO_FILE_CHUNKS_COPY_FILE_ERROR;
     }
 
     char buf[BRA_MAX_CHUNK_SIZE];
@@ -127,26 +106,29 @@ bool bra_io_file_chunks_copy_file(bra_io_file_t* dst, bra_io_file_t* src, const 
 
         // read source chunk
         if (!bra_io_file_read(src, buf, s))
-        {
-            bra_io_file_close(dst);
-            return false;
-        }
+            goto BRA_IO_FILE_CHUNKS_COPY_FILE_ERROR;
 
         // update CRC32
         if (compute_crc32)
             me->crc32 = bra_crc32c(buf, s, me->crc32);
 
         // write source chunk
-        if (!bra_io_file_write(dst, buf, s))
+        if (dst != NULL)
         {
-            bra_io_file_close(src);
-            return false;
+            if (!bra_io_file_write(dst, buf, s))
+                goto BRA_IO_FILE_CHUNKS_COPY_FILE_ERROR;
         }
 
         i += s;
     }
 
     return true;
+
+BRA_IO_FILE_CHUNKS_COPY_FILE_ERROR:
+    if (dst != NULL)
+        bra_io_file_close(dst);
+    bra_io_file_close(src);
+    return false;
 }
 
 bool bra_io_file_chunks_compress_file(bra_io_file_t* dst, bra_io_file_t* src, const uint64_t data_size, bra_meta_entry_t* me)
@@ -299,10 +281,8 @@ bool bra_io_file_chunks_decompress_file(bra_io_file_t* dst, bra_io_file_t* src, 
 
     if (dst != NULL)
     {
-        if (dst->f == NULL)
-            return false;
-        if (dst->fn == NULL)
-            return false;
+        if (dst->f == NULL || dst->fn == NULL)
+            goto BRA_IO_FILE_DECOMPRESS_FILE_CHUNKS_ERR;
     }
 
     uint8_t         buf[BRA_MAX_CHUNK_SIZE];

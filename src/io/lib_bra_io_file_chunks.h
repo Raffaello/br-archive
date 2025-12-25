@@ -44,7 +44,7 @@ bool bra_io_file_chunks_write_header(bra_io_file_t* dst, const bra_io_chunk_head
  * @param src Source file wrapper positioned at start of data (must not be @c NULL)
  * @param data_size Total number of bytes to read
  * @param me Metadata entry to update with CRC32 (must not be @c NULL)
- * @param decode if @c true it will compute the CRC32; if @c false, read through the file structure without CRC32 computation (stored files skip CRC32, compressed files skip decoding but accumulate compression ratio metadata)
+ * @param decode if @c true, decode the data and compute CRC32; if @c false, read through the file structure without full decoding (behavior depends on compression type; see individual read functions for details)
  * @retval true On successful read of all data with CRC32 updated
  * @retval false On read error, EOF, or I/O failure
  *
@@ -75,8 +75,8 @@ bool bra_io_file_chunks_read_file(bra_io_file_t* src, const uint64_t data_size, 
  * @param data_size Total number of bytes to read
  * @param me Metadata entry to update with CRC32 (must not be @c NULL)
  * @param decode if @c true, read the data and compute CRC32; if @c false, read the data without computing CRC32
- * @retval true On successful read of all data with CRC32 updated
- * @retval false  On read error, EOF, or I/O failure
+ * @retval true  On successful read of all data (CRC32 updated only if decode is true)
+ * @retval false On read error, EOF, or I/O failure
  */
 bool bra_io_file_chunks_read_file_stored(bra_io_file_t* src, const uint64_t data_size, bra_meta_entry_t* me, const bool decode);
 
@@ -96,7 +96,7 @@ bool bra_io_file_chunks_read_file_stored(bra_io_file_t* src, const uint64_t data
  * @param data_size Total number of bytes to read
  * @param me Metadata entry to update with CRC32 (must not be @c NULL)
  * @param decode if @c true it will decode to compute the CRC32; if @c false, skip decoding and accumulate size metadata for compression ratio calculation only.
- * @retval true On successful read of all data with CRC32 updated
+ * @retval true On successful read of all data (CRC32 updated only if decode is true; otherwise, compression ratio metadata accumulated)
  * @retval false  On read error, EOF, or I/O failure
  */
 bool bra_io_file_chunks_read_file_compressed(bra_io_file_t* src, const uint64_t data_size, bra_meta_entry_t* me, const bool decode);

@@ -173,9 +173,12 @@ bool bra_io_file_chunks_copy_file(bra_io_file_t* dst, bra_io_file_t* src, const 
 {
     assert_bra_io_file_t(dst);
     assert_bra_io_file_t(src);
+
     if (compute_crc32 && me == NULL)
     {
-        bra_log_critical("can't compute crc32 me is null");
+        bra_log_critical("can't compute crc32: me is null");
+        bra_io_file_close(src);
+        bra_io_file_close(dst);
         return false;
     }
 

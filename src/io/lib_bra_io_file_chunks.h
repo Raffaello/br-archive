@@ -57,7 +57,7 @@ bool bra_io_file_chunks_write_header(bra_io_file_t* dst, const bra_io_chunk_head
 bool bra_io_file_chunks_read_file(bra_io_file_t* src, const uint64_t data_size, bra_meta_entry_t* me);
 
 /**
- * @brief Copy data between files in chunks without CRC32 calculation.
+ * @brief Copy data between files in chunks, optionally computing CRC32.
  *
  * Efficiently copies data from source to destination in #BRA_MAX_CHUNK_SIZE
  * chunks. Both files must be positioned
@@ -72,9 +72,9 @@ bool bra_io_file_chunks_read_file(bra_io_file_t* src, const uint64_t data_size, 
  * @retval true On successful copy of all data
  * @retval false On read/write error or I/O failure
  *
- * @note Both files advance by data_size bytes on success.
+ * @note Both files advance by @p data_size bytes on success.
  * @note On error, both files are automatically closed via @ref bra_io_file_close().
- * @note Memory usage is limited to #BRA_MAX_CHUNK_SIZE regardless of data_size.
+ * @note Memory usage is limited to #BRA_MAX_CHUNK_SIZE regardless of @p data_size.
  *
  * @see bra_io_file_chunks_read_file
  * @see bra_io_file_chunks_compress_file

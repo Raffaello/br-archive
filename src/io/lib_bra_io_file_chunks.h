@@ -41,9 +41,13 @@ bool bra_io_file_chunks_write_header(bra_io_file_t* dst, const bra_io_chunk_head
  * entry. Used for processing large files efficiently while maintaining
  * data integrity verification.
  *
+ * @todo: this function should be split for stored file and compressed file
+ *        as the check for stored compressed file is checked multiple time in the function calls chain.
+ *
  * @param src Source file wrapper positioned at start of data (must not be @c NULL)
  * @param data_size Total number of bytes to read
  * @param me Metadata entry to update with CRC32 (must not be @c NULL)
+ * @param decode if the file is compressed it will decode to compute the CRC32
  * @retval true On successful read of all data with CRC32 updated
  * @retval false On read error, EOF, or I/O failure
  *
@@ -54,7 +58,7 @@ bool bra_io_file_chunks_write_header(bra_io_file_t* dst, const bra_io_chunk_head
  *
  * @see bra_io_file_chunks_copy_file
  */
-bool bra_io_file_chunks_read_file(bra_io_file_t* src, const uint64_t data_size, bra_meta_entry_t* me);
+bool bra_io_file_chunks_read_file(bra_io_file_t* src, const uint64_t data_size, bra_meta_entry_t* me, const bool decode);
 
 /**
  * @brief Copy data between files in chunks, optionally computing CRC32.

@@ -211,7 +211,7 @@ bool bra_io_file_meta_entry_compute_crc32(bra_io_file_t* f, const size_t filenam
         assert(mef != NULL);
 
         me->crc32 = bra_crc32c(&mef->data_size, sizeof(uint64_t), me->crc32);
-        if (!bra_io_file_chunks_read_file(f, mef->data_size, me))
+        if (!bra_io_file_chunks_read_file(f, mef->data_size, me, true))
             return false;
     }
     break;

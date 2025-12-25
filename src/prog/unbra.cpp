@@ -150,11 +150,11 @@ protected:
         bra_log_printf("%s contains num files: %u\n", m_ctx.f.fn, bh.num_files);
         if (m_listContent || m_testContent)
         {
-            bra_log_printf("| ATTR |   SIZE    | " BRA_PRINTF_FMT_FILENAME "| CRC32  |\n", "FILENAME");
+            bra_log_printf("| ATTR |   SIZE    | " BRA_PRINTF_FMT_FILENAME "| RATIO | CRC32  |\n", "FILENAME");
             bra_log_printf("|------|-----------|-");
             for (int i = 0; i < BRA_PRINTF_FMT_FILENAME_MAX_LENGTH; i++)
                 bra_log_printf("-");
-            bra_log_printf("|--------|\n");
+            bra_log_printf("|-------|--------|\n");
             for (uint32_t i = 0; i < bh.num_files; i++)
             {
                 if (!bra_io_file_ctx_print_meta_entry(&m_ctx, m_testContent))

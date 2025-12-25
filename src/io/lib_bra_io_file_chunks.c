@@ -294,15 +294,23 @@ bool bra_io_file_chunks_decompress_file(bra_io_file_t* dst, bra_io_file_t* src, 
     // TODO: it could be reduce the number of buffers in use
     // with a ping-pong technique
 
-    // assert_bra_io_file_t(dst);
     assert_bra_io_file_t(src);
     assert(me != NULL);
+
+    if (dst != NULL)
+    {
+        if (dst->f == NULL)
+            return false;
+        if (dst->fn == NULL)
+            return false;
+    }
 
     uint8_t         buf[BRA_MAX_CHUNK_SIZE];
     uint8_t         buf_bwt[BRA_MAX_CHUNK_SIZE];
     uint8_t         buf_mtf[BRA_MAX_CHUNK_SIZE];
     bra_bwt_index_t buf_trans[BRA_MAX_CHUNK_SIZE];
-    uint8_t*        buf_huffman = NULL;
+    uint8_t*        buf_huffman    = NULL;
+    uint64_t        file_orig_size = 0;
 
     for (uint64_t i = 0; i < data_size;)
     {
@@ -316,6 +324,8 @@ bool bra_io_file_chunks_decompress_file(bra_io_file_t* dst, bra_io_file_t* src, 
             bra_log_error("chunk header not valid in %s", src->fn);
             goto BRA_IO_FILE_DECOMPRESS_FILE_CHUNKS_ERR;
         }
+
+        file_orig_size += chunk_header.huffman.orig_size;
 
         // read source chunk
         if (!bra_io_file_read(src, buf, chunk_header.huffman.encoded_size))
@@ -362,10 +372,13 @@ bool bra_io_file_chunks_decompress_file(bra_io_file_t* dst, bra_io_file_t* src, 
         i += chunk_header.huffman.encoded_size + sizeof(bra_io_chunk_header_t);
     }
 
+    me->_compression_ratio = (float) ((double) data_size / (double) file_orig_size);
     return true;
 
 BRA_IO_FILE_DECOMPRESS_FILE_CHUNKS_ERR:
-    bra_io_file_close(dst);
+    if (dst != NULL)
+        bra_io_file_close(dst);
+
     bra_io_file_close(src);
     if (buf_huffman != NULL)
         free(buf_huffman);

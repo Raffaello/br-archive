@@ -53,7 +53,7 @@ typedef struct bra_io_footer_t
 typedef struct bra_huffman_t
 {
     uint8_t  lengths[BRA_ALPHABET_SIZE];    //!< Huffman canonical code lengths per symbol (0 = symbol not present)
-    uint32_t orig_size;                     //!< orig data size (used for decoding) (TODO: this should be redundant, or replace with num bits padding, 1 byte instead of 4)
+    uint32_t orig_size;                     //!< orig data size. Used for decoding and allocating buffers
     uint32_t encoded_size;                  //!< how many bytes are encoded.
 } bra_huffman_t;
 

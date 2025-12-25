@@ -99,7 +99,7 @@ bool bra_io_file_chunks_read_file_stored(bra_io_file_t* src, const uint64_t data
  * @retval true On successful read of all data (CRC32 updated only if decode is true; otherwise, compression ratio metadata accumulated)
  * @retval false  On read error, EOF, or I/O failure
  */
-bool bra_io_file_chunks_read_file_compressed(bra_io_file_t* src, const uint64_t data_size, bra_meta_entry_t* me, const bool decode);
+// bool bra_io_file_chunks_read_file_compressed(bra_io_file_t* src, const uint64_t data_size, bra_meta_entry_t* me, const bool decode);
 
 /**
  * @brief Copy data between files in chunks, optionally computing CRC32.
@@ -156,10 +156,11 @@ bool bra_io_file_chunks_compress_file(bra_io_file_t* dst, bra_io_file_t* src, co
  * specified in the metadata entry, and writes the original data to the
  * destination file. Verifies data integrity using stored CRC32.
  *
- * @param dst Destination file for decompressed data (must not be @c NULL)
+ * @param dst Destination file for decompressed data (if @c NULL will be in test mode with @p decode true)
  * @param src Source file containing compressed data (must not be @c NULL)
  * @param data_size Size of compressed data to read
- * @param me Metadata entry with compression info and CRC32 (must not be NULL)
+ * @param me Metadata entry with compression info and CRC32 (must not be @c NULL)
+ * @param decode if @c true it will decode and compute the CRC32; if @c false, skip decoding and accumulate size metadata for compression ratio calculation only.
  * @retval true On successful decompression and CRC32 verification
  * @retval false On decompression error, CRC32 mismatch, or I/O failure
  *
@@ -170,4 +171,4 @@ bool bra_io_file_chunks_compress_file(bra_io_file_t* dst, bra_io_file_t* src, co
  * @see bra_io_file_chunks_compress_file
  * @see bra_io_file_chunks_copy_file
  */
-bool bra_io_file_chunks_decompress_file(bra_io_file_t* dst, bra_io_file_t* src, const uint64_t data_size, bra_meta_entry_t* me);
+bool bra_io_file_chunks_decompress_file(bra_io_file_t* dst, bra_io_file_t* src, const uint64_t data_size, bra_meta_entry_t* me, const bool decode);

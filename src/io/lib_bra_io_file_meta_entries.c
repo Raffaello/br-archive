@@ -142,7 +142,6 @@ bool bra_io_file_meta_entry_flush_entry_file(bra_io_file_t* f, bra_meta_entry_t*
                 // TODO: this is a quick fix after changed the metadata attribute
                 //       later on refactor to avoid a recursive call.
                 bra_io_file_close(&f2);
-                // --ctx->cur_files;
                 return bra_io_file_meta_entry_flush_entry_file(f, me, filename, filename_len);
             }
             else

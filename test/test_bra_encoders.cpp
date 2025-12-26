@@ -193,9 +193,8 @@ TEST(test_bra_encoders_decode_mtf_bwt_1)
 
 TEST(test_bra_encoders_encode_decode_bwt_mtf_rle_1)
 {
-    const uint8_t* buf = (const uint8_t*) "BANANA";
-    // const uint8_t  exp_buf[] = {'B', 'B', 'N', 1, 1, 1};
-    const size_t buf_size = strlen((const char*) buf);
+    const uint8_t* buf      = (const uint8_t*) "BANANA";
+    const size_t   buf_size = strlen((const char*) buf);
 
     bra_bwt_index_t primary_index;
     uint8_t*        out_buf = bra_bwt_encode(buf, buf_size, &primary_index);
@@ -225,8 +224,6 @@ TEST(test_bra_encoders_encode_decode_bwt_mtf_rle_1)
     uint8_t* out_buf5 = bra_bwt_decode(out_buf4, buf_size, primary_index);
     ASSERT_TRUE(out_buf5 != nullptr);
     ASSERT_EQ(memcmp(out_buf5, buf, buf_size), 0);
-
-    // ASSERT_TRUE(bra_encode_rle_free_list(&rle_head));
 
     free(out_buf5);
     free(out_buf4);

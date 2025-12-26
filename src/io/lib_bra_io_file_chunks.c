@@ -141,7 +141,7 @@ bool bra_io_file_chunks_compress_file(bra_io_file_t* dst, bra_io_file_t* src, co
     uint8_t              buf[BRA_MAX_CHUNK_SIZE];
     uint8_t*             buf_bwt     = NULL;
     uint8_t*             buf_mtf     = NULL;
-    uint8_t*             buf_rle     = NULL;    // TODO move outside the for-loop as it must be freed in the error path to eventually.
+    uint8_t*             buf_rle     = NULL;
     bra_huffman_chunk_t* buf_huffman = NULL;
     uint32_t             crc32       = BRA_CRC32C_INIT;
 
@@ -171,7 +171,7 @@ bool bra_io_file_chunks_compress_file(bra_io_file_t* dst, bra_io_file_t* src, co
             return false;
         }
 
-        // compress BWT+MTF(+RLE)+huffman
+        // compress BWT+MTF+RLE+huffman
         // TODO: do the version accepting a pre-allocated buffer
         //       as it is always the same size as the input doing in chunks will avoid to allocate/free
         //       for each chunk.
@@ -286,7 +286,7 @@ BRA_IO_FILE_COMPRESS_FILE_CHUNKS_ERR:
 
 bool bra_io_file_chunks_decompress_file(bra_io_file_t* dst, bra_io_file_t* src, const uint64_t data_size, bra_meta_entry_t* me, const bool decode)
 {
-    // TODO: it could be reduce the number of buffers in use
+    // TODO: it could be reduced the number of buffers in use
     // with a ping-pong technique
 
     assert_bra_io_file_t(src);
@@ -326,7 +326,7 @@ bool bra_io_file_chunks_decompress_file(bra_io_file_t* dst, bra_io_file_t* src, 
         if (!bra_io_file_read(src, buf, chunk_header.huffman.encoded_size))
             goto BRA_IO_FILE_DECOMPRESS_FILE_CHUNKS_ERR;
 
-        // decode huffman
+        // decode huffman (required for computing file size)
         uint32_t huf_s = 0;
         buf_huffman    = bra_huffman_decode(&chunk_header.huffman, buf, &huf_s);
         if (buf_huffman == NULL)
@@ -351,7 +351,6 @@ bool bra_io_file_chunks_decompress_file(bra_io_file_t* dst, bra_io_file_t* src, 
             }
 
             file_orig_size += s;
-
             if (chunk_header.primary_index >= s)
             {
                 bra_log_error("invalid primary index (%u) for chunk size %zu in %s", chunk_header.primary_index, s, src->fn);

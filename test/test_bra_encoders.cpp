@@ -109,6 +109,7 @@ TEST(test_bra_encoders_rle_encode_3)
     ASSERT_EQ(out_buf_s, 9U);
     ASSERT_TRUE(out_buf_s > buf_size);
 
+    free(out_buf);
     return 0;
 }
 

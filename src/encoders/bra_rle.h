@@ -28,7 +28,7 @@ bool bra_rle_encode(const uint8_t* buf, const size_t buf_size, uint8_t** out_buf
  *
  * @param buf RLE encoded buffer
  * @param buf_size RLE encoded buffer size in bytes.
- * @return size_t decoded RLE buffer size
+ * @return size_t decoded RLE buffer size. 0 on error or when @p buf_size is 0.
  */
 size_t bra_rle_decode_compute_size(const uint8_t* buf, const size_t buf_size);
 

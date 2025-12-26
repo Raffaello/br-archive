@@ -44,6 +44,7 @@ TEST(test_bra_encoders_encode_decode_rle_1)
     ASSERT_EQ(buf2_s, buf_size);
     ASSERT_EQ(memcmp(buf2, buf, buf_size), 0);
 
+    free(buf2);
     free(out_buf);
     return 0;
 }
@@ -83,6 +84,7 @@ TEST(test_bra_encoders_encode_decode_rle_2)
     ASSERT_EQ(buf2_s, 10U);
     ASSERT_EQ(memcmp(buf, buf2, buf_size), 0);
 
+    free(buf2);
     free(out_buf);
     return 0;
 }

@@ -87,9 +87,8 @@ static inline size_t _bra_rle_decode_compute_size(const uint8_t* buf, const size
             size += count;
             ++i;
         }
-        else
+        else    // control == -128
         {
-            // control == -128
         }
     }
 
@@ -135,7 +134,7 @@ bool bra_rle_encode(const uint8_t* buf, const size_t buf_size, uint8_t** out_buf
             i                  += run;
             while (i < buf_size)
             {
-                if (_bra_rle_encoding_compute_size_detect_run(buf, buf_size, i) > BRA_RLE_MIN_RUNS)
+                if (_bra_rle_encoding_compute_size_detect_run(buf, buf_size, i) >= BRA_RLE_MIN_RUNS)
                     break;
 
                 ++i;
@@ -204,7 +203,7 @@ bool bra_rle_decode(const uint8_t* buf, const size_t buf_size, uint8_t** out_buf
             memset(p, v, count);
             p += count;
         }
-        else
+        else    // control == -128
         {
         }
     }

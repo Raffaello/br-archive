@@ -12,6 +12,8 @@
  *  - -1 to -127 : Run Block: repeat next byte (1 - n) times.
  *  - -128       : not used
  *
+ * @note Caller must free @p *out_buf on success
+ *
  * @param buf           Input buffer to encode.
  * @param buf_size      Size of the input buffer in bytes.
  * @param out_buf       Output buffer encoded.
@@ -24,7 +26,9 @@ bool bra_rle_encode(const uint8_t* buf, const size_t buf_size, uint8_t** out_buf
 /**
  * @brief Decode Run-Length Encoded data.
  *
- * @param buf           Input buffer to encode.
+ * @note Caller must free @p *out_buf on success
+ *
+ * @param buf           Input buffer to decode.
  * @param buf_size      Size of the input buffer in bytes.
  * @param out_buf       Output buffer decoded.
  * @param out_buf_size  Output buffer size.

@@ -7,9 +7,7 @@
 #include <stdio.h>
 
 
-typedef uint8_t bra_attr_t;          //!< file attribute type
-typedef uint8_t bra_rle_counts_t;    //!< stored as run_length - 1 (0 => 1, 255 => 256)
-
+typedef uint8_t  bra_attr_t;         //!< file attribute type
 typedef uint32_t bra_bwt_index_t;    //!< index type used by BWT (should be at least 32 bits to support 4GB chunks)
 
 /**
@@ -110,16 +108,6 @@ typedef struct bra_meta_entry_subdir_t
 {
     uint32_t parent_index;    //!< index of the parent directory in the archive; 0 for root.
 } bra_meta_entry_subdir_t;
-
-/**
- * @brief RLE chunk representing a run of repeated characters.
- */
-typedef struct bra_rle_chunk_t
-{
-    bra_rle_counts_t        counts;    //!< counts is stored as -1, i.e. 0 means 1 and 255 means 256
-    uint8_t                 value;     //!< the repeated char.
-    struct bra_rle_chunk_t* pNext;     //!< pointer to next chunk; NULL if last.
-} bra_rle_chunk_t;
 
 /**
  * @brief Directory tree node.

@@ -1,52 +1,38 @@
 #pragma once
 
-#include <lib_bra_types.h>
-
 #include <stdint.h>
+#include <stddef.h>
 #include <stdbool.h>
 
 /**
- * @brief Encode a buffer using Run-Length Encoding.
+ * @brief Encode a buffer using Run-Length Encoding as PackBits.
  *
- * @todo pass in/out rle_tail param to avoid iterating through the rle_head each time after the first buffer.
+ * The Control Block is:
+ *  -  0 to +127 : Literal block of (n + 1) bytes.
+ *  - -1 to -127 : Run Block: repeat next byte (1 - n) times.
+ *  - -128       : not used
  *
- * @see bra_encode_rle
- * @see bra_encode_rle_free_list
+ * @note Caller must free @p *out_buf on success
  *
- * @param buf                       Input buffer to encode.
- * @param buf_size                  Size of the input buffer in bytes.
- * @param num_rle_chunks[in, out]   On input: existing chunks count; on output: total chunks after encoding. @note this is not really required, but *2 give the total size in bytes.
- * @param rle_head[in, out]
- * @retval true                     on successful encoding.
- * @retval false                    on error.
+ * @param buf           Input buffer to encode.
+ * @param buf_size      Size of the input buffer in bytes.
+ * @param out_buf       Output buffer encoded.
+ * @param out_buf_size  Output buffer size.
+ * @retval true         on successful encoding.
+ * @retval false        on error.
  */
-bool bra_encode_rle(const uint8_t* buf, const size_t buf_size, uint64_t* num_rle_chunks, bra_rle_chunk_t** rle_head);
+bool bra_rle_encode(const uint8_t* buf, const size_t buf_size, uint8_t** out_buf, size_t* out_buf_size);
 
 /**
- * @brief Decode Run-Length Encoded data to output buffer @p buf.
+ * @brief Decode Run-Length Encoded data.
  *
- * @note Do not pass @p rle_head as @p cur_rle. Pass a copy of the head instead; @p rle_head is needed later with @ref bra_encode_rle_free_list.
+ * @note Caller must free @p *out_buf on success
  *
- * @see bra_encode_rle
- * @see bra_encode_rle_free_list
- *
- * @param cur_rle[in, out]
- * @param buf[out]          buf Output buffer to write decoded data.
- * @param buf_size          Size of the output buffer in bytes.
- * @param buf_i[out]
- * @retval true             on success ( @p buf_i advanced; @p *cur_rle updated; becomes @c NULL when decoding completes).
- * @retval false            on error or nothing to decode.
+ * @param buf           Input buffer to decode.
+ * @param buf_size      Size of the input buffer in bytes.
+ * @param out_buf       Output buffer decoded.
+ * @param out_buf_size  Output buffer size.
+ * @retval true         on successful decoding.
+ * @retval false        on error.
  */
-bool bra_decode_rle(bra_rle_chunk_t** cur_rle, uint8_t* buf, const size_t buf_size, size_t* buf_i);
-
-/**
- * @brief Free the allocated RLE chunk list @p rle_head created by @ref bra_encode_rle.
- *
- * @see bra_encode_rle
- * @see bra_decode_rle
- *
- * @param rle_head
- * @retval true on success
- * @retval false if rle_head is NULL
- */
-bool bra_encode_rle_free_list(bra_rle_chunk_t** rle_head);
+bool bra_rle_decode(const uint8_t* buf, const size_t buf_size, uint8_t** out_buf, size_t* out_buf_size);

@@ -338,8 +338,7 @@ bool bra_io_file_chunks_decompress_file(bra_io_file_t* dst, bra_io_file_t* src, 
         if (!decode)
         {
             // compute only the original file size:
-            const size_t s  = bra_rle_decode_compute_size(buf_huffman, huf_s);
-            file_orig_size += s;
+            file_orig_size += bra_rle_decode_compute_size(buf_huffman, huf_s);
         }
         else
         {
@@ -363,13 +362,9 @@ bool bra_io_file_chunks_decompress_file(bra_io_file_t* dst, bra_io_file_t* src, 
             bra_mtf_decode2(buf_rle, s, buf_mtf);
             bra_bwt_decode2(buf_mtf, s, chunk_header.primary_index, buf_trans, buf_bwt);
 
-
             // update CRC32
             me->crc32 = bra_crc32c(&chunk_header, sizeof(bra_io_chunk_header_t), me->crc32);
             me->crc32 = bra_crc32c(buf_bwt, s, me->crc32);
-
-            free(buf_huffman);
-            buf_huffman = NULL;
 
             free(buf_rle);
             buf_rle = NULL;
@@ -382,6 +377,8 @@ bool bra_io_file_chunks_decompress_file(bra_io_file_t* dst, bra_io_file_t* src, 
             }
         }
 
+        free(buf_huffman);
+        buf_huffman = NULL;
 
         i += chunk_header.huffman.encoded_size + sizeof(bra_io_chunk_header_t);
     }

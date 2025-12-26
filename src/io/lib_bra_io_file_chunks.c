@@ -10,6 +10,7 @@
 
 #include <encoders/bra_bwt.h>
 #include <encoders/bra_mtf.h>
+#include <encoders/bra_rle.h>
 #include <encoders/bra_huffman.h>
 
 #include <inttypes.h>
@@ -188,14 +189,25 @@ bool bra_io_file_chunks_compress_file(bra_io_file_t* dst, bra_io_file_t* src, co
             goto BRA_IO_FILE_COMPRESS_FILE_CHUNKS_ERR;
         }
 
+        // RLE encoding (if greater of the original size should be avoided?)
+        uint8_t* buf_rle   = NULL;
+        size_t   buf_rle_s = 0;
+        if (!bra_rle_encode(buf_mtf, s, &buf_rle, &buf_rle_s))
+        {
+            bra_log_error("bra_rle_encode() failed: %s (chunk: %" PRIu64 ")", src->fn, i);
+            goto BRA_IO_FILE_COMPRESS_FILE_CHUNKS_ERR;
+        }
+
         // huffman encoding
-        buf_huffman = bra_huffman_encode(buf_mtf, s);
+        // buf_huffman = bra_huffman_encode(buf_mtf, s);
+        buf_huffman = bra_huffman_encode(buf_rle, buf_rle_s);
         if (buf_huffman == NULL)
         {
             bra_log_error("bra_huffman_encode() failed: %s (chunk: %" PRIu64 ")", src->fn, i);
             goto BRA_IO_FILE_COMPRESS_FILE_CHUNKS_ERR;
         }
 
+        // free(buf_rle);
         chunk_header.huffman = buf_huffman->meta;
 
         // CRC32

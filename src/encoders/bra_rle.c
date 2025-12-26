@@ -108,7 +108,13 @@ bool bra_rle_encode(const uint8_t* buf, const size_t buf_size, uint8_t** out_buf
     *out_buf_size = 0;
     *out_buf      = NULL;
 
-    size_t   s = _bra_rle_encode_compute_size(buf, buf_size);
+    size_t s = _bra_rle_encode_compute_size(buf, buf_size);
+    if (s == 0)
+        return false;
+
+    // if (s > buf_size)
+    //     return false;
+
     uint8_t* b = malloc(sizeof(uint8_t) * s);
     if (b == NULL)
         return false;

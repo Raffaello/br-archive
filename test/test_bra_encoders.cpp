@@ -89,6 +89,29 @@ TEST(test_bra_encoders_encode_decode_rle_2)
     return 0;
 }
 
+TEST(test_bra_encoders_rle_encode_3)
+{
+    constexpr size_t buf_size      = 8;
+    uint8_t          buf[buf_size] = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'};
+    uint8_t*         out_buf       = nullptr;
+    size_t           out_buf_s     = 0;
+
+    // in this way it should return false, but it is a valid encoding even if it bigger.
+    // what it should be detected is if it is better with huffman encoded or not.
+    // but that will be done automatically.
+
+    // ASSERT_FALSE(bra_rle_encode(buf, buf_size, &out_buf, &out_buf_s));
+    // ASSERT_TRUE(out_buf == nullptr);
+    // ASSERT_EQ(out_buf_s, 0U);
+
+    // It should encode anyway the caller should decide if discard it or not when is bigger
+    ASSERT_TRUE(bra_rle_encode(buf, buf_size, &out_buf, &out_buf_s));
+    ASSERT_EQ(out_buf_s, 9U);
+    ASSERT_TRUE(out_buf_s > buf_size);
+
+    return 0;
+}
+
 static int _test_bra_encoders_encode_decode_bwt(const uint8_t* buf, const size_t buf_size, const uint8_t* exp_buf, const bra_bwt_index_t exp_primary_index)
 {
     bra_bwt_index_t primary_index;
@@ -382,6 +405,8 @@ int main(int argc, char* argv[])
     const std::map<std::string, std::function<int()>> m = {
         {TEST_FUNC(test_bra_encoders_encode_decode_rle_1)},
         {TEST_FUNC(test_bra_encoders_encode_decode_rle_2)},
+
+        {TEST_FUNC(test_bra_encoders_rle_encode_3)},
 
         {TEST_FUNC(test_bra_encoders_encode_decode_bwt_1)},
         {TEST_FUNC(test_bra_encoders_encode_decode_bwt_2)},

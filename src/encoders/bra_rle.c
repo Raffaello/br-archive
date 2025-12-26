@@ -81,7 +81,7 @@ static inline size_t _bra_rle_decode_compute_size(const uint8_t* buf, const size
             const int count = 1 - control;
 
             // safety check
-            if (i == buf_size)
+            if (i >= buf_size)
                 return 0;    // error
 
             size += count;

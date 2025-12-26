@@ -142,3 +142,18 @@ bool bra_encode_rle_free_list(bra_rle_chunk_t** rle_head)
     *rle_head = NULL;
     return true;
 }
+
+bool bra_rle_encode(const uint8_t* buf, const size_t buf_size, uint8_t** out_buf, size_t* out_buf_size)
+{
+    assert(buf != NULL);
+    assert(buf_size > 0);
+    assert(out_buf != NULL);
+    assert(out_buf_size != NULL);
+
+    // estimate the out_buf_size doing a pre-scan of the data
+
+
+    // encode the data
+
+    return true;
+}

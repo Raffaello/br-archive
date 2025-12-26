@@ -112,16 +112,6 @@ typedef struct bra_meta_entry_subdir_t
 } bra_meta_entry_subdir_t;
 
 /**
- * @brief RLE chunk representing a run of repeated characters.
- */
-typedef struct bra_rle_chunk_t
-{
-    bra_rle_counts_t        counts;    //!< counts is stored as -1, i.e. 0 means 1 and 255 means 256
-    uint8_t                 value;     //!< the repeated char.
-    struct bra_rle_chunk_t* pNext;     //!< pointer to next chunk; NULL if last.
-} bra_rle_chunk_t;
-
-/**
  * @brief Directory tree node.
  */
 typedef struct bra_tree_node_t

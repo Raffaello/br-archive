@@ -1,23 +1,21 @@
 #pragma once
 
-// #include <lib_bra_types.h>
-
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
 
 
-typedef uint8_t bra_rle_counts_t;    //!< stored as run_length - 1 (0 => 1, 255 => 256)
+// typedef uint8_t bra_rle_counts_t;    //!< stored as run_length - 1 (0 => 1, 255 => 256)
 
 /**
  * @brief RLE chunk representing a run of repeated characters.
  */
-typedef struct bra_rle_chunk_t
-{
-    bra_rle_counts_t        counts;    //!< counts is stored as -1, i.e. 0 means 1 and 255 means 256
-    uint8_t                 value;     //!< the repeated char.
-    struct bra_rle_chunk_t* pNext;     //!< pointer to next chunk; NULL if last.
-} bra_rle_chunk_t;
+// typedef struct bra_rle_chunk_t
+// {
+//     bra_rle_counts_t        counts;    //!< counts is stored as -1, i.e. 0 means 1 and 255 means 256
+//     uint8_t                 value;     //!< the repeated char.
+//     struct bra_rle_chunk_t* pNext;     //!< pointer to next chunk; NULL if last.
+// } bra_rle_chunk_t;
 
 /**
  * @brief Encode a buffer using Run-Length Encoding.
@@ -34,7 +32,7 @@ typedef struct bra_rle_chunk_t
  * @retval true                     on successful encoding.
  * @retval false                    on error.
  */
-bool bra_encode_rle(const uint8_t* buf, const size_t buf_size, uint64_t* num_rle_chunks, bra_rle_chunk_t** rle_head);
+// bool bra_encode_rle(const uint8_t* buf, const size_t buf_size, uint64_t* num_rle_chunks, bra_rle_chunk_t** rle_head);
 
 /**
  * @brief Decode Run-Length Encoded data to output buffer @p buf.
@@ -51,7 +49,7 @@ bool bra_encode_rle(const uint8_t* buf, const size_t buf_size, uint64_t* num_rle
  * @retval true             on success ( @p buf_i advanced; @p *cur_rle updated; becomes @c NULL when decoding completes).
  * @retval false            on error or nothing to decode.
  */
-bool bra_decode_rle(bra_rle_chunk_t** cur_rle, uint8_t* buf, const size_t buf_size, size_t* buf_i);
+// bool bra_decode_rle(bra_rle_chunk_t** cur_rle, uint8_t* buf, const size_t buf_size, size_t* buf_i);
 
 /**
  * @brief Free the allocated RLE chunk list @p rle_head created by @ref bra_encode_rle.
@@ -63,7 +61,7 @@ bool bra_decode_rle(bra_rle_chunk_t** cur_rle, uint8_t* buf, const size_t buf_si
  * @retval true on success
  * @retval false if rle_head is NULL
  */
-bool bra_encode_rle_free_list(bra_rle_chunk_t** rle_head);
+// bool bra_encode_rle_free_list(bra_rle_chunk_t** rle_head);
 
 /**
  * @brief Encode a buffer using Run-Length Encoding as PackBits.
@@ -81,3 +79,5 @@ bool bra_encode_rle_free_list(bra_rle_chunk_t** rle_head);
  * @retval false        on error.
  */
 bool bra_rle_encode(const uint8_t* buf, const size_t buf_size, uint8_t** out_buf, size_t* out_buf_size);
+
+bool bra_rle_decode(const uint8_t* buf, const size_t buf_size, uint8_t** out_buf, size_t* out_buf_size);

@@ -285,12 +285,6 @@ protected:
         }
 
         const string fn = path.generic_string();
-        // TODO: add the argument for compression/store
-        // TODO: also do the automatic decision based on file type/size?
-        //       (e.g. do not compress very small files or already compressed files)
-        //       or if the compression is bigger than the original size.
-        //       This will be anyway part of the compression function.
-        //       By default should be compression enabled.
         if (!bra_io_file_ctx_encode_and_write_to_disk(&m_ctx, fn.c_str(), m_compress))
             return false;
 

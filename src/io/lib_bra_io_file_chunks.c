@@ -158,9 +158,6 @@ bool bra_io_file_chunks_compress_file(bra_io_file_t* dst, bra_io_file_t* src, co
     {
         const uint32_t s = _bra_min(BRA_MAX_CHUNK_SIZE, data_size - i);
 
-        // TODO: create a metafunction bra_io_file_process_file_chunks accepting the function to do the operation
-        //       copy, read, compress, decompress
-        //       this will avoid to duplicate the loop code.
         bra_log_printf("%3u%%", (unsigned int) (i * 100 / data_size));
         bra_log_printf("\b\b\b\b");
 

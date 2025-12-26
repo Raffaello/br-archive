@@ -55,46 +55,6 @@ static inline size_t _bra_rle_encode_compute_size(const uint8_t* buf, const size
     return size;
 }
 
-static inline size_t _bra_rle_decode_compute_size(const uint8_t* buf, const size_t buf_size)
-{
-    assert(buf != NULL);
-
-    size_t size = 0;
-    for (size_t i = 0; i < buf_size;)
-    {
-        const int8_t control = buf[i++];
-        if (control >= 0)
-        {
-            // literal block
-            const int count = control + 1;
-
-            // safety check
-            if (i + count > buf_size)
-                return 0;    // error
-
-            size += count;
-            i    += count;
-        }
-        else if (control >= BRA_RLE_CTL_RUNS)
-        {
-            // run block
-            const int count = 1 - control;
-
-            // safety check
-            if (i >= buf_size)
-                return 0;    // error
-
-            size += count;
-            ++i;
-        }
-        else    // control == -128 (no-op)
-        {
-        }
-    }
-
-    return size;
-}
-
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 bool bra_rle_encode(const uint8_t* buf, const size_t buf_size, uint8_t** out_buf, size_t* out_buf_size)
@@ -108,7 +68,13 @@ bool bra_rle_encode(const uint8_t* buf, const size_t buf_size, uint8_t** out_buf
     *out_buf_size = 0;
     *out_buf      = NULL;
 
-    size_t   s = _bra_rle_encode_compute_size(buf, buf_size);
+    size_t s = _bra_rle_encode_compute_size(buf, buf_size);
+    if (s == 0)
+        return false;
+
+    // if (s > buf_size)
+    //     return false;
+
     uint8_t* b = malloc(sizeof(uint8_t) * s);
     if (b == NULL)
         return false;
@@ -153,6 +119,46 @@ bool bra_rle_encode(const uint8_t* buf, const size_t buf_size, uint8_t** out_buf
     return true;
 }
 
+size_t bra_rle_decode_compute_size(const uint8_t* buf, const size_t buf_size)
+{
+    assert(buf != NULL);
+
+    size_t size = 0;
+    for (size_t i = 0; i < buf_size;)
+    {
+        const int8_t control = buf[i++];
+        if (control >= 0)
+        {
+            // literal block
+            const int count = control + 1;
+
+            // safety check
+            if (i + count > buf_size)
+                return 0;    // error
+
+            size += count;
+            i    += count;
+        }
+        else if (control >= BRA_RLE_CTL_RUNS)
+        {
+            // run block
+            const int count = 1 - control;
+
+            // safety check
+            if (i >= buf_size)
+                return 0;    // error
+
+            size += count;
+            ++i;
+        }
+        else    // control == -128 (no-op)
+        {
+        }
+    }
+
+    return size;
+}
+
 bool bra_rle_decode(const uint8_t* buf, const size_t buf_size, uint8_t** out_buf, size_t* out_buf_size)
 {
     assert(buf != NULL);
@@ -163,7 +169,7 @@ bool bra_rle_decode(const uint8_t* buf, const size_t buf_size, uint8_t** out_buf
     *out_buf_size = 0;
 
     // estimate length
-    const size_t s = _bra_rle_decode_compute_size(buf, buf_size);
+    const size_t s = bra_rle_decode_compute_size(buf, buf_size);
     if (s == 0)
         return false;
 

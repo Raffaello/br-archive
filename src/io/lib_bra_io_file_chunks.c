@@ -10,6 +10,7 @@
 
 #include <encoders/bra_bwt.h>
 #include <encoders/bra_mtf.h>
+#include <encoders/bra_rle.h>
 #include <encoders/bra_huffman.h>
 
 #include <inttypes.h>
@@ -140,6 +141,7 @@ bool bra_io_file_chunks_compress_file(bra_io_file_t* dst, bra_io_file_t* src, co
     uint8_t              buf[BRA_MAX_CHUNK_SIZE];
     uint8_t*             buf_bwt     = NULL;
     uint8_t*             buf_mtf     = NULL;
+    uint8_t*             buf_rle     = NULL;
     bra_huffman_chunk_t* buf_huffman = NULL;
     uint32_t             crc32       = BRA_CRC32C_INIT;
 
@@ -169,7 +171,7 @@ bool bra_io_file_chunks_compress_file(bra_io_file_t* dst, bra_io_file_t* src, co
             return false;
         }
 
-        // compress BWT+MTF(+RLE)+huffman
+        // compress BWT+MTF+RLE+huffman
         // TODO: do the version accepting a pre-allocated buffer
         //       as it is always the same size as the input doing in chunks will avoid to allocate/free
         //       for each chunk.
@@ -188,8 +190,17 @@ bool bra_io_file_chunks_compress_file(bra_io_file_t* dst, bra_io_file_t* src, co
             goto BRA_IO_FILE_COMPRESS_FILE_CHUNKS_ERR;
         }
 
+        // RLE encoding
+        size_t buf_rle_s = 0;
+        if (!bra_rle_encode(buf_mtf, s, &buf_rle, &buf_rle_s))
+        {
+            bra_log_error("bra_rle_encode() failed: %s (chunk: %" PRIu64 ")", src->fn, i);
+            goto BRA_IO_FILE_COMPRESS_FILE_CHUNKS_ERR;
+        }
+
         // huffman encoding
-        buf_huffman = bra_huffman_encode(buf_mtf, s);
+        // buf_huffman = bra_huffman_encode(buf_mtf, s);
+        buf_huffman = bra_huffman_encode(buf_rle, buf_rle_s);
         if (buf_huffman == NULL)
         {
             bra_log_error("bra_huffman_encode() failed: %s (chunk: %" PRIu64 ")", src->fn, i);
@@ -214,6 +225,9 @@ bool bra_io_file_chunks_compress_file(bra_io_file_t* dst, bra_io_file_t* src, co
         buf_bwt = NULL;
         free(buf_mtf);
         buf_mtf = NULL;
+        free(buf_rle);
+        buf_rle = NULL;
+
         bra_huffman_chunk_free(buf_huffman);
         buf_huffman = NULL;
 
@@ -260,6 +274,8 @@ BRA_IO_FILE_COMPRESS_FILE_CHUNKS_ERR:
         free(buf_bwt);
     if (buf_mtf != NULL)
         free(buf_mtf);
+    if (buf_rle != NULL)
+        free(buf_rle);
 
     bra_huffman_chunk_free(buf_huffman);
 
@@ -270,7 +286,7 @@ BRA_IO_FILE_COMPRESS_FILE_CHUNKS_ERR:
 
 bool bra_io_file_chunks_decompress_file(bra_io_file_t* dst, bra_io_file_t* src, const uint64_t data_size, bra_meta_entry_t* me, const bool decode)
 {
-    // TODO: it could be reduce the number of buffers in use
+    // TODO: it could be reduced the number of buffers in use
     // with a ping-pong technique
 
     assert_bra_io_file_t(src);
@@ -280,6 +296,7 @@ bool bra_io_file_chunks_decompress_file(bra_io_file_t* dst, bra_io_file_t* src, 
     uint8_t         buf_bwt[BRA_MAX_CHUNK_SIZE];
     uint8_t         buf_mtf[BRA_MAX_CHUNK_SIZE];
     bra_bwt_index_t buf_trans[BRA_MAX_CHUNK_SIZE];
+    uint8_t*        buf_rle        = NULL;
     uint8_t*        buf_huffman    = NULL;
     uint64_t        file_orig_size = 0;
 
@@ -302,40 +319,54 @@ bool bra_io_file_chunks_decompress_file(bra_io_file_t* dst, bra_io_file_t* src, 
             goto BRA_IO_FILE_DECOMPRESS_FILE_CHUNKS_ERR;
         }
 
-        file_orig_size += chunk_header.huffman.orig_size;
+        // in this way if not RLE encoded otherwise it must also decode huffman to detect RLE size
+        // file_orig_size += chunk_header.huffman.orig_size;
 
         // read source chunk
         if (!bra_io_file_read(src, buf, chunk_header.huffman.encoded_size))
             goto BRA_IO_FILE_DECOMPRESS_FILE_CHUNKS_ERR;
 
-        // decode huffman
-        if (decode)
+        // decode huffman (required for computing file size)
+        uint32_t huf_s = 0;
+        buf_huffman    = bra_huffman_decode(&chunk_header.huffman, buf, &huf_s);
+        if (buf_huffman == NULL)
         {
-            uint32_t s  = 0;
-            buf_huffman = bra_huffman_decode(&chunk_header.huffman, buf, &s);
-            if (buf_huffman == NULL)
+            bra_log_error("unable to decode huffman file: %s ", src->fn);
+            goto BRA_IO_FILE_DECOMPRESS_FILE_CHUNKS_ERR;
+        }
+
+        if (!decode)
+        {
+            // compute only the original file size:
+            file_orig_size += bra_rle_decode_compute_size(buf_huffman, huf_s);
+        }
+        else
+        {
+            // decode RLE
+            size_t s = 0;
+            if (!bra_rle_decode(buf_huffman, huf_s, &buf_rle, &s))
             {
-                bra_log_error("unable to decode huffman file: %s ", src->fn);
+                bra_log_error("unable to decode RLE in %s", src->fn);
                 goto BRA_IO_FILE_DECOMPRESS_FILE_CHUNKS_ERR;
             }
 
+            file_orig_size += s;
             if (chunk_header.primary_index >= s)
             {
-                bra_log_error("invalid primary index (%u) for chunk size %" PRIu32 " in %s", chunk_header.primary_index, s, src->fn);
+                bra_log_error("invalid primary index (%u) for chunk size %zu in %s", chunk_header.primary_index, s, src->fn);
                 goto BRA_IO_FILE_DECOMPRESS_FILE_CHUNKS_ERR;
             }
 
             // decompress MTF+BWT
-            bra_mtf_decode2(buf_huffman, s, buf_mtf);
+            bra_mtf_decode2(buf_rle, s, buf_mtf);
             bra_bwt_decode2(buf_mtf, s, chunk_header.primary_index, buf_trans, buf_bwt);
-
 
             // update CRC32
             me->crc32 = bra_crc32c(&chunk_header, sizeof(bra_io_chunk_header_t), me->crc32);
             me->crc32 = bra_crc32c(buf_bwt, s, me->crc32);
 
-            free(buf_huffman);
-            buf_huffman = NULL;
+            free(buf_rle);
+            buf_rle = NULL;
 
             // write source chunk
             if (dst != NULL)
@@ -345,6 +376,8 @@ bool bra_io_file_chunks_decompress_file(bra_io_file_t* dst, bra_io_file_t* src, 
             }
         }
 
+        free(buf_huffman);
+        buf_huffman = NULL;
 
         i += chunk_header.huffman.encoded_size + sizeof(bra_io_chunk_header_t);
     }
@@ -366,6 +399,8 @@ BRA_IO_FILE_DECOMPRESS_FILE_CHUNKS_ERR:
     bra_io_file_close(src);
     if (buf_huffman != NULL)
         free(buf_huffman);
+    if (buf_rle != NULL)
+        free(buf_rle);
 
     return false;
 }

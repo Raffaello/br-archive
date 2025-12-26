@@ -4,6 +4,7 @@
 
 #include <assert.h>
 #include <stdlib.h>
+#include <string.h>
 
 _Static_assert(sizeof(int) >= sizeof(bra_rle_counts_t), "review for loop with int k");
 
@@ -143,6 +144,57 @@ bool bra_encode_rle_free_list(bra_rle_chunk_t** rle_head)
     return true;
 }
 
+static inline size_t _bra_rle_encoding_compute_size_detect_run(const uint8_t* buf, const size_t buf_size, const size_t i)
+{
+    assert(buf != NULL);
+
+    size_t run = 1;
+    while (i + run < buf_size && buf[i + run] == buf[i] && run < BRA_RLE_MAX_RUNS)
+        ++run;
+
+    return run;
+}
+
+static inline size_t _bra_rle_encode_compute_size(const uint8_t* buf, const size_t buf_size)
+{
+    assert(buf != NULL);
+
+    size_t size = 0;
+    for (size_t i = 0; i < buf_size;)
+    {
+        // counting repeated bytes
+        const size_t run = _bra_rle_encoding_compute_size_detect_run(buf, buf_size, i);
+        if (run >= BRA_RLE_MIN_RUNS)
+        {
+            // run block
+            size += 2;
+            i    += run;
+        }
+        else
+        {
+            // literal block
+            // 1st time already checked that is a literal run
+            size_t lit_size  = run;
+            i               += run;
+            while (i < buf_size)
+            {
+                if (_bra_rle_encoding_compute_size_detect_run(buf, buf_size, i) >= BRA_RLE_MIN_RUNS)
+                    break;
+
+                ++i;
+                if (++lit_size == BRA_RLE_MAX_RUNS)
+                    break;
+            }
+
+            size += 1 + lit_size;
+        }
+    }
+
+    return size;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 bool bra_rle_encode(const uint8_t* buf, const size_t buf_size, uint8_t** out_buf, size_t* out_buf_size)
 {
     assert(buf != NULL);
@@ -151,9 +203,53 @@ bool bra_rle_encode(const uint8_t* buf, const size_t buf_size, uint8_t** out_buf
     assert(out_buf_size != NULL);
 
     // estimate the out_buf_size doing a pre-scan of the data
+    *out_buf_size = 0;
+    *out_buf      = NULL;
 
+    size_t   s = _bra_rle_encode_compute_size(buf, buf_size);
+    uint8_t* b = malloc(sizeof(uint8_t) * s);
+    if (b == NULL)
+        return false;
 
     // encode the data
+    uint8_t* p = b;
+    for (size_t i = 0; i < buf_size;)
+    {
+        const size_t run = _bra_rle_encoding_compute_size_detect_run(buf, buf_size, i);
+        if (run >= BRA_RLE_MIN_RUNS)
+        {
+            // run block
+            const int8_t control  = -(run - 1);
+            *p++                  = control;
+            *p++                  = buf[i];
+            i                    += run;
+        }
+        else
+        {
+            // literal block
+            memcpy(p, &buf[i], run);
+            p += run;
+            i += run;
 
+            size_t  lit_start  = i;
+            uint8_t lit_length = 0;
+            while (i < buf_size)
+            {
+                if (_bra_rle_encoding_compute_size_detect_run(buf, buf_size, i) > BRA_RLE_MIN_RUNS)
+                    break;
+
+                ++i;
+                if (++lit_length == BRA_RLE_MAX_RUNS)
+                    break;
+            }
+
+            *p++ = (lit_length - 1);
+            memcpy(p, &buf[lit_start], lit_length);
+            p += lit_length;
+        }
+    }
+
+    *out_buf_size = s;
+    *out_buf      = b;
     return true;
 }

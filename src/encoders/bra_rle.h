@@ -1,9 +1,13 @@
 #pragma once
 
-#include <lib_bra_types.h>
+// #include <lib_bra_types.h>
 
 #include <stdint.h>
+#include <stddef.h>
 #include <stdbool.h>
+
+
+typedef uint8_t bra_rle_counts_t;    //!< stored as run_length - 1 (0 => 1, 255 => 256)
 
 /**
  * @brief RLE chunk representing a run of repeated characters.

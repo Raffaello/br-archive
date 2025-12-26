@@ -797,7 +797,7 @@ bool bra_io_file_ctx_print_meta_entry(bra_io_file_ctx_t* ctx, const bool test_mo
     if (me._compression_ratio >= 1.0f)
         bra_log_printf("| 100%%  ");
     else
-        bra_log_printf("| %2.1f%% ", me._compression_ratio * 100.0);
+        bra_log_printf("| %4.1f%% ", me._compression_ratio * 100.0);
     bra_log_printf("|%08X|\n", read_crc32);
     bra_meta_entry_free(&me);
     return true;

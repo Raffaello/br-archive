@@ -138,9 +138,9 @@ typedef struct bra_io_file_ctx_t
     bra_io_file_t f;            //!< file handler
     uint32_t      num_files;    //!< num files to be written in the header.
     // uint32_t         cur_files;        //!< entries written in this session; used to reconcile header on close
-    char*            last_dir;         //!< the last encoded or decoded directory. used for files as they don't know where they belong.
-    size_t           last_dir_size;    //!< length of last_dir in bytes;
-    bra_tree_dir_t*  tree;             //!< directory tree used when encoding.
-    bra_tree_node_t* last_dir_node;    //!< pointer to the node of last_dir in the tree; NULL for root.
-
+    char*            last_dir;                   //!< the last encoded or decoded directory. used for files as they don't know where they belong.
+    size_t           last_dir_size;              //!< length of last_dir in bytes;
+    bra_tree_dir_t*  tree;                       //!< directory tree used when encoding.
+    bra_tree_node_t* last_dir_node;              //!< pointer to the node of last_dir in the tree; NULL for root.
+    uint64_t         total_size_uncompressed;    //!< total uncompressed size of all files processed.
 } bra_io_file_ctx_t;

@@ -752,11 +752,13 @@ bool bra_io_file_ctx_print_meta_entry(bra_io_file_ctx_t* ctx, const bool test_mo
     _bra_print_string_max_length(fn, (int) len, BRA_PRINTF_FMT_FILENAME_MAX_LENGTH);
 
     // skip data content
+    // TODO: this is not ok test_mode should not be a branch here, as it is duplicating the code basically
     if (test_mode)
     {
         // perform CRC checks
         if (!bra_io_file_meta_entry_compute_crc32(&ctx->f, len, fn, &me))
             goto BRA_IO_FILE_CTX_PRINT_META_ENTRY_ERR;
+        ctx->total_size_uncompressed += (uint64_t) me._compression_ratio * ds;
     }
     else
     {
@@ -765,10 +767,12 @@ bool bra_io_file_ctx_print_meta_entry(bra_io_file_ctx_t* ctx, const bool test_mo
         case BRA_ATTR_COMP_STORED:
             if (!bra_io_file_skip_data(&ctx->f, ds))
                 goto BRA_IO_FILE_CTX_PRINT_META_ENTRY_ERR;
+            ctx->total_size_uncompressed += ds;
             break;
         case BRA_ATTR_COMP_COMPRESSED:
             if (!bra_io_file_chunks_decompress_file(NULL, &ctx->f, ds, &me, false))
                 goto BRA_IO_FILE_CTX_PRINT_META_ENTRY_ERR;
+            ctx->total_size_uncompressed += (uint64_t) me._compression_ratio * ds;
             break;
         default:
             bra_log_critical("invalid compression type for file: %u", BRA_ATTR_COMP(me.attributes));

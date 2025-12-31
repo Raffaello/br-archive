@@ -43,8 +43,8 @@ uint8_t* bra_mtf_encode(const uint8_t* buf, const size_t buf_size);
  * @param buf      Input data buffer to transform
  * @param buf_size Size of input data in bytes (must be > 0)
  * @param out_buf  Output buffer to store MTF-encoded data (must not be @c NULL)
- * @retval true on success
- * @retval false on error
+ * @retval true always (MTF encoding cannot fail)
+ * @retval false reserved for future error conditions
  */
 bool bra_mtf_encode2(const uint8_t* buf, const size_t buf_size, uint8_t* out_buf);
 

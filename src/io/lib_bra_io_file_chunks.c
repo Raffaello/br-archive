@@ -185,9 +185,6 @@ bool bra_io_file_chunks_compress_file(bra_io_file_t* dst, bra_io_file_t* src, co
 
         const uint32_t crc_source_chunk = bra_crc32c(g_buf, s, BRA_CRC32C_INIT);
         // compress BWT+MTF+RLE+huffman
-        // TODO: do the version accepting a pre-allocated buffer
-        //       as it is always the same size as the input doing in chunks will avoid to allocate/free
-        //       for each chunk.
         bra_io_chunk_header_t chunk_header = {.primary_index = 0};
         if (!bra_bwt_encode2(g_buf, s, &chunk_header.primary_index, g_buf2))
         {
@@ -311,7 +308,6 @@ bool bra_io_file_chunks_decompress_file(bra_io_file_t* dst, bra_io_file_t* src, 
         if (dst->f == NULL || dst->fn == NULL)
             goto BRA_IO_FILE_DECOMPRESS_FILE_CHUNKS_ERR;
     }
-
 
     for (uint64_t i = 0; i < data_size;)
     {

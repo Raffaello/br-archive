@@ -99,7 +99,13 @@ bool bra_io_file_chunks_copy_file(bra_io_file_t* dst, bra_io_file_t* src, const 
         goto BRA_IO_FILE_CHUNKS_COPY_FILE_ERROR;
     }
 
-    char buf[BRA_MAX_CHUNK_SIZE];
+    // TODO: create global buffers, avoiding to alloc and dealloc for each file.
+    uint8_t* buf = malloc(sizeof(uint8_t) * BRA_MAX_CHUNK_SIZE);
+    if (buf == NULL)
+    {
+        bra_log_critical("unable to allocate buffer for copying file: %s", src->fn);
+        goto BRA_IO_FILE_CHUNKS_COPY_FILE_ERROR;
+    }
 
     for (uint64_t i = 0; i < data_size;)
     {
@@ -123,9 +129,12 @@ bool bra_io_file_chunks_copy_file(bra_io_file_t* dst, bra_io_file_t* src, const 
         i += s;
     }
 
+    free(buf);
     return true;
 
 BRA_IO_FILE_CHUNKS_COPY_FILE_ERROR:
+    if (buf != NULL)
+        free(buf);
     if (dst != NULL)
         bra_io_file_close(dst);
     bra_io_file_close(src);
@@ -138,7 +147,10 @@ bool bra_io_file_chunks_compress_file(bra_io_file_t* dst, bra_io_file_t* src, co
     assert_bra_io_file_t(src);
     assert(me != NULL);
 
-    uint8_t              buf[BRA_MAX_CHUNK_SIZE];
+    // TODO: there are some buffers optimization to avoid multiple buffers
+    //       using a ping pong buffer for mtf bwt and buf are all the same size.
+    /// can reuse 2 buffers in a ping-ping fashion and alloc dealloc "globally" once
+    uint8_t*             buf         = NULL;
     uint8_t*             buf_bwt     = NULL;
     uint8_t*             buf_mtf     = NULL;
     uint8_t*             buf_rle     = NULL;
@@ -154,6 +166,13 @@ bool bra_io_file_chunks_compress_file(bra_io_file_t* dst, bra_io_file_t* src, co
     {
         bra_log_error("unable to compress file: %s", src->fn);
         return false;
+    }
+
+    buf = malloc(sizeof(uint8_t) * BRA_MAX_CHUNK_SIZE);
+    if (buf == NULL)
+    {
+        bra_log_critical("unable to allocate buffer for compressing file: %s", src->fn);
+        goto BRA_IO_FILE_COMPRESS_FILE_CHUNKS_ERR;
     }
 
     for (uint64_t i = 0; i < data_size;)
@@ -266,10 +285,13 @@ bool bra_io_file_chunks_compress_file(bra_io_file_t* dst, bra_io_file_t* src, co
     }
 
     bra_io_file_close(&tmpfile);
+    free(buf);
     return res;
 
 BRA_IO_FILE_COMPRESS_FILE_CHUNKS_ERR:
     bra_io_file_close(&tmpfile);
+    if (buf != NULL)
+        free(buf);
     if (buf_bwt != NULL)
         free(buf_bwt);
     if (buf_mtf != NULL)
@@ -292,18 +314,27 @@ bool bra_io_file_chunks_decompress_file(bra_io_file_t* dst, bra_io_file_t* src, 
     assert_bra_io_file_t(src);
     assert(me != NULL);
 
-    uint8_t         buf[BRA_MAX_CHUNK_SIZE];
-    uint8_t         buf_bwt[BRA_MAX_CHUNK_SIZE];
-    uint8_t         buf_mtf[BRA_MAX_CHUNK_SIZE];
-    bra_bwt_index_t buf_trans[BRA_MAX_CHUNK_SIZE];
-    uint8_t*        buf_rle        = NULL;
-    uint8_t*        buf_huffman    = NULL;
-    uint64_t        file_orig_size = 0;
+    bool             res = true;
+    uint8_t*         buf;
+    uint8_t*         buf2;
+    bra_bwt_index_t* buf_trans;
+    uint8_t*         buf_rle        = NULL;
+    uint8_t*         buf_huffman    = NULL;
+    uint64_t         file_orig_size = 0;
 
     if (dst != NULL)
     {
         if (dst->f == NULL || dst->fn == NULL)
             goto BRA_IO_FILE_DECOMPRESS_FILE_CHUNKS_ERR;
+    }
+
+    buf       = malloc(sizeof(uint8_t) * BRA_MAX_CHUNK_SIZE);
+    buf2      = malloc(sizeof(uint8_t) * BRA_MAX_CHUNK_SIZE);
+    buf_trans = malloc(sizeof(bra_bwt_index_t) * BRA_MAX_CHUNK_SIZE);
+    if (buf == NULL || buf2 == NULL || buf_trans == NULL)
+    {
+        bra_log_critical("unable to allocate buffers for decompressing file: %s", src->fn);
+        goto BRA_IO_FILE_DECOMPRESS_FILE_CHUNKS_ERR;
     }
 
     for (uint64_t i = 0; i < data_size;)
@@ -358,12 +389,12 @@ bool bra_io_file_chunks_decompress_file(bra_io_file_t* dst, bra_io_file_t* src, 
             }
 
             // decompress MTF+BWT
-            bra_mtf_decode2(buf_rle, s, buf_mtf);
-            bra_bwt_decode2(buf_mtf, s, chunk_header.primary_index, buf_trans, buf_bwt);
+            bra_mtf_decode2(buf_rle, s, buf2);
+            bra_bwt_decode2(buf2, s, chunk_header.primary_index, buf_trans, buf);
 
             // update CRC32
             me->crc32 = bra_crc32c(&chunk_header, sizeof(bra_io_chunk_header_t), me->crc32);
-            me->crc32 = bra_crc32c(buf_bwt, s, me->crc32);
+            me->crc32 = bra_crc32c(buf, s, me->crc32);
 
             free(buf_rle);
             buf_rle = NULL;
@@ -371,7 +402,7 @@ bool bra_io_file_chunks_decompress_file(bra_io_file_t* dst, bra_io_file_t* src, 
             // write source chunk
             if (dst != NULL)
             {
-                if (!bra_io_file_write(dst, buf_bwt, s))
+                if (!bra_io_file_write(dst, buf, s))
                     goto BRA_IO_FILE_DECOMPRESS_FILE_CHUNKS_ERR;
             }
         }
@@ -389,17 +420,29 @@ bool bra_io_file_chunks_decompress_file(bra_io_file_t* dst, bra_io_file_t* src, 
         goto BRA_IO_FILE_DECOMPRESS_FILE_CHUNKS_ERR;
     }
     me->_compression_ratio = (float) ((double) data_size / (double) file_orig_size);
-    return true;
+
+
+    res = true;
+    goto _BRA_IO_FILE_DECOMPRESS_FILE_CHUNKS_FREE_BUFS;
 
 BRA_IO_FILE_DECOMPRESS_FILE_CHUNKS_ERR:
     if (dst != NULL)
         bra_io_file_close(dst);
 
     bra_io_file_close(src);
+    res = false;
+
+_BRA_IO_FILE_DECOMPRESS_FILE_CHUNKS_FREE_BUFS:
+    if (buf != NULL)
+        free(buf);
+    if (buf2 != NULL)
+        free(buf2);
+    if (buf_trans != NULL)
+        free(buf_trans);
     if (buf_huffman != NULL)
         free(buf_huffman);
     if (buf_rle != NULL)
         free(buf_rle);
 
-    return false;
+    return res;
 }

@@ -87,6 +87,9 @@ bool bra_io_file_chunks_copy_file(bra_io_file_t* dst, bra_io_file_t* src, const 
 {
     assert_bra_io_file_t(src);
 
+    // TODO: use  global buffers instead
+    uint8_t* buf = NULL;
+
     if (dst != NULL)
     {
         if (dst->f == NULL || dst->fn == NULL)
@@ -100,7 +103,7 @@ bool bra_io_file_chunks_copy_file(bra_io_file_t* dst, bra_io_file_t* src, const 
     }
 
     // TODO: create global buffers, avoiding to alloc and dealloc for each file.
-    uint8_t* buf = malloc(sizeof(uint8_t) * BRA_MAX_CHUNK_SIZE);
+    buf = malloc(sizeof(uint8_t) * BRA_MAX_CHUNK_SIZE);
     if (buf == NULL)
     {
         bra_log_critical("unable to allocate buffer for copying file: %s", src->fn);
@@ -314,10 +317,10 @@ bool bra_io_file_chunks_decompress_file(bra_io_file_t* dst, bra_io_file_t* src, 
     assert_bra_io_file_t(src);
     assert(me != NULL);
 
-    bool             res = true;
-    uint8_t*         buf;
-    uint8_t*         buf2;
-    bra_bwt_index_t* buf_trans;
+    bool             res            = true;
+    uint8_t*         buf            = NULL;
+    uint8_t*         buf2           = NULL;
+    bra_bwt_index_t* buf_trans      = NULL;
     uint8_t*         buf_rle        = NULL;
     uint8_t*         buf_huffman    = NULL;
     uint64_t         file_orig_size = 0;

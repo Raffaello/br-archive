@@ -41,6 +41,9 @@
  */
 uint8_t* bra_bwt_encode(const uint8_t* buf, const bra_bwt_index_t buf_size, bra_bwt_index_t* primary_index);
 
+
+bool bra_bwt_encode2(const uint8_t* buf, const bra_bwt_index_t buf_size, bra_bwt_index_t* primary_index, uint8_t* out_buf);
+
 /**
  * @brief Decode BWT-transformed data back to original.
  *

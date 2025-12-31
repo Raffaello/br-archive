@@ -87,8 +87,13 @@ bool bra_io_file_chunks_copy_file(bra_io_file_t* dst, bra_io_file_t* src, const 
 {
     assert_bra_io_file_t(src);
 
-    // TODO: use  global buffers instead
-    uint8_t* buf = NULL;
+    extern uint8_t* g_buf;
+
+    if (g_buf == NULL)
+    {
+        bra_log_critical("bra not initialized");
+        return false;
+    }
 
     if (dst != NULL)
     {
@@ -102,42 +107,31 @@ bool bra_io_file_chunks_copy_file(bra_io_file_t* dst, bra_io_file_t* src, const 
         goto BRA_IO_FILE_CHUNKS_COPY_FILE_ERROR;
     }
 
-    // TODO: create global buffers, avoiding to alloc and dealloc for each file.
-    buf = malloc(sizeof(uint8_t) * BRA_MAX_CHUNK_SIZE);
-    if (buf == NULL)
-    {
-        bra_log_critical("unable to allocate buffer for copying file: %s", src->fn);
-        goto BRA_IO_FILE_CHUNKS_COPY_FILE_ERROR;
-    }
-
     for (uint64_t i = 0; i < data_size;)
     {
         const uint32_t s = _bra_min(BRA_MAX_CHUNK_SIZE, data_size - i);
 
         // read source chunk
-        if (!bra_io_file_read(src, buf, s))
+        if (!bra_io_file_read(src, g_buf, s))
             goto BRA_IO_FILE_CHUNKS_COPY_FILE_ERROR;
 
         // update CRC32
         if (compute_crc32)
-            me->crc32 = bra_crc32c(buf, s, me->crc32);
+            me->crc32 = bra_crc32c(g_buf, s, me->crc32);
 
         // write source chunk
         if (dst != NULL)
         {
-            if (!bra_io_file_write(dst, buf, s))
+            if (!bra_io_file_write(dst, g_buf, s))
                 goto BRA_IO_FILE_CHUNKS_COPY_FILE_ERROR;
         }
 
         i += s;
     }
 
-    free(buf);
     return true;
 
 BRA_IO_FILE_CHUNKS_COPY_FILE_ERROR:
-    if (buf != NULL)
-        free(buf);
     if (dst != NULL)
         bra_io_file_close(dst);
     bra_io_file_close(src);
@@ -150,12 +144,18 @@ bool bra_io_file_chunks_compress_file(bra_io_file_t* dst, bra_io_file_t* src, co
     assert_bra_io_file_t(src);
     assert(me != NULL);
 
+    extern uint8_t* g_buf;
+    extern uint8_t* g_buf2;
+
+    if (g_buf == NULL || g_buf2 == NULL)
+    {
+        bra_log_critical("bra not initialized");
+        return false;
+    }
+
     // TODO: there are some buffers optimization to avoid multiple buffers
     //       using a ping pong buffer for mtf bwt and buf are all the same size.
     /// can reuse 2 buffers in a ping-ping fashion and alloc dealloc "globally" once
-    uint8_t*             buf         = NULL;
-    uint8_t*             buf_bwt     = NULL;
-    uint8_t*             buf_mtf     = NULL;
     uint8_t*             buf_rle     = NULL;
     bra_huffman_chunk_t* buf_huffman = NULL;
     uint32_t             crc32       = BRA_CRC32C_INIT;
@@ -171,12 +171,6 @@ bool bra_io_file_chunks_compress_file(bra_io_file_t* dst, bra_io_file_t* src, co
         return false;
     }
 
-    buf = malloc(sizeof(uint8_t) * BRA_MAX_CHUNK_SIZE);
-    if (buf == NULL)
-    {
-        bra_log_critical("unable to allocate buffer for compressing file: %s", src->fn);
-        goto BRA_IO_FILE_COMPRESS_FILE_CHUNKS_ERR;
-    }
 
     for (uint64_t i = 0; i < data_size;)
     {
@@ -186,27 +180,26 @@ bool bra_io_file_chunks_compress_file(bra_io_file_t* dst, bra_io_file_t* src, co
         bra_log_printf("\b\b\b\b");
 
         // read source chunk
-        if (!bra_io_file_read(src, buf, s))
+        if (!bra_io_file_read(src, g_buf, s))
         {
             bra_io_file_close(&tmpfile);
             bra_io_file_close(dst);
             return false;
         }
+        const uint32_t crc_source_chunk = bra_crc32c(g_buf, s, crc32);
 
         // compress BWT+MTF+RLE+huffman
         // TODO: do the version accepting a pre-allocated buffer
         //       as it is always the same size as the input doing in chunks will avoid to allocate/free
         //       for each chunk.
         bra_io_chunk_header_t chunk_header = {.primary_index = 0};
-        buf_bwt                            = bra_bwt_encode(buf, s, &chunk_header.primary_index);
-        if (buf_bwt == NULL)
+        if (!bra_bwt_encode2(g_buf, s, &chunk_header.primary_index, g_buf2))
         {
             bra_log_error("bra_bwt_encode() failed: %s (chunk: %" PRIu64 ")", src->fn, i);
             goto BRA_IO_FILE_COMPRESS_FILE_CHUNKS_ERR;
         }
 
-        buf_mtf = bra_mtf_encode(buf_bwt, s);
-        if (buf_mtf == NULL)
+        if (!bra_mtf_encode2(g_buf2, s, g_buf))
         {
             bra_log_error("bra_mtf_encode() failed: %s (chunk: %" PRIu64 ")", src->fn, i);
             goto BRA_IO_FILE_COMPRESS_FILE_CHUNKS_ERR;
@@ -214,14 +207,13 @@ bool bra_io_file_chunks_compress_file(bra_io_file_t* dst, bra_io_file_t* src, co
 
         // RLE encoding
         size_t buf_rle_s = 0;
-        if (!bra_rle_encode(buf_mtf, s, &buf_rle, &buf_rle_s))
+        if (!bra_rle_encode(g_buf, s, &buf_rle, &buf_rle_s))
         {
             bra_log_error("bra_rle_encode() failed: %s (chunk: %" PRIu64 ")", src->fn, i);
             goto BRA_IO_FILE_COMPRESS_FILE_CHUNKS_ERR;
         }
 
         // huffman encoding
-        // buf_huffman = bra_huffman_encode(buf_mtf, s);
         buf_huffman = bra_huffman_encode(buf_rle, buf_rle_s);
         if (buf_huffman == NULL)
         {
@@ -233,7 +225,7 @@ bool bra_io_file_chunks_compress_file(bra_io_file_t* dst, bra_io_file_t* src, co
 
         // CRC32
         crc32 = bra_crc32c(&chunk_header, sizeof(chunk_header), crc32);
-        crc32 = bra_crc32c(buf, s, crc32);
+        crc32 = bra_crc32c_combine(crc32, crc_source_chunk, s);
 
         // write chunk header
         if (!bra_io_file_chunks_write_header(&tmpfile, &chunk_header))
@@ -243,10 +235,6 @@ bool bra_io_file_chunks_compress_file(bra_io_file_t* dst, bra_io_file_t* src, co
         if (!bra_io_file_write(&tmpfile, buf_huffman->data, buf_huffman->meta.encoded_size))
             goto BRA_IO_FILE_COMPRESS_FILE_CHUNKS_ERR;
 
-        free(buf_bwt);
-        buf_bwt = NULL;
-        free(buf_mtf);
-        buf_mtf = NULL;
         free(buf_rle);
         buf_rle = NULL;
 
@@ -288,17 +276,10 @@ bool bra_io_file_chunks_compress_file(bra_io_file_t* dst, bra_io_file_t* src, co
     }
 
     bra_io_file_close(&tmpfile);
-    free(buf);
     return res;
 
 BRA_IO_FILE_COMPRESS_FILE_CHUNKS_ERR:
     bra_io_file_close(&tmpfile);
-    if (buf != NULL)
-        free(buf);
-    if (buf_bwt != NULL)
-        free(buf_bwt);
-    if (buf_mtf != NULL)
-        free(buf_mtf);
     if (buf_rle != NULL)
         free(buf_rle);
 
@@ -311,19 +292,23 @@ BRA_IO_FILE_COMPRESS_FILE_CHUNKS_ERR:
 
 bool bra_io_file_chunks_decompress_file(bra_io_file_t* dst, bra_io_file_t* src, const uint64_t data_size, bra_meta_entry_t* me, const bool decode)
 {
-    // TODO: it could be reduced the number of buffers in use
-    // with a ping-pong technique
-
     assert_bra_io_file_t(src);
     assert(me != NULL);
 
-    bool             res            = true;
-    uint8_t*         buf            = NULL;
-    uint8_t*         buf2           = NULL;
-    bra_bwt_index_t* buf_trans      = NULL;
-    uint8_t*         buf_rle        = NULL;
-    uint8_t*         buf_huffman    = NULL;
-    uint64_t         file_orig_size = 0;
+    extern uint8_t*         g_buf;
+    extern uint8_t*         g_buf2;
+    extern bra_bwt_index_t* g_buf_trans;
+
+    if (g_buf == NULL || g_buf2 == NULL || g_buf_trans == NULL)
+    {
+        bra_log_critical("bra not initialized");
+        return false;
+    }
+
+    bool     res            = true;
+    uint8_t* buf_rle        = NULL;
+    uint8_t* buf_huffman    = NULL;
+    uint64_t file_orig_size = 0;
 
     if (dst != NULL)
     {
@@ -331,14 +316,6 @@ bool bra_io_file_chunks_decompress_file(bra_io_file_t* dst, bra_io_file_t* src, 
             goto BRA_IO_FILE_DECOMPRESS_FILE_CHUNKS_ERR;
     }
 
-    buf       = malloc(sizeof(uint8_t) * BRA_MAX_CHUNK_SIZE);
-    buf2      = malloc(sizeof(uint8_t) * BRA_MAX_CHUNK_SIZE);
-    buf_trans = malloc(sizeof(bra_bwt_index_t) * BRA_MAX_CHUNK_SIZE);
-    if (buf == NULL || buf2 == NULL || buf_trans == NULL)
-    {
-        bra_log_critical("unable to allocate buffers for decompressing file: %s", src->fn);
-        goto BRA_IO_FILE_DECOMPRESS_FILE_CHUNKS_ERR;
-    }
 
     for (uint64_t i = 0; i < data_size;)
     {
@@ -357,12 +334,12 @@ bool bra_io_file_chunks_decompress_file(bra_io_file_t* dst, bra_io_file_t* src, 
         // file_orig_size += chunk_header.huffman.orig_size;
 
         // read source chunk
-        if (!bra_io_file_read(src, buf, chunk_header.huffman.encoded_size))
+        if (!bra_io_file_read(src, g_buf, chunk_header.huffman.encoded_size))
             goto BRA_IO_FILE_DECOMPRESS_FILE_CHUNKS_ERR;
 
         // decode huffman (required for computing file size)
         uint32_t huf_s = 0;
-        buf_huffman    = bra_huffman_decode(&chunk_header.huffman, buf, &huf_s);
+        buf_huffman    = bra_huffman_decode(&chunk_header.huffman, g_buf, &huf_s);
         if (buf_huffman == NULL)
         {
             bra_log_error("unable to decode huffman file: %s ", src->fn);
@@ -392,12 +369,12 @@ bool bra_io_file_chunks_decompress_file(bra_io_file_t* dst, bra_io_file_t* src, 
             }
 
             // decompress MTF+BWT
-            bra_mtf_decode2(buf_rle, s, buf2);
-            bra_bwt_decode2(buf2, s, chunk_header.primary_index, buf_trans, buf);
+            bra_mtf_decode2(buf_rle, s, g_buf2);
+            bra_bwt_decode2(g_buf2, s, chunk_header.primary_index, g_buf_trans, g_buf);
 
             // update CRC32
             me->crc32 = bra_crc32c(&chunk_header, sizeof(bra_io_chunk_header_t), me->crc32);
-            me->crc32 = bra_crc32c(buf, s, me->crc32);
+            me->crc32 = bra_crc32c(g_buf, s, me->crc32);
 
             free(buf_rle);
             buf_rle = NULL;
@@ -405,7 +382,7 @@ bool bra_io_file_chunks_decompress_file(bra_io_file_t* dst, bra_io_file_t* src, 
             // write source chunk
             if (dst != NULL)
             {
-                if (!bra_io_file_write(dst, buf, s))
+                if (!bra_io_file_write(dst, g_buf, s))
                     goto BRA_IO_FILE_DECOMPRESS_FILE_CHUNKS_ERR;
             }
         }
@@ -436,12 +413,6 @@ BRA_IO_FILE_DECOMPRESS_FILE_CHUNKS_ERR:
     res = false;
 
 _BRA_IO_FILE_DECOMPRESS_FILE_CHUNKS_FREE_BUFS:
-    if (buf != NULL)
-        free(buf);
-    if (buf2 != NULL)
-        free(buf2);
-    if (buf_trans != NULL)
-        free(buf_trans);
     if (buf_huffman != NULL)
         free(buf_huffman);
     if (buf_rle != NULL)

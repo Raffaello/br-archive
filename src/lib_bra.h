@@ -32,6 +32,14 @@ extern "C" {
 bool bra_init(void);
 
 /**
+ * @brief Deinitialize the library.
+ *
+ * @retval true
+ * @retval false
+ */
+bool bra_quit(void);
+
+/**
  * @brief Check if the CPU has SSE4.2 support.
  *
  * @retval true

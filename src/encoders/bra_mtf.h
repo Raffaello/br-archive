@@ -2,6 +2,7 @@
 
 #include <stdint.h>
 #include <stddef.h>
+#include <stdbool.h>
 
 /**
  * @brief Encode data using Move-to-Front (MTF) algorithm.
@@ -26,6 +27,8 @@
  * @warning Input buffer must not be NULL and buf_size must be > 0.
  */
 uint8_t* bra_mtf_encode(const uint8_t* buf, const size_t buf_size);
+
+bool bra_mtf_encode2(const uint8_t* buf, const size_t buf_size, uint8_t* out_buf);
 
 /**
  * @brief Decode MTF-encoded data back to original.

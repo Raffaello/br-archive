@@ -55,6 +55,21 @@ uint8_t* bra_mtf_encode(const uint8_t* buf, const size_t buf_size)
     if (!out_buf)
         return NULL;
 
+    if (!bra_mtf_encode2(buf, buf_size, out_buf))
+    {
+        free(out_buf);
+        return NULL;
+    }
+
+    return out_buf;
+}
+
+bool bra_mtf_encode2(const uint8_t* buf, const size_t buf_size, uint8_t* out_buf)
+{
+    assert(buf != NULL);
+    assert(buf_size > 0);
+    assert(out_buf != NULL);
+
     // Initialize MTF table
     uint8_t mtf_table[BRA_ALPHABET_SIZE];
     mtf_init_table(mtf_table);
@@ -63,7 +78,7 @@ uint8_t* bra_mtf_encode(const uint8_t* buf, const size_t buf_size)
     for (size_t i = 0; i < buf_size; ++i)
         out_buf[i] = mtf_encode_symbol(mtf_table, buf[i]);
 
-    return out_buf;
+    return true;
 }
 
 uint8_t* bra_mtf_decode(const uint8_t* buf, const size_t buf_size)

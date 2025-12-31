@@ -54,15 +54,32 @@ static int bwt_suffix_context_compare(void* context, const void* a, const void* 
 
 uint8_t* bra_bwt_encode(const uint8_t* buf, const bra_bwt_index_t buf_size, bra_bwt_index_t* primary_index)
 {
+    // Allocate output buffer
+    uint8_t* out_buf = (uint8_t*) malloc(buf_size);
+    if (out_buf == NULL)
+        return NULL;
+
+    if (!bra_bwt_encode2(buf, buf_size, primary_index, out_buf))
+    {
+        free(out_buf);
+        return NULL;
+    }
+
+    return out_buf;
+}
+
+bool bra_bwt_encode2(const uint8_t* buf, const bra_bwt_index_t buf_size, bra_bwt_index_t* primary_index, uint8_t* out_buf)
+{
     assert(buf != NULL);
     assert(buf_size > 0);
     assert(primary_index != NULL);
+    assert(out_buf != NULL);
 
     // Allocate suffix array for all rotations
     bwt_suffix_ctx_t suffix_ctx = {.index = NULL, .data = buf, .length = buf_size};
     suffix_ctx.index            = malloc(buf_size * sizeof(bra_bwt_index_t));
     if (!suffix_ctx.index)
-        return NULL;
+        return false;
 
     // Initialize suffix array with all possible rotations
     for (bra_bwt_index_t i = 0; i < buf_size; i++)
@@ -70,11 +87,6 @@ uint8_t* bra_bwt_encode(const uint8_t* buf, const bra_bwt_index_t buf_size, bra_
 
     // Sort all rotations lexicographically
     BRA_QSORT(suffix_ctx.index, buf_size, sizeof(bra_bwt_index_t), bwt_suffix_context_compare, &suffix_ctx);
-
-    // Allocate output buffer
-    uint8_t* out_buf = (uint8_t*) malloc(buf_size);
-    if (out_buf == NULL)
-        goto BRA_BWT_ENCODE_EXIT;
 
     // Generate BWT by taking the last character of each sorted rotation
     *primary_index = 0;
@@ -89,9 +101,8 @@ uint8_t* bra_bwt_encode(const uint8_t* buf, const bra_bwt_index_t buf_size, bra_
             *primary_index = i;
     }
 
-BRA_BWT_ENCODE_EXIT:
     free(suffix_ctx.index);
-    return out_buf;
+    return true;
 }
 
 uint8_t* bra_bwt_decode(const uint8_t* buf, const bra_bwt_index_t buf_size, const bra_bwt_index_t primary_index)

@@ -41,7 +41,25 @@
  */
 uint8_t* bra_bwt_encode(const uint8_t* buf, const bra_bwt_index_t buf_size, bra_bwt_index_t* primary_index);
 
-
+/**
+ * @brief Encode data using Burrows-Wheeler Transform (BWT).
+ *
+ * Performs the Burrows-Wheeler Transform on input data by creating all cyclic
+ * rotations of the input, sorting them lexicographically, and taking the last
+ * character of each sorted rotation. This transformation clusters similar
+ * characters together, making the output highly compressible with subsequent
+ * algorithms like Move-to-Front and entropy coding.
+ *
+ * The BWT is reversible using the primary index, which indicates the position
+ * of the original string in the sorted rotation matrix.
+ *
+ * @param buf Input data buffer to transform (must not be @c NULL)
+ * @param buf_size Size of input data in bytes (must be > 0)
+ * @param primary_index Pointer to store primary index for decoding (must not be @c NULL)
+ * @param out_buf Output buffer to store BWT-transformed data (must not be @c NULL)
+ * @retval true  on success
+ * @retval false on failure
+ */
 bool bra_bwt_encode2(const uint8_t* buf, const bra_bwt_index_t buf_size, bra_bwt_index_t* primary_index, uint8_t* out_buf);
 
 /**

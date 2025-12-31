@@ -153,9 +153,6 @@ bool bra_io_file_chunks_compress_file(bra_io_file_t* dst, bra_io_file_t* src, co
         return false;
     }
 
-    // TODO: there are some buffers optimization to avoid multiple buffers
-    //       using a ping pong buffer for mtf bwt and buf are all the same size.
-    /// can reuse 2 buffers in a ping-ping fashion and alloc dealloc "globally" once
     uint8_t*             buf_rle     = NULL;
     bra_huffman_chunk_t* buf_huffman = NULL;
     uint32_t             crc32       = BRA_CRC32C_INIT;
@@ -171,7 +168,6 @@ bool bra_io_file_chunks_compress_file(bra_io_file_t* dst, bra_io_file_t* src, co
         return false;
     }
 
-
     for (uint64_t i = 0; i < data_size;)
     {
         const uint32_t s = _bra_min(BRA_MAX_CHUNK_SIZE, data_size - i);
@@ -186,8 +182,8 @@ bool bra_io_file_chunks_compress_file(bra_io_file_t* dst, bra_io_file_t* src, co
             bra_io_file_close(dst);
             return false;
         }
-        const uint32_t crc_source_chunk = bra_crc32c(g_buf, s, crc32);
 
+        const uint32_t crc_source_chunk = bra_crc32c(g_buf, s, crc32);
         // compress BWT+MTF+RLE+huffman
         // TODO: do the version accepting a pre-allocated buffer
         //       as it is always the same size as the input doing in chunks will avoid to allocate/free

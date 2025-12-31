@@ -37,6 +37,7 @@ bool bra_init(void)
     if (g_buf == NULL || g_buf2 == NULL || g_buf_trans == NULL)
     {
         bra_log_critical("unable to allocate global buffers");
+        bra_quit();
         return false;
     }
 

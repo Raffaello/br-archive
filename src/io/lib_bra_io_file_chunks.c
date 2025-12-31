@@ -183,7 +183,7 @@ bool bra_io_file_chunks_compress_file(bra_io_file_t* dst, bra_io_file_t* src, co
             return false;
         }
 
-        const uint32_t crc_source_chunk = bra_crc32c(g_buf, s, crc32);
+        const uint32_t crc_source_chunk = bra_crc32c(g_buf, s, BRA_CRC32C_INIT);
         // compress BWT+MTF+RLE+huffman
         // TODO: do the version accepting a pre-allocated buffer
         //       as it is always the same size as the input doing in chunks will avoid to allocate/free
@@ -397,8 +397,7 @@ bool bra_io_file_chunks_decompress_file(bra_io_file_t* dst, bra_io_file_t* src, 
     }
     me->_compression_ratio = (float) ((double) data_size / (double) file_orig_size);
 
-
-    res = true;
+    // res = true;
     goto _BRA_IO_FILE_DECOMPRESS_FILE_CHUNKS_FREE_BUFS;
 
 BRA_IO_FILE_DECOMPRESS_FILE_CHUNKS_ERR:

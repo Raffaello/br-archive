@@ -89,15 +89,3 @@ bool bra_io_file_meta_entry_flush_entry_dir(bra_io_file_t* f, const bra_meta_ent
  * @retval false on failure
  */
 bool bra_io_file_meta_entry_flush_entry_subdir(bra_io_file_t* f, const bra_meta_entry_t* me);
-
-/**
- * @brief Computes the CRC32 of the whole meta entry
- *
- * @param f the file to be read from
- * @param filename_len the length of @p filename
- * @param filename the reconstructed full path of the meta entry name
- * @param me the meta entry
- * @retval true on success
- * @retval false on failures
- */
-bool bra_io_file_meta_entry_compute_crc32(bra_io_file_t* f, const size_t filename_len, const char* filename, bra_meta_entry_t* me);

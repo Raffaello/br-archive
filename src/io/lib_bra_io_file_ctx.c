@@ -773,7 +773,7 @@ bool bra_io_file_ctx_print_meta_entry(bra_io_file_ctx_t* ctx, const bool test_mo
         if (!bra_io_file_chunks_read_file(&ctx->f, mef->data_size, &me, test_mode))
             goto BRA_IO_FILE_CTX_PRINT_META_ENTRY_ERR;
 
-        ctx->total_size_uncompressed += (uint64_t) me._compression_ratio * ds;
+        ctx->total_size_uncompressed += (uint64_t) ds / me._compression_ratio;
     }
     break;
     case BRA_ATTR_TYPE_SUBDIR:

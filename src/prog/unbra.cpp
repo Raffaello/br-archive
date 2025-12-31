@@ -165,7 +165,7 @@ protected:
             auto fs_size = bra::fs::file_size(m_bra_file).value_or(0);
             bra_log_printf("\nORIGINAL SIZE: %" PRIu64 "\n", m_ctx.total_size_uncompressed);
             bra_log_printf("COMPRESSED SIZE: %" PRIu64 "\n", fs_size);
-            bra_log_printf("RATIO: %.2f%%\n", fs_size == 0 ? 0.0 : ((double) m_ctx.total_size_uncompressed / (double) fs_size) * 100.0);
+            bra_log_printf("RATIO: %.2f%%\n", fs_size == 0 ? 0.0 : ((double) fs_size / (double) m_ctx.total_size_uncompressed) * 100.0);
 
             if (m_testContent)
                 bra_log_printf("* All %u entr%s verified successfully.\n", bh.num_files, bh.num_files == 1 ? "y" : "ies");

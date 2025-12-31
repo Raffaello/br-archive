@@ -751,30 +751,48 @@ bool bra_io_file_ctx_print_meta_entry(bra_io_file_ctx_t* ctx, const bool test_mo
     bra_log_printf("| %c|%c  | %s | ", attr_type, attr_comp, bytes);
     _bra_print_string_max_length(fn, (int) len, BRA_PRINTF_FMT_FILENAME_MAX_LENGTH);
 
-    // skip data content
     if (test_mode)
     {
-        // perform CRC checks
-        if (!bra_io_file_meta_entry_compute_crc32(&ctx->f, len, fn, &me))
+        if (!_bra_validate_filename(fn, len))
+            goto BRA_IO_FILE_CTX_PRINT_META_ENTRY_ERR;
+
+        if (!_bra_compute_header_crc32(len, fn, &me))
             goto BRA_IO_FILE_CTX_PRINT_META_ENTRY_ERR;
     }
-    else
+
+    switch (BRA_ATTR_TYPE(me.attributes))
     {
-        switch (BRA_ATTR_COMP(me.attributes))
-        {
-        case BRA_ATTR_COMP_STORED:
-            if (!bra_io_file_skip_data(&ctx->f, ds))
-                goto BRA_IO_FILE_CTX_PRINT_META_ENTRY_ERR;
-            break;
-        case BRA_ATTR_COMP_COMPRESSED:
-            if (!bra_io_file_chunks_decompress_file(NULL, &ctx->f, ds, &me, false))
-                goto BRA_IO_FILE_CTX_PRINT_META_ENTRY_ERR;
-            break;
-        default:
-            bra_log_critical("invalid compression type for file: %u", BRA_ATTR_COMP(me.attributes));
+    case BRA_ATTR_TYPE_FILE:
+    {
+        const bra_meta_entry_file_t* mef = (const bra_meta_entry_file_t*) me.entry_data;
+        assert(mef != NULL);
+
+        if (test_mode)
+            me.crc32 = bra_crc32c(&mef->data_size, sizeof(uint64_t), me.crc32);
+
+        if (!bra_io_file_chunks_read_file(&ctx->f, mef->data_size, &me, test_mode))
             goto BRA_IO_FILE_CTX_PRINT_META_ENTRY_ERR;
-            break;
+
+        ctx->total_size_uncompressed += (uint64_t) ds / me._compression_ratio;
+    }
+    break;
+    case BRA_ATTR_TYPE_SUBDIR:
+    {
+        if (test_mode)
+        {
+            const bra_meta_entry_subdir_t* mes = me.entry_data;
+            me.crc32                           = bra_crc32c(&mes->parent_index, sizeof(uint32_t), me.crc32);
         }
+    }
+    break;
+    case BRA_ATTR_TYPE_DIR:
+        break;
+    case BRA_ATTR_TYPE_SYM:
+        bra_log_critical("SYMLINK NOT IMPLEMENTED YET");
+        BRA_FALLTHROUGH;
+        // fallthrough
+    default:
+        goto BRA_IO_FILE_CTX_PRINT_META_ENTRY_ERR;
     }
 
     // read CRC32

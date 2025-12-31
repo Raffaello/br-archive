@@ -2,6 +2,7 @@
 
 #include <stdint.h>
 #include <stddef.h>
+#include <stdbool.h>
 
 /**
  * @brief Encode data using Move-to-Front (MTF) algorithm.
@@ -26,6 +27,28 @@
  * @warning Input buffer must not be NULL and buf_size must be > 0.
  */
 uint8_t* bra_mtf_encode(const uint8_t* buf, const size_t buf_size);
+
+/**
+ * @brief Encode data using Move-to-Front (MTF) algorithm.
+ *
+ * @todo improve the implementation using double linked list for efficiency.
+ *
+ * The Move-to-Front algorithm maintains a list of all possible byte values
+ * (0-255) and for each input symbol, outputs its current position in the list,
+ * then moves that symbol to the front. This creates many small values (0-3)
+ * when there's locality in the data, making it highly compressible.
+ *
+ * Commonly used after BWT to further improve compression ratios.
+ *
+ * @param buf      Input data buffer to transform
+ * @param buf_size Size of input data in bytes (must be > 0)
+ * @param out_buf  Output buffer to store MTF-encoded data (must not be @c NULL, at least @p buf_size bytes)
+ * @retval true always (MTF encoding cannot fail)
+ * @retval false reserved for future error conditions
+ *
+ * @note Output size is always equal to input size.
+ */
+bool bra_mtf_encode2(const uint8_t* buf, const size_t buf_size, uint8_t* out_buf);
 
 /**
  * @brief Decode MTF-encoded data back to original.

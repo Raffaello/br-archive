@@ -42,6 +42,27 @@
 uint8_t* bra_bwt_encode(const uint8_t* buf, const bra_bwt_index_t buf_size, bra_bwt_index_t* primary_index);
 
 /**
+ * @brief Encode data using Burrows-Wheeler Transform (BWT).
+ *
+ * Performs the Burrows-Wheeler Transform on input data by creating all cyclic
+ * rotations of the input, sorting them lexicographically, and taking the last
+ * character of each sorted rotation. This transformation clusters similar
+ * characters together, making the output highly compressible with subsequent
+ * algorithms like Move-to-Front and entropy coding.
+ *
+ * The BWT is reversible using the primary index, which indicates the position
+ * of the original string in the sorted rotation matrix.
+ *
+ * @param buf Input data buffer to transform (must not be @c NULL)
+ * @param buf_size Size of input data in bytes (must be > 0)
+ * @param primary_index Pointer to store primary index for decoding (must not be @c NULL)
+ * @param out_buf Output buffer to store BWT-transformed data (must not be @c NULL)
+ * @retval true  on success
+ * @retval false on failure
+ */
+bool bra_bwt_encode2(const uint8_t* buf, const bra_bwt_index_t buf_size, bra_bwt_index_t* primary_index, uint8_t* out_buf);
+
+/**
  * @brief Decode BWT-transformed data back to original.
  *
  * Reverses the Burrows-Wheeler Transform using the first-last mapping property.
@@ -83,7 +104,7 @@ uint8_t* bra_bwt_decode(const uint8_t* buf, const bra_bwt_index_t buf_size, cons
  * @param buf_size Size of transformed data in bytes (must be > 0)
  * @param primary_index Primary index from  @ref bra_bwt_encode() (must be < @p buf_size)
  * @param transform transform buffer to be passed as at least having @p buf_size num elements.
- * @param out_buf Allocated output buffer containing original data of at least @p buf_size  size.
+ * @param out_buf Output buffer to store BWT-transformed data (must not be @c NULL, at least @p buf_size bytes)
  *
  * @note Caller is responsible for freeing the returned buffer.
  * @note Output size is always equal to input size.
@@ -99,14 +120,5 @@ uint8_t* bra_bwt_decode(const uint8_t* buf, const bra_bwt_index_t buf_size, cons
  * // original contains "BANANA"
  * free(original);
  * @endcode
- */
-
-/**
- * @brief
- *
- * @param buf
- * @param buf_size
- * @param primary_index
-
  */
 void bra_bwt_decode2(const uint8_t* buf, const bra_bwt_index_t buf_size, const bra_bwt_index_t primary_index, bra_bwt_index_t* transform, uint8_t* out_buf);

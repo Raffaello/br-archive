@@ -22,10 +22,47 @@ _Static_assert(BRA_MAX_CHUNK_SIZE <= UINT32_MAX, "BRA_MAX_CHUNK_SIZE must fit in
 
 /////////////////////////////////////////////////////////////////////////////
 
+uint8_t*         g_buf       = NULL;
+uint8_t*         g_buf2      = NULL;
+bra_bwt_index_t* g_buf_trans = NULL;
+
 bool bra_init(void)
 {
     bra_log_init();
     bra_crc32c_use_sse42(true);
+
+    g_buf       = malloc(sizeof(uint8_t) * BRA_MAX_CHUNK_SIZE);
+    g_buf2      = malloc(sizeof(uint8_t) * BRA_MAX_CHUNK_SIZE);
+    g_buf_trans = malloc(sizeof(bra_bwt_index_t) * BRA_MAX_CHUNK_SIZE);
+    if (g_buf == NULL || g_buf2 == NULL || g_buf_trans == NULL)
+    {
+        bra_log_critical("unable to allocate global buffers");
+        bra_quit();
+        return false;
+    }
+
+    return true;
+}
+
+bool bra_quit(void)
+{
+    if (g_buf != NULL)
+    {
+        free(g_buf);
+        g_buf = NULL;
+    }
+
+    if (g_buf2 != NULL)
+    {
+        free(g_buf2);
+        g_buf2 = NULL;
+    }
+
+    if (g_buf_trans != NULL)
+    {
+        free(g_buf_trans);
+        g_buf_trans = NULL;
+    }
 
     return true;
 }

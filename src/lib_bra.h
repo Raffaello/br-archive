@@ -96,24 +96,24 @@ bool bra_meta_entry_init(bra_meta_entry_t* me, const bra_attr_t attr, const char
 void bra_meta_entry_free(bra_meta_entry_t* me);
 
 /**
- * @brief Initialize a metadata entry for a regular file.
+ * @brief Set a metadata entry for a regular file.
  *
  * @param me
  * @param data_size
  * @retval true
  * @retval false
  */
-bool bra_meta_entry_file_init(bra_meta_entry_t* me, const uint64_t data_size);
+bool bra_meta_entry_file_set(bra_meta_entry_t* me, const uint64_t data_size);
 
 /**
- * @brief Initialize a metadata entry for a subdirectory.
+ * @brief Set a metadata entry for a subdirectory.
  *
  * @param me
  * @param parent_index
  * @retval true
  * @retval false
  */
-bool bra_meta_entry_subdir_init(bra_meta_entry_t* me, const uint32_t parent_index);
+bool bra_meta_entry_subdir_set(bra_meta_entry_t* me, const uint32_t parent_index);
 
 
 #ifdef __cplusplus

@@ -5,6 +5,14 @@
 
 #include <stdbool.h>
 
+/**
+ * @brief Read the common meta entry header data.
+ *
+ * @param f the target file
+ * @param me the meta entry to write to @p f
+ * @retval true on success
+ * @retval false on error and close the file @p f via @ref bra_io_file_close
+ */
 bool bra_io_file_meta_entry_read_common_header(bra_io_file_t* f, bra_meta_entry_t* me);
 
 /**
@@ -23,7 +31,7 @@ bool bra_io_file_meta_entry_write_common_header(bra_io_file_t* f, const bra_meta
  * @param f the source file to read from.
  * @param me where to store the read data.
  * @retval true on success
- * @retval false on error
+ * @retval false on error and close the file @p f via @ref bra_io_file_close
  */
 bool bra_io_file_meta_entry_read_file_entry(bra_io_file_t* f, bra_meta_entry_t* me);
 
@@ -33,7 +41,7 @@ bool bra_io_file_meta_entry_read_file_entry(bra_io_file_t* f, bra_meta_entry_t* 
  * @param f the destination file to write from.
  * @param me the data to be written.
  * @retval true on success
- * @retval false on error
+ * @retval false on error and close the file @p f via @ref bra_io_file_close
  */
 bool bra_io_file_meta_entry_write_file_entry(bra_io_file_t* f, const bra_meta_entry_t* me);
 
@@ -43,7 +51,7 @@ bool bra_io_file_meta_entry_write_file_entry(bra_io_file_t* f, const bra_meta_en
  * @param f the file to read from
  * @param me the meta entry to store the meta subdir data.
  * @retval true on success
- * @retval false on error
+ * @retval false on error and close the file @p f via @ref bra_io_file_close
  */
 bool bra_io_file_meta_entry_read_subdir_entry(bra_io_file_t* f, bra_meta_entry_t* me);
 
@@ -53,7 +61,7 @@ bool bra_io_file_meta_entry_read_subdir_entry(bra_io_file_t* f, bra_meta_entry_t
  * @param f the file to write to.
  * @param me the meta entry to read the meta subdir data from.
  * @retval true on success
- * @retval false on error
+ * @retval false on error and close the file @p f via @ref bra_io_file_close
  */
 bool bra_io_file_meta_entry_write_subdir_entry(bra_io_file_t* f, const bra_meta_entry_t* me);
 
@@ -68,7 +76,7 @@ bool bra_io_file_meta_entry_write_subdir_entry(bra_io_file_t* f, const bra_meta_
  * @param filename the original filename with its path to be archived.
  * @param filename_len the length of @p filename (to avoid to recompute it internally)
  * @retval true on success
- * @retval false on failure
+ * @retval false on failure and close the file @p f via @ref bra_io_file_close
  */
 bool bra_io_file_meta_entry_flush_entry_file(bra_io_file_t* f, bra_meta_entry_t* me, const char* filename, const size_t filename_len);
 
@@ -78,7 +86,7 @@ bool bra_io_file_meta_entry_flush_entry_file(bra_io_file_t* f, bra_meta_entry_t*
  * @param f the file to write to
  * @param me the meta entry directory
  * @retval true on success
- * @retval false on failure
+ * @retval false on failure and close the file @p f via @ref bra_io_file_close
  */
 bool bra_io_file_meta_entry_flush_entry_dir(bra_io_file_t* f, const bra_meta_entry_t* me);
 
@@ -88,6 +96,6 @@ bool bra_io_file_meta_entry_flush_entry_dir(bra_io_file_t* f, const bra_meta_ent
  * @param f the file to write to
  * @param me the meta entry subdirectory.
  * @retval true on success
- * @retval false on failure
+ * @retval false on failure and close the file @p f via @ref bra_io_file_close
  */
 bool bra_io_file_meta_entry_flush_entry_subdir(bra_io_file_t* f, const bra_meta_entry_t* me);

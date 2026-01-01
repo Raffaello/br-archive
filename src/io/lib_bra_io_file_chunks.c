@@ -17,6 +17,15 @@
 #include <stdlib.h>
 #include <assert.h>
 
+/**
+ * @brief Union used to store bra_bwt_index_t on disk with less bytes.
+ */
+typedef union bra_bwt_index_u
+{
+    uint8_t  b[sizeof(uint32_t)];    //!< byte array representation
+    uint32_t u32;                    //!< uint32_t representation
+} bra_bwt_index_u;
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 static bool bra_io_file_chunks_header_validate(const bra_io_chunk_header_t* chunk_header)
@@ -24,6 +33,8 @@ static bool bra_io_file_chunks_header_validate(const bra_io_chunk_header_t* chun
     if (chunk_header == NULL)
         return false;
 
+    if (chunk_header->primary_index >= BRA_MAX_CHUNK_SIZE)
+        return false;
     if (chunk_header->huffman.encoded_size > BRA_MAX_CHUNK_SIZE)
         return false;
     if (chunk_header->huffman.orig_size > BRA_MAX_CHUNK_SIZE)
@@ -43,9 +54,19 @@ bool bra_io_file_chunks_read_header(bra_io_file_t* src, bra_io_chunk_header_t* c
     assert_bra_io_file_t(src);
     assert(chunk_header != NULL);
 
-    if (!bra_io_file_read(src, chunk_header, sizeof(bra_io_chunk_header_t)))
+    // read 3 bytes for primary index
+    bra_bwt_index_u pi_union = {.u32 = 0};
+    if (!bra_io_file_read(src, pi_union.b, BRA_BWT_INDEX_BYTES))
     {
-        bra_log_error("unable to read chunk header from %s", src->fn);
+        bra_log_error("unable to read chunk primary index from %s", src->fn);
+        return false;
+    }
+
+    chunk_header->primary_index = pi_union.u32;
+    // read huffman
+    if (!bra_io_file_read(src, &chunk_header->huffman, sizeof(bra_huffman_t)))
+    {
+        bra_log_error("unable to read chunk huffman header from %s", src->fn);
         return false;
     }
 
@@ -57,9 +78,16 @@ bool bra_io_file_chunks_write_header(bra_io_file_t* dst, const bra_io_chunk_head
     assert_bra_io_file_t(dst);
     assert(chunk_header != NULL);
 
-    if (!bra_io_file_write(dst, chunk_header, sizeof(bra_io_chunk_header_t)))
+    const bra_bwt_index_u pi_union = {.u32 = chunk_header->primary_index};
+    if (!bra_io_file_write(dst, pi_union.b, BRA_BWT_INDEX_BYTES))
     {
-        bra_log_error("unable to write chunk header to %s", dst->fn);
+        bra_log_error("unable to write chunk primary index to %s", dst->fn);
+        return false;
+    }
+
+    if (!bra_io_file_write(dst, &chunk_header->huffman, sizeof(bra_huffman_t)))
+    {
+        bra_log_error("unable to write chunk huffman header to %s", dst->fn);
         return false;
     }
 
@@ -382,7 +410,7 @@ bool bra_io_file_chunks_decompress_file(bra_io_file_t* dst, bra_io_file_t* src, 
         free(buf_huffman);
         buf_huffman = NULL;
 
-        i += chunk_header.huffman.encoded_size + sizeof(bra_io_chunk_header_t);
+        i += chunk_header.huffman.encoded_size + BRA_IO_CHUNK_HEADER_SIZE;
     }
 
     // safety check

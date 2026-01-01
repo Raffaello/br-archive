@@ -89,10 +89,12 @@
 #error "unsupported platform" // maybe it could work anyway, but I did't test it.
 #endif
 
-#define BRA_MAX_PATH_LENGTH (UINT8_MAX + 1)    //!< capacity including trailing @c '\\0'; max on-disk name_size = UINT8_MAX (255).
-#define BRA_MAX_CHUNK_SIZE  (256 * 1024)       //!< Use #BRA_MAX_CHUNK_SIZE for optimal I/O performance during file transfers (256KB).
-#define BRA_MAX_RLE_COUNTS  UINT8_MAX          //!< Maximum encoded count value (255) representing runs up to 256 bytes (count = run_length - 1).
-#define BRA_RLE_MAX_RUNS    128                //!< Max repeated consecutive chars
-#define BRA_RLE_MIN_RUNS    3                  //!< Min repeated consecutive chars
-#define BRA_RLE_CTL_RUNS    -127               //!< Control Value to check for Run block while decoding
-#define BRA_ALPHABET_SIZE   256                //!< Extended ASCII
+#define BRA_MAX_PATH_LENGTH      (UINT8_MAX + 1)                                  //!< capacity including trailing @c '\\0'; max on-disk name_size = UINT8_MAX (255).
+#define BRA_MAX_CHUNK_SIZE       (256 * 1024)                                     //!< Use #BRA_MAX_CHUNK_SIZE for optimal I/O performance during file transfers (256KB).
+#define BRA_BWT_INDEX_BYTES      3                                                //!< number of bytes used to store bra_bwt_index_t on disk, must be sufficient to represent values up to #BRA_MAX_CHUNK_SIZE
+#define BRA_MAX_RLE_COUNTS       UINT8_MAX                                        //!< Maximum encoded count value (255) representing runs up to 256 bytes (count = run_length - 1).
+#define BRA_RLE_MAX_RUNS         128                                              //!< Max repeated consecutive chars
+#define BRA_RLE_MIN_RUNS         3                                                //!< Min repeated consecutive chars
+#define BRA_RLE_CTL_RUNS         -127                                             //!< Control Value to check for Run block while decoding
+#define BRA_IO_CHUNK_HEADER_SIZE (BRA_BWT_INDEX_BYTES + sizeof(bra_huffman_t))    //!< Real size on disk for a chunk header
+#define BRA_ALPHABET_SIZE        256                                              //!< Extended ASCII

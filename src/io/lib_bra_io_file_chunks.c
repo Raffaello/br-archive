@@ -410,7 +410,7 @@ bool bra_io_file_chunks_decompress_file(bra_io_file_t* dst, bra_io_file_t* src, 
         free(buf_huffman);
         buf_huffman = NULL;
 
-        i += chunk_header.huffman.encoded_size + sizeof(bra_io_chunk_header_t);
+        i += chunk_header.huffman.encoded_size + BRA_IO_CHUNK_HEADER_SIZE;
     }
 
     // safety check

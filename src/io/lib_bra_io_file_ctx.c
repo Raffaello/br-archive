@@ -443,6 +443,7 @@ bool bra_io_file_ctx_read_meta_entry(bra_io_file_ctx_t* ctx, bra_meta_entry_t* m
         {
         BRA_IO_READ_ERR:
             bra_io_file_close(&ctx->f);
+            return false;
         }
     }
     break;

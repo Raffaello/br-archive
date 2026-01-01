@@ -36,7 +36,7 @@ bool bra_io_file_meta_entry_read_common_header(bra_io_file_t* f, bra_meta_entry_
     if (!bra_io_file_read(f, &buf_size, sizeof(uint8_t)))
         goto BRA_IO_FILE_META_ENTRY_READ_COMMON_HEADER_ERR;
 
-    if (buf_size == 0)
+    if (buf_size == 0 /*|| buf_size > BRA_MAX_PATH_LENGTH*/)
         goto BRA_IO_FILE_META_ENTRY_READ_COMMON_HEADER_ERR;
 
     // 3. filename

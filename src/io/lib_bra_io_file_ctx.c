@@ -426,11 +426,7 @@ bool bra_io_file_ctx_read_meta_entry(bra_io_file_ctx_t* ctx, bra_meta_entry_t* m
     assert(me != NULL);
 
     if (!bra_io_file_meta_entry_read_common_header(&ctx->f, me))
-    {
-    BRA_IO_READ_ERR:
-        bra_io_file_close(&ctx->f);
         return false;
-    }
 
     // 4. entry data
     switch (BRA_ATTR_TYPE(me->attributes))
@@ -444,7 +440,10 @@ bool bra_io_file_ctx_read_meta_entry(bra_io_file_ctx_t* ctx, bra_meta_entry_t* m
 
         ctx->last_dir_node = bra_tree_dir_insert_at_parent(ctx->tree, ((bra_meta_entry_subdir_t*) me->entry_data)->parent_index, me->name);
         if (ctx->last_dir_node == NULL)
-            goto BRA_IO_READ_ERR;
+        {
+        BRA_IO_READ_ERR:
+            bra_io_file_close(&ctx->f);
+        }
     }
     break;
     case BRA_ATTR_TYPE_DIR:

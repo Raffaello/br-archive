@@ -9,7 +9,7 @@
  * @brief Read the common meta entry header data.
  *
  * @param f the target file
- * @param me the meta entry to write to @p f
+ * @param me the meta entry to read to @p f
  * @retval true on success
  * @retval false on error and close the file @p f via @ref bra_io_file_close
  */

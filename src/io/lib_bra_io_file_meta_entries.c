@@ -79,17 +79,13 @@ bool bra_io_file_meta_entry_read_file_entry(bra_io_file_t* f, bra_meta_entry_t* 
     assert(me != NULL);
     assert(me->entry_data != NULL);
 
-    if (BRA_ATTR_TYPE(me->attributes) != BRA_ATTR_TYPE_FILE)
+    if (!bra_meta_entry_file_set(me, 0))
     {
         bra_io_file_close(f);
         return false;
     }
 
-    // if (!bra_meta_entry_file_set(me, 0))
-    //     return false;
-
     bra_meta_entry_file_t* mef = me->entry_data;
-    mef->data_size             = 0;
     return bra_io_file_read(f, &mef->data_size, sizeof(uint64_t));
 }
 

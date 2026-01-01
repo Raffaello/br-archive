@@ -33,7 +33,7 @@ static bool bra_io_file_chunks_header_validate(const bra_io_chunk_header_t* chun
     if (chunk_header == NULL)
         return false;
 
-    if (chunk_header->primary_index > BRA_MAX_CHUNK_SIZE)
+    if (chunk_header->primary_index >= BRA_MAX_CHUNK_SIZE)
         return false;
     if (chunk_header->huffman.encoded_size > BRA_MAX_CHUNK_SIZE)
         return false;

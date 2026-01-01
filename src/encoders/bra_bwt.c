@@ -23,7 +23,7 @@ typedef struct bwt_suffix_ctx_t
 
 } bwt_suffix_ctx_t;
 
-_Static_assert(BRA_MAX_CHUNK_SIZE <= 1 << (BRA_BWT_INDEX_BYTES * 8), "");
+_Static_assert(BRA_MAX_CHUNK_SIZE <= 1 << (BRA_BWT_INDEX_BYTES * 8), "BRA_BWT_INDEX_BYTES insufficient to represent BRA_MAX_CHUNK_SIZE");
 
 //////////////////////////////////////////////////////////////////////////////////////////
 

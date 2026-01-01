@@ -14,6 +14,26 @@
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+bool bra_io_file_meta_entry_read_common_header(bra_io_file_t* f, bra_meta_entry_t* me)
+{
+    assert_bra_io_file_t(f);
+    assert(me != NULL);
+
+    // 1. attributes
+    if (!bra_io_file_read(f, &me->attributes, sizeof(bra_attr_t)))
+        return false;
+
+    // 2. filename size
+    if (!bra_io_file_read(f, &me->name_size, sizeof(uint8_t)))
+        return false;
+
+    // 3. filename
+    if (!bra_io_file_read(f, &me->name, me->name_size))
+        return false;
+
+    return true;
+}
+
 bool bra_io_file_meta_entry_write_common_header(bra_io_file_t* f, const bra_meta_entry_t* me)
 {
     assert_bra_io_file_t(f);

@@ -5,6 +5,8 @@
 
 #include <stdbool.h>
 
+bool bra_io_file_meta_entry_read_common_header(bra_io_file_t* f, bra_meta_entry_t* me);
+
 /**
  * @brief write the common meta entry header data.
  *

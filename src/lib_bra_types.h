@@ -8,7 +8,7 @@
 
 
 typedef uint8_t  bra_attr_t;         //!< file attribute type
-typedef uint32_t bra_bwt_index_t;    //!< index type used by BWT (should be at least 32 bits to support 4GB chunks)
+typedef uint32_t bra_bwt_index_t;    //!< index type used by BWT (32 bits max 4GB chunks, effectively using only #BRA_BWT_INDEX_BYTES bytes on disk)
 
 /**
  * @brief Define a file overwrite policy.
@@ -55,6 +55,8 @@ typedef struct bra_huffman_t
     uint32_t encoded_size;                  //!< how many bytes are encoded.
 } bra_huffman_t;
 
+#pragma pack(pop)
+
 /**
  * @brief BRa Chunk Header
  */
@@ -64,8 +66,6 @@ typedef struct bra_io_chunk_header_t
     bra_huffman_t   huffman;          //!< huffman meta data for huffman tree reconstruction.
 
 } bra_io_chunk_header_t;
-
-#pragma pack(pop)
 
 /**
  * @brief Type used to perform I/O from the disk.

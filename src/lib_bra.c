@@ -214,9 +214,10 @@ void bra_meta_entry_free(bra_meta_entry_t* me)
     }
 }
 
-bool bra_meta_entry_file_init(bra_meta_entry_t* me, const uint64_t data_size)
+bool bra_meta_entry_file_set(bra_meta_entry_t* me, const uint64_t data_size)
 {
     assert(me != NULL);
+    assert(me->entry_data != NULL);
 
     if (BRA_ATTR_TYPE(me->attributes) != BRA_ATTR_TYPE_FILE)
         return false;
@@ -226,9 +227,10 @@ bool bra_meta_entry_file_init(bra_meta_entry_t* me, const uint64_t data_size)
     return true;
 }
 
-bool bra_meta_entry_subdir_init(bra_meta_entry_t* me, const uint32_t parent_index)
+bool bra_meta_entry_subdir_set(bra_meta_entry_t* me, const uint32_t parent_index)
 {
     assert(me != NULL);
+    assert(me->entry_data != NULL);
 
     if (BRA_ATTR_TYPE(me->attributes) != BRA_ATTR_TYPE_SUBDIR)
         return false;

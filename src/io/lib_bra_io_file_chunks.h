@@ -73,7 +73,7 @@ bool bra_io_file_chunks_read_file(bra_io_file_t* src, const uint64_t data_size, 
  * @param compute_crc32 If @c true, compute CRC32 while copying and update @p me->crc32 field.
  *
  * @retval true On successful copy of all data
- * @retval false On read/write error or I/O failure
+ * @retval false On read/write error or I/O failure and close both files via @ref bra_io_file_close
  *
  * @note Both files advance by @p data_size bytes on success.
  * @note On error, both files are automatically closed via @ref bra_io_file_close().
